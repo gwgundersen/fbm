@@ -47,8 +47,6 @@ void main
   log_file logf;
   log_gobbled logg;
  
-  int i;
-
   /* Look at program arguments. */
 
   max_index = 0;

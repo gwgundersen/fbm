@@ -96,7 +96,7 @@ void main
 
   for (ap = argv+3; *ap!=0; ap += 4)
   { if (strcmp(ap[0],"/")!=0 
-     || (grid_size[ng] = atoi(ap[3]))<=0 && strcmp(ap[3],"0")!=0) usage();
+     || ((grid_size[ng] = atoi(ap[3]))<=0 && strcmp(ap[3],"0")!=0)) usage();
     grid_low[ng] = atof(ap[1]);
     grid_high[ng] = atof(ap[2]);
     ng += 1;

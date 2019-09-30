@@ -26,7 +26,6 @@
 /* HOW TO COMPUTE THE CURRENT TRAJECTORY. */
 
 static mc_traj *tj;	/* Description of how to compute trajectory */
-static float *ss;	/* Stepsize to use for each component */
 static mc_iter *it;	/* Description of iteration (contains approx order) */
 
 static int na;		/* Number of distinct approximations used */
@@ -86,11 +85,14 @@ void mc_traj_permute (void)
    state by following the trajectory for some number of steps, computed
    as previously specified using mc_traj_init.  The number of steps may
    be negative, in which case the state is taken backwards along the
-   trajectory that number of steps. */
+   trajectory that number of steps.  If the last parameter is non-zero,
+   the potential energy will be evaluated at the last state, if it is
+   convenient to do so. */
 
 void mc_trajectory
 ( mc_dynamic_state *ds,	/* Dynamical state to update */
-  int n			/* Number of steps to compute */
+  int n,		/* Number of steps to compute */
+  int need_pot		/* Need potential energy for last state? */
 )
 {
   double sf, sfh;
@@ -145,7 +147,9 @@ void mc_trajectory
           a = (a+x+ta) % ta;
           o = a<na ? a : a==na ? 0 : 2*na-a;
 
-          mc_app_energy (ds, na, it->approx_order[o], 0, ds->grad);
+          mc_app_energy (ds, na, it->approx_order[o], 
+                         need_pot && n==1 ? &ds->pot_energy : 0, 
+                         ds->grad);
   
           n -= 1;
           if (n==0) break;
@@ -162,6 +166,7 @@ void mc_trajectory
         }
 
         ds->know_grad = it->approx_order[0];
+        ds->know_pot  = need_pot;
       }
       else 
       {
@@ -199,14 +204,14 @@ void mc_trajectory
         }
 
         ds->know_grad = 0;
+        ds->know_pot  = 0;
       }
   
       break;
     }
   }
 
-  /* Since position and momentum have changed, we don't know energies now. */
+  /* Since momentum has changed, we don't know kinetic energy anymore. */
 
-  ds->know_pot     = 0;
   ds->know_kinetic = 0;
 }

@@ -136,8 +136,8 @@ void mc_hybrid
 
       /* Next state is found by following trajectory for 'jump' steps. */
 
-      mc_trajectory (ds, dir * jump);
       n += dir;
+      mc_trajectory (ds, dir * jump, n<window || n>jmps-window);
 
       /* Do tempering in first half if appropriate. */
 
@@ -251,6 +251,98 @@ void mc_hybrid
 
     ds->pot_energy     = rej_pot_energy;
     ds->kinetic_energy = rej_kinetic_energy;
+    ds->know_pot     = 1;
+    ds->know_kinetic = 1;
+    ds->know_grad    = 0;
+  }
+}
+  
+
+/* PERFORM HYBRID MONTE CARLO OPERATION - SECOND FORM. */
+
+void mc_hybrid2
+( mc_dynamic_state *ds,	/* State to update */
+  mc_iter *it,		/* Description of this iteration */
+  mc_traj *tj,		/* Trajectory specification */
+  int steps,		/* Maximum number of steps to do */
+  int in_steps,		/* Maximum number of acceptable steps to do */
+  int jump,		/* Number of steps in each jump */
+  mc_value *q_save,	/* Place to save original q */
+  mc_value *p_save	/* Place to save original p */
+)
+{
+  double old_pot_energy, old_kinetic_energy;
+  double threshold, H;
+  int n, in, k;
+
+  if (steps%jump!=0 || in_steps%jump!=0) abort();
+
+  if (!ds->know_pot)
+  { mc_app_energy (ds, 1, 1, &ds->pot_energy, ds->grad);
+    ds->know_pot = 1;
+    ds->know_grad = 1;
+  }
+
+  if (!ds->know_kinetic)
+  { ds->kinetic_energy = mc_kinetic_energy(ds);
+    ds->know_kinetic = 1;
+  }
+
+  mc_value_copy (q_save, ds->q, ds->dim);
+  mc_value_copy (p_save, ds->p, ds->dim);
+
+  old_pot_energy = ds->pot_energy;
+  old_kinetic_energy = ds->kinetic_energy;
+
+  threshold = ds->pot_energy + ds->kinetic_energy + rand_exp();
+
+  mc_traj_init(tj,it);
+  mc_traj_permute();
+
+  n = 0;
+  in = 0;
+
+  while (n<steps && in<in_steps)
+  {
+    mc_trajectory (ds, jump, 1);
+
+    if (!ds->know_pot)
+    { mc_app_energy (ds, 1, 1, &ds->pot_energy, ds->grad);
+      ds->know_pot = 1;
+      ds->know_grad = 1;
+    }
+
+    if (!ds->know_kinetic)
+    { ds->kinetic_energy = mc_kinetic_energy(ds);
+      ds->know_kinetic = 1;
+    }
+
+    H = ds->pot_energy + ds->kinetic_energy;
+
+    n += jump;
+    if (H<=threshold) in += 1;
+  }
+
+  it->proposals += 1;
+
+  if (H<=threshold)
+  { 
+    it->move_point = n;
+
+    for (k = 0; k<ds->dim; k++)
+    { ds->p[k] = -ds->p[k];
+    }
+  }
+  else
+  { 
+    it->rejects += 1;
+    it->move_point = 0;
+
+    mc_value_copy (ds->q, q_save, ds->dim);
+    mc_value_copy (ds->p, p_save, ds->dim);
+
+    ds->pot_energy     = old_pot_energy;
+    ds->kinetic_energy = old_kinetic_energy;
     ds->know_pot     = 1;
     ds->know_kinetic = 1;
     ds->know_grad    = 0;

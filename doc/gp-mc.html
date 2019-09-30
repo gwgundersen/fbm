@@ -1,0 +1,74 @@
+<html>
+<body>
+<pre>
+
+
+GP-MC:  Use Markov chain to sample Gaussian process hyperparameters.
+
+The gp-mc program is the specialization of xxx-mc to the task of
+sampling from the posterior distribution of the hyperparameters of a
+Gaussian process model, and possibly also from the posterior
+distribution of the latent values and/or noise variances for training
+cases.  If no training data is specified, the prior will be sampled
+instead.  See <A HREF="xxx-mc.html">xxx-mc.doc</A> for the generic features of this program.
+
+The primary state of the simulation consists of the values the
+hyperparameters defining the Gaussian process. These hyperparameters
+are represented internally in logarithmic form, but are always printed
+in 'sigma' form (ie, with in the units of a standard deviation).
+
+This state may be augmented by the latent values for training cases
+and/or by the noise variances to use for each training case.  This
+auxiliary state is updated only by the application-specific sampling
+procedures described below.  This augmentation is not needed for
+regression models where the noise variance is the same for all cases,
+but is needed for classification models and for regression models with
+varying noise (equivalently, noise that has a t distribution).
+
+If latent values are present when they are not needed, they will be
+used when updating the hyperparameters (treated as noise-free data).
+This will probably slow convergence considerably, but might be desired
+in order that these values can be plotted.  The best way to proceed in
+this situation is to generate the values at the end of each iteration
+but discard them before sampling resumes.
+
+The following application-specific sampling procedures are implemented:
+
+   scan-values [ N ]
+
+       This procedure does N Gibbs sampling scans for the latent values
+       associated with training cases, given the current hyperparameters 
+       (and possible case-specific noise variances).  If N is not 
+       specified, one scan is done.  Note that a single scan is 
+       generally not sufficient to obtain a set of values that are
+       independent of the previous set.
+
+       If latent values do not exist beforehand, this procedure operates 
+       as if the previous values were all zero.
+
+   sample-values
+
+       Samples latent values associated with training cases given the 
+       current values of the hyperparameters, ignoring the current latent
+       values (if any).  This is possible only for a regression model.
+
+   discard-values
+
+       Eliminates the latent values currently stored.  This is useful
+       for regression models, where keeping these values around may be 
+       desirable in order to allow certain quantities to be plotted, but
+       where convergence is faster if these values are discarded before 
+       the hyperparameters are updated.
+
+   sample-variances
+
+       Samples values for the case-specific noise variances in a 
+       regression model where these vary (equivalently, where the noise 
+       has a t distribution).  This operation requires that the latent
+       values the training cases be available.  If these are not recorded, 
+       such values are automatically sampled and then discarded.
+
+            Copyright (c) 1996 by Radford M. Neal
+</pre>
+</body>
+</html>

@@ -28,13 +28,14 @@ arguments may follow after a slash (for which, see the documentation
 specific to that application - eg, net-plt).
 
 For the format of the quantity specifications, see the documentation
-on generic quantities, quantities for Monte Carlo runs, quantities for
-neural networks, etc.  The number of values specified for each axis
-must either be the same, or one axis must have only a single value
-(which will be reused).  For each x-axis value and the corresponding
-y-axis value, a continuous trace of data from each log file will be
-output.  Breaks will be inserted at the start of each log file and at
-the start of each new combination of values.
+on quantities that are generic (<A HREF="quantities.html">quantities.doc</A>), for Monte Carlo runs
+(<A HREF="mc-quantities.html">mc-quantities.doc</A>), for neural networks (<A HREF="net-quantities.html">net-quantities.doc</A>), for
+Gaussian processes (<A HREF="gp-quantities.html">gp-quantities.doc</A>), etc.  The number of values
+specified for each axis must either be the same, or one axis must have
+only a single value (which will be reused).  For each x-axis value and
+the corresponding y-axis value, a continuous trace of data from each
+log file will be output.  Breaks will be inserted at the start of each
+log file and at the start of each new combination of values.
 
 Data comes from records with indexes in the specified ranges within
 the log files mentioned.  The ranges have the form "[low][:[high]]][%mod]".  

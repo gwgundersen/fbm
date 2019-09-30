@@ -42,7 +42,7 @@ void main
 
   char ps[100];
   char **ap;
-  int i, l;
+  int l;
 
   /* Look for log file name. */
 

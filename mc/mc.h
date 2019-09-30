@@ -34,8 +34,8 @@ typedef struct
     int type;		  /* Type of operation, zero for empty slot */
     int repeat_count;	  /* Repetition count for type 'R'' */
 
-    int steps;		  /* Number of steps in trajectory, or max intervals
-                             for slice sampling */
+    int steps;		  /* Number of steps in trajectory, or max steps, or
+                             max intervals for slice sampling */
 
     float stepsize_adjust;/* Adjustment factor for stepsizes */
     float stepsize_alpha; /* Gamma param for stepsize dist, zero is infinity */
@@ -55,7 +55,10 @@ typedef struct
 
     int refinements;	  /* Number of refinement steps */
 
-    int reserved[4];      /* Reserved for future use */
+    int in_steps;	  /* Maximum number of inside steps in trajectory,
+			     zero if this feature is not being used */
+
+    int reserved[3];      /* Reserved for future use */
 
     char appl[101];	  /* Name of application-specific procedure */
 
@@ -151,7 +154,7 @@ typedef struct
   int slice_evals;	/* Number of energy evaluations in slice calls */
   int time;             /* Cumulative cpu-usage in ms */
 
-  int reserved[4];        /* Reserved for future use */
+  int reserved[4];	/* Reserved for future use */
 
 } mc_iter;
 
@@ -212,10 +215,11 @@ void mc_iteration  (mc_dynamic_state *, mc_iter *, log_gobbled *, void *, int);
 
 void mc_traj_init    (mc_traj *, mc_iter *);
 void mc_traj_permute (void);
-void mc_trajectory   (mc_dynamic_state *, int);
+void mc_trajectory   (mc_dynamic_state *, int, int);
 
 void mc_record_sizes     (log_gobbled *);
 void mc_heatbath         (mc_dynamic_state *, float, float);
+void mc_radial_heatbath  (mc_dynamic_state *, float);
 double mc_kinetic_energy (mc_dynamic_state *);
 void mc_temp_present     (mc_dynamic_state *, mc_temp_sched *);
 int mc_temp_index        (mc_temp_sched *, float);

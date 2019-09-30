@@ -73,8 +73,6 @@ void net_initialize
 ( log_gobbled *logg
 )
 { 
-  int i, j;
-
   /* Check that required specification records are present. */
 
   arch   = logg->data['A'];
@@ -144,7 +142,8 @@ void net_available
   char model_type = model ? model->type : 0;
 
   char letter;
-  int mod, low;
+  int mod;
+
   int v, o, n, s;
 
   for (v = 0; v<Max_quantities; v++)
@@ -168,7 +167,7 @@ void net_available
       { qd[v].available = mod<arch->N_outputs ? 1 : -1; 
       }
       else if (strchr("bBaA",letter)!=0)
-      { qd[v].available = model_type!='C' && mod<arch->N_outputs ? 1 : -1;
+      { qd[v].available = mod<arch->N_outputs ? 1 : -1;
       }
       else if (letter=='c' || letter=='C')
       { qd[v].available = model_type=='C' && qd[v].low==-1 ? 1 : -1;
@@ -215,7 +214,7 @@ void net_available
       if (qd[v].available<0) continue;
 
       if (strchr("xoygzlba",letter)!=0)
-      { if (strchr("xoyz",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_train) 
+      { if (strchr("xoyzg",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_train) 
         { qd[v].available = -1;
           continue;
         }
@@ -223,7 +222,7 @@ void net_available
       }
 
       else if (strchr("XOYGZLBA",letter)!=0)
-      { if (strchr("XOYZ",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_test) 
+      { if (strchr("XOYZG",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_test) 
         { qd[v].available = -1;
           continue;
         }
@@ -243,7 +242,7 @@ void net_available
           { qd[v].available = -1;
             continue;
           }
-          if (qd[v].low!=-1 && qd[v].high==-1) qd[v].high = arch->N_outputs;
+          if (qd[v].low!=-1 && qd[v].high==-1) qd[v].high = arch->N_outputs-1;
         }
         else
         { if (qd[v].low!=-1) 
@@ -507,7 +506,7 @@ void net_evaluate
             }
 
             for (m = mod; m<=(qd[v].modifier==-1 ? M_targets-1 : mod); m++)
-            { tv = targets[M_targets*i+m];
+            { tv = model_type=='C' ? targets[i]==m : targets[M_targets*i+m];
               if (model_type=='V' && tv<0) tv = -tv;
               d = target_guess[m] - tv;
               if (low==-1) 
@@ -545,7 +544,7 @@ void net_evaluate
             }
 
             for (m = mod; m<=(qd[v].modifier==-1 ? M_targets-1 : mod); m++)
-            { tv = targets[M_targets*i+m];
+            { tv = model_type=='C' ? targets[i]==m : targets[M_targets*i+m];
               if (model_type=='V' && tv<0) tv = -tv;
               d = target_guess[m] - tv;
               if (low==-1) 
@@ -676,7 +675,7 @@ void net_evaluate
             qh->updated[v] = 1;
             break;
           }
-          else
+          else if (model_type=='C')
           {
             double e;
             int c;

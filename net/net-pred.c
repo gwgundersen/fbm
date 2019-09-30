@@ -22,6 +22,7 @@
 #include <math.h>
 
 #include "misc.h"
+#include "rand.h"
 #include "log.h"
 #include "prior.h"
 #include "model.h"
@@ -198,7 +199,6 @@ void main
   if (op_r && (m!=0 && m->type=='B' || m!=0 && m->type=='C')
    || op_p && (m==0)
    || op_m && (m==0 || m->type=='R' || m->type=='V')
-   || op_n && (m!=0 && m->type=='C')
    || op_d && (m!=0 && m->type=='B' || m!=0 && m->type=='C'))
   { fprintf(stderr,"Illegal combination of options with data model\n");
     exit(1);
@@ -228,12 +228,12 @@ void main
     sum_targets  = chk_alloc (M_targets*N_test, sizeof (double));
     curr_targets = chk_alloc (M_targets, sizeof (double));
     log_prob     = chk_alloc (N_test, sizeof (double));
-    guess        = chk_alloc (data_spec->N_targets, sizeof (double));
-    error        = chk_alloc (data_spec->N_targets, sizeof (double));
-    sq_error     = chk_alloc (data_spec->N_targets, sizeof (double));
+    guess        = chk_alloc (M_targets, sizeof (double));
+    error        = chk_alloc (M_targets, sizeof (double));
+    sq_error     = chk_alloc (M_targets, sizeof (double));
+    sq_error_sq  = chk_alloc (M_targets, sizeof (double));
     abs_error    = chk_alloc (data_spec->N_targets, sizeof (double));
     wrong        = chk_alloc (data_spec->N_targets, sizeof (double));
-    sq_error_sq  = chk_alloc (data_spec->N_targets, sizeof (double));
     abs_error_sq = chk_alloc (data_spec->N_targets, sizeof (double));
     wrong_sq     = chk_alloc (data_spec->N_targets, sizeof (double));
 
@@ -463,8 +463,8 @@ void main
                     exit(1);
                   }
 
-                  curr_targets[j] 
-                    *= exp ((1/m->noise.width) / (2*tr->scale*tr->scale));
+                  curr_targets[j] *= exp (m->noise.width*m->noise.width
+                                           / (tr->scale*tr->scale*2));
                 }
               }
 
@@ -554,7 +554,7 @@ void main
     if (op_n)
     { printf(" %-*s",7*M_targets," Means");
       if (have_targets) 
-      { printf(" %-*s",7*M_targets," Error^2");
+      { printf(" %-*s",7*data_spec->N_targets," Error^2");
       }
     }
 
@@ -574,9 +574,14 @@ void main
   {
     ave_log_prob = ave_log_prob_sq = 0;
  
+    for (j = 0; j<M_targets; j++) 
+    { sq_error[j] = 0;
+      sq_error_sq[j] = 0;
+    }
+ 
     for (j = 0; j<data_spec->N_targets; j++) 
-    { sq_error[j] = abs_error[j] = wrong[j] = 0;
-      sq_error_sq[j] = abs_error_sq[j] = wrong_sq[j] = 0;
+    { abs_error[j] = wrong[j] = 0;
+      abs_error_sq[j] = wrong_sq[j] = 0;
     }
 
     tsq_error = tabs_error =  0;
@@ -675,11 +680,12 @@ void main
 
       tot_error = 0;
 
-      for (j = 0; j<data_spec->N_targets; j++)
+      for (j = 0; j<M_targets; j++)
       { guess[j] = sum_targets[M_targets*i+j] / N_nets;
         if (have_targets)
         { double val, diff;
-          val = test_targets[data_spec->N_targets*i+j];
+          val = m!=0 && m->type=='C' ? j==test_targets[i]
+                                     : test_targets[data_spec->N_targets*i+j];
           if (op_r) val = data_inv_trans(val,data_spec->target_trans[j]);
           if (m!=0 && m->type=='V' && val<0) val = -val;
           diff = guess[j] - val;
@@ -695,13 +701,18 @@ void main
 
       if (!op_a) 
       { printf(" ");
-        for (j = 0; j<data_spec->N_targets; j++) 
+        for (j = 0; j<M_targets; j++) 
         { printf(" %6.2lf",guess[j]);
         }
         if (have_targets)
         { printf(" ");
-          for (j = 0; j<data_spec->N_targets; j++) 
-          { printf(" %6.4lf",error[j]);
+          if (m!=0 && m->type=='C') 
+          { printf(" %6.4lf",tot_error);
+          }
+          else
+          { for (j = 0; j<data_spec->N_targets; j++) 
+            { printf(" %6.4lf",error[j]);
+            }
           }
         }
       }
@@ -787,15 +798,24 @@ void main
       double a;
 
       printf("Average squared error guessing mean: ");
-
-      for (j = 0; j<data_spec->N_targets; j++)
-      { a = sq_error[j]/N_test;
+      if (m!=0 && m->type=='C')
+      { a = tsq_error / N_test;
         printf (" %8.5lf", a);
-        if (N_test>1)
-        { printf ("+-%.5lf", sqrt((sq_error_sq[j]/N_test - a*a) / (N_test-1)));
+        if (N_test>1) 
+        { printf("+-%.5lf",sqrt((tsq_error_sq/N_test - a*a) / (N_test-1)));
         }
+        printf("\n");
+      } 
+      else
+      { for (j = 0; j<data_spec->N_targets; j++)
+        { a = sq_error[j]/N_test;
+          printf (" %8.5lf", a);
+          if (N_test>1)
+          { printf("+-%.5lf", sqrt((sq_error_sq[j]/N_test - a*a) / (N_test-1)));
+          }
+        }
+        printf("\n");
       }
-      printf("\n");
 
       if (data_spec->N_targets>1) 
       { a = tsq_error / N_test;

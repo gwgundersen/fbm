@@ -2,45 +2,66 @@
 
 FACILITIES PROVIDED BY THIS SOFTWARE
 
-This software implements Bayesian methods for learning multilayer
-perceptron networks, as described in my thesis, "Bayesian Learning for
-Neural Networks", which has now been published by Springer-Verlag
-(ISBN 0-387-94724-8).  The implementation uses Markov chain Monte
-Carlo methods.  Software modules that support Markov chain sampling
-are included in the distribution, and may be useful in other
-applications.  Note that I am distributing this software to facilitate
-research in this area.  Potential users should make note of the
-copyright notice at the beginning of this document (or accessible via
-the first hypertext link).  You must obtain permission from me before
-using this software for purposes other than research or education.
-You should also note that the software may have bugs, particularly
-regarding recently added experimental features.
+This software implements flexible Bayesian models for regression and
+classification applications that are based on multilayer perceptron
+neural networks or on Gaussian processes.  The implementation uses
+Markov chain Monte Carlo methods.  Software modules that support
+Markov chain sampling are included in the distribution, and may be
+useful in other applications.  Note that I am distributing this
+software to facilitate research in this area.  Potential users should
+make note of the copyright notice at the beginning of this document
+(or accessible via the first hypertext link).  You must obtain
+permission from me before using this software for purposes other than
+research or education.  You should also note that the software may
+have bugs, particularly regarding recently added experimental features.
 
-The software supports Bayesian learning for regression problems,
-classification problems, and survival analysis (experimental), using
-models based on networks with any number of hidden layers, with a wide
-variety of prior distributions for network parameters and
-hyperparameters.  The advantages of Bayesian learning include the
-automatic determination of "regularization" hyperparameters, without
-the need for a validation set, the avoidance of overfitting when using
-large networks, and the quantification of uncertainty in predictions.
-The software implements the Automatic Relevance Determination (ARD)
-approach to handling inputs that may turn out to be irrelevant
-(developed with David MacKay).  For problems and networks of moderate
-size (eg, 200 training cases, 10 inputs, 20 hidden units), full
-training (to the point where one can be reasonably sure that the
-correct Bayesian answer has been found) typically takes several hours
-to a day on our SGI machine.  However, quite good results, competitive
-with other methods, are often obtained after training for under an
-hour.  (Of course, your machine may not be as fast as ours!)
+The neural network models are described in my thesis, "Bayesian
+Learning for Neural Networks", which has now been published by
+Springer-Verlag (ISBN 0-387-94724-8).  The neural network models
+implemented are essentially as described in the Appendix of this book.
+The Gaussian process models are in many ways analogous to the network
+models.  The Gaussian process models implemented in this software, and
+computatonal methods that used, are described in my technical report
+entitled "Monte Carlo implementation of Gaussian process models for
+Bayesian regression and classification", available in compressed
+Postscript at URL http://www.cs.utoronto.ca/~radford/mc-gp.ps.Z.  The
+Gaussian process models for regression are similar to those evaluated
+by Carl Rasmussen in his thesis, "Evaluation of Gaussian Processes and
+other Methods for Non-Linear Regression", available from his home
+page, at the URL http://www.cs.utoronto.ca/~carl/; he also talks about
+neural network models.  To understand how to use this software, it is
+essential for you to have read at least one of these references.
 
-To understand how to use this software, it is essential for you to
-have read my thesis or the book based on it.  The neural network
-models implemented are essentially as described in the Appendix of the
-thesis and book.
+The neural network software supports Bayesian learning for regression
+problems, classification problems, and survival analysis (experimental), 
+using models based on networks with any number of hidden layers, with
+a wide variety of prior distributions for network parameters and
+hyperparameters.  The Gaussian process software supports regression
+and classification models that are similar to neural network models
+with an infinite number of hidden units, using Gaussian priors.
 
-The software consists of a number of programs and modules.  Three
-major components are included in this distribution, each with its own
+The advantages of Bayesian learning for both types of model include
+the automatic determination of "regularization" hyperparameters,
+without the need for a validation set, the avoidance of overfitting
+when using large networks, and the quantification of uncertainty in
+predictions.  The software implements the Automatic Relevance
+Determination (ARD) approach to handling inputs that may turn out to
+be irrelevant (developed with David MacKay).  
+
+For problems and networks of moderate size (eg, 200 training cases, 10
+inputs, 20 hidden units), fully training a neural network model (to
+the point where one can be reasonably sure that the correct Bayesian
+answer has been found) typically takes several hours to a day on our
+SGI machine.  However, quite good results, competitive with other
+methods, are often obtained after training for under an hour. The time
+required to train the Gaussian process models depends a lot on the
+number of training cases.  For 100 cases, these models may take only a
+few minutes to train (again, to the point where one can be reasonably
+sure that convergence to the correct answer has occurred).  For 1000
+cases, however, training might well require a day of computation.
+
+The software consists of a number of programs and modules.  Four major
+components are included in this distribution, each with its own
 directory:
   
     util    Modules and programs of general utility.
@@ -52,6 +73,10 @@ directory:
             for models based on multilayer perceptrons, using the
             modules from util and mc.
 
+    gp      Modules and programs that implement Bayesian inference
+            for models based on Gaussian processes, using the modules
+            from util and mc.
+
 In addition, the 'bvg' directory contains modules and programs for
 sampling from a bivariate Gaussian distribution, as a simple
 demonstration of the capabilities of the Markov chain Monte Carlo
@@ -61,8 +86,8 @@ how you might go about using the Markov chain Monte Carlo modules for
 another application.
 
 The 'examples' directory contains the data sets that are used in the
-tutorial examples of Bayesian neural network learning, along with the
-shell scripts with the commands used.
+tutorial examples, along with shell scripts containing the commands
+used.
 
 It is possible to use this software to do learning and prediction
 without any knowledge of how the programs are written (assuming that

@@ -1,0 +1,12 @@
+
+# Commands to apply a Gaussian process model to the simple regression problem
+# with outliers, using a t-distribution with 4 df for the noise.
+
+gp-spec olog.gpt 1 1 1 - 0.001 / 0.05:0.5 0.05:0.5
+model-spec olog.gpt real 0.05:0.5::4
+
+data-spec olog.gpt 1 1 / odata@1:100 . odata@101:200 .
+
+gp-gen olog.gpt fix 0.5 0.1
+mc-spec olog.gpt sample-variances heatbath hybrid 20:4 0.5
+gp-mc olog.gpt 200

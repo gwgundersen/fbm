@@ -1,0 +1,84 @@
+
+
+NOTES ON THE VERSION OF 1997-01-18:
+
+Changes in this version:
+
+1) Programs for handling Gaussian process models have been added.
+
+2) Yet more new Markov chain Monte Carlo methods have been added.
+   These may or may not be of any use for neural network models.
+
+3) A "bin" directory is now present, containing symbolic links to
+   all the programs.  You can therefore put just this directory in
+   your search path, rather than all the directories.
+
+4) The 'n' option is now allowed for net-pred when the data model
+   is 'class'.  It gives the mean probability for each class, and
+   a single squared error figure that is the sum of the squares
+   of the differences between these probabilities and the 0/1 
+   indicators for the class.
+
+5) The 'a' and 'b' quantities are now defined for 'class' models.
+   The give the absolute and squared errors of the vector of 
+   class probabilities with respect to the vector of indicators
+   in which there is a 1 for the correct class and 0s elsewhere.
+
+6) The introductory documentation has been reorganized a bit to
+   accomodate the new Gaussian process facilities.  A new example
+   on regression with outliers has been added.
+
+7) A file "make.include" has been added to the main directory, which
+   is included in all the makefiles.  This allows compiler options, 
+   etc. to be set in one place.
+
+
+Bug fixes:
+
+A) A bug regarding computation of predictive means when the targets 
+   were log transformed has been fixed.
+
+B) A bug that might have produced an incorrect error message when
+   specifying an array quantity has been fixed.  
+
+C) A few other minor bugs have been fixed as well.
+
+
+Portability:
+
+a) Log files are now opened as binary files; this should make no 
+   difference on Unix systems, but is the proper way to do things.  
+
+b) The coding for the CPU time feature has been changed to use the 
+   right symbolic constant (CLOCKS_PER_SEC), and to try to bypass
+   the overflow problem as well as possible.  
+
+c) The code no longer relies on M_PI being defined in <math.h>.  
+
+d) The random number generation module (rand.c) has been changed to 
+   read the file of natural random numbers (randfile) one byte at a 
+   time, in order to avoid assuming that an 'int' is four bytes long.  
+   This will cause the random number stream for a given seed to be 
+   different from that of the last release on a machine with
+   little-endian byte order (which shouldn't be a problem to most
+   people).
+
+e) As far as I know, log files created with the previous version of
+   1996-08-26 should still be readable with the new version, on the 
+   same machine as they were created on.
+
+
+Known bugs and other problems in this release:
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The "sample-values" and "scan-values" operations for Gaussian processes
+   always recompute the inverse covariance matrix, even when an up-to-date
+   version was computed for the previous Monte Carlo operation.

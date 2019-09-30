@@ -17,7 +17,7 @@
 #include "rand.h"
 
 
-main(argc,argv)
+void main(argc,argv)
   int argc;
   char **argv;
 { 

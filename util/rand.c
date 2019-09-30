@@ -35,17 +35,24 @@
 */
 
 
+/* CONSTANT PI.  Defined here if not in <math.h>. */
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+
 /* TABLES OF REAL RANDOM NUMBERS.  A file of 100000 real random numbers
    (NOT pseudo-random) is used in conjunction with pseudo-random numbers
    for extra insurance.  These are employed in the form of five tables
-   of 5000 long integers.  
+   of 5000 32-bit integers.  
 
    The file must be located at the path given by RAND_FILE, which should
    be defined on the "cc" command line. */
 
 #define Table_size 5000			/* Number of words in each table */
 
-static long rn[N_tables][Table_size];	/* Random number tables */
+static int rn[N_tables][Table_size];	/* Random number tables */
 
 
 /* STATE OF RANDOM NUMBER GENERATOR. */
@@ -62,6 +69,8 @@ static rand_state *state;		/* Pointer to current state */
 
 static void initialize (void)
 {
+  int i, j, k;
+  int b, w;
   FILE *f;
 
   if (!initialized)
@@ -73,9 +82,20 @@ static void initialize (void)
       exit(1);
     }
 
-    if (fread(rn,sizeof(long),N_tables*Table_size,f) != N_tables*Table_size)
-    { fprintf(stderr,"Error reading file of random numbers (%s)\n",RAND_FILE);
-      exit(1);
+    for (i = 0; i<N_tables; i++)
+    { for (j = 0; j<Table_size; j++)
+      { w = 0;
+        for (k = 0; k<4; k++)
+        { b = getc(f);
+          if (b<0) 
+          { fprintf(stderr,"Error reading file of random numbers (%s)\n",
+                            RAND_FILE);
+            exit(1);
+          }
+          w = (w<<8) | b;
+        }
+        rn[i][j] = w;
+      }
     }
 
     state = &state0;
@@ -139,7 +159,7 @@ rand_state *rand_get_state (void)
 
 int rand_word(void)
 {
-  long v;
+  int v;
   int j;
 
   if (!initialized) initialize();

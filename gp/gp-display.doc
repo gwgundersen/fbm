@@ -1,0 +1,32 @@
+
+
+GP-DISPLAY:  Print Gaussian process hyperparameters & other information.
+
+Gp-display can print the hyperparameter values associated with a
+Gaussian process, the latent values for the training cases, and the
+noise variances for the training cases.
+
+Usage:
+
+    gp-display [ -h ] [ -l ] [ -n ] log-file [ index ]
+
+If no index is specified, the last record in the log file is used.  By
+default, or if -h is specified, only the hyperparameters are
+displayed.  If -l is specified, the latent values for the training
+cases will be displayed, if these values have been sampled.  If -n is
+specified, noise standard deviations for individual training cases
+will be displayed, if this makes sense.  More than one of -h, -l, and
+-n can be specified (in any order); eg, -h -n gets both the
+hyperparameters and the case-specific noise standard deviations.
+
+In the output, the higher-level hyperparameters are shown first,
+followed after a colon by the associated lower-level hyperparameters.
+For the exponential part of the covariance, the scale hyperparameter
+is shown first on a line by itself, followed by the relevance
+hyperparameters in the above format.
+
+The latent values and noise standard deviations are listed with the
+number of the training case first, followed by the values for each
+output.
+
+            Copyright (c) 1996 by Radford M. Neal

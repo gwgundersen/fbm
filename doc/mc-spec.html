@@ -47,6 +47,13 @@ An operation-spec may be one of the following:
 
         Do a heatbath update of the momentum variables.
 
+    radial-heatbath
+
+        Do a radial heatbath update of the momentum variables, in
+        which the squared magnitude of the momentum is sampled 
+        from a chi-squared distribution, while the direction is
+        left unchanged.
+
     negate
 
         Negate the momentum variables.
@@ -72,14 +79,31 @@ An operation-spec may be one of the following:
         Like 'dynamic', but the order of approximations is randomly
         permuted.
 
-    hybrid steps[:window[:jump]] 
-         [ stepsize-adjust[:stepsize-alpha] ] 
+    hybrid steps[:window[:jump]] [ stepsize-adjust[:stepsize-alpha] ] 
+   
+        OR
+
+    hybrid max-steps/max-ok[:jump] [ stepsize-adjust[:stepsize-alpha] ] 
 
         Use the results of following a dynamical trajectory as a 
-        candidate state for a Metropolis update.  Only steps at multiples 
-        of 'jump' are looked at; 'steps' must be a multiple of 'jump'.  
-        The momentum is negated if the proposal is accepted to make the 
-        step reversible.
+        candidate state for a Metropolis update.  There are two forms,
+        differing in the way length of a trajectory and its acceptance
+        are determined.  In both forms, states along a trajectory are
+        looked at only at every 'jump' steps (and either 'steps' or
+        'max-steps' must be multiples of 'jump').  The default is a jump 
+        of one.  The stepsize is determined as for the 'dynamic' operation. 
+        In both forms, the momentum is negated if the proposal is accepted 
+        in order to make the step reversible.
+
+        In the first form, acceptance is based on a 'window' of states
+        at the beginning and end of the trajectory.  In the second form,
+        acceptance is based on a single state, but the number of steps
+        in the trajectory is not fixed - instead, the trajectory ends
+        after max-ok states that would be accepted have been found (looking
+        only every 'jump' states), or when max-steps states of any sort have 
+        been produced; if the trajectory ends for the first reason, acceptance 
+        is guaranteed.  The default if neither 'max-ok' nor 'window' is 
+        specified is standard hybrid Monte Carlo (ie, a window of one).
 
     tempered-hybrid temper-factor steps[:window[:jump]] 
                   [ stepsize-adjust[:stepsize-alpha] ] 
@@ -109,6 +133,25 @@ An operation-spec may be one of the following:
         (indicating no limit).  The default range of components if no range is 
         given is all components. The default for last if first alone is given 
         is last=first.
+
+    slice-inside steps [ stepsize-adjust[:stepsize-alpha] ] 
+
+        Performs multivariate slice sampling by reflection from inside 
+        points, proceeding for the indicated number of steps, with the
+        indicated stepsize adjustment factor.  The momentum is negated
+        in such a way as to make the operation reversible.
+
+    slice-outside steps[/in-steps] [ stepsize-adjust[:stepsize-alpha] ] 
+
+        Performs multivariate slice sampling by reflection from outside 
+        points, proceeding for the indicated number of steps, with the
+        indicated stepsize adjustment factor. The momentum is negated
+        at the end in such a way as to make the operation reversible. 
+        The in-steps argument gives a limit on the number of steps that
+        can be inside the slice; it defaults to the same as steps (thereby
+        having no effect).  Setting in-steps to less than steps may decrease
+        the chances of the trajectory ending on an outside point, and being
+        rejected.
 
     sim-temp
 

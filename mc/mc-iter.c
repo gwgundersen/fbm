@@ -70,10 +70,16 @@ static int print_index;	/* Index used to label printed quantities */
 
 void mc_metropolis (mc_dynamic_state *, mc_iter *, mc_value *);
 void mc_met_1 (mc_dynamic_state *, mc_iter *, int, int);
-void mc_slice (mc_dynamic_state *, mc_iter *, int, int, int);
+void mc_slice_1 (mc_dynamic_state *, mc_iter *, int, int, int);
 void mc_slice_over (mc_dynamic_state *, mc_iter *, int, float, int, int, int);
+void mc_slice_inside (mc_dynamic_state *, mc_iter *, int, 
+                      mc_value *, mc_value *);
+void mc_slice_outside (mc_dynamic_state *, mc_iter *, int, int,
+                       mc_value *, mc_value *);
 void mc_hybrid (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int, double,
   int, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *);
+void mc_hybrid2 (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int, 
+                 mc_value *, mc_value *);
 
 
 /* LOCAL PROCEDURES.  Tempering procedures are included in this module
@@ -144,15 +150,16 @@ void mc_iter_init
     }
 
     if (type=='B' || type=='N' || type=='D' || type=='P' 
-     || type=='H' || type=='T')
+     || type=='H' || type=='T' || type=='i' || type=='o')
     { need_p = 1;
     }
 
-    if (type=='D' || type=='P' || type=='H' || type=='T')
+    if (type=='D' || type=='P' || type=='H' || type=='T' 
+     || type=='i' || type=='o')
     { need_grad = 1;
     }
 
-    if (type=='M' || type=='H' || type=='T')
+    if (type=='M' || type=='H' || type=='T' || type=='i' || type=='o')
     { need_save = 1;
     }
 
@@ -211,7 +218,7 @@ void mc_iteration
   int N_quantities	/* Number of quantities to plot, -1 for tt plot */
 )
 { 
-  int i, j, k, n, na;
+  int j, na;
 
   /* Create momentum variables and gradient vector if needed. */
 
@@ -302,7 +309,8 @@ static void do_group
     /* Figure out what stepsize factor to use this time, if necessary. */
 
     if (type=='M' || type=='m' || type=='S' || type=='O' 
-     || type=='D' || type=='P' || type=='H' || type=='T')
+     || type=='D' || type=='P' || type=='H' || type=='T'
+     || type=='i' || type=='o')
     { 
       stepsize_adjust = ops->op[i].stepsize_adjust;
       alpha = ops->op[i].stepsize_alpha;
@@ -348,6 +356,11 @@ static void do_group
         break;
       }
 
+      case 'r':
+      { mc_radial_heatbath (ds, it->temperature);
+        break;
+      }
+
       case 'N':
       { for (k = 0; k<ds->dim; k++) 
         { ds->p[k] = -ds->p[k];
@@ -367,33 +380,50 @@ static void do_group
 
       case 'D':
       { mc_traj_init(tj,it);
-        mc_trajectory(ds,ops->op[i].steps);
+        mc_trajectory(ds,ops->op[i].steps,0);
         break;
       }
 
       case 'P':
       { mc_traj_init(tj,it);
         mc_traj_permute();
-        mc_trajectory(ds,ops->op[i].steps);
+        mc_trajectory(ds,ops->op[i].steps,0);
         break;
       }
 
       case 'H': case 'T':
-      { mc_hybrid (ds, it, tj, ops->op[i].steps, ops->op[i].window, 
-                ops->op[i].jump, type=='H' ? 0.0 : ops->op[i].temper_factor, 
-                N_quantities, q_save, p_save, q_asv, p_asv, q_rsv, p_rsv);
+      { if (ops->op[i].in_steps==0)
+        { mc_hybrid (ds, it, tj, ops->op[i].steps, ops->op[i].window, 
+                  ops->op[i].jump, type=='H' ? 0.0 : ops->op[i].temper_factor, 
+                  N_quantities, q_save, p_save, q_asv, p_asv, q_rsv, p_rsv);
+        }
+        else
+        { mc_hybrid2 (ds, it, tj, ops->op[i].steps, ops->op[i].in_steps,
+                ops->op[i].jump, q_save, p_save);
+        }
         break;
       }
 
       case 'S':
-      { mc_slice (ds, it, ops->op[i].firsti, ops->op[i].lasti, 
-                  ops->op[i].steps);
+      { mc_slice_1 (ds, it, ops->op[i].firsti, ops->op[i].lasti, 
+                    ops->op[i].steps);
         break;
       }
 
       case 'O':
       { mc_slice_over (ds, it, ops->op[i].refinements, ops->op[i].refresh_prob,
                        ops->op[i].firsti, ops->op[i].lasti, ops->op[i].steps);
+        break;
+      }
+
+      case 'i':
+      { mc_slice_inside (ds, it, ops->op[i].steps, q_save, p_save);
+        break;
+      }
+ 
+      case 'o':
+      { mc_slice_outside (ds, it, ops->op[i].steps, ops->op[i].in_steps, 
+                          q_save, p_save);
         break;
       }
 
@@ -473,21 +503,6 @@ static void do_group
 }
 
 
-/* COPY STATE VARIABLES. */
-
-void mc_value_copy
-( mc_value *dest,	/* Place to copy to */
-  mc_value *src,	/* Place to copy from */
-  int n			/* Number of values to copy */
-)
-{
-  while (n>0)
-  { *dest++ = *src++;
-    n -= 1;
-  }
-}
-
-
 /* PERFORM SIMULATED TEMPERING UPDATE.  Does a Metropolis update for a
    proposal to increase or decrease the inverse temperature. */
 
@@ -497,7 +512,6 @@ void mc_simulated_tempering
 )
 {
   double old_energy, olde, newe;
-  int i;
 
   if (sch==0)
   { fprintf(stderr,"No tempering schedule has been specified\n");
@@ -573,7 +587,7 @@ void mc_tempered_transition
   mc_temp_state ts;
   double delta, ed, b1, b2;
   int quad0, quad1;
-  int i1, i2, c;
+  int i1, i2;
 
   if (ds->temp_state)
   { fprintf(stderr, "Tempering operations can't be nested\n");

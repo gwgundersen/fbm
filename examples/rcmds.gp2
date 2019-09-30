@@ -1,0 +1,13 @@
+
+# Commands to apply a Gaussian process model to the simple regression problem,
+# generating function values at end of each iteration, but discarding them
+# so they aren't used for hyperparameter updates.
+
+gp-spec rlog.gp2 1 1 10 - 0.01 / 0.05:0.5 0.05:0.5
+model-spec rlog.gp2 real 0.05:0.5
+
+data-spec rlog.gp2 1 1 / rdata@1:100 . rdata@101:200 .
+
+gp-gen rlog.gp2 fix 0.5 0.1
+mc-spec rlog.gp2 discard-values heatbath hybrid 20:4 0.5 sample-values
+gp-mc rlog.gp2 100

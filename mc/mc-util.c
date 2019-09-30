@@ -38,34 +38,6 @@ void mc_record_sizes
 }
 
 
-/* PERFORM HEATBATH UPDATE OF MOMENTUM. */
-
-void mc_heatbath
-( mc_dynamic_state *ds,	/* State to update */
-  float temperature,	/* Temperature of heat bath */
-  float decay		/* Decay factor for existing momentum */
-)
-{ 
-  double std_dev;
-  int j;
-
-  std_dev = sqrt (temperature * (1-decay*decay));
-
-  if (decay==0)
-  { for (j = 0; j<ds->dim; j++)
-    { ds->p[j] = std_dev * rand_gaussian();
-    }
-  }
-  else
-  { for (j = 0; j<ds->dim; j++)
-    { ds->p[j] = decay * ds->p[j] + std_dev * rand_gaussian();
-    }
-  }
-
-  ds->know_kinetic = 0;
-}
-
-
 /* COMPUTE KINETIC ENERGY OF MOMENTUM VARIABLES.  Returns zero if no momentum
    variables exist. */
 
@@ -163,4 +135,19 @@ double mc_energy_diff
   }
 
   return ed;
+}
+
+
+/* COPY STATE VARIABLES. */
+
+void mc_value_copy
+( mc_value *dest,	/* Place to copy to */
+  mc_value *src,	/* Place to copy from */
+  int n			/* Number of values to copy */
+)
+{
+  while (n>0)
+  { *dest++ = *src++;
+    n -= 1;
+  }
 }

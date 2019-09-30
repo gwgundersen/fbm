@@ -1,0 +1,576 @@
+/* GP-QUANTITIES.C - Module defining quantities for Gaussian processes. 
+
+/* Copyright (c) 1996 by Radford M. Neal 
+ *
+ * Permission is granted for anyone to copy, use, or modify this program 
+ * for purposes of research or education, provided this copyright notice 
+ * is retained, and note is made of any changes that have been made. 
+ *
+ * This program is distributed without any warranty, express or implied.
+ * As this program was written for research purposes only, it has not been
+ * tested to the degree that would be advisable in any important application.
+ * All use of this program is entirely at the user's own risk.
+ */
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+
+#include "misc.h"
+#include "log.h"
+#include "quantities.h"
+#include "prior.h"
+#include "model.h"
+#include "data.h"
+#include "gp.h"
+#include "gp-data.h"
+
+
+/* CONSTANT PI.  Defined here if not in <math.h>. */
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+
+/* GAUSSIAN PROCESS VARIABLES. */
+
+static gp_spec *gp;
+static model_specification *model;
+static model_survival *surv;
+
+static gp_hypers hypers;
+
+static int M_targets;
+static double *target_guess;
+
+static int have_train_data;
+
+
+/* INITIALIZE AFTER FIRST RECORDS READ. */
+
+void gp_initialize
+( log_gobbled *logg
+)
+{ 
+  /* Check that required specification records are present. */
+
+  gp     = logg->data['P'];
+  model  = logg->data['M'];
+  surv   = logg->data['V'];
+
+  gp_check_specs_present(gp,0,model,surv);
+
+  /* Check that network is present, and set up pointers. */
+
+  hypers.total_hypers = gp_hyper_count(gp,model);
+  hypers.hyper_block = logg->data['S'];
+
+  if (hypers.hyper_block==0)
+  { fprintf(stderr,"Gaussian process records in log file are incomplete\n");
+    exit(1);
+  }
+
+  if (logg->actual_size['S'] != hypers.total_hypers*sizeof(double))
+  { fprintf(stderr,"Bad size for Gaussian process record\n");
+    exit(1);
+  }
+
+  gp_hyper_pointers (&hypers, gp, model);
+
+  /* Read training and test data, if present. */
+
+  have_train_data = 0;
+  data_spec = logg->data['D'];
+
+  if (data_spec!=0)
+  {
+    have_train_data = 1;
+
+    gp_data_free ();   
+    gp_data_read (1, 1, gp, model, surv);
+
+    M_targets = gp->N_outputs;
+
+    target_guess = chk_alloc (M_targets, sizeof *target_guess);
+  }
+}
+
+
+/* INDICATE WHAT QUANTITIES ARE AVAILABLE FROM THIS MODULE. */
+
+void gp_available 
+( quantities_described qd,
+  log_gobbled *logg
+)
+{ 
+  char model_type = model ? model->type : 0;
+
+  char letter;
+  int mod;
+  int v;
+
+  for (v = 0; v<Max_quantities; v++)
+  {
+    letter = qd[v].letter;
+    mod = qd[v].modifier;
+
+    if (letter && qd[v].available==0)
+    {
+      if (strchr("xoygzlbavV",letter)!=0 && !have_train_data)
+      { qd[v].available = -1;
+        continue;
+      }
+
+      if (letter=='x')
+      { qd[v].available = mod<gp->N_inputs ? 1 : -1; 
+      }
+      else if (strchr("oyz",letter)!=0)
+      { qd[v].available = mod<gp->N_outputs ? 1 : -1; 
+      }
+      else if (strchr("ba",letter)!=0)
+      { qd[v].available = mod<gp->N_outputs ? 1 : -1;
+      }
+      else if (letter=='P')
+      { qd[v].available = mod==-1 ? 1 : -1;
+      }
+      else if (letter=='l')
+      { qd[v].available = model_type!=0 && mod==-1 ? 1 : -1;
+      }
+      else if (letter=='S')
+      { qd[v].available = 
+          mod<=0 && gp->has_constant || mod>0 && mod<=gp->N_exp_parts ? 1 : -1;
+      }
+      else if (letter=='R')
+      { qd[v].available = 
+          mod<=0 && gp->has_linear || mod>0 && mod<=gp->N_exp_parts ? 1 : -1;
+      }
+      else if (letter=='G')
+      { qd[v].available = mod==-1 && gp->has_jitter ? 1 : -1;
+      }
+      else if (letter=='n' || letter=='N')
+      { qd[v].available = model_type=='R' && mod==-1 ? 1 : -1;
+      }
+      else if (letter=='v' || letter=='V')
+      { qd[v].available = model_type=='R' && mod<gp->N_outputs ? 1 : -1;
+      }
+
+      if (qd[v].available<0) continue;
+
+      if (strchr("xoygzlLbavV",letter)!=0)
+      { if (strchr("xoyzvV",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_train) 
+        { qd[v].available = -1;
+          continue;
+        }
+        if (qd[v].low!=-1 && qd[v].high==-1) qd[v].high = N_train-1;
+      }
+
+      else if (letter=='P' || letter=='S' || letter=='G')
+      { if (qd[v].low!=-1)
+        { qd[v].available = -1;
+          continue;
+        }
+      }
+
+      else if (letter=='R')
+      { if (qd[v].low>=gp->N_inputs || qd[v].high>=gp->N_inputs)
+        { qd[v].available = -1;
+          continue;
+        }
+        if (qd[v].low!=-1 && qd[v].high==-1) qd[v].high = gp->N_inputs-1;
+      }
+ 
+      else if (letter=='n' || letter=='N')
+      { if (qd[v].low>=gp->N_outputs || qd[v].high>=gp->N_outputs)
+        { qd[v].available = -1;
+          continue;
+        }
+        if (qd[v].low!=-1 && qd[v].high==-1) qd[v].high = gp->N_outputs-1;
+      }
+
+      else if (letter=='o' || letter=='y')
+      { if (model_type=='V' && surv->hazard_type!='C') 
+        { qd[v].available = -1;
+          continue;
+        }
+      }
+    }
+  }
+}
+
+
+/* EVALUATE QUANTITIES KNOWN TO THIS MODULE. */
+
+void gp_evaluate 
+( quantities_described qd, 
+  quantities_held *qh,
+  log_gobbled *logg
+)
+{ 
+  char model_type = model ? model->type : 0;
+
+  int mod, low, high;
+  double *inputs;
+  double *targets;
+  double *latent_values;
+  double *noise_variances;
+  int N_cases;
+  char letter;
+  int v, i;
+
+  if (logg->data['S']==0 || logg->index['S']!=logg->last_index)
+  { fprintf(stderr,"  records missing\n"); return;
+  }
+
+  if (logg->data['S']!=hypers.hyper_block) abort();
+
+  latent_values = logg->data['F']!=0 && logg->index['F']==logg->last_index
+                   ? (double*) logg->data['F'] : 0;
+
+  noise_variances = logg->data['N']!=0 && logg->index['N']==logg->last_index
+                     ? (double*) logg->data['N'] : 0;
+
+  for (v = 0; v<Max_quantities; v++)
+  {
+    letter = qd[v].letter;
+
+    if (letter && !qh->updated[v])
+    {
+      inputs = train_inputs;
+      targets = train_targets;
+      N_cases = N_train;
+
+      low  = qd[v].low;
+      high = qd[v].high;
+      mod  = qd[v].modifier;
+
+      if (mod<0) mod = 0;
+
+      switch (letter)
+      { 
+        case 'x':
+        { for (i = low; i<=high; i++)
+          { qh->value[v][i-low] = inputs[gp->N_inputs*i+mod];
+          }
+          qh->updated[v] = 1;
+          break;
+        }
+
+        case 'o':
+        { if (latent_values!=0)
+          { for (i = low; i<=high; i++)
+            { qh->value[v][i-low] = latent_values[gp->N_outputs*i+mod];
+            }
+            qh->updated[v] = 1;
+          }
+          break;
+        }
+
+        case 'y':
+        { 
+          if (latent_values!=0)
+          { 
+            for (i = low; i<=high; i++)
+            { 
+              if (model_type=='B')
+              { qh->value[v][i-low] = 
+                  1 / (1+exp(-latent_values[gp->N_outputs*i+mod]));
+              }
+              else if (model_type=='C')
+              { double s;
+                int m;
+                s = 0;
+                for (m = 0; m<gp->N_outputs; m++)
+                { s += exp(latent_values[gp->N_outputs*i+m]);
+                }
+                qh->value[v][i-low] = exp(latent_values[gp->N_outputs*i+mod])/s;
+              }
+              else
+              { qh->value[v][i-low] = latent_values[gp->N_outputs*i+mod];
+              }
+            }
+
+            qh->updated[v] = 1;
+          }
+          break;
+        }
+
+        case 'z':
+        { for (i = low; i<=high; i++)
+          { qh->value[v][i-low] = 
+              model_type=='C' && qd[v].modifier>=0 ? targets[i]==mod
+               : targets[data_spec->N_targets*i+mod];
+            if (model_type=='V' && qh->value[v][i-low]<0)
+            { qh->value[v][i-low] = -qh->value[v][i-low];
+            }
+          }
+          qh->updated[v] = 1;
+          break;
+        }
+
+        case 'P':
+        { *qh->value[v] = gp_log_prior(&hypers,gp,model,1);
+          qh->updated[v] = 1;
+          break;
+        }
+
+        case 'l':
+        { 
+          double l, e, s, tv, fv, nv;
+          int m;
+
+          if (latent_values==0 
+           || noise_variances==0 && model_type=='R' && model->noise.alpha[2]!=0)
+          { break;
+          }
+
+          if (low==-1) e = 0;
+
+          for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
+          { 
+            if (model_type=='C')
+            {
+              s = 0;
+              for (m = 0; m<gp->N_outputs; m++)
+              { fv = latent_values[gp->N_outputs*i+m];
+                s += exp(fv);
+              }
+              
+              l = - latent_values[gp->N_outputs*i+(int)targets[i]] / log(s);
+
+              if (low!=-1) 
+              { qh->value[v][i-low] = l;
+              }
+              else
+              { e += l;
+              }
+            }
+            else
+            {
+              if (low!=-1) 
+              { qh->value[v][i-low] = 0;
+              }
+
+              for (m = 0; m<M_targets; m++)
+              { 
+                tv = targets[M_targets*i+m];
+                fv = latent_values[M_targets*i+m];
+
+                if (model_type=='R')
+                { nv = model->noise.alpha[2]!=0 ? noise_variances[M_targets*i+m]
+                                                : exp(2 * *hypers.noise[m]);
+                  s = (tv-fv)*(tv-fv);
+                  l = s/(2*nv) + log(2*M_PI*nv)/2;
+                }
+                else if (model_type=='B')
+                { l = targets[M_targets*i+m]==0 ? log(1+exp(fv)) 
+                                                : log(1+exp(-fv));
+                }
+                else 
+                { abort();
+                }
+
+                if (low!=-1)
+                { qh->value[v][i-low] += l;
+                }
+                else
+                { e += l;
+                }
+              }
+            }
+          }
+ 
+          if (low==-1)
+          { *qh->value[v] = e / N_cases;
+          }
+
+          qh->updated[v] = 1;
+
+          break;
+        }
+
+        case 'a': 
+        { 
+          double d, e, s, tv, fv, gv;
+          int m;
+
+          if (latent_values==0) break;
+
+          if (low==-1) e = 0;
+
+          for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
+          { 
+            if (low!=-1) 
+            { qh->value[v][i-low] = 0;
+            }
+
+            if (model_type=='C')
+            { s = 0;
+              for (m = 0; m<gp->N_outputs; m++)
+              { fv = latent_values[gp->N_outputs*i+m];
+                s += exp(fv);
+              }
+            }
+
+            for (m = mod; m<=(qd[v].modifier==-1 ? M_targets-1 : mod); m++)
+            { tv = model_type=='C' ? targets[i]==m : targets[M_targets*i+m];
+              fv = latent_values[M_targets*i+m];
+              if (model_type=='R')
+              { gv = fv;
+              }
+              else if (model_type=='B')
+              { gv = 1/(1+exp(-fv));
+              }
+              else if (model_type=='C')
+              { gv = exp(fv)/s;
+              }
+              else
+              { abort();
+              }
+              d = gv-tv;
+              if (d<0) d = -d;
+              if (low==-1)
+              { e += d;
+              }
+              else 
+              { qh->value[v][i-low] += d;
+              }
+            }
+          }
+ 
+          if (low==-1)
+          { *qh->value[v] = e / N_cases;
+          }
+
+          qh->updated[v] = 1;
+
+          break;
+        }
+
+        case 'b':
+        { 
+          double d, e, s, tv, fv, gv;
+          int m;
+
+          if (latent_values==0) break;
+
+          if (low==-1) e = 0;
+
+          for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
+          { 
+            if (low!=-1) 
+            { qh->value[v][i-low] = 0;
+            }
+
+            if (model_type=='C')
+            { s = 0;
+              for (m = 0; m<gp->N_outputs; m++)
+              { fv = latent_values[gp->N_outputs*i+m];
+                s += exp(fv);
+              }
+            }
+
+            for (m = mod; m<=(qd[v].modifier==-1 ? M_targets-1 : mod); m++)
+            { tv = model_type=='C' ? targets[i]==m : targets[M_targets*i+m];
+              fv = latent_values[M_targets*i+m];
+              if (model_type=='R')
+              { gv = fv;
+              }
+              else if (model_type=='B')
+              { gv = 1/(1+exp(-fv));
+              }
+              else if (model_type=='C')
+              { gv = exp(fv)/s;
+              }
+              else
+              { abort();
+              }
+              d = gv-tv;
+              if (low==-1)
+              { e += d*d;
+              }
+              else 
+              { qh->value[v][i-low] += d*d;
+              }
+            }
+          }
+ 
+          if (low==-1)
+          { *qh->value[v] = e / N_cases;
+          }
+
+          qh->updated[v] = 1;
+
+          break;
+        }
+
+        case 'S':
+        {
+          *qh->value[v] =
+            exp(mod==0 ? *hypers.constant : *hypers.exp[mod-1].scale);
+
+          qh->updated[v] = 1;
+ 
+          break;
+        }
+
+        case 'R':
+        {
+          if (low==-1)
+          { *qh->value[v] = 
+              exp(mod==0 ? *hypers.linear_cm : *hypers.exp[mod-1].rel_cm);
+          }
+          else
+          { for (i = low; i<=high; i++)
+            { qh->value[v][i-low] = 
+                exp(mod==0 ? *hypers.linear[i] : *hypers.exp[mod-1].rel[i]);
+            }
+          }
+
+          qh->updated[v] = 1;
+ 
+          break;
+        }
+
+        case 'G':
+        {
+          *qh->value[v] = exp(*hypers.jitter);
+
+          qh->updated[v] = 1;
+
+          break;
+        }
+
+        case 'n': case 'N':
+        { 
+          if (low==-1)
+          { *qh->value[v] = exp(letter=='n' ? *hypers.noise_cm 
+                                 : *hypers.noise_cm * 2);
+          }
+          else
+          { for (i = low; i<=high; i++)
+            { qh->value[v][i-low] = exp(letter=='n' ? *hypers.noise[i]
+                                         : *hypers.noise[i] * 2);
+            }
+          }
+
+          qh->updated[v] = 1;
+
+          break;
+        }
+        case 'v': case 'V':
+        { if (noise_variances!=0)
+          { for (i = low; i<=high; i++)
+            { qh->value[v][i-low] = 
+                letter=='V' ? noise_variances[gp->N_outputs*i+mod]
+                            : sqrt(noise_variances[gp->N_outputs*i+mod]);
+            }
+            qh->updated[v] = 1;
+          }
+          break;
+        }
+      }
+    }
+  }
+}

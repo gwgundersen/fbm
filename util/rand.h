@@ -19,7 +19,7 @@
 
 typedef struct
 { int seed;			/* Seed state derives from */
-  long ptr[N_tables];		/* Pointers for tables of real random numbers */
+  int ptr[N_tables];		/* Pointers for tables of real random numbers */
   unsigned short state48[3];	/* State of 'rand48' pseudo-random generator */
 } rand_state;
 

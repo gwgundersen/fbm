@@ -105,7 +105,6 @@ double prior_width_scaled
 )
 {
   double scale, alpha;
-  int i;
 
   if (!pr->scale)
   { return pr->width;

@@ -1,0 +1,95 @@
+<html>
+<body>
+<pre>
+
+
+GP-QUANTITIES:  Quantities from log files relating to Gaussian processes.
+
+The quantities below relating to Gaussian process models can be
+obtained from log files (eg, for use in gp-plt).  As far as possible,
+these quantities have been defined analogously to those available for
+neural network modes.  However, since computations for test cases are
+computationally demanding for the Gaussian process models, quantities
+relating to test cases have not been included here.  Some other useful
+quantities that could take a long time to compute have also been omitted.
+
+Note that the generic quantities documented in <A HREF="quantities.html">quantities.doc</A> and the
+quantities relating to Markov chain methods documented in <A HREF="mc-quantities.html">mc-quantities.doc</A> 
+will also be available.
+
+    xn   Array of n'th input values for training cases.
+
+    on   Array of n'th output values for training cases.  This quantity 
+         can be found only if latent values are explicitly represented.
+
+    yn   Array of n'th "guessed" values for training cases.  These will be
+         the class probabilities for binary and class models.  This quantity
+         can be found only if latent values are explicitly represented.
+
+    z[n] Array of n'th target values for training cases
+
+    P    Log prior probability density of the current hyperparameter values.
+         This is the density for the logarithmic form of the hyperparameters,
+         as is used in the Markov chain methods.  NOTE: This is not entirely
+         analogous to the P quantity for network models.
+
+    l    Array of minus log probabilities for training cases, given the
+         current latent values.  If not specified to be an array, the 
+         average minus log probability over training cases.  This quantity
+         can be found only if latent values are explicitly represented.
+
+    a[n] Array of absolute errors of n'th target for training cases, 
+         or sum of absolute errors if 'n' not specified.  If not 
+         specified to be an array, the average error over training 
+         cases.  This quantity can be found only if latent values are 
+         explicitly represented.
+
+    b[n] Array of squared errors of n'th target for training cases, or 
+         sum of squared errors if 'n' not specified.  If not specified 
+         to be an array, the average error over training cases.  This 
+         quantity can be found only if latent values are explicitly 
+         represented.
+
+    S[n] Scale hyperparameter for the n'th exponential part, except that
+         with n of zero, it is the hyperparameter for the constant part.
+
+    R[n] Top-level relevance hyperparameter for the n'th exponential part
+         if scalar; associated lower-level hyperparameters if array.  With
+         n of zero, gives the hyperparameters for the linear part.
+
+    G    Jitter (regularization) hyperparameter.  NOTE: This is not 
+         analogous to the G quantity for networks.
+
+    n    For regression model: The common noise std. dev. if scalar, 
+         or array of output-specific noise levels.
+
+    N    For regression model: The common noise variance if scalar, or 
+         array of output-specific noise levels.  
+
+    v[n] Array of case-by-case standard deviations for regression model.
+         NOTE: This is not analogous to the v quantity for neural networks.
+
+    V[n] Array of case-by-case variances for regression model. NOTE: This 
+         is not analogous to the v quantity for neural networks.
+
+When a value for 'n' is needed but not specified, it defaults to zero.
+
+The 'o' values are the latent values defined by the Gaussian process,
+before interpretation by the model.  The 'y' values are the same as
+the 'o' values for regression models.  For binary and multi-class
+models, the 'y' values are the bit/class probabilities obtained from
+the 'o' values (note that these probabilities are based only on the
+present latent values, not on an integration over the "jitter").  For
+multi-class models, the 'z' quantity with a modifier ('n') refers to
+the representation of the class as a binary vector with the true class
+indicated by a one; with no modifier, it refers to the numeric value
+of the class.  For multi-class models, the 'a', 'A', 'b', and 'B'
+quantities are based on the difference between the vector of
+probabilities for the classes and the vector of 0s and 1s with a
+single 1 indicating the correct class.
+
+
+            Copyright (c) 1996 by Radford M. Neal
+</pre>
+</body>
+</html>

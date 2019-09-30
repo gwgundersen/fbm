@@ -44,8 +44,6 @@ void main
   int params_only;
   int index;
 
-  int l, i;
-
   /* Look at arguments. */
 
   sigmas_only = 0;

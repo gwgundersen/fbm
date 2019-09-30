@@ -12,7 +12,7 @@ Usage:
     net-pred options { log-file range } [ / test-inputs [ test-targets ] ]
 
 The final optional arguments give the source of inputs and targets for
-the case to look at; they default to the test data specification in
+the cases to look at; they default to the test data specification in
 the first log file given.  The networks to use in making guesses are
 taken from the records with the given ranges of indexes in the given
 log files.  The outputs of all these networks are combined to give a
@@ -67,13 +67,17 @@ combinations are marked with an 'X' in the following table:
      r    X       X
      p                                           X
      m                     X           X         X
-     n            X     
+     n                  
      d    X       X    
 
 Furthermore, the 'a' and 'b' options are incompatible, and the 't',
 'p', and 'a' options may be used only if the true targets are given.
 The errors for individual cases are also displayed only if the true
-targets are known.
+targets are known. The 'n' option for class models displays the mean
+probabilities for each class, and computes a single figure for squared
+error that is the sum of the squares of the differences between these
+probabilities and the indicator variables that are one for the right
+class and zero for the wrong classes.
 
 The median is calculated by Monte Carlo, using a sample consisting of
 eleven points from each network's target distribution.  The random

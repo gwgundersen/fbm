@@ -32,9 +32,9 @@ static void pick_value (mc_dynamic_state *, mc_iter *, int, double, double,
                         double, double);
 
 
-/* PERFORM SLICE SAMPLING UPDATES FOR COORDINATES IN SOME RANGE. */
+/* PERFORM ONE-VARIABLE SLICE SAMPLING UPDATES FOR COORDINATES IN SOME RANGE. */
 
-void mc_slice
+void mc_slice_1
 ( mc_dynamic_state *ds,	/* State to update */
   mc_iter *it,		/* Description of this iteration */
   int firsti,		/* Index of first component to update (-1 for all) */
@@ -88,7 +88,7 @@ void mc_slice_over
 )
 {
   double sf, curr_q, slice_point, low_bnd, high_bnd, olow_bnd, ohigh_bnd, width;
-  int k, i, r;
+  int k, r;
 
   sf = it->stepsize_factor;
 
@@ -281,5 +281,188 @@ static void pick_value
     else
     { high_bnd = ds->q[k];
     }
+  }
+}
+
+
+/* PERFORM MULTIVARIATE SLICE SAMPLING WITH INSIDE REFLECTION. */
+
+void mc_slice_inside
+( mc_dynamic_state *ds,	/* State to update */
+  mc_iter *it,		/* Description of this iteration */
+  int steps,		/* Number of steps to take */
+  mc_value *q_save,	/* Place to save q values */
+  mc_value *p_save	/* Place to save p values (used here for grad) */
+)
+{
+  double slice_point;  
+  double gmag, proj;
+  double old_pot;
+  double sf;
+
+  int rejects, rejected;
+  int k, j;
+
+  sf = it->stepsize_factor;
+
+  if (!ds->know_pot || !ds->know_grad)
+  { mc_app_energy (ds, 1, 1, &ds->pot_energy, ds->grad);
+    ds->know_pot = 1;
+    ds->know_grad = 1;
+  }
+
+  slice_point = ds->pot_energy + rand_exp();
+
+  rejects = 0;
+  
+  for (k = 0; k<steps; k++)
+  {
+    mc_value_copy (q_save, ds->q, ds->dim);
+    mc_value_copy (p_save, ds->grad, ds->dim);
+    old_pot = ds->pot_energy;
+
+    for (j = 0; j<ds->dim; j++) 
+    { ds->q[j] += sf * ds->stepsize[j] * ds->p[j];
+    }
+
+    mc_app_energy (ds, 1, 1, &ds->pot_energy, ds->grad);
+
+    if (ds->pot_energy>slice_point) 
+    { 
+      mc_value_copy (ds->q, q_save, ds->dim);
+      mc_value_copy (ds->grad, p_save, ds->dim);
+      ds->pot_energy = old_pot;
+
+      gmag = 0;
+      for (j = 0; j<ds->dim; j++) 
+      { gmag += ds->grad[j]*ds->grad[j];
+      }
+
+      proj = 0;
+      for (j = 0; j<ds->dim; j++) 
+      { proj += ds->p[j]*ds->grad[j];
+      }
+
+      rejected = 1;
+
+      if (gmag>1e-30)
+      { 
+        for (j = 0; j<ds->dim; j++)
+        { ds->q[j] += 
+            sf * ds->stepsize[j] * (2*ds->grad[j]*proj/gmag - ds->p[j]);
+        }      
+
+        mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
+
+        if (ds->pot_energy>slice_point)
+        { for (j = 0; j<ds->dim; j++)
+          { ds->p[j] = 2*ds->grad[j]*proj/gmag - ds->p[j];
+          }      
+          rejected = 0;
+        }
+
+        mc_value_copy (ds->q, q_save, ds->dim);
+        ds->pot_energy = old_pot;
+      }
+
+      for (j = 0; j<ds->dim; j++) ds->p[j] = - ds->p[j];
+     
+      rejects += rejected;
+    }
+  }
+
+  for (j = 0; j<ds->dim; j++) ds->p[j] = - ds->p[j];
+
+  it->proposals += k;
+  it->rejects += rejects;
+}
+
+
+/* PERFORM MULTIVARIATE SLICE SAMPLING WITH OUTSIDE REFLECTION. */
+
+void mc_slice_outside
+( mc_dynamic_state *ds,	/* State to update */
+  mc_iter *it,		/* Description of this iteration */
+  int steps,		/* Number of steps to take */
+  int in_steps,		/* Max number of steps inside slice */
+  mc_value *q_save,	/* Place to save q values */
+  mc_value *p_save	/* Place to save p values (used here for grad) */
+)
+{
+  double slice_point;  
+  double gmag, proj;
+  double old_pot;
+  double sf;
+
+  int j, k, ki;
+
+  sf = it->stepsize_factor;
+
+  if (!ds->know_pot || !ds->know_grad)
+  { mc_app_energy (ds, 1, 1, &ds->pot_energy, ds->grad);
+    ds->know_pot = 1;
+    ds->know_grad = 1;
+  }
+
+  mc_value_copy (q_save, ds->q, ds->dim);
+  mc_value_copy (p_save, ds->grad, ds->dim);
+  old_pot = ds->pot_energy;
+
+  slice_point = ds->pot_energy + rand_exp();
+
+  /*fprintf(stderr,"E: %f %f",ds->pot_energy,slice_point);*/
+  /*printf("\n%f %f\n",ds->q[0],ds->q[1]);*/
+
+  k = 0;
+  ki = 0;
+
+  for (;;)
+  {
+    for (j = 0; j<ds->dim; j++) 
+    { ds->q[j] += sf * ds->stepsize[j] * ds->p[j];
+    }
+
+    /*printf("%f %f\n",ds->q[0],ds->q[1]);*/
+
+    k += 1;
+
+    mc_app_energy (ds, 1, 1, &ds->pot_energy, ds->grad);
+
+    if (ds->pot_energy<=slice_point) ki += 1;
+
+    if (k>=steps || ki>=in_steps) break;
+
+    if (ds->pot_energy>slice_point) 
+    { 
+      gmag = 0;
+      for (j = 0; j<ds->dim; j++) 
+      { gmag += ds->grad[j]*ds->grad[j];
+      }
+
+      proj = 0;
+      for (j = 0; j<ds->dim; j++) 
+      { proj += ds->p[j]*ds->grad[j];
+      }
+
+      if (gmag>1e-30)
+      { for (j = 0; j<ds->dim; j++)
+        { ds->p[j] = ds->p[j] - 2*ds->grad[j]*proj/gmag;
+        }      
+      }
+    }
+  }
+
+  it->proposals += 1;
+
+  if (ds->pot_energy<=slice_point) 
+  { for (j = 0; j<ds->dim; j++) ds->p[j] = - ds->p[j];
+    /*fprintf(stderr," Accept %d\n");*/
+  }
+  else
+  { mc_value_copy (ds->q, q_save, ds->dim);
+    mc_value_copy (ds->grad, p_save, ds->dim);
+    ds->pot_energy = old_pot;
+    it->rejects += 1;
+    /*fprintf(stderr," Reject\n");*/
   }
 }

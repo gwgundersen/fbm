@@ -25,6 +25,15 @@
 #include "rand.h"
 
 
+/* CONSTANT PI.  Defined here if not in <math.h>. */
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+
+/* LOCAL PROCEDURES. */
+
 static void pick_unit_params (net_param *, net_sigma *, int, net_sigma *,
                               prior_spec, int, double);
 
@@ -312,7 +321,7 @@ static void compute_prior
 {
   extern double lgamma(double);
 
-  double sum_sq, v, t;
+  double v, t;
   int i;
 
   if (alpha==0) /* Gaussian distribution */

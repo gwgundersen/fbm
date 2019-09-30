@@ -1,0 +1,37 @@
+<html>
+<body>
+<pre>
+
+
+GP:  Bayesian modelling using Gaussian processes.
+
+The 'gp' programs implement Bayesian models for regression and
+classification tasks that are based on Gaussian process priors over
+functions.  For details, see the thesis, Evaluation of Gaussian
+Process and Other Methods for Non-linear Regression, by Carl Edward
+Rasmussen, Dept. of Computer Science, University of Toronto.
+
+A Gaussian process specifies a distribution over functions from some
+number of inputs to some number of real outputs.  (For the Gaussian
+processes implemented here, the functions for different outputs are
+independent.)  In the Bayesian models based on these Gaussian
+processes, the functions in question are used to define a model for
+the target attributes in training and test cases given the values of
+the input attributes in these cases.  The Gaussian process gives the
+prior distribution over these functions.
+
+A Gaussian process is specified by giving its covariance function,
+which is expressed in terms of "hyperparameters", which are themselves
+given prior distributions.  (The means for the Gaussian processes
+implemented here are always zero.)  To see how the form of the
+covariance function and the priors for the hyperparameters are
+specified, see <A HREF="gp-spec.html">gp-spec.doc</A>.
+
+The models based on these Gaussian processes are described using a
+general scheme that is also used for neural network models, see
+<A HREF="model-spec.html">model-spec.doc</A> for details.  Survival models are not allowed.
+
+            Copyright (c) 1996 by Radford M. Neal
+</pre>
+</body>
+</html>

@@ -5,22 +5,22 @@ INSTALLING THE SOFTWARE
 The software is distributed as a Unix tar archive.  To obtain the
 files, create an empty directory and change to it, download the tar
 archive for the desired version by anonymous ftp or via your Web
-browser to a file of the form 'bnn.YYYY-MM-DD.tar', and then issue the
+browser to a file of the form 'fbm.YYYY-MM-DD.tar', and then issue the
 Unix command
 
-    tar xf bnn.YYYY-MM-DD.tar
+    tar xf fbm.YYYY-MM-DD.tar
 
-If you got the archive in compressed form, as 'bnn.YYYY-MM-DD.tar.Z',
-you must use the command "uncompress bnn.YYYY-MM-DD.tar.Z" before
+If you got the archive in compressed form, as 'fbm.YYYY-MM-DD.tar.Z',
+you must use the command "uncompress fbm.YYYY-MM-DD.tar.Z" before
 doing the above.  The following instructions cover what to do next for
 the current version; you should read the old documentation if for some
 reason you are installing an older version.
 
 The tar command should create sub-directories 'util', 'mc', 'net',
-'bvg', 'examples', and 'doc', and place a large number of files in
-these sub-directories.  It should also place the file 'README' in the
-current directory.  If all this seems to have worked, you can remove
-the file 'bnn.YYYY-MM-DD.tar'.
+'gp', 'bvg', 'examples', 'doc', and 'bin', and place a large number of
+files in these sub-directories.  It should also place the files
+'README' and 'make.include' in the current directory.  If all this 
+seems to have worked, you can remove the file 'fbm.YYYY-MM-DD.tar'.
 
 The directory 'doc' contains links to all the documentation files.
 The file 'manual' contains all the introductory documentation
@@ -35,9 +35,12 @@ you can access them via 'index.html', as described in Guide.doc.
 You will probably be able to compile the programs as described below
 without making having to change anything.  However, it is possible
 that you will want to use a different C compiler, or set certain
-compilation options, in which case you will need to modify the
-'Makefile' and 'xxx.make' files in the various directories.  Also, the
-'util' directory contains a file of 100,000 natural random bytes,
+compilation options.  This can probably be done by modifying the
+'make.include' file in the main directory, which is included at the
+beginning of all Makefiles, though for some problems you might have to
+modify the 'Makefile' and 'xxx.make' files in the various directories.
+
+The 'util' directory contains a file of 100,000 natural random bytes,
 which are used in combination with pseudo-random numbers.  This file
 is accessed by many of the programs, using a path name that by default
 points into this 'util' directory.  If you plan on moving this file
@@ -59,6 +62,10 @@ by issuing the following commands
     make
     cd ..
 
+    cd gp
+    make
+    cd ..
+
     cd bvg
     make
     cd ..
@@ -71,11 +78,13 @@ where they are used; this is intentional.
 It is possible that these compilation commands will fail for some
 reason, in which case you'll have to figure out what's wrong and fix
 it.  Note that for the makes to work correctly, the programs MUST be
-kept in separate 'util', 'mc', 'net', and 'bvg' sub-directories, with
-these names.
+kept in separate 'util', 'mc', 'net', 'gp', and 'bvg' sub-directories,
+with these names.
 
 Once the above make commands have been successful, you should put the
-directories 'util', 'mc', 'net', and perhaps 'bvg' in your search
-path.  How this is done depends on the shell program you are using;
-consult a local expert if you don't know how.  Subsequent instructions
-assume that this has been done.
+'bin' directory (within the main directory for this software) in your
+search path.  How this is done depends on the shell program you are
+using; consult a local expert if you don't know how.  This directory
+contains symbolic links to all the programs making up this software
+(except some that are used only for testing).  Subsequent instructions
+assume that you have this 'bin' directory in your search path.

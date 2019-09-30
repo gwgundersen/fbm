@@ -28,6 +28,14 @@
 #include "quantities.h"
 
 
+/* CLOCKS_PER_SEC should be defined by <time.h>, but it seems that it
+   isn't always.  1000000 seems to be the best guess for Unix systems. */
+
+#ifndef CLOCKS_PER_SEC
+#define CLOCKS_PER_SEC 1000000	/* Best guess */
+#endif
+
+
 static void usage(void);
 
 
@@ -60,7 +68,11 @@ void main
   char **ap;
 
   int j, na;
-  int old_clock_count, timelimit;
+  int timelimit;
+
+  unsigned old_clock; /* Theoretically, these should be of type clock_t, but  */
+  unsigned new_clock; /* that type is inexplicably declared signed on most    */
+                      /* systems, cutting the already-too-small range in half */
 
   /* Look at program arguments. */
 
@@ -217,7 +229,7 @@ void main
   it->slice_calls = 0;
   it->slice_evals = 0;
 
-  old_clock_count = clock();      /* start clock */
+  old_clock = clock();      /* start clock */
 
   /* Perform Markov chain iterations. */
 
@@ -225,6 +237,11 @@ void main
          index++)
   {
     mc_iteration (&ds, it, &logg, qd, N_quantities);
+
+    new_clock = clock(); 
+    it->time += (int) (0.5 + 
+             (1000.0 * (unsigned) (new_clock - old_clock)) / CLOCKS_PER_SEC);
+    old_clock = new_clock;
 
     if (index%modulus==0)
     { 
@@ -243,9 +260,6 @@ void main
         logf.header.size = sizeof (mc_temp_state);
         log_file_append (&logf, ds.temp_state);
       }
-
-      it->time += (clock()-old_clock_count)/1000; 
-      old_clock_count = clock(); 
 
       logf.header.type = 'i';
       logf.header.index = index;

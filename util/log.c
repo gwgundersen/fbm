@@ -40,7 +40,7 @@ void log_file_create
 ( log_file *logf	/* Log file state structure */
 )
 { 
-  logf->file_struct = fopen(logf->file_name,"w+");
+  logf->file_struct = fopen(logf->file_name,"wb+");
 
   if (logf->file_struct==NULL)
   { fprintf(stderr,"Can't create log file: %s\n",logf->file_name);
@@ -62,7 +62,7 @@ void log_file_open
   int allow_append	/* Allow data to be appended? */
 )
 {
-  logf->file_struct = fopen (logf->file_name, allow_append ? "r+" : "r");
+  logf->file_struct = fopen (logf->file_name, allow_append ? "rb+" : "rb");
 
   if (logf->file_struct==NULL)
   { fprintf(stderr,"Can't open log file: %s\n",logf->file_name);

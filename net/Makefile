@@ -11,8 +11,7 @@
 # tested to the degree that would be advisable in any important application.
 # All use of this program is entirely at the user's own risk.
 
-CFLAGS = -O
-LFLAGS = 
+include ../make.include
 
 programs:	net-spec net-gen net-rej net-eval net-display net-pred net-mc \
 		net-plt net-hist net-dvar net-grad-test net-stepsizes 
@@ -27,15 +26,9 @@ include ../mc/mc.make
 
 
 net-func.o:	net-func.c	misc.h prior.h model.h net.h 
-		cc -c $(CFLAGS) net-func.c
-
 net-back.o:	net-back.c	misc.h prior.h model.h net.h 
-		cc -c $(CFLAGS) net-back.c
-
 net-grad.o:	net-grad.c	misc.h prior.h model.h net.h 
-		cc -c $(CFLAGS) net-grad.c
-
-net-util.o:	net-util.c	misc.h prior.h model.h net.h rand.h
+net-util.o:	net-util.c	misc.h prior.h model.h net.h data.h
 net-setup.o:	net-setup.c	misc.h prior.h model.h net.h 
 net-prior.o:	net-prior.c	misc.h prior.h model.h net.h rand.h
 net-model.o:	net-model.c	misc.h prior.h model.h net.h rand.h
@@ -101,7 +94,7 @@ net-pred:	net-pred.o	net-setup.o net-func.o net-model.o net-data.o \
 		  data-trans.o -lm -o net-pred
 
 net-pred.o:	net-pred.c	misc.h prior.h model.h net.h net-data.h log.h \
-				data.h numin.h
+				data.h numin.h rand.h mc.h
 
 net-dvar:	net-dvar.o	net-util.o net-setup.o net-func.o net-model.o \
 				misc.o log.o rand.o 
@@ -116,10 +109,10 @@ net-grad-test:	mc-grad-test.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 				mc-slice.o net-setup.o prior.o net-prior.o \
 				net-model.o net-func.o net-back.o net-grad.o \
 				net-data.o model.o net-util.o net-quantities.o \
-				mc-quantities.o quantities.o
+				mc-quantities.o quantities.o mc-heatbath.o
 		$(CC) $(LFLAGS) mc-grad-test.o net-mc.o ars.o misc.o log.o \
 		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
-		  mc-metropolis.o mc-hybrid.o mc-slice.o \
+		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
 		  net-setup.o prior.o net-prior.o net-model.o net-func.o \
 		  net-back.o net-grad.o net-data.o model.o net-util.o \
 		  net-plt.o net-quantities.o mc-quantities.o quantities.o \
@@ -127,7 +120,7 @@ net-grad-test:	mc-grad-test.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 
 net-stepsizes:	mc-stepsizes.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 				numin.o data-trans.o mc-iter.o mc-traj.o \
-				mc-util.o \
+				mc-util.o mc-heatbath.o \
 				mc-metropolis.o mc-hybrid.o mc-slice.o \
 				net-setup.o prior.o net-prior.o net-model.o \
 				net-func.o net-back.o net-grad.o net-data.o \
@@ -135,7 +128,7 @@ net-stepsizes:	mc-stepsizes.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 				mc-quantities.o quantities.o
 		$(CC) $(LFLAGS) mc-stepsizes.o net-mc.o ars.o misc.o log.o \
 		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
-		  mc-metropolis.o mc-hybrid.o mc-slice.o \
+		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
 		  net-setup.o prior.o net-prior.o net-model.o net-func.o \
 		  net-back.o net-grad.o net-data.o model.o net-util.o \
 		  net-plt.o net-quantities.o mc-quantities.o quantities.o \
@@ -147,17 +140,17 @@ net-mc:		mc.o net-mc.o	ars.o misc.o log.o rand.o numin.o data-trans.o \
 				net-setup.o prior.o net-prior.o net-model.o \
 				net-func.o net-back.o net-grad.o net-data.o \
 				model.o net-util.o net-quantities.o \
-				mc-quantities.o quantities.o
+				mc-quantities.o quantities.o mc-heatbath.o
 		$(CC) $(LFLAGS) mc.o net-mc.o ars.o misc.o log.o rand.o numin.o\
 		  data-trans.o mc-iter.o mc-traj.o mc-util.o \
-		  mc-metropolis.o mc-hybrid.o mc-slice.o \
+		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
 		  net-setup.o prior.o net-prior.o net-model.o net-func.o \
 		  net-plt.o net-quantities.o mc-quantities.o quantities.o \
 		  net-back.o net-grad.o net-data.o model.o net-util.o \
 		  -lm -o net-mc
 
-net-mc.o:	net-mc.c	misc.h rand.h log.h mc.h data.h prior.h model.h\
-				net.h net-data.h
+net-mc.o:	net-mc.c	misc.h rand.h ars.h log.h mc.h data.h prior.h \
+				model.h net.h net-data.h
 
 net-plt:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 				net-func.o net-data.o model.o net-quantities.o \
@@ -181,4 +174,4 @@ net-hist:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 		  mc-quantities.o mc-util.o hist.o quantities.o \
 		  misc.o log.o rand.o numin.o data-trans.o -lm -o net-hist
 
-net-plt.o:	net-plt.c	misc.h log.h quantities.h
+net-plt.o:	net-plt.c	misc.h log.h quantities.h mc.h

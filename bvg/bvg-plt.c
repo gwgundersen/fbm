@@ -25,10 +25,21 @@
 #include "bvg.h"
 
 
+/* CONSTANT PI.  Defined here if not in <math.h>. */
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+
+/* LOCAL DATA. */
+
 #define N_segments 1000	/* Number of segments plotted for ellipse */
 
 static int ellipse;	/* Should we plot an ellipse? */
 
+
+/* LOCAL PROCEDURES. */
 
 static void bvg_arguments  (char ***);
 static void bvg_initialize (log_gobbled *);

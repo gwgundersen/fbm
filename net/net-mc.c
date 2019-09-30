@@ -215,6 +215,8 @@ void mc_app_initialize
 
   ds->dim = params.total_params;
   ds->q   = params.param_block;
+
+  ds->temp_state = 0;
   
   ds->stepsize = stepsizes.param_block;
 }
@@ -260,7 +262,7 @@ int mc_app_sample
 )
 {
   int sample_hyper, sample_noise;
-  int l, i;
+  int l;
 
   sample_hyper = sample_noise = 0;
 

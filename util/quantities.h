@@ -35,7 +35,7 @@
    module sets the 'high' entry to -1, the actual value is filled in by the 
    application-specific module. */
 
-#define Max_quantities 100 /* Max. number of quantities that can be specified */
+#define Max_quantities 50 /* Max. number of quantities that can be specified */
 
 typedef struct
 {

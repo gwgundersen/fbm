@@ -153,7 +153,7 @@ void net_print_sigmas
   model_specification *m
 )
 {
-  int i, l, g;
+  int l, g;
 
   g = 1;
 

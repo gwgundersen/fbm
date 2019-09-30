@@ -68,7 +68,6 @@ void main
   int *bin;
 
   int N, V, a, i, b;
-  char *s;
 
   /* Look at arguments other than log files and ranges. */
 

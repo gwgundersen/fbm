@@ -34,8 +34,8 @@ redefined):
 
     #   An array with values equal to indexes.
 
-Other quantities are as defined by the application, or other by other
-higher-level modules.  For documentation, see mc-quantities, net-quantities, 
-etc.
+Other quantities are as defined by the application, or by other
+higher-level modules.  For documentation, see mc-quantities.doc,
+net-quantities.doc, gp-quantities.doc, etc.
 
             Copyright (c) 1995 by Radford M. Neal

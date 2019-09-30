@@ -194,9 +194,9 @@ void net_model_prob(net_values *, double *, double *, net_values *, net_arch *,
 void net_model_max_second (net_value *, net_arch *, model_specification *,
                            model_survival *, net_sigmas *);
 
-double net_model_guess (net_values *, double *, net_arch *, 
-                        model_specification *, model_survival *, net_params *,
-                        net_sigmas *, int);
+void net_model_guess (net_values *, double *, net_arch *, 
+                      model_specification *, model_survival *, net_params *,
+                      net_sigmas *, int);
 
 void net_print_params (net_params *, net_sigmas *, net_arch *, 
                        model_specification *);

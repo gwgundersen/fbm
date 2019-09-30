@@ -23,7 +23,7 @@ that words in quotes are to be entered literally (without the quotes).
 The ".doc" files present in the various directories are listed below,
 with the more important files marked by "*".  Programs listed as
 "xxx-something" are generic, with "xxx" being replaced by the name of
-an application (eg, "net" or "bvg").  In some cases, further
+an application (eg, "net", "gp", or "bvg").  In some cases, further
 documentation is available under the specific name.
 
 The file index.html is a hypertext index to this documenation.  It can
@@ -45,7 +45,7 @@ All the introductory documentation (including this) is collected into
 the 'manual' file.  You can print all the documentation by going to
 the main directory for this software and issuing a command such as
 
-    &gt; lpr doc/manual util/*.doc mc/*.doc net/*.doc bvg/*.doc doc/release*
+  lpr doc/manual util/*.doc mc/*.doc net/*.doc gp/*.doc bvg/*.doc doc/rel*
  
 (or using whatever command other than 'lpr' you use to print text files).
 
@@ -115,6 +115,21 @@ Bayesian neural networks [net]:
     net-dvar        Find the variance of a difference in function values
 
     net-rej         Generate networks from the posterior by rejection sampling
+
+
+Gaussian process models [gp]:
+
+  * gp              Bayesian modelling using Gaussian processes
+  * gp-spec         Specify a Gaussian process model, or display existing spec
+
+  * gp-mc           Use Markov chain to sample Gaussian process hyperparameters
+  * gp-gen          Generate GP hyperparameters randomly, or fix them
+
+  * gp-display      Print Gaussian process hyperparameters &amp; other information
+  * gp-quantities   Quantities from log files relating to Gaussian processes
+
+  * gp-pred         Make predictions for test cases using Gaussian process
+    gp-eval         Evaluate function drawn from a Gaussian process over a grid
 
 
 Markov chain sampling for a bivariate Gaussian [bvg]:

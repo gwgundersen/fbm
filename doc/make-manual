@@ -1,2 +1,3 @@
-cat Copyright.doc Facilities.doc Install.doc Overview.doc Examples.doc \
+cat Copyright.doc Facilities.doc Install.doc Overview.doc \
+    Examples.doc Examples-r.doc Examples-b.doc Examples-c.doc Examples-o.doc \
     Hints.doc Guide.doc Acknowledgements.doc >manual

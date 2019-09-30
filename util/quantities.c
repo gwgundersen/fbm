@@ -101,9 +101,9 @@ int quantities_requested
             s += 1;
           }
 
-          if (qd[i].high<qd[i].low)
+          if (qd[n].high<qd[n].low)
           { fprintf(stderr,"Range for quantity '%c' is bad (%d,%d)\n",
-              qd[i].letter, qd[i].low, qd[i].high);
+              qd[n].letter, qd[n].low, qd[n].high);
             exit(1);
           }
         }

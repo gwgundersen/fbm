@@ -68,7 +68,6 @@ void main
   int V_on_x, V_on_y;
 
   int a, i, v;
-  char *s;
 
   /* Look at arguments other than log files and ranges. */
 

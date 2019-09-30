@@ -1,0 +1,543 @@
+
+
+A SIMPLE REGRESSION PROBLEM
+
+As a first example, we will look at a simple regression problem, 
+in which there is one real-valued input for each case, and one
+real-valued target, whose value is to be predicted.
+
+I generated synthetic data of this type in which the input variable,
+x, for each case had a standard Gaussian distribution and the
+corresponding target value came from a Gaussian distribution with
+standard deviation 0.1 and mean given by
+
+         0.3 + 0.4*x + 0.5*sin(2.7*x) + 1.1/(1+x^2)
+
+I generated 200 cases in total, stored in the file 'rdata'.  Each case
+consists of a line containing first the input value and then the
+target value.  The first 100 of these cases are meant for training,
+nand the second 100 for testing.
+
+
+A neural network model for the regression problem.
+
+We will model this data using a multilayer perceptron with one input
+unit, one hidden layer of eight tanh units, and a single output unit
+whose activation function is the identity.  The value of the output
+unit will be taken as the mean of a Gaussian distribution for the
+target, with the standard deviation of this Gaussian (the noise level)
+being a hyperparameter to be estimated along with the parameters of
+the network.  We will also use hyperparameters to express the prior
+distributions for the network parameters.  Specifically, we will use
+one hyperparameter for the input-to-hidden weights, one for the hidden
+unit biases, and one for the hidden-to-output weights.  The output
+unit bias will be given a simple Gaussian prior, with no adjustable
+hyperparameter.  (The role of hyperparameters is primarily to
+introduce dependencies between parameters, so they are usually not
+used when they would control just a single parameter.)
+
+The first step in applying this model to the data is to create a log
+file containing the specifications for the network architecture and
+the priors to use for the network parameters.  This can be done using
+the following command:
+
+    > net-spec rlog.net 1 8 1 / - 0.05:0.5 0.05:0.5 - x0.05:0.5 - 100
+
+Here, "rlog.net" is the name of the new log file, and the arguments
+"1", "8", and "1", specify the numbers of input, hidden, and output
+units.  Following the "/", the priors for the various groups of
+network parameters are given, with a "-" indicating that a parameter
+group should be omitted (equivalent to the parameters being zero).
+The order of the groups is a bit hard to remember, but you can get a
+summary easily by just invoking 'net-spec' with no arguments.  The
+groups in the above command that are not omitted are the input-hidden
+weights, the hidden biases, the hidden-output weights, and the output
+bias.
+
+In general, the prior specifications used in the net-spec command
+consist of a "width" value followed by up to three "alpha" values,
+with perhaps an option character tacked on to the front.  For the full
+details, see Appendix A of my thesis and prior.doc.  Here, I will just
+comment on the particular priors used above.
+
+The prior specification used for the output bias is simply "100",
+which means that the bias has a Gaussian prior with mean zero and
+standard deviation 100.  The prior specifications of the form
+"0.05:0.5" indicate that the parameters in these groups are associated
+with a hyperparameter, which gives the standard deviation of a
+Gaussian prior for these parameters.  The hyperparameter itself has a
+rather vague prior that spans several orders of magnitude around one.
+The inverse gamma priors used are somewhat difficult to visualize,
+because their tails are asymmetrical, but some standard choices are
+often appropriate.  Here, the "0.5" after the colon controls how vague
+the prior is (closer to zero is more vague).  The "0.05" specifies the
+location of this vague distribution, but due to the asymmetry of the
+tails, it is closer to being the lower limit of the prior than the
+centre (for vague priors such as this). 
+
+The "x" in front of the prior for the hidden-to-output weights
+indicates that the prior should be automatically rescaled based on the
+number of hidden units, so as to produce an effect that is independent
+of the number of hidden units (in the limit of large numbers).
+
+Once the network has been specified, we need to say how the network
+outputs will be used to model the targets (response variables) in the
+data set.  We do this with the 'model-spec' command:
+
+    > model-spec rlog.net real 0.05:0.5
+
+In this case, the targets are real-valued, and are modeled as the
+network output plus Gaussian noise, with the noise standard deviation
+being a hyperparameter having the prior given by the last argument of
+the command.  The syntax of the prior specification is the same as 
+for the priors on network parameters.
+
+You can view the architecture and prior specifications stored in the
+log file by invoking 'net-spec' with just a log file argument.  In
+this example, this should give the following result:
+
+    > net-spec rlog.net
+    
+    Network Architecture:
+    
+      Size of input layer:    1
+      Sizes of hidden layers: 8
+      Size of output layer:   1
+    
+      Data model: real
+    
+    
+    Prior Specifications:
+    
+             Hidden Layer 0
+    
+      Input-Hidden Weights:    0.050:0.50
+      Hidden Biases:           0.050:0.50
+    
+             Output Layer
+    
+      Hidden0-Output Weights: x0.050:0.50
+      Input-Output Weights:    0.050:0.50
+      Output Biases:           100.000
+
+You can also view the model specification by invoking 'model-spec'
+with just one argument giving the log file.
+
+Once the network and data model have been specified, we need to
+specify the data sets to be used for training and (optionally) for
+testing.  We do this using the 'data-spec' command:
+
+    > data-spec rlog.net 1 1 / rdata@1:100 . rdata@101:200 .
+    Number of training cases: 100
+    Number of test cases: 100
+
+Here, "rlog.net" is the log file we created with 'net-spec', to which
+the data specifications will be appended.  The "1" and "1" arguments
+give the numbers of inputs and targets.  These must be consistent with
+the network architecture (if not, an error will be reported later when
+you try to start the training).
+
+After the "/", specifications for where to get the training and test
+data are given.  Each such specification consists of two parts: the
+source for the inputs, and the source for the targets.  The
+specification "rdata@1:100" means that the training inputs come from
+the file 'rdata', in lines 1 to 100, while the specification of
+"rdata@101:200" for the test inputs indicates that they also come from
+the file 'rdata', but in lines 101 to 200.  In the above command, the
+sources for the targets are given as just ".", which means the target
+items are on the same lines as the inputs, following the last input
+item.  We could have said that the targets come from a completely
+different file, however.  It is also possible to specify exactly where
+on a line the inputs and targets are located (and hence to ignore some
+items in the file).  For documentation on these and other features,
+see numin.doc.
+
+Though it is not done above, the 'data-spec' command also allows you
+to specify transformations to be applied to the inputs or targets
+before they are used.  This is useful, for example, if you wish to use
+inputs that have been "normalized" to have mean zero and variance one,
+based on the training data.  See data-spec.doc for the details.
+
+In the training runs reported in the thesis, I used a short "initial
+phase" to get things started, followed by a long "sampling phase" to
+bring the simulation to equilibrium and then produce a sample of
+networks from the posterior for use in prediction.  I still use the
+same general procedure, but with some changes to how the initial phase
+is done.
+
+It seems desirable to start the simulation in a state where the
+hyperparameters take on moderate values, and leave them fixed for a
+few iterations so that the network parameters will also take on
+moderate values.  This can be accomplished using the following
+commands:
+
+    > net-gen rlog.net fix 0.5
+    > mc-spec rlog.net repeat 10 sample-noise heatbath hybrid 100:10 0.2
+    > net-mc rlog.net 1
+
+The 'net-gen' command stores a network in the log file with index
+zero, in which the hyperparameters have values of 0.5, and the network
+parameters are zero.  This is the initial state of the simulation run.
+The following 'mc-spec' command specifies the Markov chain operations
+to be performed in the initial phase.  Here, each iteration consists
+of ten repetitions of the following steps:  Gibbs sampling for the
+noise level, a heatbath replacement of the momentum variables, and a
+hybrid Monte Carlo update with a trajectory 100 leapfrog steps long,
+using a window of 10, and a stepsize adjustment factor of 0.2.  Note
+that the hyperparameters are not updated, and hence will remain fixed
+at values of 0.5.  Finally, a single such iteration is done by calling
+'net-mc' with an iteration limit of 1.
+
+The stepsize adjustment factor of 0.2 used above is typical of what is
+needed, but will not be appropriate in all circumstances.  After the
+'net-mc' command has finished, the number of the 10 hybrid Monte Carlo
+updates that were rejected can be determined using the command
+'net-plt t r rlog.net', which will write the iteration number (of 1)
+and the rejection rate on standard output.  If the rejection rate is
+high (say, over 0.3), a new run should be done using a smaller
+stepsize adjustment factor.  In the initial phase, one would generally
+start by guessing a value for the stepsize adjustment factor that is
+on the low side, since there is no point in optimizing this choice.
+
+At this point, we hope to have a network stored in the log file (with
+index 1) that has values for both the parameters and hyperparameters
+that are of moderate magnitude, and which have adapted at least
+somewhat to the training data.  We can now start serious sampling with
+the following commands:
+
+    > mc-spec rlog.net sample-sigmas heatbath hybrid 1000:10 0.4
+    > net-mc rlog.net 100
+
+The 'mc-spec' command appends a new set of Markov chain operations to
+the log file, which will override the previous set.  These operations
+are Gibbs sampling for both the hyperparameters and the noise level
+(the "sigmas"), a heatbath update for the momentum variables, and a
+hybrid Monte Carlo update with a trajectory 1000 leapfrog steps long,
+a window of 10, and a stepsize adjustment factor of 0.4.  A long
+trajectory length is typically desirable for the sampling phase.  As
+in the initial phase, the stepsize adjustment factor of 0.4 used is
+typical, but not universally applicable.  It may pay at this stage to
+experiment in order to find out how large this factor can be while
+keeping the rejection rate low.  The use of a "window" of around 10
+states costs little and is often beneficial.
+
+The 100 iterations of the sampling phase started with the command
+'net-mc rlog.net 100' will take a while to complete (about four
+minutes on our current SGI machine).  If you put the command in the
+background (or add a '&' to the end of the 'net-mc' command), you will
+be able to monitor progress while you wait.  For example, you can look
+at the last network saved in the log file (or any earlier one) using
+'net-display'.  After half a minute or so, you might see the following:
+
+    > net-display rlog.net
+  
+    Network in file "rlog.net" with index 15
+    
+    Input to Hidden Layer 0 Weights [1]
+    
+     3.36 3.36: -1.24  +1.73  -4.04  -0.24  +2.49  -2.95  -1.56  -3.21
+    
+    Hidden Layer 0 Biases [2]
+    
+          1.90: -1.58  -3.59  +4.42  +0.85  -4.59  -3.69  +2.03  -0.40
+    
+    Hidden Layer 0 to Output Weights [3]
+    
+     0.76 0.76: -1.23
+    
+          0.76: +1.04
+    
+          0.76: +0.34
+    
+          0.76: -0.38
+    
+          0.76: -0.24
+    
+          0.76: +0.80
+    
+          0.76: +0.52
+    
+          0.76: -0.56
+    
+    Output Biases [4]
+    
+        100.00: +1.10
+    
+    Noise levels
+    
+       0.08 -  0.08
+
+This display of network parameters and hyperparameters is divided into
+sections for different parameter groups.  Within each section, the
+numbers before the colons are hyperparameters, those after are
+parameters (weight and biases).  There are more hyperparameters shown
+than were mentioned earlier, but for this network architecture, the
+extra hyperparameters are either fixed in value (the 100 for output
+biases), or tied to the value of a higher-level hyperparameter, so
+they are effectively not present.
+
+The parameter groups in the 'net-display' output are identified by
+numbers in square brackets.  These can be used with the 'h', 'w', 
+and 'W' quantities of 'net-plt'.  For example, to see how the
+hyperparameter controlling the hidden-to-output weights has changed
+during the simulation (so far), one can use the command
+
+    > net-plt t h3 rlog.net | plot
+
+where 'plot' is some suitable plot program.  (One can also just invoke
+net-plt and look at the numbers printed on standard output.)  Here
+'h3' refers to the top-level hyperparameter for group 3, which is seen
+in the output of 'net-display' above to be the hidden-to-output group.
+
+By looking at plots of the hyperparameters and quantities such as the
+squared error on the training set ('b'), one can get an idea of when
+the simulation has reached equilibrium.  Networks from that point on
+can then be used to make predictions for test case using the
+'net-pred' program.  Often, it will not be completely clear that
+equilibrium has been reached until the simulation has been allowed to
+proceed for quite a long time, but predictions based on shorter runs
+may nevertheless be quite good.
+
+For this problem, let's assume that we have decided to discard the
+first 20 iterations as perhaps not coming from the equilibrium
+distribution.  The following command will use the networks from the
+remaining 80 iterations to produce predictions for all test cases, and
+report the average squared error:
+
+    > net-pred itn rlog.net 21: 
+
+    Number of networks used: 80
+
+    Case  Inputs  Targets  Means   Error^2
+
+       1    0.92    1.49     1.59  0.0093
+       2    0.71    1.83     1.79  0.0012
+       3    0.20    1.72     1.67  0.0021
+       
+            ( midde lines omitted )
+    
+      98   -0.69    0.35     0.35  0.0000
+      99   -1.33    0.19     0.36  0.0277
+     100   -0.09    1.31     1.24  0.0052
+
+    Average squared error guessing mean:   0.01035+-0.00147
+
+The options "itn" specified ask for a listing of the inputs ("i") and
+targets ("t") for each case, along with the mean ("n") output for that
+case of the 80 networks used for prediction.  The squared error when
+using this mean to predict the target is shown for each case, and the
+average squared error for the test cases is shown at the bottom, along
+with its standard error with respect to the random selection of test
+cases.  Considering that the average squared error with optimal
+prediction is 0.01 (due to the noise of standard deviation 0.1 added
+when generating the data), the network model has done quite well, as
+one would hope it would on an easy problem such as this.
+
+It is also possible to get predictions for cases that are not in the
+test set that was specified with 'data-spec'.  For example:
+
+    > net-pred nb rlog.net 11: / "%echo 2.3"
+        1.37
+
+Here, the options "nb" ask for only the predictive mean, with "bare"
+output (no headings).  The argument at the end says that the inputs
+for test cases (here, just one case) should be taken from the output
+of the Unix command "echo 2.3", which just outputs the number 2.3.
+
+
+A Gaussian process model for the regression problem.
+
+We can also model this data using a Gaussian process.  Such a model is
+similar to a network model with an infinite number of hidden units.
+The weights in this hypothetical infinite network are not represented
+explicitly (fortunately, since this would require an infinite amount
+of memory).  Only the hyperparameters are explicitly represented.
+
+A Gaussian process model is specified using the gp-spec command, which
+is analogous to the net-spec command.  For the simple regression
+model, the following is one appropriate specification:
+
+    > gp-spec rlog.gp 1 1 100 0.05:0.5 / 0.05:0.5 0.05:0.5
+
+Here, "rlog.gp" is the name of the new log file that will hold the
+results of the Gaussia process run.  The first two arguments following
+the log file are the numbers of inputs and outputs, respectively, both
+"1" for this problem.
+
+The (optional) argument of "100" that follows is the priors for the
+constant part of the covariance function used.  This corresponds to
+the prior for the output unit bias in a network model.  A
+specification for a linear part of the covariance could follow (but
+doesn't here); it would correspond to a prior for direct input-output
+connections in a network.  For reasons of computational accuracy, it
+is best not to use too vague a prior for the constant part of the
+covariance, even though that would not usually be a problem from a
+statistical point of view.
+
+The remaining arguments (after the "/") give the priors for the
+hyperparameters used in an exponential term of the covariance
+function.  These priors correspond to those for the hidden-output and
+input-hidden weights in a network model.  (There is no counterpart
+here to the prior for the hidden unit biases in a network model.)  The
+first prior is for the scale of this term, which controls the
+magnitude of the non-linear variation in the function.  The second
+prior is for the relevance of the input, which controls the amount by
+which the input has to change to produce a change in the non-linear
+component of the function that is comparable to the overall scale over
+which this component varies.  The prior specifications are in the same
+form as is used for network specifications (see prior.doc).  The
+specifications of "0.05:0.5" used here are vague, allowing these
+hyperparameters to take on values over a wide range.
+
+The specification can be viewed by invoking 'gp-spec' with just the
+name of the log file:
+
+    > gp-spec rlog.gp
+    
+    Number of inputs:    1
+    Number of outputs:   1
+
+    Constant part of covariance:  100.000
+
+    Exponential parts of covariance:
+
+       Scale           Relevance            Power
+
+       0.050:0.50      0.050:0.50           2.000
+
+Once the Gaussian process model for functions has been specified, we
+can specify how the function values are used to model the targets in
+the dataset using 'model-spec', in exactly the same was as for a
+network model:
+
+    > model-spec rlog.gp real 0.05:0.5
+
+We also say where the training and (optionally) the test data comes
+from using 'data-spec':
+
+    > data-spec rlog.gp 1 1 / rdata@1:100 . rdata@101:200 .
+
+The model and data specifications can be viewed by invoking these
+programs with just the name of a log file.
+
+We are now ready to sample from the posterior distribution of the
+hyperparameters for the Gaussian process model.  To start, we can fix
+the hyperparmeters at reasonable initial values, using 'gp-gen':
+
+    > gp-gen rlog.gp fix 0.5 0.1
+
+This fixes the scale hyperparameters to 0.5 and the relevance
+hyperparameters to 0.1 (linear hyperparameters, if present, would be
+fixed to the product of these).  By default, the hyperparameters are
+set to the "width" value from their prior specification.  Because the
+priors are often vague (as here), this may not be a very reasonable
+starting point.
+
+We now specify the Markov chain operations to be used in sampling.
+There are a great many possibilities for these operations.  Here is
+one reasonable method:
+
+    > mc-spec rlog.gp heatbath hybrid 20:4 0.5
+
+This uses hybrid Monte Carlo, with trajectories 20 leapfrog steps
+long, with a window of 4 states.  The stepsize adjustment factor used
+is 0.5.  If the rejection rate turns out to be too high (as can be
+checked using the 'gp-plt t r rlog.gp' command), the stepsize should
+be adjusted downward.
+
+To peform these sampling operations 100 times, we use the following
+command:
+
+    > gp-mc rlog.gp 100
+
+We can let this run in the background (eg, by adding '&' to the end of
+the command), and use 'gp-plt' or 'gp-display' to monitor progress.
+The quantities that can be plotted with 'gp-plt' are similar to those
+that can be plotted using 'net-plt', except that quantities relating
+to test cases have been omitted, since they would often take a long
+time to compute (the 'E' and 'H' quantities, defined in the "mc"
+module, may also take a long time).  See gp-quantities.doc for
+details.
+
+Once the gp-mc run has completed (which takes about two minutes on
+our SGI machine), the iterations from the latter part of the run can
+be used to make predictions for test cases.  This is done using
+'gp-pred', which operates much like 'net-pred'.  The following command
+makes predictions for the test cases based on the last 80 of the 100
+iterations, and reports the average squared error:
+
+    > gp-pred na rlog.gp 21:
+
+    Number of iterations used: 80
+
+    Number of test cases: 100
+
+    Average squared error guessing mean:   0.00972+-0.00131
+
+This takes only a few seconds on our machine.  Predictions will take
+longer when the number of training cases is larger, or if the median
+or log probability are to be found (options "d" or "p" of 'gp-pred').
+As can be seen, the performance of the Gaussian process model is quite
+similar to that of the neural network model for this problem.  (The
+difference in average performance seen is probably not significant,
+considering the standard errors.)
+
+The predictions for test cases made above are found directly from the
+covariances between the targets in the training cases and the unknown
+target in a test case.  The values of the regression function for the
+training cases are never explicitly found.  Consequently, it is not
+possible to plot quantities such as the squared error on training
+cases over the course of the run.  To plot such quantities, you will
+have to ask for the function values for training cases to be generated
+in each iteration.  This takes a significant amount of time, and can
+potentially cause numerical problems, which is why gp-plt won't just
+do it as needed.
+
+If you want to be able to plot the squared error on training cases (or
+similar quantities such as case-by-case likelihoods), you will need to
+change the 'mc-spec' command to the following:
+
+    > mc-spec rlog.gp2 discard-values heatbath hybrid 20:4 0.5 sample-values
+
+The "sample-values" operation at the end generates function values for
+all the training cases, which will be stored in the log file.  These
+values can later be used to compute the squared error for training
+cases, which can be plotted with a command such as
+
+    > gp-plt t b rlog.gp2
+
+The "discard-values" operation throws away the function values (if
+present) before the operations for updating hyperparameters.  Throwing
+away information may seem wasteful, but it actually improves
+convergence in this context.
+
+Unfortunately, if you make only this change, you will probably get the
+following error message when you try to run 'gp-mc':
+
+  Couldn't find Cholesky decomposition of posterior covariance in sample-values!
+
+This message is produced when the round-off error in the matrix
+computations used by "sample-values" is enough to turn the results
+into nonsense.  The problem is due to the poor "conditioning" of the
+covariance matrix.  Roughly speaking, the covariances between
+neighbouring training cases are so high that knowing all but one
+function value is enough to determine the remaining function value to
+a precision comparable to the level of round-off error.
+
+To fix this, the conditioning of the covariance matrix must be improved.
+Changing the 'gp-spec' command as follows is sufficient on our machine:
+
+    > gp-spec rlog.gp2 1 1 10 - 0.01 / 0.05:0.5 0.05:0.5
+
+There are two changes here from the 'gp-spec' command used before.
+First, the constant part of the covariance has been reduced from 100
+to 10, which in fact makes little difference for this problem.  Since
+arithmetic is done in floating point, this increases the effective
+precision of the covariances.  Second, the covariance now includes a
+"jitter" part of 0.01 (the "-" preceding this indicates that there is
+still no linear part).  Jitter is much like noise, in that it varies
+independently from one case to another, but it is considered part of
+the function value, which noise is not.  The jitter makes all the
+function values less predictable, reducing the problem of poor
+conditioning.  Jitter plays a more crucial role for binary and class
+models.

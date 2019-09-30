@@ -141,6 +141,12 @@ void main
       }
     }
 
+    else if (strcmp(*ap,"radial-heatbath")==0)
+    { 
+      ops->op[o].type = 'r';
+      ap += 1;
+    }
+
     else if (strcmp(*ap,"negate")==0)
     { 
       ops->op[o].type = 'N';
@@ -218,9 +224,13 @@ void main
       }
     }
 
-    else if (strcmp(*ap,"dynamic")==0 || strcmp(*ap,"permuted-dynamic")==0)
+    else if (strcmp(*ap,"dynamic")==0 || strcmp(*ap,"permuted-dynamic")==0
+          || strcmp(*ap,"slice-inside")==0 || strcmp(*ap,"slice-outside")==0)
     {
-      ops->op[o].type = strcmp(*ap,"dynamic")==0 ? 'D' : 'P';
+      ops->op[o].type = strcmp(*ap,"dynamic")==0 ? 'D' 
+                      : strcmp(*ap,"permuted-dynamic")==0 ? 'P'
+                      : strcmp(*ap,"slice-inside")==0 ? 'i' : 'o';
+
       ops->op[o].stepsize_adjust = 1;
       ops->op[o].stepsize_alpha = 0;
 
@@ -228,7 +238,17 @@ void main
 
       if (!*ap || !strchr("0123456789+-.",**ap)) usage();
 
-      if ((ops->op[o].steps = atoi(*ap++))<=0) usage();
+      if ((ops->op[o].steps = atoi(*ap))<=0) usage();
+
+      if (ops->op[o].type=='o')
+      { ops->op[o].in_steps = ops->op[o].steps;
+        if (strchr(*ap,'/')!=0)
+        { if ((ops->op[o].in_steps = atoi(strchr(*ap,'/')+1))<=0
+           || ops->op[o].in_steps>ops->op[o].steps) usage();
+        }
+      }
+
+      ap += 1;
 
       if (*ap && strchr("0123456789+-.",**ap))
       { if ((ops->op[o].stepsize_adjust = atof(*ap))==0) usage();
@@ -257,6 +277,7 @@ void main
 
       ops->op[o].stepsize_adjust = 1;
       ops->op[o].stepsize_alpha = 0;
+      ops->op[o].in_steps = 0;
       ops->op[o].window = 1;
       ops->op[o].jump = 1;
 
@@ -265,7 +286,19 @@ void main
       if (!*ap || !strchr("0123456789+-.",**ap)) usage();
 
       if ((ops->op[o].steps = atoi(*ap))<=0) usage();
-      if (strchr(*ap,':')!=0)
+      if (strchr(*ap,'/')!=0)
+      { s = strchr(*ap,'/')+1;
+        if ((ops->op[o].in_steps = atoi(s))<=0) usage();
+        if (strchr(s,':')!=0)
+        { if ((ops->op[o].jump = atoi(strchr(s,':')+1))<=0) usage();
+          if (ops->op[o].steps%ops->op[o].jump!=0)
+          { fprintf (stderr,
+             "Maximum number of steps must be multiple of jump\n");
+            exit(1);
+          }
+        }
+      } 
+      else if (strchr(*ap,':')!=0)
       { s = strchr(*ap,':')+1;
         if ((ops->op[o].window = atoi(s))<=0) usage();
         if (strchr(s,':')!=0)
@@ -462,6 +495,11 @@ static void display_specs
           break;
         }
 
+        case 'r':
+        { printf(" radial-heatbath\n");
+          break;
+        }
+
         case 'N':
         { printf(" negate\n");
           break;
@@ -499,10 +537,16 @@ static void display_specs
           break;
         }
   
-        case 'D': case 'P':
-        { printf (" %s %d",
-            ops->op[o].type=='D' ? "dynamic" : "permuted-dynamic", 
-            ops->op[o].steps);
+        case 'D': case 'P': case 'i': case 'o':
+        { printf (" %s", ops->op[o].type=='D' ? "dynamic" 
+                       : ops->op[o].type=='P' ? "permuted-dynamic"
+                       : ops->op[o].type=='i' ? "slice-inside" 
+                                              : "slice-outside");
+          printf (" %d", ops->op[o].steps);
+          if (ops->op[o].type=='o' && ops->op[o].in_steps!=ops->op[o].steps)
+          { printf ("/%d", ops->op[o].in_steps);
+          }
+
           if (ops->op[o].stepsize_alpha!=0)
           { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,
                                   ops->op[o].stepsize_alpha);
@@ -516,11 +560,16 @@ static void display_specs
   
         case 'H': 
         { printf(" hybrid %d",ops->op[o].steps);
-          if (ops->op[o].window!=1)
-          { printf(":%d",ops->op[o].window);
-            if (ops->op[o].jump!=0)
-            { printf(":%d",ops->op[o].jump);
+          if (ops->op[o].in_steps!=0)
+          { printf("/%d",ops->op[o].in_steps);
+          }
+          else
+          { if (ops->op[o].window!=1 || ops->op[o].jump!=1)
+            { printf(":%d",ops->op[o].window);
             }
+          }
+          if (ops->op[o].jump!=1)
+          { printf(":%d",ops->op[o].jump);
           }
           if (ops->op[o].stepsize_alpha!=0)
           { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,

@@ -32,7 +32,7 @@ int model_targets
   int N_outputs			/* Number of outputs of function used by model*/
 )
 { 
-  if (m->type==0) return N_outputs;
+  if (m==0 || m->type==0) return N_outputs;
 
   switch (m->type)
   { 

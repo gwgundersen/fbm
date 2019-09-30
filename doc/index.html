@@ -1,18 +1,21 @@
 <html>
 <head>
 
-<title>Bayesian Neural Network Software</title>
+<title>Software for Flexible Bayesian Models</title>
 
 </head>
 
 <body>
 
-<h1>Bayesian Neural Network Software</h1>
+<h1>Software for Flexible Bayesian Models Based on Neural Networks and
+Gaussian Processes</h1>
 
-Version of 1996-08-26.  Copyright (c) 1995, 1996 by Radford M. Neal<P>
+Version of 1997-01-18.  Copyright (c) 1995, 1996, 1997 by
+Radford M. Neal<P>
 
-This is an index to documenation for software implementing Bayesian
-neural network learning using Markov chain Monte Carlo methods.
+This is an index to documenation for software implementing flexible
+Bayesian models based on neural networks and Gaussian processes,
+implemented using Markov chain Monte Carlo methods.
 
 
 <h2>Introduction, overview, and examples:</h2>
@@ -22,7 +25,13 @@ neural network learning using Markov chain Monte Carlo methods.
 <LI><a href="Facilities.html">Facilities provided by this software</a>
 <LI><a href="Install.html">Installing the software</a>
 <LI><a href="Overview.html">Overview of the software</a>
-<LI><a href="Examples.html">Examples of Bayesian network training</a>
+<LI><a href="Examples.html">Examples of Bayesian modeling:</a>
+    <UL>
+       <LI><a href="Examples-r.html">A simple regression problem</a>
+       <LI><a href="Examples-b.html">A problem with a binary response</a>
+       <LI><a href="Examples-c.html">A three-way classification problem</a>
+       <LI><a href="Examples-o.html">A regression problem with outliers</a>
+    </UL>
 <LI><a href="Hints.html">Hints and warnings</a>
 <LI><a href="Guide.html">Guide to further documentation</a>
 <LI><a href="Acknowledgements.html">Acknowledgements</a>
@@ -32,31 +41,32 @@ neural network learning using Markov chain Monte Carlo methods.
 <h2>Notes on the present release and past releases:</h2>
 
 <UL>
-<LI> <a href="release.1996-08-26.html">Current release of 1996-08-26</a>
+<LI> <a href="release.1997-01-18.html">Release of 1997-01-18</a>
+<LI> <a href="release.1996-08-26.html">Release of 1996-08-26</a>
 <LI> <a href="release.1995-08-09.html">Release of 1995-08-09</a>
 </UL>
 
 
 <h2>Alphabetical index within directories:</h2>
 <pre>
-       UTIL              MC              NET             BVG
+     UTIL              MC              NET              GP           BVG
 
-     <a href="data-spec.html">data-spec</a>      <a href="mc.html">mc</a>                <a href="net.html">net</a>              <a href="bvg.html">bvg</a>
-     <a href="extract.html">extract</a>        <a href="mc-quantities.html">mc-quantities</a>     <a href="net-dvar.html">net-dvar</a>         <a href="bvg-plt.html">bvg-plt</a>
-     <a href="grid.html">grid</a>           <a href="mc-spec.html">mc-spec</a>           <a href="net-display.html">net-display</a>      <a href="bvg-mc.html">bvg-mc</a>
-     <a href="log.html">log</a>            <a href="mc-temp-filter.html">mc-temp-filter</a>    <a href="net-eval.html">net-eval</a>         <a href="bvg-spec.html">bvg-spec</a>
-     <a href="log-copy.html">log-copy</a>       <a href="mc-temp-sched.html">mc-temp-sched</a>     <a href="net-gen.html">net-gen</a>
-     <a href="log-last.html">log-last</a>       <a href="xxx-grad-test.html">xxx-grad-test</a>     <a href="net-hist.html">net-hist</a>
-     <a href="log-records.html">log-records</a>    <a href="xxx-mc.html">xxx-mc</a>            <a href="net-mc.html">net-mc</a>
-     <a href="log-types.html">log-types</a>      <a href="xxx-stepsizes.html">xxx-stepsizes</a>     <a href="net-plt.html">net-plt</a>
-     <a href="model-spec.html">model-spec</a>                       <a href="net-pred.html">net-pred</a>
-     <a href="numin.html">numin</a>                            <a href="net-quantities.html">net-quantities</a>
-     <a href="prior.html">prior</a>                            <a href="net-rej.html">net-rej</a>
-     <a href="quantities.html">quantities</a>                       <a href="net-spec.html">net-spec</a>
-     <a href="rand-seed.html">rand-seed</a> 
-     <a href="series.html">series</a>   
-     <a href="xxx-hist.html">xxx-hist</a>
-     <a href="xxx-plt.html">xxx-plt</a>
+   <a href="data-spec.html">data-spec</a>      <a href="mc.html">mc</a>                <a href="net.html">net</a>              <a href="gp.html">gp</a>            <a href="bvg.html">bvg</a>
+   <a href="extract.html">extract</a>        <a href="mc-quantities.html">mc-quantities</a>     <a href="net-dvar.html">net-dvar</a>         <a href="gp-display.html">gp-display</a>    <a href="bvg-plt.html">bvg-plt</a>
+   <a href="grid.html">grid</a>           <a href="mc-spec.html">mc-spec</a>           <a href="net-display.html">net-display</a>      <a href="gp-eval.html">gp-eval</a>       <a href="bvg-mc.html">bvg-mc</a>
+   <a href="log.html">log</a>            <a href="mc-temp-filter.html">mc-temp-filter</a>    <a href="net-eval.html">net-eval</a>         <a href="gp-gen.html">gp-gen</a>        <a href="bvg-spec.html">bvg-spec</a>
+   <a href="log-copy.html">log-copy</a>       <a href="mc-temp-sched.html">mc-temp-sched</a>     <a href="net-gen.html">net-gen</a>          <a href="gp-mc.html">gp-mc</a>
+   <a href="log-last.html">log-last</a>       <a href="xxx-grad-test.html">xxx-grad-test</a>     <a href="net-hist.html">net-hist</a>         <a href="gp-pred.html">gp-pred</a>
+   <a href="log-records.html">log-records</a>    <a href="xxx-mc.html">xxx-mc</a>            <a href="net-mc.html">net-mc</a>           <a href="gp-quantities.html">gp-quantities</a>
+   <a href="log-types.html">log-types</a>      <a href="xxx-stepsizes.html">xxx-stepsizes</a>     <a href="net-plt.html">net-plt</a>          <a href="gp-spec.html">gp-spec</a>
+   <a href="model-spec.html">model-spec</a>                       <a href="net-pred.html">net-pred</a>
+   <a href="numin.html">numin</a>                            <a href="net-quantities.html">net-quantities</a>
+   <a href="prior.html">prior</a>                            <a href="net-rej.html">net-rej</a>
+   <a href="quantities.html">quantities</a>                       <a href="net-spec.html">net-spec</a>
+   <a href="rand-seed.html">rand-seed</a> 
+   <a href="series.html">series</a>   
+   <a href="xxx-hist.html">xxx-hist</a>
+   <a href="xxx-plt.html">xxx-plt</a>
 </pre>
 
 
@@ -131,6 +141,21 @@ asterisk.
     <a href="net-dvar.html">net-dvar</a>        Find the variance of a difference in function values
 
     <a href="net-rej.html">net-rej</a>         Generate networks from the posterior by rejection sampling
+</pre>
+
+<h2>Gaussian process models [gp]:</h2>
+<pre>
+  * <a href="gp.html">gp</a>              Bayesian modelling using Gaussian processes
+  * <a href="gp-spec.html">gp-spec</a>         Specify a Gaussian process model, or display existing spec
+
+  * <a href="gp-mc.html">gp-mc</a>           Use Markov chain to sample Gaussian process hyperparameters
+  * <a href="gp-gen.html">gp-gen</a>          Generate GP hyperparameters randomly, or fix them
+
+  * <a href="gp-display.html">gp-display</a>      Print Gaussian process hyperparameters & other information
+  * <a href="gp-quantities.html">gp-quantities</a>   Quantities from log files relating to Gaussian processes
+
+  * <a href="gp-pred.html">gp-pred</a>         Make predictions for test cases using Gaussian process
+    <a href="gp-eval.html">gp-eval</a>         Evaluate function drawn from a Gaussian process over a grid
 </pre>
 
 

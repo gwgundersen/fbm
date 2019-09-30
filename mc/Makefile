@@ -1,6 +1,6 @@
 # MAKEFILE FOR MARKOV CHAIN MONTE CARLO MODULES.
 
-# Copyright (c) 1995 by Radford M. Neal 
+# Copyright (c) 1995, 1996 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 
@@ -11,7 +11,7 @@
 # tested to the degree that would be advisable in any important application.
 # All use of this program is entirely at the user's own risk.
 
-CFLAGS = -O
+include ../make.include
 
 programs:	mc-spec mc-temp-sched mc-temp-filter
 
@@ -27,17 +27,18 @@ include ../util/util.make
 include mc.make
 
 mc-spec:	mc-spec.o	misc.o log.o
-		$(CC) mc-spec.o misc.o log.o -lm -o mc-spec 
+		$(CC) $(LFLAGS) mc-spec.o misc.o log.o -lm -o mc-spec 
 
 mc-spec.o:	mc-spec.c	log.h mc.h
 
 mc-temp-sched:	mc-temp-sched.o	misc.o log.o
-		$(CC) mc-temp-sched.o misc.o log.o -lm -o mc-temp-sched 
+		$(CC) $(LFLAGS) mc-temp-sched.o misc.o log.o \
+		      -lm -o mc-temp-sched 
 
 mc-temp-sched.o: mc-temp-sched.c log.h mc.h
 
 mc-temp-filter:	mc-temp-filter.o misc.o log.o
-		$(CC) mc-temp-filter.o misc.o log.o \
+		$(CC) $(LFLAGS) mc-temp-filter.o misc.o log.o \
 		      -lm -o mc-temp-filter 
 
 mc-temp-filter.o: mc-temp-filter.c log.h mc.h

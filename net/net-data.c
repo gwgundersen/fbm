@@ -101,19 +101,19 @@ void net_data_read
 
   if (model_targets(model,arch->N_outputs) != data_spec->N_targets
    || arch->N_inputs != data_spec->N_inputs 
-                         + (model->type=='V' && surv->hazard_type!='C'))
+                    + (model!=0 && model->type=='V' && surv->hazard_type!='C'))
   { fprintf(stderr,
      "Number of inputs/targets in data specification doesn't match network\n");
     exit(1);
   }
 
-  if (model->type=='C' && arch->N_outputs!=data_spec->int_target)
+  if (model!=0 && model->type=='C' && arch->N_outputs!=data_spec->int_target)
   { fprintf(stderr,
 "Integer range for targets does not match number of outputs for class model\n");
     exit(1);
   }
 
-  if (model->type=='B' && data_spec->int_target!=2)
+  if (model!=0 && model->type=='B' && data_spec->int_target!=2)
   { fprintf(stderr,"Data for binary targets must be specified to be binary\n");
     exit(1);
   }
@@ -171,7 +171,7 @@ static net_values *read_inputs
   }
 
   for (i = 0; i<N_cases; i++) 
-  { if (model->type=='V' && surv->hazard_type!='C')
+  { if (model!=0 && model->type=='V' && surv->hazard_type!='C')
     { values[i].i[0] = 0;
       j0 = 1;
     }

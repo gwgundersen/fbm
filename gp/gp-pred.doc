@@ -1,0 +1,113 @@
+
+
+GP-PRED:  Make predictions for test cases using Gaussian process model.
+
+GP-pred prints guesses at the target values for a set of test cases,
+as obtained using a Gaussian process, or set of Gaussian processes.
+If the true targets are known, performance of the guesses can also be
+evaluated.  Inputs can be printed as well.
+
+Usage:
+
+    gp-pred options { log-file range } [ / test-inputs [ test-targets ] ]
+
+The final optional arguments give the source of inputs and targets for
+the cases to look at; they default to the test data specification in
+the first log file given.  The Gaussian processes to use in making
+guesses are taken from the records with the given ranges of indexes in
+the given log files.  The outputs of all these are combined to give a
+single guess for each case.
+
+An index range can have one of the forms "[low][:[high]][%mod]" or
+"[low][:[high]]+num", or one of these forms preceded by "@".  When "@"
+is present, "low" and "high" are given in terms of cpu time, otherwise
+they are iteration numbers.  When just "low" is given, only that index
+is used.  If the colon is included, but "high" is not, the range
+extends to the highest index in the log file.  The "mod" form allows
+iterations to be selected whose numbers are multiples of "mod", with
+the default being "mod" of one.  The "num" form allows the total
+number of iterations used to be specified; they are distributed as
+evenly as possible within the specified range.  Note that it is
+possible that the number of Gaussian processes used in the end may not
+equal this number, if records with some indexes are missing.
+
+The 'options' argument consists of one or more of the following letters:
+
+    i   Display the input values for each case
+    t   Display the target values for each case
+    r   Use the raw form of the target values, before transformation
+
+    p   Display the log probability of the true targets
+
+    m   Display the guess based on the mode, and whether it is in error
+    n   Display the guess based on the mean, and its squared error
+    d   Display the guess based on the median, and its absolute error
+
+    l   Use stored latent values for predictions with a regression model
+        (if available).  Normally, predictions for regression models are 
+        done as if no latent values were stored, since this is better, 
+        but suppressing this behaviour might be of interest for testing 
+        purposes.  (Stored latent values are essential for other models.)
+
+    b   Suppress headings and averages - just bare numbers for each case
+    B   Bare numbers, but with blank lines whenever first input changes
+
+    a   Display only average log probabilities and errors, suppressing 
+        the results for individual cases (makes sense only in combination 
+        with one or more of 'p', 'm', 'n', and 'd', and not with 'i' or 't')
+
+Some of these options are illegal for some data models.  The illegal
+combinations are marked with an 'X' in the following table:
+
+        binary  class  real-valued  no-model
+
+     r    X       X
+     p                                 X
+     m                     X           X
+     n                  
+     d    X       X    
+     f    X       X                    X
+
+Furthermore, the 'a' and 'b' options are incompatible, and the 't',
+'p', and 'a' options may be used only if the true targets are given.
+The errors for individual cases are also displayed only if the true
+targets are known.  The 'n' option for class models displays the mean
+probabilities for each class, and computes a single figure for squared
+error that is the sum of the squares of the differences between these
+probabilities and the indicator variables that are one for the right
+class and zero for the wrong classes.
+
+Making predictions requires inverting the covariance matrix of the
+training points for each Gaussian process used, which can take a
+substantial amount of time if the number of training points is large.
+This could be avoided if the inverse covariance matrix were saved in
+the log file for each iteration, but this could take up a very large
+amount of disk space.  When the number of test cases is large, it will
+take much longer to compute the median or log probability predictions
+(options "d" or "p") for a regression model than to compute only the
+mean predictons (option "n").  For binary and class models, all 
+sorts of predictions take about the same amount of time.
+
+The median is calculated by Monte Carlo, using a sample consisting of
+eleven points from the predictive distribution for each Gaussian
+process.  A sample of one hundred points for each Gaussian process is
+used to calculate predictive probabilities for binary and class
+models.  If the model has case-by-case noise variances, a single
+test-case variance is chosen randomly for each Gaussian process (this
+is a bit sub-optimal, as it would be better to pick a new variance for
+each of the eleven points used to compute the median, and to integrate
+the variance away to produce a t-distribution when computing the log
+predictive probability - but the programming was easier this way).
+
+In all these cases, the random number seed used in making predictions
+is 101*x+i, where x is the iteration number and i is the number of the
+test case.
+
+Each average performance figure is accompanied by +- its standard
+error (as long as there is more than one test case).
+
+If only inputs and targets are to be displayed (no predictions), one
+may give just a single log file with no range.  Otherwise, at least
+one Gaussian process must be specified.
+
+            Copyright (c) 1996 by Radford M. Neal

@@ -17,6 +17,8 @@ data.h:
 	ln -s ../util/data.h .
 misc.h: 
 	ln -s ../util/misc.h .
+matrix.h:
+	ln -s ../util/matrix.h .
 numin.h:
 	ln -s ../util/numin.h .
 quantities.h:
@@ -34,6 +36,8 @@ model.h:
 
 misc.c:
 	ln -s ../util/misc.c .
+matrix.c:
+	ln -s ../util/matrix.c .
 log.c:
 	ln -s ../util/log.c .
 quantities.c:
@@ -68,6 +72,7 @@ numin.o:	numin.c		numin.h
 data-trans.o:	data-trans.c	data.h
 seq-read.o:	seq-read.c	misc.h seq.h
 prior.o:	prior.c		rand.h prior.h 
+matrix.o:	matrix.c	matrix.h
 
 rand.o:		rand.c		rand.h
-	$(CC) -c $(CFLAGS) -DRAND_FILE=\"`pwd`/../util/randfile\" rand.c
+	$(CC) $(CFLAGS) -DRAND_FILE=\"`pwd`/../util/randfile\" -c rand.c

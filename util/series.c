@@ -21,7 +21,7 @@
 
 
 #define Max_realizations   200
-#define Max_length       10000
+#define Max_length       50000
 
 static double *data[Max_realizations];	/* Data for each realization */
 static int length[Max_realizations];	/* Length of each realization */
@@ -34,7 +34,7 @@ static int ml;				/* Maximum lag with any data */
 static void usage(void);
 
 
-main
+void main
 ( int argc,
   char **argv
 )

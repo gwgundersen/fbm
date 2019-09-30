@@ -28,7 +28,6 @@ void main
 )
 {
   log_file logf;
-  int index;
 
   if (argc!=2)
   { fprintf(stderr,"Usage: log-last log-file\n");

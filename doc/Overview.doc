@@ -3,17 +3,19 @@
 OVERVIEW OF THE SOFTWARE
 
 This software is being distributed primarily to further research in
-Bayesian learning for neural network models.  The software is designed
-for potentially wider use, however.  In particular, the programs and
-modules in the 'util' directory are of general utility, and those in
-the 'mc' directory provide generic support for Markov chain Monte
-Carlo methods.  These facilities are specialized to neural network
-learning by the modules and programs in the 'net' directory.  The
-'bvg' directory demonstrates in a simple context how the generic
-facilities in 'util' and 'mc' can be specialized for other tasks, but
-users interested only in neural network learning need not concern
-themselves with this.  This section provides an overview of the
-facilities offered by these various components of the software.
+Bayesian learning for models based on neural networks and Gaussian
+processes.  The software is designed for potentially wider use,
+however.  In particular, the programs and modules in the 'util'
+directory are of general utility, and those in the 'mc' directory
+provide generic support for Markov chain Monte Carlo methods.  These
+facilities are specialized to neural network learning by the modules
+and programs in the 'net' directory, and to Gaussian process models by
+the modules and programs in the 'gp' directory.  The 'bvg' directory
+demonstrates in a simple context how the generic facilities in 'util'
+and 'mc' can be specialized for other tasks, but users interested only
+in neural networks or Gaussian processes need not concern themselves
+with this.  This section provides an overview of the facilities
+offered by these various components of the software.
 
 
 Log files
@@ -49,7 +51,7 @@ during the course of the run, without having to decide beforehand
 which quantities will be of interest.  The states saved at various
 iterations are also the basis for making Monte Carlo estimates, and in
 particular, for making Bayesian predictions based on a sample of
-networks from the posterior distribution.
+networks or Gaussian processes from the posterior distribution.
 
 
 Models and data
@@ -119,20 +121,22 @@ as the procedures for doing Gibbs sampling for hyperparameters in the
 neural network application.
 
 A variety of Markov chain methods are supported by the 'mc' system,
-including some that are not of much use in the neural network
-application.  In particular, the "tempering" methods are not currently
-implemented for the neural networks, though they may be in future.
-Users interested only in neural networks should therefore ignore the
+including some that are not of much use in the neural network and
+Gaussian process applications.  In particular, the "tempering" methods
+are not currently implemented for the neural networks or Gaussian
+processes, though they may be in future.  Users interested only in
+neural networks or Gaussian processes should therefore ignore the
 tempering facilities (such as the 'mc-temp-sched' and 'mc-temp-filter'
 programs).
 
-For the neural network user, the most important 'mc' program is
-'mc-spec', which is used to specify how the Markov chain sampling is
-to be done.  There are a large number of reasonable ways of sampling
-for neural networks.  The best way is still the subject of research.
-Good results can be obtained using several standard approaches,
-however, as described in the examples in the next section.  You can
-also read all about the various methods in mc-spec.doc.
+For the user of neural network or Gaussian process models, the most
+important 'mc' program is 'mc-spec', which is used to specify how the
+Markov chain sampling is to be done.  There are a large number of
+reasonable ways of sampling for neural networks or Gaussian processes.
+The best way is still the subject of research.  Good results can be
+obtained using several standard approaches, however, as described in
+the examples in other sections of this documentation.  You can also
+read all about the various methods in mc-spec.doc.
 
 
 Neural network models
@@ -140,10 +144,9 @@ Neural network models
 The 'net' directory contains the modules and programs that implement
 Bayesian learning for models based on multilayer perceptron networks,
 making use of the modules in the 'util' and 'mc' directories.  The
-networks and data models supported are as described in my thesis, with
-the addition that the output units may now be connected to any of the
-hidden layers (not just the last), and models for survival analysis
-are now included.
+networks and data models supported are as described in my book,
+Bayesian Learning for Neural Networks, with the addition of
+experimental models for survival analysis.
 
 A network training run is started with the 'net-spec' program, which
 creates a log file to which it writes specifications for the network
@@ -169,16 +172,43 @@ possible to directly look at the numbers.
 Several other programs are also present in the 'net' directory.  Some
 of these will probably not be of interest to the ordinary user, as
 they were written for debugging purposes, or to do specialized tasks
-relating to the thesis.
+relating to my thesis.
+
+
+Gaussian process models
+
+The 'gp' directory contains the modules and programs that implement
+Bayesian inference for Gaussian process models, making use of the
+modules in the 'util' and 'mc' directories.  These Gaussian process
+programs are analogous to the neural network programs.  The models
+based on Gaussian processes are also similar to models based on large
+neural networks using Gaussian priors (or other priors with finite
+variance).
+
+To start, the 'gp-spec' program is used to specify a Gaussian process
+model - that is, to specify the form of the covariance function, and
+the priors on the hyperparameters that control this covariance
+function.  The 'model-spec' and 'data-spec' programs are then be used
+to specify how the Gaussian process is used to model data, and the
+source of the training data (and possibly test data).  The Markov
+chain sampling method is then specified using 'mc-spec', and sampling
+is done using 'gp-mc'.  Finally, 'gp-pred' is used to make predictions
+for test cases using the Gaussian processes that were saved in the log
+file by 'gp-mc'.
+
+The 'gp-display' and 'gp-plt' programs can be used to view the
+Gaussian processes generated by 'gp-mc', both during and after the
+run.  Several other programs in the 'gp' directory may also be of
+interest.
 
 
 Quantities obtainable from log files
 
-The 'xxx-plt' programs (eg, 'net-plt') are the principal means by
-which simulation runs are monitored.  These programs allow one to see
-the values of various "quantities", evaluated for each iteration
-stored in a log file within some range.  Some other programs (eg,
-'xxx-hist') also use the same set of quantities.
+The 'xxx-plt' programs (eg, 'net-plt' and 'gp-plt') are the principal
+means by which simulation runs are monitored.  These programs allow
+one to see the values of various "quantities", evaluated for each
+iteration stored in a log file within some range.  Some other programs
+(eg, 'xxx-hist') also use the same set of quantities.
 
 A quantity is specified by an identifying character, perhaps with a
 numeric modifier.  Some quantities are single numeric values
@@ -192,8 +222,8 @@ levels.  A few quantities are universally defined - principally 't',
 the index of the current iteration.  Many more are defined for any
 Markov chain Monte Carlo application - such as 'r', the rejection rate
 for Metropolis or Hybrid Monte Carlo updates.  A large number of
-quantities specific to neural networks are also defined - for example,
-'b', the average squared error on the training set, and 'n', the
-current value of the noise standard deviation (for a regression
-model).  See quantities.doc, mc-quantities.doc, and net-quantities.doc
-for details.
+quantities specific to neural networks or to Gaussian processes are
+also defined - for example, 'b', the average squared error on the
+training set, and 'n', the current value of the noise standard
+deviation (for a regression model).  For details, see quantities.doc,
+mc-quantities.doc, net-quantities.doc, and gp-quantities.doc.

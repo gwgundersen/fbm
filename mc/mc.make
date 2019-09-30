@@ -17,6 +17,8 @@ mc-traj.c:
 	ln -s ../mc/mc-traj.c .
 mc-iter.c:
 	ln -s ../mc/mc-iter.c .
+mc-heatbath.c:
+	ln -s ../mc/mc-heatbath.c .
 mc-metropolis.c:
 	ln -s ../mc/mc-metropolis.c .
 mc-hybrid.c:
@@ -36,6 +38,7 @@ mc.c:
 
 mc-traj.o:	mc-traj.c	misc.h rand.h log.h mc.h
 mc-iter.o:	mc-iter.c	misc.h rand.h log.h mc.h quantities.h
+mc-heatbath.o:	mc-heatbath.c	misc.h rand.h log.h mc.h
 mc-metropolis.o:mc-metropolis.c	misc.h rand.h log.h mc.h 
 mc-hybrid.o:	mc-hybrid.c	misc.h rand.h log.h mc.h
 mc-slice.o:	mc-slice.c	misc.h rand.h log.h mc.h

@@ -99,12 +99,14 @@ interpretation by the model.  The 'y' values are the same as the 'o'
 values for regression models.  For binary and multi-class models, the
 'y' values are the bit/class probabilities obtained from the 'o'
 values.  The 'g' values are taken randomly from the predictive
-distribution.  
+distribution.  For multi-class models, the 'a', 'A', 'b', and 'B'
+quantities are based on the difference between the vector of
+probabilities for the classes and the vector of 0s and 1s with a
+single 1 indicating the correct class.
 
 Depending on whether any training/test cases are available, and if
 they are, whether they include targets, some of the above quantities
-may not be defined.  The 'a', 'A', 'b', and 'B' quantities are not
-defined for multi-class models.  The 'c' and 'C' quantities are not
+may not be defined.  The 'c' and 'C' quantities are not
 defined for regression models.  The 'o' quantities are allowed with
 survival models only when the hazard is constant (independent of
 time).  For multi-class models, the 'z' and 'Z' quantities with a

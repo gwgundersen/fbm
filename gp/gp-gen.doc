@@ -1,0 +1,33 @@
+
+
+GP-GEN:  Generate GP hyperparameters randomly from the prior, or fix them.
+
+Gp-gen writes a series of independently-generated values for the
+hyperparameters of a Gaussian process model to a log file.
+
+Usage:
+
+    gp-gen log-file [ max-index ] [ "fix" [ scale-value relevance-value ] ]
+
+Records of hyperparameters with indexes from zero up to the indicated
+index are generated (the default is max-index of zero).  If the log
+file already contains records with some of these indexes, only records
+with indexes greater than the last existing record are generated.
+
+If just max-index is specified, the hyperparameters are generated
+randomly from the prior, using the random number seed taken from the
+log file (eg, as specified by rand-seed).
+
+The "fix" option is useful for initializing iterative programs.  If it
+is given, the hyperparameters are not generated at random, but are
+instead set to fixed values.  These values are the top-level widths
+for each hyperparameter if no values follow "fix".  If values do
+follow "fix", they specify the scale and relevance hyperparameters of
+exponential parts of the covariance.  The hyperparameters for the
+linear part are set to the product of these two values.  The
+hyperparameter for the constant part is set to the scale value given.
+
+No data model is required to use gp-gen, but if a model is specified,
+the hyperparameters associated with it are generated as well.
+
+            Copyright (c) 1996 by Radford M. Neal

@@ -25,6 +25,13 @@
 #include "rand.h"
 
 
+/* CONSTANT PI.  Defined here if not in <math.h>. */
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+
 /* COMPUTE LOG PROBABILITY OF TARGETS AND/OR ITS DERIVATIVES.  Computes the 
    log of the probability (or probability density) of the observed target 
    values given the observed inputs, as defined by the current network outputs 
@@ -307,7 +314,7 @@ void net_model_max_second
    If no data model is specified, a real-valued data model with no noise
    is assumed. */
 
-double net_model_guess
+void net_model_guess
 ( net_values *v,	/* Values for units in network */
   double *t,		/* Place to store guesses at targets */
   net_arch *a,		/* Network architecture */
@@ -394,7 +401,7 @@ double net_model_guess
 
         case 'P':  /* Piecewise constant hazard */ 
         {
-          double t0, t1, h, pr, pi;
+          double t0, t1, h, pr;
           int w;
 
           t0 = 0;

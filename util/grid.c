@@ -28,7 +28,7 @@ static void usage (void);
 
 /* MAIN PROGRAM. */
 
-main
+void main
 ( int argc,
   char **argv
 )
@@ -61,6 +61,8 @@ main
   }
 
   grid(r,n,"");
+
+  exit(0);
 }
 
 

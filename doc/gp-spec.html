@@ -1,0 +1,98 @@
+<html>
+<body>
+<pre>
+
+
+GP-SPEC:  Specify a Gaussian process model, or display existing spec.
+
+Gp-spec creates a log file containing a specification of a Gaussian
+process model and the associated priors over hyperparameters.  When
+invoked with just a log file as argument, it displays the
+specifications of the Gaussian process model stored in that log file.
+
+Usage:
+  
+    gp-spec log-file N-inputs N-outputs 
+            [ const-part [ linear-part [ jitter-part ] ] ]
+            { / scale-prior relevance-prior [ power ] }
+
+or:
+
+    gp-spec log-file
+
+N-inputs and N-outputs are the numbers of input variables and output
+variables in the model - ie, the dimensionality of the domain and the
+range of the functions that the Gaussian process defines a
+distribution over.  For the Gaussian processes allowed here, the
+functions from the inputs to the various output variables are
+independent, given particular values for the hyperparameters.  The
+covariance functions for the each output all have the same form, and
+share the same hyperparameters.
+
+The const-part argument gives the prior for the hyperparameter
+controlling the constant part of the covariance function, in the form
+described in <A HREF="prior.html">prior.doc</A>.  A value of c for this hyperparameter adds a
+term of c^2 to the covariance between all pairs of input points.  The
+prior for this hyperparameter can have only one level.  If this
+argument is "-", or missing altogether, the covariance function will
+not have a constant part.
+
+The linear-part argument gives the prior for the hyperparameters, s_i,
+controlling the linear part of the covariance function.  This part of
+the covariance between inputs x and x' is
+
+       SUM_i s_i^2 x_i x'_i
+
+This prior can have up to two levels, allowing for a common
+hyperparameter that controls the priors for the coefficients, s_i,
+associated with the various inputs.  The "x" option may be used in
+order to have the width of this prior scale with the number of inputs,
+as described in <A HREF="prior.html">prior.doc</A>.  The linear part may be "-", or missing, in
+which case the covariance function will not have a linear part.
+
+The jitter-part argument gives the prior for a hyperparameter whose
+square is added to the covariance of a training or test case with
+itself.  Such a contribution may be desirable for modeling reasons, or
+in order to improve the numerical methods.  If a regression model with
+noise is being used, it is usually not necessary to include such a
+contribution to the covariance; if jitter-part is included, it
+effectively adds to the noise level (this could be useful if you want
+to constrain the noise to be at least some amount).  For a
+classification model, a jitter-part should usually be included, as
+otherwise the updates of the underlying function values may be very
+slow, and numerical problems can arise.  If the jitter-part is "-" or
+missing, it is taken to be zero.
+
+Zero or more additional terms in the covariance function may be
+specified using further groups of arguments.  These terms in the
+expression for the covariance between a particular output at inputs
+x and x' have the form:
+
+      v^2 * exp( - SUM_i (w_i |x_i - x'_i|)^R )
+
+The power, R, in this expression must be in the interval (0,2].  It is
+given by the last argument in a group, with the default being R=2.
+The first argument in the group gives the prior for the scale
+hyperparameter, v, which must have only one level.  The prior for the
+w_i, which determine the relevance of the various inputs, can have up
+to two levels, allowing for a common hyparameter and hyperparameters
+for each input, i.  Here again, the "x" option may be used to
+automatically scale the prior.
+
+Note that the prior for the const-part corresponds closely to the
+prior for output biases in neural network models, and that the prior
+for the linear-part corresponds to the prior for input-output weights
+in a network.  The priors for v and w_i correspond to the priors in
+neural network models on the hidden-output and the input-hidden
+weights.  (The neural network priors can go to more levels, however.)
+
+To use a Gaussian process to model data, additional information must
+be specified as well, as described in <A HREF="model-spec.html">model-spec.doc</A>.  Depending on
+the model used, state information in addition to the hyperparameter
+values for the Gaussian process may need to be kept (case-specific
+function values and/or case-specific noise variances).
+
+            Copyright (c) 1996 by Radford M. Neal
+</pre>
+</body>
+</html>

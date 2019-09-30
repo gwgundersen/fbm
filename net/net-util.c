@@ -23,7 +23,6 @@
 #include "prior.h"
 #include "model.h"
 #include "net.h"
-#include "rand.h"
 
 
 /* SET UP REQUIRED RECORD SIZES.  Doesn't set the sizes of the variable-sized
