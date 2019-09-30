@@ -1,0 +1,10 @@
+#!/bin/sh
+
+while test -n "$1"; do
+
+  base=`echo $1 | sed s/\\.doc\$//`
+  rm $base.html
+
+  shift
+
+done

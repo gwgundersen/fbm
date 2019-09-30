@@ -1,15 +1,16 @@
 /* RAND.C - Random number generation module. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 #include <stdlib.h>
@@ -69,8 +70,8 @@ static rand_state *state;		/* Pointer to current state */
 
 static void initialize (void)
 {
-  int i, j, k;
-  int b, w;
+  int i, j, k, w;
+  char b;
   FILE *f;
 
   if (!initialized)
@@ -86,13 +87,12 @@ static void initialize (void)
     { for (j = 0; j<Table_size; j++)
       { w = 0;
         for (k = 0; k<4; k++)
-        { b = getc(f);
-          if (b<0) 
+        { if (fread(&b,1,1,f)!=1)
           { fprintf(stderr,"Error reading file of random numbers (%s)\n",
                             RAND_FILE);
             exit(1);
           }
-          w = (w<<8) | b;
+          w = (w<<8) | (b&0xff);
         }
         rn[i][j] = w;
       }
@@ -304,7 +304,7 @@ double rand_gaussian (void)
 
 double rand_exp (void)
 {
-  return -log(rand_uniopen());
+  return -log(rand_uniopen()); 
 }
 
 

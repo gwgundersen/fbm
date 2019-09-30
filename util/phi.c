@@ -1,9 +1,24 @@
 /* PHI.C - Gaussian density, CDF, and inverse CDF functions. */
 
+/* Copyright (c) 1995-2003 by Radford M. Neal
+ *
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+
+#include "phi.h"
 
 
 #define sqrt2   1.4142135623730950488
@@ -13,7 +28,7 @@
 double erfc (double);
 
 
-/* GAUSIAN DENSITY FUNCTION. */
+/* GAUSSIAN DENSITY FUNCTION. */
 
 double phi (double x)
 {
@@ -34,16 +49,19 @@ double Phi (double x)
 
 double Phi_inverse (double p)
 {
-  double x, c, d;
+  double ix, x, c, d, v, t;
   int i;
 
   if (p<0.5) 
   { return -Phi_inverse(1-p);
   }
 
+  if (p>0.99999999)
+  { return 5.612002;
+  }
+
   if (p>0.9)
-  { double v, t, x;
-    v = -2*log(1-p);
+  { v = -2*log(1-p);
     x = log(pi2*v);
     t = x/v + (2-x)/(v*v) + (-14+6*x-x*x)/(2*v*v*v);
     x = sqrt(v*(1-t)) * 1.01;
@@ -57,7 +75,14 @@ double Phi_inverse (double p)
     c = Phi(x);
     d = phi(x);
 
-    x = x + (p-c) / (d - 0.5*(p-c)*x);
+    ix = (p-c) / (d - 0.5*(p-c)*x);
+    x = x + ix;
+
+    if (ix<1e-14 && ix>-1e-14) break;
+  }
+
+  if (x<-5.612002 || x>5.612002) 
+  { abort();
   }
 
   return x;

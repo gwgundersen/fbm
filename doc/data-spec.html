@@ -12,46 +12,51 @@ specifications already stored in the log file.
 
 Usage:
 
-    data-spec log-file N-inputs N-targets [ int-target ]
-          / train-inputs train-targets [ test-inputs [ test-targets ] ]
-        [ / { input-trans } [ / { target-trans } ] ]
+    data-spec log-file N-inputs N-targets [ int-target ] [ -n ]
+                / train-inputs train-targets [ test-inputs [ test-targets ] ]
+              [ / { input-trans } [ / { target-trans } ] ]
 
 or:
 
     data-spec log-file
 
 The number of "input" and "target" values must be specified.  The
-number of inputs may be zero (though other programs may not allow
-this), but the number of targets must be at least one.  The user can
-require the targets to be integers by including an 'int-target'
-argument.  The permitted range of these integer targets is from zero
-to 'int-target' minus one.
+number of inputs or targets may be zero, although other programs may
+not allow this.  The user can require the targets to be integers by
+including an 'int-target' argument.  The permitted range of these
+integer targets is from zero to 'int-target' minus one.
 
 The training and (optionally) test sets are given in the form of
 specifications described in <A HREF="numin.html">numin.doc</A>.  The default specification for
 training and test inputs is "data@1,1".  The training input
 specification provides the default for the training target
-specification - i.e. the file and line range are used for the inputs
-is used for targets if not overridden, and the item indexes for the
+specification - i.e. the file and line range used for the inputs is
+used for targets if not overridden, and the item indexes for the
 targets start by default after the last index for the inputs.
 Similarly, the test input specification is used as the default for the
 test targets.
 
-The data files are read and checked for errors.  The number of lines
-of training inputs must match the number of lines of training targets,
-and similarly for test inputs and targets.
+The data files are read and checked for errors, unless the "-n" option
+was included before the file specifications.  If the data is checked,
+the number of lines of training inputs must match the number of lines
+of training targets, and similarly for test inputs and targets.
 
 The final optional arguments specify the transformations to be applied
 to inputs and targets.  A transformation specification has one of the
-forms
+four forms
 
-               [L][+T][xS]  or  [L][-T][xS]  or  I
+           [L][+T][xS]  or  [L][-T][xS]  or  I  or  ...
 
-If "L" is present in the two forms, the raw data is first transformed
-by taking the logarithm.  T is then added or subtracted, and the
-result multiplied by S.  The "I" form specifies an identity
-transformation.  This is the default for any inputs or targets for
-which no transformation is specified.
+If "L" is present in the first two forms, the raw data is first
+transformed by taking the logarithm.  T is then added or subtracted
+(default 0), and the result multiplied by S (default 1).  The "I" form
+specifies an identity transformation.  The "..."  form is valid only
+at the end of a list of transformations, and indicates that the
+transformation specifications for any remaining inputs or targets
+(whichever the list pertains to) should be the same as the
+specification preceding "...".  If "..." does not occur at the end of
+a list of transformations, the transformation specification for any
+remaining inputs or targets defaults to "I".
 
 The translation and scaling amounts ("T" and "S") may be "@", in which
 case they are computed from the training data, so as to produce a mean
@@ -60,7 +65,7 @@ of zero (for translation), or a variance of one (for scaling).
 The specifications are written to the log file as a record with type
 'D' and index -1.
 
-            Copyright (c) 1995 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal
 </pre>
 </body>
 </html>

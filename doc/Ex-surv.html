@@ -52,7 +52,7 @@ other models.  Here is one set of commands that work reasonably well:
     &gt; mc-spec clog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     &gt; net-mc clog.net 100
 
-This takes about ten minutes of computing time on our 550MHz Pentium III.
+This takes 7.0 minutes on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
 
 Predictions for test cases can now be made using net-pred.  For
 example, the following command produces the 10% and 90% quantiles of
@@ -171,7 +171,7 @@ The following commands sample from the posterior distribution:
     &gt; mc-spec vlog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     &gt; net-mc vlog.net 100
 
-This takes about 100 minutes on our 550MHz Pentium III.
+This takes 28 minutes on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
 
 The net-pred command can be used to make predictions for test cases.
 Here is a command to display the median of the predictive distribution
@@ -244,7 +244,7 @@ number of leapfrog steps is increased to compensate):
     &gt; mc-spec v2log.net repeat 4 sample-sigmas heatbath hybrid 1000:10 0.25
     &gt; net-mc v2log.net 400
 
-This takes about 24 hours to run on our 550MHz Pentium III.
+This takes 15 hours to run on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
 
 The model does in fact discover that an additive form for the log
 hazard is appropriate, as can be seen by examining the hyperparameters

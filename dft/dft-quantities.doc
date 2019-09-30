@@ -1,0 +1,87 @@
+
+
+DFT-QUANTITIES:  Quantities from log files relating to diffusion trees.
+
+The quantities below relating to diffustion tree models can be
+obtained from log files (eg, for use in dft-plt).  The generic
+quantities documented in quantities.doc are also available.  The
+Markov chain quantities documented in mc-quantities.doc are defined as
+well, but at present most of them are not meaningful for diffusion
+tree models, since the standard Markov chain operations are not
+supported.
+
+The quantities specific to diffusion tree models are listed below.  If
+"n" is present after the letter, it represents a numeric modifier,
+optional with default 1 when in square brackets.
+
+    tn   Array of n'th target values for training cases (numbered from 1).
+         NOTE:  One cannot omit n, since if it's missing, it's the 't' 
+         quantity described in quantities.doc.
+
+    o[n] Array giving for each training case (numbered from 1) the latent
+         value associated with variable n (numbered from 1).  Available
+         only if latent vectors are stored.
+
+    V[n] As an array, the variances of the n'th diffusion tree (from 1)
+         for each variable (numbered from 1).  As a scalar, the top-level 
+         variance hyperparameter that controls these variances.  
+
+    v[n] Same as for V, but expressed in terms of standard deviations
+         rather than variances.
+
+    c[n] Array giving the parameters for the divergence function for the
+         n'th diffusion tree (from 1).  At present, only parameters c@0, 
+         c@1, and c@2 exist.
+
+    N    As an array, the noise variances for each target variable 
+         (numbered from 1).  As a scalar, the top-level variance 
+         hyperparameter that controls these variances.  Valid only when 
+         the targets are real-valued.  
+
+    n    Same as for N, but expressed in terms of standard deviations
+         rather than variances.
+
+    dn   As an array, the divergence times for internal nodes of the n'th 
+         diffusion tree (numbered from 1), sorted by increasing divergence 
+         time.  The lower bound given for portion of the array desired is 
+         ignored; a lower bound of 1 is always used.  For example, "d1@1:10", 
+         "d1@:10", "d1@10", and "d1@5:10" all give the ten earliest divergence 
+         times for tree 1.  As a scalar, the average divergence time over all
+         internal nodes.  NOTE:  The tree number, n, cannot be omitted, since
+         if it's missing, it's the 'd' quantity described in mc-quantities.doc.
+
+    Dn   As an array, the depths for the training cases (numbered from 1)
+         in tree n.  The depth is the number of links to successive parents 
+         that need to be followed to reach the root.  (The depth will be zero 
+         if there is only one training case, and otherwise will be at least 
+         one, and no greater than the number of training cases minus one.)  '
+         As a scalar, the average depth over training cases.  NOTE:  The 
+         tree number, n, cannot be omitted, since if it's missing, it's the 
+         'D' quantity described in mc-quantities.doc.
+
+    a... Divergence time of last common ancestor of two training cases in
+         a tree.  The numeric modifier following "a" is interpreted in
+         terms of its decimal digits.  The first non-zero digit should be
+         the number of the tree (from 1).  This should be followed by the
+         numbers of the training cases (from 1), which must have the SAME
+         number of digits.  For instance, "a10213" is the divergence time
+         of the last common ancestor of training cases 2 and 13 in tree
+         number 1.
+
+    A... An indicator (0/1) of whether or not two training cases are more
+         closely related in a tree than they are to a third training case.  
+         The numeric modifier following "c" is interpreted in terms of its 
+         decimal digits.  The first non-zero digit should be the number of 
+         the tree (from 1).  This should be followed by the numbers of the 
+         three training cases (from 1), which must have the SAME number of 
+         digits.  For instance, "A2555008077" has the value 1 if in tree 
+         number 2, training case 555 is more closely related to training 
+         case 8 than either of them are to training case 77; otherwise, it
+         has the value 0.  The three training cases must be distinct.
+
+Note that the numbering of training cases starting from 1 is different
+from some other modules in this software.  This is so these numbers
+can be combined with zero for the root node and with negative numbers
+for other non-terminal nodes.
+
+            Copyright (c) 1995-2003 by Radford M. Neal

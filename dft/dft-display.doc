@@ -1,0 +1,110 @@
+
+
+DFT-DISPLAY:  Print diffusion trees, parameters, and hyperparameters.
+
+Dft-display can print a representation of the diffusion tree(s)
+underlying the training cases, the parameters for these diffusion
+trees, and the overall hyperparameters for the model.
+
+Usage:
+
+  dft-display [ -b ] [ -h ] [ -p ] [ -l ] [ -t ] [ -n | -N ] [ -g[time] ]
+              log-file [ index ]
+
+If no index is specified, the last record in the log file is shown.
+The -b option enables "bare" output for latent vectors, tree
+structure, and non-terminal nodes, in which headers are omitted, some
+values are printed to higher precision, and each line starts with the
+number of the tree it applies to.  The other options enable display
+of certain information, as follows:
+
+   -h  Values of the overall hyperparameters
+   -p  Parameters for each diffusion tree 
+   -l  Latent vectors for each training case (if stored)
+   -t  Structure of the diffusion trees underlying the training cases
+   -n  Non-terminal nodes of the trees
+   -N  Same as -n, but with node locations as well (if stored)
+   -g  Graphical display of the tree structures (picture done with text)
+
+More than one of these options can be specified (in any order, but
+this does not affect the display order), though specifying more than
+one is probably not useful if -b is specified.  The default if none of
+these flags are specified is -h and -p.
+
+Currently, the only overall hyperparameters are the noise standard
+deviations for the variables (if they are real), along with the common
+noise standard deviation controlling these.  The common noise standard
+deviation is displayed first, followed by a colon and then the noise
+standard deviations for each variable.
+
+One set of parameters for a diffusion tree are the standard deviations
+for each variable, along with the common standard deviation
+controlling these.  These are displayed in the same format as noise
+standard deviations.  The parameters of the divergence function are
+also displayed, labled as c0, c1, and c2.
+
+The latent vectors are displayed one per line if -l is specified,
+preceded by the number of the case, from 1 (and the number of the
+tree, if -b is specified).  If no data model was specified, the latent
+vectors will equal the data vectors.  Otherwise, they will be the
+values in terms of which the distribution of the observed data is
+defined.  Note, however, that for real data, latent vectors may not be
+present in the log file, depending on which Markov chain operations
+were used (see dft-mc.doc).
+
+The structure of the diffusion trees is displayed with -t in a
+low-level format that is mostly useful for debugging, or for input to
+another program (using -b).  The non-terminal nodes are displayed
+first, numbered -1, -2, etc., followed by the terminal nodes
+corresponding to training cases, numbered 1, 2, etc.  One line is
+displayed for each node, which (after the tree number if -b is
+specified) shows the node number, the number of the parent node (0 for
+the root), and the divergence time for the node (1 for terminal
+nodes).
+
+The display of non-terminal nodes with -n or -N is also low-level,
+showing (after the tree number if -b is specifed) the node number (-1,
+-2, etc.), the indexes of the node's two children, the number of
+points under the node (ie, the number of terminal descendents), and
+the divergence time.  For -N, this is followed by the node location.
+
+Pictures of the trees are displayed if -g is specified, in the format
+illustrated below:
+
+     5| 3| 2| 1
+      |  |  | 4
+      |  | 2
+      |
+      | 2| 3
+      |  | 5
+
+The numbers before "|" are the counts of observations in a sub-tree.
+The "5" in the top-left of the above display indicates that there are
+five observations altogether, the "3" and "2" in the next column are
+the numbers of observations in the two sub-trees of the root, and so
+forth.  The numbers at the ends of lines are not counts, but rather
+are the indexes of the cases associated with the terminal nodes.
+
+If a time in the interval (0,1] is given immediately after -g,
+non-terminal nodes whose divergence times are later than this are
+shown as just a list of indexes of cases that are in the sub-tree
+headed by this node.  For instance, if -g.7 were specified, the tree
+shown above might be displayed instead as follows:
+
+     5| 1 4 2
+      |
+      | 2| 3
+      |  | 5
+
+Here, the first sub-tree of the root had a divergence time greater
+than 0.7, and is therefore shown just as the list "1 4 2", of cases
+within its sub-tree.  The divergence time of the second child is less
+than or equal to 0.7, and so its children are shown separately.
+
+The lines in these diagrams can become arbitrarily long; no attempt is
+made to wrap them.
+
+Similar output in Postscript is produced by the dft-dendrogram program
+(see dft-dendrogram.doc).
+
+            Copyright (c) 1995-2003 by Radford M. Neal

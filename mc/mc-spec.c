@@ -1,15 +1,16 @@
 /* MC-SPEC.C - Specify parameters of Markov chain Monte Carlo simulation. */
 
-/* Copyright (c) 1995-2000 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 #include <stdlib.h>
@@ -37,6 +38,7 @@ main
   static mc_traj traj0, *traj = &traj0;
 
   int have_traj, any_specs;
+  char junk;
   int o;
 
   log_file logf;
@@ -163,6 +165,15 @@ main
       ap += 1;
     }
 
+    else if (strcmp(*ap,"mix-momentum")==0)
+    { 
+      ops->op[o].type = 'X';
+
+      ap += 1;
+
+      if (!*ap || (ops->op[o].heatbath_decay = atof(*ap++))<0) usage();
+    }
+
     else if (strcmp(*ap,"negate")==0)
     { 
       ops->op[o].type = 'N';
@@ -279,6 +290,8 @@ main
       ops->op[o].stepsize_alpha = 0;
       ops->op[o].steps = 0;
       ops->op[o].firsti = -1;
+      ops->op[o].s_factor = 0;
+      ops->op[o].s_threshold = 0;
 
       ap += 1;
 
@@ -290,6 +303,23 @@ main
         }
         else if (strcmp("-r",*ap)==0)
         { ops->op[o].r_update = 1;
+        }
+        else if (ops->op[o].type=='S' && strcmp("-s",*ap)==0)
+        { ap += 1;
+          if (*ap==0) usage();
+          if (strchr(*ap,'/')!=0)
+          { if (sscanf(*ap,"%d/%f%c",&ops->op[o].s_factor,
+                       &ops->op[o].s_threshold, &junk)!=2 
+             || ops->op[o].s_factor==0)
+            { usage();
+            }
+          }
+          else
+          { if (sscanf(*ap,"%d%c",&ops->op[o].s_factor,&junk)!=1
+             || ops->op[o].s_factor==0)
+            { usage();
+            }
+          }
         }
         else
         { usage();
@@ -320,6 +350,38 @@ main
 
       if (ops->op[o].type!='m' && *ap && strchr("-0123456789",**ap))
       { ops->op[o].steps = atoi(*ap);
+        ap += 1;
+      }
+
+      if (*ap && strchr("0123456789",**ap))
+      { ops->op[o].firsti = atoi(*ap);
+        ops->op[o].lasti = ops->op[o].firsti;
+        if (strchr(*ap,':')!=0)
+        { if ((ops->op[o].lasti = atoi(strchr(*ap,':')+1)) < ops->op[o].firsti)
+          { usage();
+          }
+        }
+        ap += 1;
+      }
+    }
+
+    else if (strcmp(*ap,"gaussian-gibbs")==0)
+    {
+      ops->op[o].type = 'U';
+
+      ops->op[o].r_update = 0;
+      ops->op[o].firsti = -1;
+
+      ap += 1;
+
+      while (*ap && (*ap)[0]=='-' 
+          && strchr("abcdefghijklmnopqrstuvwxyz",(*ap)[1]))
+      { if (strcmp("-r",*ap)==0)
+        { ops->op[o].r_update = 1;
+        }
+        else
+        { usage();
+        }
         ap += 1;
       }
 
@@ -474,6 +536,29 @@ main
       if ((ops->op[o].repeat_count = atoi(*ap++))<=0) usage();
 
       depth += 1;
+    }
+
+    else if (strcmp(*ap,"multiply-stepsizes")==0)
+    {
+      ops->op[o].type = 'x';
+
+      ap += 1;
+
+      if ((ops->op[o].stepsize_adjust = atof(*ap)) <= 0) usage();
+      ap += 1;
+
+      ops->op[o].firsti = -1;
+
+      if (*ap && strchr("0123456789",**ap))
+      { ops->op[o].firsti = atoi(*ap);
+        ops->op[o].lasti = ops->op[o].firsti;
+        if (strchr(*ap,':')!=0)
+        { if ((ops->op[o].lasti = atoi(strchr(*ap,':')+1)) < ops->op[o].firsti)
+          { usage();
+          }
+        }
+        ap += 1;
+      }
     }
 
     else if (strcmp(*ap,"temp-trans")==0)
@@ -745,7 +830,7 @@ static void display_specs
         case 'B':
         { printf(" heatbath");
           if (ops->op[o].heatbath_decay!=0)
-          { printf(" %.4f",ops->op[o].heatbath_decay);
+          { printf(" %.6f",ops->op[o].heatbath_decay);
           }
           printf("\n");
           break;
@@ -753,6 +838,11 @@ static void display_specs
 
         case 'r':
         { printf(" radial-heatbath\n");
+          break;
+        }
+
+        case 'X':
+        { printf(" mix-momentum %.6f\n",ops->op[o].heatbath_decay);
           break;
         }
 
@@ -842,6 +932,21 @@ static void display_specs
           printf("\n");
           break;
         }
+
+        case 'U':
+        { printf("gaussian-gibbs");
+          if (ops->op[o].r_update)
+          { printf(" -r");
+          }
+          if (ops->op[o].firsti!=-1)
+          { printf(" %d",ops->op[o].firsti);
+            if (ops->op[o].lasti!=ops->op[o].firsti)
+            { printf(":%d",ops->op[o].lasti);
+            }
+          }
+          printf("\n");
+          break;
+        }
   
         case 'D': case 'P': case 'i': case 'o': case 'h':
         { printf (" %s", ops->op[o].type=='D' ? "dynamic" 
@@ -893,6 +998,14 @@ static void display_specs
         { printf(" slice-1");
           if (ops->op[o].r_update)
           { printf(" -r");
+          }
+          if (ops->op[o].s_factor!=0)
+          { if (ops->op[o].s_threshold==0)
+            { printf(" -s %d",ops->op[o].s_factor);
+            }
+            else
+            { printf(" -s %d/%f",ops->op[o].s_factor,ops->op[o].s_threshold);
+            }
           }
           if (ops->op[o].stepsize_alpha!=0)
           { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
@@ -1005,6 +1118,18 @@ static void display_specs
         { printf(" repeat %d",ops->op[o].repeat_count);
           printf("\n");
           depth += 1;
+          break;
+        }
+
+        case 'x':
+        { printf(" multiply-stepsizes %f",ops->op[o].stepsize_adjust);
+          if (ops->op[o].firsti!=-1)
+          { printf(" %d",ops->op[o].firsti);
+            if (ops->op[o].lasti!=ops->op[o].firsti)
+            { printf(":%d",ops->op[o].lasti);
+            }
+          }
+          printf("\n");
           break;
         }
   

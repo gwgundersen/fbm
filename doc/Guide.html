@@ -46,10 +46,10 @@ by going to the main directory for this software and issuing a command
 such as
 
   lpr doc/manual util/*.doc mc/*.doc dist/*.doc bvg/*.doc \
-      net/*.doc gp/*.doc mix/*.doc doc/Rel*.doc
+      net/*.doc gp/*.doc mix/*.doc dft/*.doc doc/Rel*.doc
  
 (or using whatever command other than 'lpr' you use to print text files).
-This will produce about 150 pages of paper.
+This will produce about 200 pages of paper.
 
 
 Generic utility programs [util]:
@@ -141,6 +141,7 @@ Bayesian neural networks [net]:
 
   * net-mc          Do Markov chain simulation to sample networks
   * net-gen         Generate networks from the prior, or with fixed values  
+    net-approx      Specify quadratic approximation to replace log likelihood
     net-gd          Train a network by gradient descent in the error
 
   * net-display     Print network parameters and/or hyperparameters
@@ -187,9 +188,24 @@ Bayesian inference for mixture models [mix]:
   * mix-display     Print mixture model parameters, hyperparameters, etc.
   * mix-quantities  Quantities from log files relating to mixture models
 
+  * mix-pred        Make predictions for tests cases using mixture models
     mix-cases       Generate cases from a mixture model
 
-    mix-extensions  Possible extensions to the mixture modeling software
+
+Bayesian inference for Dirichlet diffusion tree models [dft]:
+
+  * dft             Bayesian inference for diffusion tree models
+  * dft-spec        Specify a diffusion tree model, or display existing spec
+
+  * dft-mc          Use Markov chain to do sampling for a diffusion tree model
+  * dft-gen         Generate hyperparameters randomly, or fix them
+
+  * dft-display     Print diffusion tree model parameters, hyperparameters, etc.
+    dft-dendrogram  Create Postscript representation of a dendrogram of a tree
+  * dft-quantities  Quantities from log files relating to diffusion tree models
+
+  * dft-pred        Make predictions using Dirichlet diffusion trees
+    dft-cases       Generate cases from a diffusion tree model
 </pre>
 </body>
 </html>

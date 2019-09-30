@@ -1,15 +1,16 @@
 /* MC.H - Interface to Markov chain Monte Carlo module. */
 
-/* Copyright (c) 1995-2000 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 
@@ -17,7 +18,7 @@
    give the one-character ids of operations needing various things to 
    operate. */
 
-#define MC_needs_p	"BNDPhHT@^ior*="	/* Need momentum variables */
+#define MC_needs_p	"BNDPhHT@^ior*=X"	/* Need momentum variables */
 #define MC_needs_grad	"DPHT@^hiol"		/* Need gradient computed  */
 
 
@@ -52,8 +53,9 @@ typedef struct
     int jump;	  	  /* Steps in each jump for hybrid Monte Carlo */
 
     float heatbath_decay; /* Momentum decay for heatbath step, also factor
-                             for multiply-momentum operation minus 1, and value
-			     for set-momentum operation. */
+                             for multiply-momentum operation minus 1, value
+			     for set-momentum operation, and amount of
+                             mixing for mix-momentum. */
 
     float temper_factor;  /* Tempering factor for tempered hybrid Monte Carlo */
     float app_param;	  /* Parameter for application-specific procedure */
@@ -65,25 +67,27 @@ typedef struct
 
     int refinements;	  /* Number of refinement steps */
 
-#   define b_accept refinements /* Overlaps above.  0 for Metropolis acceptance
-			           function, 1 for Barker/Boltzmann acceptance*/
-
     int in_steps;	  /* Maximum number of inside steps in trajectory,
 			     zero if this feature is not being used */
 
-#   define r_update in_steps    /* Overlaps above.  0 if all components are to
-                                   be updated by single-variable operations,
-                                   1 for updating just one, chosen at random */
+    char b_accept;	  /* 0 for Metropolis acceptance function, 1 for 
+                             Barker/Boltzmann acceptance*/
 
-#   define g_shrink in_steps    /* Overlaps above.  Shrinkage option for "slice"
-                                   0=shrink all, 1=shrink one (-g), 2=more(-G)*/
+    char r_update;	  /* 0 if all components are to be updated by 
+                             single-variable operations, 1 for updating just 
+                             one, chosen at random */
 
-#   define e_shrink in_steps    /* Overlaps above.  Shrinkage option for 
-				   "slice-gaussian" */
+    char g_shrink; 	  /* Shrinkage option for "slice" 0=shrink all, 
+                             1=shrink one (-g), 2=more(-G)*/
+
+    char e_shrink;	  /* Shrinkage option for "slice-gaussian" */
+
+    int s_factor;	  /* Extra shrinkage factor for -s in slice-1, or 0 */
+    float s_threshold;	  /* Threshold for extra shrinkage with -s */
 
     float app_param2;	  /* Second application-specific parameter */
 
-    int reserved[2];      /* Reserved for future use */
+    int reserved[4];      /* Reserved for future use */
 
     char appl[101];	  /* Name of application-specific procedure */
 
@@ -284,11 +288,13 @@ double mc_energy_diff    (mc_dynamic_state *, mc_temp_sched *, int);
 
 void mc_heatbath         (mc_dynamic_state *, float, float);
 void mc_radial_heatbath  (mc_dynamic_state *, float);
+void mc_mix_momentum     (mc_dynamic_state *, float);
 
 void mc_metropolis       (mc_dynamic_state *, mc_iter *, mc_value *, int);
 void mc_rgrid_met        (mc_dynamic_state *, mc_iter *, mc_value *, int);
 void mc_met_1            (mc_dynamic_state *, mc_iter *, int, int, int, int);
 void mc_rgrid_met_1      (mc_dynamic_state *, mc_iter *, int, int, int, int);
+void mc_gaussian_gibbs   (mc_dynamic_state *, mc_iter *, int, int, int);
 
 void mc_hybrid (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int, double,
   int, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *);
@@ -299,7 +305,8 @@ void mc_hybrid2 (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int,
 void mc_spiral (mc_dynamic_state *, mc_iter *, mc_traj *, int, double, int,
                 mc_value *, mc_value *, mc_value *, mc_value *);
 
-void mc_slice_1      (mc_dynamic_state *, mc_iter *, int, int, int, int);
+void mc_slice_1      (mc_dynamic_state *, mc_iter *, int, int, int, int, 
+                      int, double);
 void mc_slice        (mc_dynamic_state *, mc_iter *, 
                       mc_value *, mc_value *, mc_value *, int);
 void mc_slice_gaussian (mc_dynamic_state *, mc_iter *, 

@@ -1,15 +1,16 @@
 /* MC-HEATBATH.C - Procedures for performing heatbath updates. */
 
-/* Copyright (c) 1995, 1996, 1997 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 #include <stdlib.h>
@@ -75,4 +76,33 @@ void mc_radial_heatbath
   }
 
   ds->kinetic_energy = new_kinetic;
+}
+
+
+/* MIX MOMENTUM WITHOUT CHANGING TOTAL. */
+
+void mc_mix_momentum
+( mc_dynamic_state *ds,	/* State to update */
+  float mix		/* Amount to mix by */
+)
+{
+  double r, f;
+  int i;
+
+  if (!ds->know_kinetic)
+  { ds->kinetic_energy = mc_kinetic_energy(ds);
+    ds->know_kinetic = 1;
+  }
+
+  r = sqrt(2*ds->kinetic_energy);
+
+  for (i = 0; i<ds->dim; i++)
+  { ds->p[i] += mix * (r/sqrt(ds->dim)) * rand_gaussian();
+  } 
+
+  f = r / sqrt(2*mc_kinetic_energy(ds));
+
+  for (i = 0; i<ds->dim; i++)
+  { ds->p[i] *= f;
+  } 
 }

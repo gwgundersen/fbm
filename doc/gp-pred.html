@@ -19,7 +19,8 @@ the cases to look at; they default to the test data specification in
 the first log file given.  The Gaussian processes to use in making
 guesses are taken from the records with the given ranges of indexes in
 the given log files.  The outputs of all these are combined to give a
-single guess for each case.
+single guess for each case.  The Gaussian process models should all 
+have the same specification and use the same data specifications.
 
 An index range can have one of the forms "[low][:[high]][%mod]" or
 "[low][:[high]]+num", or one of these forms preceded by "@".  When "@"
@@ -40,7 +41,7 @@ The 'options' argument consists of one or more of the following letters:
     t   Display the target values for each case
     r   Use the raw form of the target values, before transformation
 
-    p   Display the log probability of the true targets
+    p   Display the log probability of the true targets (to base e)
 
     m   Display the guess based on the mode, and whether it is in error
     n   Display the guess based on the mean, and its squared error
@@ -65,6 +66,10 @@ The 'options' argument consists of one or more of the following letters:
     a   Display only average log probabilities and errors, suppressing 
         the results for individual cases (makes sense only in combination 
         with one or more of 'p', 'm', 'n', and 'd', and not with 'i' or 't')
+
+    E   Display the expected error for test cases, based on the predictive 
+        probabilities, as well as the actual error (if targets are known).
+        Currently implemented only for "binary" data.
 
     1-9 If any of these characters are used, only the corresponding 
         non-linear parts of the covariance is used when computing 
@@ -141,7 +146,7 @@ However, users might have a use for -alt-mean, which forces a possibly
 more accurate computation of the mean prediction (which is, however,
 slower, if only the mean is being computed).
 
-            Copyright (c) 1996, 1998, 2001 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal
 </pre>
 </body>
 </html>

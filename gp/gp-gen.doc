@@ -30,4 +30,4 @@ hyperparameter for the constant part is set to the scale value given.
 No data model is required to use gp-gen, but if a model is specified,
 the hyperparameters associated with it are generated as well.
 
-            Copyright (c) 1996 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal

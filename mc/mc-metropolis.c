@@ -1,15 +1,16 @@
 /* MC-METROPOLIS.C - Procedures for performing Metropolis-style updates. */
 
-/* Copyright (c) 1995-2000 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 #include <stdlib.h>
@@ -278,4 +279,59 @@ void mc_rgrid_met_1
       ds->q[k] = qsave;
     }
   }
+}
+
+
+/* PERFORM GAUSSIAN GIBBS SAMPLING UPDATES.  The components updated are ASSUMED,
+   without checking, to have Gaussian conditional distributions, which are 
+   found by evaluating the energy at points -1, 0, +1. */
+
+void mc_gaussian_gibbs
+( mc_dynamic_state *ds,	/* State to update */
+  mc_iter *it,		/* Description of this iteration */
+  int firsti,		/* Index of first component to update (-1 for all) */
+  int lasti,		/* Index of last component to update */
+  int r_update		/* Update just one component at random? */
+)
+{
+  double Eminus, Ezero, Eplus;
+  double mean, tau;
+  int k;
+
+  if (firsti==-1) 
+  { firsti = 0;
+    lasti = ds->dim-1;
+  }
+
+  if (lasti>=ds->dim-1) lasti = ds->dim-1;
+  if (firsti>lasti) firsti = lasti;
+
+  if (r_update)
+  { firsti = lasti = firsti + (int)(rand_uniform()*(lasti-firsti+1));
+  }
+
+  for (k = firsti; k<=lasti; k++)
+  {
+    ds->q[k] = -1;
+    mc_app_energy (ds, 1, 1, &Eminus, 0);
+
+    ds->q[k] = 0;
+    mc_app_energy (ds, 1, 1, &Ezero, 0);
+
+    ds->q[k] = 1;
+    mc_app_energy (ds, 1, 1, &Eplus, 0);
+
+    tau = Eminus - 2*Ezero + Eplus;
+    if (tau<=0)
+    { fprintf(stderr,"Variance in gaussian_gibbs is not positive!\n");
+      exit(1);
+    }
+
+    mean = (Eminus - Eplus) / (2*tau);
+
+    ds->q[k] = mean + rand_gaussian() / sqrt(tau);
+  }
+
+  ds->know_pot = 0;
+  ds->know_grad = 0;
 }

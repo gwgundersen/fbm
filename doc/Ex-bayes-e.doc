@@ -107,7 +107,7 @@ We can now sample for 10000 iterations with the following command:
 
     > dist-mc elog.met 10000
 
-This takes a bit over a minute on our 550MHz Pentium III.
+This takes 28 seconds on the system used (see Ex-system.doc).
 
 A scatterplot of the posterior distribution for v1 and v2 can be
 obtained using a command such as
@@ -141,9 +141,9 @@ randomly positioning an interval of width 2 around the current point,
 and then sampling successively from this interval until a point within
 the slice is found.  The last argument of "1" specifies that the
 maximum interval size is just one times the width parameter.  Since
-there is no possibility of widening the interval, there is no point in
-evaluating the energy function at the interval's endpoints.  This
-saving may make this approach beneficial in some circumstances.
+there is no possibility of widening the interval, there is no need to
+evaluate the energy function at the interval's endpoints.  This saving
+may make this approach beneficial in some circumstances.
 
 These 5 slice sampling operations take about the same time as the 25
 Metropolis updates of the previous section.  The resulting sampling

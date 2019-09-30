@@ -30,8 +30,4 @@ the hyperparameters is done using Markov chain methods.  The resulting
 sample from the posterior can then be used to make predictions for
 future cases.
 
-The facilities supported by these programs are presently a bit
-rudimentary; mix-extensions.doc gives a list of things that could be
-done, but aren't yet.
-
-            Copyright (c) 1997 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal

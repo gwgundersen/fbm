@@ -64,6 +64,6 @@ for each component.
 Note: There is no way at present of getting the prior for the means of
 the offsets for the targets to have a mean other than zero, but you
 can get an equivalent effect by transforming the target values by
-subtracting a constant.
+subtracting a constant, as described in data-spec.doc.
 
-            Copyright (c) 1997, 1998 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal

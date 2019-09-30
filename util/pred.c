@@ -1,15 +1,16 @@
 /* PRED.C - Skeleton for programs that make predictions for test cases. */
 
-/* Copyright (c) 1995, 1996, 1998, 1999, 2001 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  *
  * Features allowing selection of a given number of iterations and 
  * specification of ranges by cpu-time are adapted from code written
@@ -29,6 +30,15 @@
 #include "data.h"
 #include "mc.h"
 #include "pred.h"
+
+
+/* PROBABILITY ESTIMATION ONLY FLAG.  Set to 1 if only log probabilities (or 
+   densities) are produced, as in dft-pred.  It defaults here to 0, but 
+   may be set otherwise using the -D option for the compiler. */
+
+#ifndef Ponly 
+#define Ponly 0
+#endif
 
 
 /* DEBUG FLAG.  Normally set to 0. */
@@ -197,6 +207,13 @@ main
 
   if ((argc-2)%2!=0 && (guessing || argc!=3)) usage();
 
+  if (Ponly && (op_m || op_n || op_d || op_D || op_q || op_Q))
+  { fprintf(stderr,
+      "Options 'm', 'n', 'd', 'D', 'q', and 'Q' aren't allowed for %s-pred\n",
+      pred_app_name);
+    exit(1);
+  }
+
   ap = argv+2;
 
   /* Open first log file and read specifications. */
@@ -239,7 +256,7 @@ main
 
   if (op_a && (op_t || op_i || op_q || op_Q)
    || op_r && (m!=0 && m->type=='B' || m!=0 && m->type=='C')
-   || op_p && (m==0) || op_l && (m==0 || m->type!='R')
+   || op_l && (m==0 || m->type!='R')
    || op_m && (m==0 || m->type=='R' || m->type=='V')
    || (op_d || op_D || op_q || op_Q) 
         && (m!=0 && m->type=='B' || m!=0 && m->type=='C'))
@@ -254,7 +271,8 @@ main
 
   if (!have_targets && (op_t || op_p || op_a))
   { fprintf(stderr,
-      "Options 't', 'p', and 'a' are valid only when the targets are known\n");
+     Ponly ? "Option 'p' is valid only when the targets are known\n"
+     : "Options 't', 'p', and 'a' are valid only when the targets are known\n");
     exit(1);
   }
 
@@ -268,20 +286,23 @@ main
   {
     /* Allocate space for error accumulators. */
   
-    log_prob       = chk_alloc (N_test, sizeof (double));
-    sum_targets    = chk_alloc (M_targets*N_test, sizeof (double));
-    sum_targets_med= chk_alloc (M_targets*N_test, sizeof (double));
     test_log_prob  = chk_alloc (N_test, sizeof (double));
-    test_targ_pred = chk_alloc (M_targets*N_test, sizeof (double));
-    test_targ_med  = chk_alloc (M_targets*N_test, sizeof (double));
-    sq_error       = chk_alloc (M_targets, sizeof (double));
-    sq_error_sq    = chk_alloc (M_targets, sizeof (double));
-    guess          = chk_alloc (M_targets, sizeof (double));
-    error          = chk_alloc (M_targets, sizeof (double));
-    abs_error      = chk_alloc (data_spec->N_targets, sizeof (double));
-    wrong          = chk_alloc (data_spec->N_targets, sizeof (double));
-    abs_error_sq   = chk_alloc (data_spec->N_targets, sizeof (double));
-    wrong_sq       = chk_alloc (data_spec->N_targets, sizeof (double));
+    log_prob       = chk_alloc (N_test, sizeof (double));
+
+    if (!Ponly)
+    { sum_targets    = chk_alloc (M_targets*N_test, sizeof (double));
+      sum_targets_med= chk_alloc (M_targets*N_test, sizeof (double));
+      test_targ_pred = chk_alloc (M_targets*N_test, sizeof (double));
+      test_targ_med  = chk_alloc (M_targets*N_test, sizeof (double));
+      sq_error       = chk_alloc (M_targets, sizeof (double));
+      sq_error_sq    = chk_alloc (M_targets, sizeof (double));
+      guess          = chk_alloc (M_targets, sizeof (double));
+      error          = chk_alloc (M_targets, sizeof (double));
+      abs_error      = chk_alloc (data_spec->N_targets, sizeof (double));
+      wrong          = chk_alloc (data_spec->N_targets, sizeof (double));
+      abs_error_sq   = chk_alloc (data_spec->N_targets, sizeof (double));
+      wrong_sq       = chk_alloc (data_spec->N_targets, sizeof (double));
+    }
 
     if (op_d || op_q || op_Q)
     { 
@@ -300,11 +321,13 @@ main
     }
 
     /* Initialize various accumulators. */
-  
-    for (i = 0; i<N_test; i++)
-    { for (j = 0; j<M_targets; j++)
-      { sum_targets[M_targets*i+j] = 0;
-        sum_targets_med[M_targets*i+j] = 0;
+
+    if (!Ponly)  
+    { for (i = 0; i<N_test; i++)
+      { for (j = 0; j<M_targets; j++)
+        { sum_targets[M_targets*i+j] = 0;
+          sum_targets_med[M_targets*i+j] = 0;
+        }
       }
     }
 
@@ -484,9 +507,11 @@ main
               { log_prob[i] += lf;
               }
             }
-            for (j = N_test*M_targets-1; j>=0; j--) 
-            { sum_targets[j] *= f;
-              sum_targets_med[j] *= f;
+            if (!Ponly)
+            { for (j = N_test*M_targets-1; j>=0; j--) 
+              { sum_targets[j] *= f;
+                sum_targets_med[j] *= f;
+              }
             }
             max_log_weight = w;
             lf = 0;
@@ -507,9 +532,11 @@ main
             }
           }
 
-          for (j = N_test*M_targets-1; j>=0; j--) 
-          { sum_targets[j] += f * test_targ_pred[j];
-            sum_targets_med[j] += f * test_targ_med[j];
+          if (!Ponly)
+          { for (j = N_test*M_targets-1; j>=0; j--) 
+            { sum_targets[j] += f * test_targ_pred[j];
+              sum_targets_med[j] += f * test_targ_med[j];
+            }
           }
 
           ms_count += Median_sample; 
@@ -571,7 +598,7 @@ main
   { 
     printf("\nCase");
 
-    if (op_i)
+    if (op_i && data_spec->N_inputs>0)
     { printf(" %-*s",7*data_spec->N_inputs," Inputs");
     }
 
@@ -626,19 +653,21 @@ main
   if (guessing)
   {
     ave_log_prob = ave_log_prob_sq = 0;
- 
-    for (j = 0; j<M_targets; j++) 
-    { sq_error[j] = 0;
-      sq_error_sq[j] = 0;
-    }
- 
-    for (j = 0; j<data_spec->N_targets; j++) 
-    { abs_error[j] = wrong[j] = 0;
-      abs_error_sq[j] = wrong_sq[j] = 0;
-    }
 
-    tsq_error = tabs_error =  0;
-    tsq_error_sq = tabs_error_sq = 0;
+    if (!Ponly) 
+    { for (j = 0; j<M_targets; j++) 
+      { sq_error[j] = 0;
+        sq_error_sq[j] = 0;
+      }
+ 
+      for (j = 0; j<data_spec->N_targets; j++) 
+      { abs_error[j] = wrong[j] = 0;
+        abs_error_sq[j] = wrong_sq[j] = 0;
+      }
+
+      tsq_error = tabs_error =  0;
+      tsq_error_sq = tabs_error_sq = 0;
+    }
   }
 
   for (i = 0; i<N_test; i++)
@@ -652,7 +681,7 @@ main
 
     if (!op_a && !op_b) printf("%4d",i+1);
  
-    if (!op_a && op_i)
+    if (!op_a && op_i && data_spec->N_inputs>0)
     { printf(" ");
       for (j = 0; j<data_spec->N_inputs; j++)
       { printf(op_b ? " %+.8e" : " %6.2f",test_inputs[data_spec->N_inputs*i+j]);
@@ -664,13 +693,16 @@ main
       for (j = 0; j<data_spec->N_targets; j++)
       { double val;
         val = test_targets[data_spec->N_targets*i+j];
-        if (op_r) val = data_inv_trans(val,data_spec->target_trans[j]);
+        if (op_r) 
+        { val = data_inv_trans(val,data_spec->trans[data_spec->N_inputs+j]);
+        }
         printf(op_b ? " %+.8e" : " %6.2f",val);
       }
     }
 
     if (op_p)
-    { log_prob[i] -= log(sum_weights);
+    { 
+      log_prob[i] -= log(sum_weights);
       ave_log_prob += log_prob[i];
       ave_log_prob_sq += log_prob[i]*log_prob[i];
       if (!op_a) printf(op_b ? " %.8e" : " %9.3f",log_prob[i]);
@@ -734,7 +766,9 @@ main
         { double val, diff;
           val = m!=0 && m->type=='C' ? j==test_targets[i]
                                      : test_targets[data_spec->N_targets*i+j];
-          if (op_r) val = data_inv_trans(val,data_spec->target_trans[j]);
+          if (op_r) 
+          { val = data_inv_trans(val,data_spec->trans[data_spec->N_inputs+j]);
+          }
           if (m!=0 && m->type=='V' && val<0) val = -val;
           diff = guess[j] - val;
           error[j] = diff * diff;
@@ -777,7 +811,9 @@ main
         if (have_targets)
         { double val, diff;
           val = test_targets[data_spec->N_targets*i+j];
-          if (op_r) val = data_inv_trans(val,data_spec->target_trans[j]);
+          if (op_r) 
+          { val = data_inv_trans(val,data_spec->trans[data_spec->N_inputs+j]);
+          }
           if (m!=0 && m->type=='V' && val<0) val = -val;
           diff = guess[j] - val;
           error[j] = diff<0 ? -diff : diff;
@@ -890,7 +926,7 @@ main
       if (N_test>1) 
       { printf("+-%.3f", sqrt((ave_log_prob_sq/N_test-a*a) / (N_test-1)));
       }
-      printf("\n\n");
+      printf("\n");
     }
 
     if (op_m) 
@@ -999,11 +1035,26 @@ static float find_median
 
 static void usage(void)
 { 
-  fprintf(stderr,
-   "Usage: %s-pred options { log-file range } [ / test-inputs [ test-targets ] ]\n", pred_app_name);
-  fprintf(stderr,
-   "  Opt: i=inputs, t=targets, p=prob, m=mode, n=mean, d/D=median, q/Q=quantiles\n");
-  fprintf(stderr,
-   "       <digit> = select component, r = raw data, b/B = bare, a = averages only\n");
+  if (Ponly)
+  {
+    fprintf(stderr,
+"Usage: %s-pred options { log-file range } [ / test-inputs [ test-targets ] ]\n", 
+    pred_app_name);
+    fprintf(stderr,
+"  Opt: i=inputs, t=targets, p=prob, r=raw data, b/B=bare, a=averages only\n"
+    );
+  }
+  else
+  {
+    fprintf(stderr,
+"Usage: %s-pred options { log-file range } [ / test-inputs [ test-targets ] ]\n", 
+    pred_app_name);
+    fprintf(stderr,
+"  Opt: i=inputs, t=targets, p=prob, m=mode, n=mean, d/D=median, q/Q=quantiles\n"
+    );
+   fprintf(stderr,
+"       <digit> = select component, r = raw data, b/B = bare, a = averages only\n"
+    );
+  }
   exit(1);
 }

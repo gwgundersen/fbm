@@ -10,4 +10,4 @@ Writes a record with index 0 to the log file, containing the specified
 values for the state variables (values after the first two are needed
 only if replication was specified).
 
-            Copyright (c) 1997 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal

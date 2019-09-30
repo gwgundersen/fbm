@@ -1,15 +1,16 @@
 /* NET-SPEC.C - Program to specify a new network (and create log file). */
 
-/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 #include <stdlib.h>
@@ -226,14 +227,13 @@ main
       ap += 1;
     }
 
-    if (a->N_layers == (Max_layers>7 ? 7 : Max_layers))
-    { fprintf(stderr,"Too many layers specified (maximum is %d)\n",
-                      Max_layers>7 ? 7 : Max_layers);
-      exit(1);
-    }
-
     if (*ap!=0 && strcmp(*ap,"/")!=0)
-    { a->N_hidden[a->N_layers] = size;
+    { if (a->N_layers == (Max_layers>7 ? 7 : Max_layers))
+      { fprintf(stderr,"Too many layers specified (maximum is %d)\n",
+                        Max_layers>7 ? 7 : Max_layers);
+        exit(1);
+      }
+      a->N_hidden[a->N_layers] = size;
       flgs->layer_type[a->N_layers] = type==-1 ? Tanh_type : type;
       for (i = 0; i<a->N_inputs; i++) 
       { flgs->omit[i] = (flgs->omit[i] | ((flgs->omit[i]&1)<<(a->N_layers+1))) & ~1;

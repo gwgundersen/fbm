@@ -112,9 +112,10 @@ sometimes goes up rather than down), the stepsize will have to be
 reduced.  Net-gd does not try to determine relative stepsizes itself,
 but stepsizes for groups of parameters can be set individually.
 
-The above command takes about five minutes on our 550MHz Pentium III.
-While waiting, you can monitor progress using net-plt.  For example,
-the progress of the training error can be viewed with the command:
+The above command takes 200 seconds on the system used (see
+Ex-system.doc).  While waiting, you can monitor progress using
+net-plt.  For example, the progress of the training error can be
+viewed with the command:
 
     > net-plt t l blog.gd | plot
 

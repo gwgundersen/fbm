@@ -1,15 +1,16 @@
 /* MIX-MC.C - Interface between mixture model and Markov chain modules. */
 
-/* Copyright (c) 1997-2000 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 #include <stdlib.h>
@@ -136,6 +137,12 @@ void mc_app_initialize
       exit(1);
     }
 
+    if (data_spec && logg->actual_size['D'] !=
+                       data_spec_size(data_spec->N_inputs,data_spec->N_targets))
+    { fprintf(stderr,"Data specification record is the wrong size!\n");
+      exit(1);
+    }
+
     if (data_spec!=0) 
     { mix_data_read (1, 0, mx, model);
     }
@@ -177,7 +184,7 @@ void mc_app_initialize
       }
  
       if (have_noise_SD 
-       && logg->actual_size['O'] != N_active*N_targets * sizeof *noise_SD)
+       && logg->actual_size['N'] != N_active*N_targets * sizeof *noise_SD)
       { fprintf(stderr, 
          "Wrong size of record of component noise standard deviations!\n");
         exit(1);

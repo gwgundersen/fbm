@@ -1,6 +1,6 @@
 # MAKEFILE FOR MARKOV CHAIN MONTE CARLO MODULES.
 
-# Copyright (c) 1995, 1996, 2000 by Radford M. Neal 
+# Copyright (c) 1995-2002 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 
@@ -17,7 +17,7 @@ programs:	mc-spec mc-temp-sched mc-temp-filter mc-ais
 
 modules:	mc-traj.o mc-iter.o mc-metropolis.o mc-hybrid.o mc-slice.o \
 		mc-util.o mc-quantities.o \
-		mc-grad-test.o mc-stepsizes.o mc.o
+		mc-grad-test.o mc-stepsizes.o mc.o mc-his.o
 
 clean:
 	rm -f *.o mc-spec mc-temp-sched mc-temp-filter mc-ais

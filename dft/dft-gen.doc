@@ -1,0 +1,37 @@
+
+
+DFT-GEN:  Generate parameters randomly from the prior, or fix them.
+
+Dft-gen writes a series of independently-generated values for the
+overall hyperparameters and diffusion tree parameters to a log file.
+
+Usage:
+
+    dft-gen log-file [ max-index ] [ "fix" [ SD-value ] ]
+
+Records of parameters with indexes from zero up to the indicated index
+are generated (the default is max-index of zero).  If the log file
+already contains records with some of these indexes, only records with
+indexes greater than the last existing record are generated.
+
+If just max-index is specified, the parameters are generated randomly
+from the prior, using the random number seed taken from the log file
+(eg, as specified by rand-seed).
+
+The "fix" option is useful for initializing iterative programs.  If it
+is given, the parameters are not generated at random, but are instead
+set to fixed values.  The noise standard deviation hyperparameters and
+the diffusion tree standard deviations will be fixed to the value
+given after "fix", or at the location parameter of their prior
+distribution, if no such value is specified.  The parameters of the
+divergence function are fixed at the location parameter of their prior
+distribution.
+
+No data model is required to use dft-gen, but if a model is specified,
+the hyperparameters associated with it are generated as well.
+
+Note that dft-gen does not generate any actual diffusion trees to go
+with the training cases, nor does it generate latent values for
+training cases.
+
+            Copyright (c) 1995-2003 by Radford M. Neal

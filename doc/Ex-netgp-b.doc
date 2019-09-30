@@ -32,9 +32,7 @@ similar to those used in the regression problem (see Ex-netgp-r.doc):
     Number of training cases: 300
     Number of test cases: 200
 
-The 'net-spec' command here differs only in the number of input units
-(2) and the number of hidden units (15).  The data model used is
-"binary", with no need for a noise level prior.
+The data model used is "binary", with no need for a noise level prior.
 
 The 'data-spec' command also says that there are two inputs, and one
 target.  It also has a third argument of "2" just before the "/",
@@ -55,7 +53,7 @@ well try something different (the mc-spec command needed here is long,
 so it is continued by putting a "\" at the end of the first line):
 
     > mc-spec blog.net repeat 10 sample-sigmas heatbath 0.95 \
-                             hybrid 100:10 0.3 negate
+                                 hybrid 100:10 0.3 negate
     > net-mc blog.net 200
 
 The above 'mc-spec' command specifies the variant of hybrid Monte
@@ -66,9 +64,9 @@ rejection rate must be quite small.  This alternative method has the
 advantage that it allows for more frequent hyperparameter updates
 (with 'sample-sigmas').
 
-On our 550MHz Pentium III, the 200 iterations requested above take
-about eleven minutes.  During this time, one can monitor the
-simulation, for instance with the command:
+The 200 iterations requested above take about 7.5 minutes on the
+system used (see Ex-system.doc).  During this time, one can monitor
+the simulation, for instance with the command:
 
     > net-plt t h1h2h3 blog.net | plot
 
@@ -94,23 +92,22 @@ right.  We can get such predictions as follows:
     Case  Inputs        Targets  Log Prob  Guesses  Wrong?
 
        1   -1.56   0.90    0.00    -0.001      0       0
-       2    0.09  -0.13    1.00    -0.054      1       0
-       3   -0.79   0.85    0.00    -0.003      0       0
+       2    0.09  -0.13    1.00    -0.057      1       0
+       3   -0.79   0.85    0.00    -0.004      0       0
 
                      (some lines omitted )
 
-      99    0.14   0.86    1.00    -2.590      0       1
-     100    0.21   0.18    1.00    -0.097      1       0
-     101   -1.32  -0.19    0.00    -0.008      0       0
+      99    0.14   0.86    1.00    -2.594      0       1
+     100    0.21   0.18    1.00    -0.103      1       0
+     101   -1.32  -0.19    0.00    -0.006      0       0
 
                      (some lines omitted )
 
-     198    1.49   0.70    0.00    -0.028      0       0
-     199   -2.23  -0.28    0.00    -0.002      0       0
+     198    1.49   0.70    0.00    -0.030      0       0
+     199   -2.23  -0.28    0.00    -0.007      0       0
      200   -0.91  -0.03    0.00    -0.055      0       0
 
-    Average log probability of targets:    -0.245+-0.034
-
+    Average log probability of targets:    -0.244+-0.034
     Fraction of guesses that were wrong:  0.0850+-0.0198
 
 The "itmp" options ask for output listing the inputs, the targets, the
@@ -176,28 +173,28 @@ Unfortunately, for the very same reason, the direct "sample-values"
 operation is not available, so one must use Gibbs sampling or
 Metropolis-Hastings updates (the met-values or mh-values operations).
 
-The 50 sampling iterations take about thirteen minutes on our 550MHz
-Pentium III.  While you wait, you can check the progress of the
+The 50 sampling iterations take 5.9 minutes on the system used (see
+Ex-system.doc).  While you wait, you can check the progress of the
 hyperparameters using gp-display:
 
     > gp-display blog.gpl
 
     GAUSSIAN PROCESS IN FILE "blog.gpl" WITH INDEX 10
-
+    
     HYPERPARAMETERS
-
+    
     Constant part:
-
+    
           1.000
-
+    
     Jitter part:
-
+    
             0.1
-
+    
     Exponential parts:
-
-         10.418
-          0.486 :      0.486      0.486
+    
+          5.973
+          0.620 :      0.620      0.620
 
 Note that there are only two variable hyperparameters, since the
 constant and jitter parts are fixed, and the relevance hyperparameters
@@ -218,8 +215,8 @@ classification performance:
 
     Fraction of guesses that were wrong:  0.0950+-0.0208
 
-This takes about about five seconds on our machine.  This is slower
-than prediction using a network model, since the Cholesky
+This takes 2.5 seconds on the system used (see Ex-system.doc).  This
+is slower than prediction using a network model, since the Cholesky
 decomposition of the covariance matrix must be found for each
 iteration used (saving these would take up lots of disk space).  The
 accuracy achieved is about the same as for the network model, which is

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # WRAP AROUND A MARKOV CHAIN SIMULATION.  Linked to under names
 # like dist-wrap, net-wrap, etc. to get versions for each module.

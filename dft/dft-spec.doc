@@ -1,0 +1,77 @@
+
+
+DFT-SPEC:  Specify a diffusion tree model, or display existing spec.
+
+Dft-spec creates a log file containing the specifications for a
+Dirichlet diffusion tree model, along with the associated priors over
+hyperparameters.  When invoked with just a log file as an argument, it
+displays the specifications stored in that log file.
+
+Usage:
+
+    dft-spec log-file N-inputs N-targets { / SD-prior c0 [ c1 [ c2 ] ] }
+
+or:
+
+    dft-spec log-file
+
+N-inputs and N-targets are the numbers of input variables and target
+variables in the model.  The model tries to represent the joint
+distribution of the targets.  At present, the number of inputs
+(N-inputs) must be 0, but in future, input variables may be allowed,
+in which case the model will define a joint conditional distribution
+for the target values given observed values for the inputs.
+
+One or more specifications for Dirichlet diffusion trees must follow
+the number of targets.  The values at the terminal nodes of all these
+trees are added together to give the values used to model the observed
+data.  Each specification starts with a prior for the standard
+deviations of the diffusion process for each variable, in a two-level
+hierarchical form, in which a top level standard deviation common to
+all variables gives the centre of the prior for the standard deviation
+for each individual variable.  For the syntax of hierarchical prior
+specifications, see prior.doc.  Note that levels in the hierarcy can
+be omitted, and in particular, a prior specification that is just a
+number produces a degenerate prior in which the parameter is fixed at
+that number.
+
+The remainder of the specification for a diffusion tree is the prior
+for the parameters of the divergence function.  At present, divergence
+functions of the following form are supported:
+
+    a(t) = c0 + c1/(1-t) + c2/(1-t)^2
+
+Priors for the parameters c0, c1, and c2 are specified in the same
+format as the standard deviation prior, except that there is only one
+level.  A simple number makes the corresponding parameter be a
+constant, and specifying zero or "-" eliminates the corresponding
+term.  If c2 and/or c1 are omitted, they default to zero.
+
+The specification of the overall model is completed using the
+model-spec command (see model-spec.doc), which specifies whether the
+model is for binary or real data.  
+
+For real data, model-spec specifies the prior for the "noise" standard
+deviations, in a three-level hierarchical form, which allows for a
+top-level standard deviation common to all target values, giving the
+centre of the prior distribution for the standard deviation for each
+target value.  If there are only two levels, the distribution of the
+data is normal with this noise standard deviation and with mean given
+by the sum of the values from the diffusion trees.  If a third level
+is given, the data has a t distribution with degrees of freedom given
+by the third alpha value.
+
+For binary data, the probability that a target is 1 is 1/(1+exp(-v)),
+where v is the latent value for that variable, which is the sum of the
+diffusion values from the diffusion trees.
+
+If no data model is specified, the data is assumed to be real valued,
+and to have no additional noise (ie, the diffusion tree(s) directly
+produce the observed values).
+
+Note: There is no way at present to make the diffusion trees have
+anything other than zero means for each variable, but you can get an
+equivalent effect by transforming the target values by subtracting a
+constant, as described in data-spec.doc.
+
+            Copyright (c) 1995-2003 by Radford M. Neal

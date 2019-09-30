@@ -41,4 +41,4 @@ matrix is poorly conditioned, it is possible for some of the
 eigenvalues found to be negative, even though these cannot be correct,
 since the covariance matrix is supposed to be positive semi-definite.
 
-            Copyright (c) 1997 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal

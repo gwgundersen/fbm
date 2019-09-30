@@ -76,7 +76,7 @@ often appropriate.  Here, the "0.5" after the colon controls how vague
 the prior is (closer to zero is more vague).  The "0.05" specifies the
 location of this vague distribution, but due to the asymmetry of the
 tails, it is closer to being the lower limit of the prior than the
-centre (for vague priors such as this). 
+centre (for vague priors such as this).
 
 The "x" in front of the prior for the hidden-to-output weights
 indicates that the prior should be automatically rescaled based on the
@@ -92,22 +92,20 @@ data set.  We do this with the 'model-spec' command:
 In this case, the targets are real-valued, and are modeled as the
 network output plus Gaussian noise, with the noise standard deviation
 being a hyperparameter having the prior given by the last argument of
-the command.  The syntax of the prior specification is the same as 
-for the priors on network parameters.
+the command.  The syntax of the prior specification is the same as for
+the priors on network parameters. 
 
 You can view the architecture and prior specifications stored in the
 log file by invoking 'net-spec' with just a log file argument.  In
 this example, this should give the following result:
 
     &gt; net-spec rlog.net
-    
+
     Network Architecture:
     
-      Size of input layer:    1
-      Sizes of hidden layers: 8
-      Size of output layer:   1
-    
-      Data model: real
+      Input layer:     size 1
+      Hidden layer 0:  size 8  tanh
+      Output layer:    size 1
     
     
     Prior Specifications:
@@ -157,9 +155,9 @@ see <A HREF="numin.html">numin.doc</A>.
 Though it is not done above, the 'data-spec' command also allows you
 to specify transformations to be applied to the inputs or targets
 before they are used.  This is useful, for example, if you wish to use
-inputs that have been "normalized" to have mean zero and variance one,
-based on the training data. See <A HREF="data-spec.html">data-spec.doc</A> for the details.  In
-this example, the data already has approximately mean zero and
+inputs that have been "standardized" to have mean zero and variance
+one, based on the training data.  See <A HREF="data-spec.html">data-spec.doc</A> for the details.
+In this example, the data already has approximately mean zero and
 variance one, so the priors used are sensible without normalization.
 
 In the training runs reported in the thesis, I used a short "initial
@@ -210,7 +208,7 @@ somewhat to the training data.  We can now start serious sampling with
 the following commands:
 
     &gt; mc-spec rlog.net sample-sigmas heatbath hybrid 1000:10 0.4
-    &gt; net-mc rlog.net 100
+    &gt; net-mc rlog.net 400
 
 The 'mc-spec' command appends a new set of Markov chain operations to
 the log file, which will override the previous set.  These operations
@@ -225,51 +223,51 @@ experiment in order to find out how large this factor can be while
 keeping the rejection rate low.  The use of a "window" of around 10
 states costs little and is often beneficial.
 
-The 100 iterations of the sampling phase started with the command
-'net-mc rlog.net 100' will take a little while to complete (about one
-minute on our 550MHz Pentium III).  If you put the command in the
-background (or add a '&amp;' to the end of the 'net-mc' command), you will
-be able to monitor progress while you wait.  For example, you can look
-at the last network saved in the log file (or any earlier one) using
+The 399 iterations of the sampling phase started with the command
+'net-mc rlog.net 400' take 160 seconds to complete on the the system
+used (see <A HREF="Ex-system.html">Ex-system.doc</A>).  If you put the command in the background
+(or add a '&amp;' to the end of the 'net-mc' command), you will be able to
+monitor progress while you wait.  For example, you can look at the
+last network saved in the log file (or any earlier one) using
 'net-display'.  After a few seconds, you might see the following:
 
     &gt; net-display rlog.net
-  
-    Network in file "rlog.net" with index 15
 
+    Network in file "rlog.net" with index 15
+    
     Input to Hidden Layer 0 Weights [1]
     
-     3.57 3.57: -2.75  +2.66  +4.67  +1.67  -2.99  +3.42  -0.94  +2.69
+     1.38 1.38: -0.85  +1.51  -0.39  -0.08  -2.74  -0.92  +0.87  -0.46
     
     Hidden Layer 0 Biases [2]
     
-          3.66: -0.40  +2.96  +9.48  +2.35  -2.66  -3.74  +8.69  -6.43
+          2.49: +1.48  -1.93  -4.53  +2.42  -0.39  +2.29  -3.24  +2.46
     
     Hidden Layer 0 to Output Weights [3]
     
-     0.57 0.57: -0.73
+     1.54 1.54: -2.73
     
-          0.57: -0.59
+          1.54: -2.32
     
-          0.57: +0.26
+          1.54: +0.70
     
-          0.57: +0.07
+          1.54: +1.88
     
-          0.57: -0.51
+          1.54: -0.71
     
-          0.57: -0.57
+          1.54: -0.31
     
-          0.57: +0.64
+          1.54: +0.72
     
-          0.57: +0.82
+          1.54: +1.50
     
     Output Biases [4]
     
-        100.00: +0.51
+        100.00: -0.21
     
     Noise levels
     
-       0.08 -  0.08
+       0.09 -  0.09
 
 This display of network parameters and hyperparameters is divided into
 sections for different parameter groups.  Within each section, the
@@ -318,28 +316,28 @@ proceed for quite a long time, but predictions based on shorter runs
 may nevertheless be quite good.
 
 For this problem, let's assume that we have decided to discard the
-first 20 iterations as perhaps not coming from the equilibrium
+first 100 iterations as perhaps not coming from the equilibrium
 distribution.  The following command will use the networks from the
-remaining 80 iterations to produce predictions for all test cases, and
+remaining 300 iterations to produce predictions for all test cases, and
 report the average squared error:
 
-    &gt; net-pred itn rlog.net 21: 
+    &gt; net-pred itn rlog.net 101: 
 
-    Number of networks used: 80
+    Number of iterations used: 300
 
     Case  Inputs Targets   Means Error^2
 
-       1    0.92    1.49    1.58  0.0075
-       2    0.71    1.83    1.79  0.0014
-       3    0.20    1.72    1.68  0.0016
+       1    0.92    1.49    1.57  0.0059
+       2    0.71    1.83    1.78  0.0017
+       3    0.20    1.72    1.68  0.0013
  
             ( middle lines omitted )
 
       98   -0.69    0.35    0.35  0.0000
-      99   -1.33    0.19    0.37  0.0306
-     100   -0.09    1.31    1.24  0.0056
+      99   -1.33    0.19    0.37  0.0303
+     100   -0.09    1.31    1.24  0.0061
 
-    Average squared error guessing mean:   0.00937+-0.00123
+    Average squared error guessing mean:   0.00941+-0.00123
 
 The options "itn" specified ask for a listing of the inputs ("i") and
 targets ("t") for each case, along with the mean ("n") output for that
@@ -356,7 +354,7 @@ It is also possible to get predictions for cases that are not in the
 test set that was specified with 'data-spec'.  For example:
 
     &gt; net-pred nb rlog.net 11: / "%echo 2.3"
-      +1.36491809e+00
+      +1.36798018e+00
 
 Here, the options "nb" ask for only the predictive mean, with "bare"
 output (no headings, also higher precision, in exponential format).
@@ -365,39 +363,42 @@ just one case) should be taken from the output of the Unix command
 "echo 2.3", which just outputs the number 2.3.
 
 The 'net-pred' program can also find the median and the 10% and 90%
-quantiles of the predictive distribution, as illustrated below:
+quantiles of the predictive distribution.  The program limits the
+number of iterations that can be used when finding medians and
+quantiles, so the command below uses "%5" to look only at the 60
+iterations above 1100 with numbers that are multiples of five:
 
-    &gt; net-pred itdq rlog.net 21:
+    &gt; net-pred itdq rlog.net 101:%5
 
-    Number of iterations used: 80
+    Number of iterations used: 60
     
     Case  Inputs Targets Medians |Error| 10% Qnt 90% Qnt
 
-       1    0.92    1.49    1.58  0.0901    1.46    1.70
-       2    0.71    1.83    1.79  0.0359    1.66    1.91
-       3    0.20    1.72    1.68  0.0376    1.56    1.80
-       4    0.19    1.76    1.65  0.1093    1.54    1.77
-       5    1.18    1.18    1.21  0.0297    1.08    1.34
-       6   -2.10    0.05    0.05  0.0052   -0.10    0.20
-       7   -1.34    0.30    0.37  0.0639    0.25    0.49
-       8   -1.62    0.48    0.42  0.0589    0.28    0.55
-       9   -2.29   -0.41   -0.27  0.1434   -0.54    0.05
-      10   -0.23    0.89    0.98  0.0841    0.86    1.09
-
-                        (some lines omitted)
-
-      91   -0.16    1.21    1.10  0.1058    0.99    1.22
-      92    0.79    1.70    1.72  0.0254    1.60    1.84
-      93   -1.99    0.19    0.18  0.0099    0.05    0.32
-      94    0.18    1.71    1.65  0.0608    1.53    1.77
-      95    1.56    0.84    0.82  0.0167    0.68    0.94
-      96   -0.32    0.80    0.82  0.0217    0.69    0.95
-      97   -0.12    1.23    1.17  0.0588    1.05    1.29
-      98   -0.69    0.35    0.35  0.0021    0.23    0.48
-      99   -1.33    0.19    0.37  0.1810    0.24    0.50
-     100   -0.09    1.31    1.24  0.0749    1.12    1.36
+       1    0.92    1.49    1.57  0.0791    1.45    1.68
+       2    0.71    1.83    1.79  0.0386    1.67    1.90
+       3    0.20    1.72    1.68  0.0338    1.57    1.80
+       4    0.19    1.76    1.66  0.0983    1.55    1.78
+       5    1.18    1.18    1.22  0.0437    1.11    1.34
+       6   -2.10    0.05    0.06  0.0151   -0.08    0.20
+       7   -1.34    0.30    0.37  0.0615    0.24    0.49
+       8   -1.62    0.48    0.40  0.0766    0.27    0.53
+       9   -2.29   -0.41   -0.25  0.1599   -0.46   -0.06
+      10   -0.23    0.89    0.97  0.0782    0.85    1.09
     
-    Average abs. error guessing median:    0.07723+-0.00581
+                        (middle lines omitted)
+
+      91   -0.16    1.21    1.10  0.1079    0.98    1.22
+      92    0.79    1.70    1.72  0.0185    1.60    1.83
+      93   -1.99    0.19    0.19  0.0027    0.05    0.32
+      94    0.18    1.71    1.65  0.0613    1.53    1.77
+      95    1.56    0.84    0.83  0.0060    0.71    0.95
+      96   -0.32    0.80    0.82  0.0153    0.70    0.94
+      97   -0.12    1.23    1.18  0.0524    1.06    1.29
+      98   -0.69    0.35    0.35  0.0025    0.23    0.46
+      99   -1.33    0.19    0.36  0.1724    0.24    0.49
+     100   -0.09    1.31    1.24  0.0784    1.12    1.35
+    
+    Average abs. error guessing median:    0.07807+-0.00594
 
 We see here that all but one of the actual targets for the twenty test
 cases shown lie between the 10% and 90% quantiles.  When the median is
@@ -520,12 +521,12 @@ time to compute (the 'E' and 'H' quantities, defined in the "mc"
 module, may also take a long time).  See <A HREF="gp-quantities.html">gp-quantities.doc</A> for
 details.
 
-Once the gp-mc run has completed (which takes about half a minute on
-our 550MHz Pentium III), the iterations from the latter part of the
-run can be used to make predictions for test cases.  This is done
-using 'gp-pred', which operates much like 'net-pred'.  The following
-command makes predictions for the test cases based on the last 80 of
-the 100 iterations, and reports the average squared error:
+Once the gp-mc run has completed, which takes 13 seconds on the system
+used (see <A HREF="Ex-system.html">Ex-system.doc</A>), iterations from the latter part of the run
+can be used to make predictions for test cases.  This is done using
+'gp-pred', which operates much like 'net-pred'.  The following command
+makes predictions for the test cases based on the last 80 of the 100
+iterations, and reports the average squared error:
 
     &gt; gp-pred na rlog.gp 21:
 
@@ -533,15 +534,15 @@ the 100 iterations, and reports the average squared error:
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.00952+-0.00126
+    Average squared error guessing mean:   0.00999+-0.00139
 
-This takes less than a second on our machine.  Predictions will take
-longer when the number of training cases is larger, or if the median
-or log probability are to be found (options "d" or "p" of 'gp-pred').
-As can be seen, the performance of the Gaussian process model is quite
-similar to that of the neural network model for this problem.  (The
-difference in average performance seen is probably not significant,
-considering the standard errors.)
+This takes less than a second on the sytem used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
+Predictions will take longer when the number of training cases is
+larger, or if the median or log probability are to be found (options
+"d" or "p" of 'gp-pred').  As can be seen, the performance of the
+Gaussian process model is quite similar to that of the neural network
+model for this problem.  (The difference in average performance seen
+is probably not statistically significant.)
 
 The predictions for test cases made above are found directly from the
 covariances between the targets in the training cases and the unknown

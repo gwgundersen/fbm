@@ -39,4 +39,4 @@ latter option is selected by preceding the number of bins with a minus
 sign.  Values falling outside the range are discarded, except that
 they affect the normalization of counts to give fractions.
 
-            Copyright (c) 1995 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal

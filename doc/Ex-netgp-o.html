@@ -46,7 +46,7 @@ The commands used to do this are as follows:
     &gt; net-mc olog.net 1
 
     &gt; mc-spec olog.net sample-sigmas heatbath hybrid 1000:10 0.4
-    &gt; net-mc olog.net 100
+    &gt; net-mc olog.net 400
 
 The crucial difference is in the 'model-spec' command, where the noise
 prior of 0.05:0.5::4 specifies that the per-case noise precision
@@ -57,31 +57,31 @@ of the way the noise was actually generated, but its fairly heavy
 tails are enough to prevent the model from paying undue attention to
 the outliers.
 
-The above commands take about one minute on our 550MHz Pentium III.
-The resulting model can be tested on data from the same source using
-net-pred:
+The above commands take 165 seconds on the system used (see
+<A HREF="Ex-system.html">Ex-system.doc</A>).  The resulting model can be tested on data from the
+same source using net-pred:
 
-    &gt; net-pred na olog.net 31:
+    &gt; net-pred na olog.net 101:
 
-    Number of networks used: 70
+    Number of iterations used: 300
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.02129+-0.01336
+    Average squared error guessing mean:   0.01917+-0.01057
 
 One can also see how well the model does on the uncorrupted data that
 was used originally:
 
-    &gt; net-pred na olog.net 31: / rdata@101:200 .
+    &gt; net-pred na olog.net 101: / rdata@101:200 .
 
-    Number of networks used: 70
+    Number of iterations used: 300
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.01201+-0.00209
+    Average squared error guessing mean:   0.00927+-0.00124
 
-This is not much different than the results obtained earlier with the
-model trained on uncorrupted data.
+This is similar to the results obtained earlier with the model trained
+on uncorrupted data (slightly better, in fact, but that's just luck).
 
 In contrast, the results are substantially worse when the data with
 outliers is used to train a standard model where the noise is
@@ -106,7 +106,7 @@ be sampled.  The following commands illustrate how this is done:
     &gt; mc-spec olog.gpt sample-variances heatbath hybrid 20:4 0.5
     &gt; gp-mc olog.gpt 200
 
-This takes a bit over a minute on our 550MHz Pentium III.  The
+This takes 30 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).  The
 progress of the run can be monitored by examining the case-by-case
 noise standard deviations in (say) the first 8 training cases, as
 follows:
@@ -126,7 +126,7 @@ Predictions can be made using 'gp-pred':
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.01926+-0.01111
+    Average squared error guessing mean:   0.01939+-0.01134
 
 This performance is very similar to that of the network model.
 </pre>

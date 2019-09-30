@@ -1,0 +1,408 @@
+
+
+DFT-MC:  Do Markov chain sampling for a Dirichlet diffusion tree model.
+
+The dft-mc program is the specialization of xxx-mc to the task of
+sampling from the posterior distribution of the overall model
+hyperparameters, the diffusion tree parameters, the latent vectors for
+training cases, and the structures, divergence times, and node
+locations of the diffusion trees.  If no training data is specified,
+the prior distribution for the overall hyperparameters and diffusion
+tree parameters is sampled from, in which case only the gibbs-sigmas
+and slice-div operations below do anything (this is useful only for
+testing).
+
+The state of the simulation has up to five parts: 
+
+  1) overall hyperparameter values
+  2) parameters associated with each diffusion tree
+  3) diffusion tree structure and divergence times
+  4) latent vectors for training cases
+  5) locations for non-terminal nodes in the diffusion trees
+
+The first three parts are always present, once sampling has begun, but
+latent vectors and node locations are sometimes optional - if not
+present, they are integrated over.  Four situations can be
+distinguished in this respect, first according to whether the model is
+Gaussian (or there is no model - ie, no noise) or non-Gaussian (binary
+data or real data with t-distributed noise), and second according to
+whether there is only one diffusion tree or there is more than one
+diffusion tree.  The following table shows for each situation whether
+latent vectors and/or node locations are absolutely required (req),
+and whether they are needed in practice to do useful sampling (need):
+
+                    GAUSSIAN MODEL           NON-GAUSSIAN MODEL
+
+  ONLY ONE TREE     req:  neither            req:  latent vectors or 
+                                                   node locations
+                    need: neither            need: latent vectors
+
+  SEVERAL TREES     req:  node locations     req:  node locations
+
+                    need: node locations     need: node locations and
+                                                   latent vectors
+
+Even when keeping latent vectors and/or node locations around is not
+necessary, it is possible that doing so will reduce computation time.
+Occasionally, one might wish to discard latent vectors and/or node
+locations that are useful for sampling but not absolutely required at
+the end of each iteration, in order to conserved on disk space,
+resampling them at the beginning of the next iteration.
+
+Note that the locations of terminal nodes are never stored - if there
+is only one tree, they are the same as the latent vectors; if there is
+more than one tree, these terminal node locations can easily be
+integrated over given the latent vectors.
+
+If the overall hyperparameters or tree parameters are not present when
+dft-mc is run, they are set to the location parameters of their
+priors.  If trees are not present to begin, random trees are generated
+by sucessively pairing randomly selected terminal or non-terminal
+nodes, with divergence times ranging from zero to 0.1.  As described
+below, latent vectors and node locations are also created as required
+by some operations, whereas for other operations, one or the other
+must be present beforehand.
+
+The generic features of this program are described in xxx-mc.doc.
+Note, however, that the dynamical state for the standard Markov chain
+operations is null for this module, so the standard Markov chain
+operations (described in mc-spec.doc) are of no use.  The state can be
+updated only by using the application-specific operations described
+below.  Time requirements are given in terms of the number of training
+cases, N, the number of trees, T, and the number of target variables, 
+V, and the average depth of a node in the tree, D, which is typically
+of order log(N).  It is assumed that T is much less than N.  The number 
+of scans, K, that is an argument to some operations defaults to one.
+
+Typical uses of these operations are described after the list.
+
+   gibbs-hypers [ K ]
+
+       Does K Gibbs sampling scans updating the hyperparameters 
+       controlling the standard deviations of the diffusions for each
+       variable, for each tree.  If node locations and/or latent values
+       are present, the updates are done conditional on these values;
+       otherwise values for node locations are generated, as for
+       sample-locations and then discarded once the hyperparameters
+       have been updated.  Locations for terminal nodes are also
+       generated before the K Gibbs sampling updates, and discarded
+       afterwards.  The time required for this operation is O(N*T*K).
+
+       Latent vectors and node locations must not both be absent when 
+       the data model is non-Gaussian.  Node locations must not be
+       absent when there is more than one tree.
+
+   gibbs-noise [ K ]
+
+       Does K Gibbs sampling scans updating the noise standard deviations,
+       if the data model is real; does nothing if the model isn't real.
+       If latent vectors are present, the updates are done conditional
+       on these values; otherwise values for latent vectors are 
+       generated, as for sample-latent, and then discarded once the noise
+       parameters have been updated.  Locations for terminal nodes are
+       also generated before the K Gibbs sampling updates, and discarded 
+       afterwards, as are case-by-case noise variances, if there is a third 
+       level in the prior for the noise.  The time required for this 
+       operation is O(N*T*K).
+
+       Latent vectors and node locations must not both be absent when the
+       data model is non-Gaussian.  Node locations must not be absent when
+       there is more than one tree.
+
+   gibbs-sigmas [ K ]
+
+       Does K Gibbs sampling scans for both diffusion standard deviations
+       and noise standard deviations, combining the effects of gibbs-hyper
+       and gibbs-noise.  Equivalent to "repeat K gibbs-hypers gibbs-noise".
+
+   slice-div [ scale [ K ] ]
+
+       Does K slice sampling updates for the parameters of the divergence 
+       functions for each of the diffusion trees.  The single variable slice 
+       sampling procedure is used, applied to the logarithms (base e) of the 
+       parameters, using an initial interval of width "scale" (default one), 
+       which is not expanded.  This takes O(N*T*K) time.
+
+   sample-latent
+
+       Samples values for the latent vectors underlying training cases,
+       independently of any previous such values.  If non-terminal node
+       locations are present, sampling is done conditional on these values,
+       which is possible for any data model.  If node locations are not 
+       present, this operation is possible only when there is only one tree,
+       and the targets are real-valued, with no data model or with a Gaussian 
+       noise model.  The time required is O(N*T).
+
+   sample-locations
+
+       Samples values for the locations of non-terminal nodes.  This is
+       possible only when there is only one tree.  If latent vectors are 
+       present, the sampling is conditional on their values.  If latent 
+       vectors are not present, sampling is conditional on the observed 
+       data, which is possible only when the data is real, with no data model 
+       or with a Gaussian noise model.  The time required is O(N).
+
+   gibbs-latent [ K ]
+
+       Does K Gibbs sampling scans for the latent vectors underlying 
+       training cases, updating the vector for each training case in turn.  
+       This operation is possible for any data model.  If node locations 
+       are present, the Gibbs updates are conditional on these locations, 
+       and this operation is equivalent to sample-latent.  If node locations 
+       are absent, udpates are based on integrating over the node locations, 
+       which is possible only when there is only one tree.  The time required 
+       is O(K*N*T).
+
+       If latent vectors were not present to begin, they are created,
+       as if create_latent were done.
+
+   gibbs-locations [ K ]
+
+       Does K Gibbs sampling scans for the node locations of each tree.
+       In each update, the entire set of node locations for one tree is
+       updated at once, conditional on the latent vectors or the data.  
+       If there is only one tree, this operation is equivalent to
+       sample-locations.  This operation is possible for any data model 
+       if latent vectors are present; if latent vectors are absent, it is 
+       possible only when the data is real, with no data model or with a 
+       Gaussian noise model.  The time required is O(K*N*T^2).
+
+       If node locations were not present to begin, they are created,
+       as if create_locations were done.
+
+   mh-latent [ scale [ K ] ]
+
+       This operation does nothing if node locations are present, or if
+       there is no data model, and is not allowed if there is more than 
+       one tree.  Otherwise, it does K Metropolis-Hastings updates for the 
+       latent vectors underlying training cases.  Each update proposes a 
+       change to the entire set of latent vectors simultaneously, with 
+       the proposed vectors found by multiplying the current vectors by 
+       sqrt(1-scale^2) and then adding Gaussian noise with mean zero and 
+       covariance given by the covariance of the latent vectors times scale^2.
+       The default for scale is one, in which case the current vectors do not 
+       affect the proposal, but this is probably not desirable in most cases.
+
+       If latent vectors were not present to begin, they are created,
+       as if create_latent were done.
+
+   discard-latent
+
+       Discard the values stored for the latent vectors for each training
+       case.  Does nothing if there are no latent vectors. 
+
+       Note that if latent vectors are discarded during a run, they 
+       should be re-created (if desired) with sample-latent, not with
+       create-latent, as the later does not preserve the desired distribution.
+
+   discard-locations
+
+       Discard the values stored for node locations.  Does nothing if
+       node locations aren't present.  
+
+       Note that if node locations are discarded during a run, they 
+       should be re-created (if desired) with sample-locations, not with
+       create-locations, as the later does not preserve the desired 
+       distribution.
+
+   create-latent
+
+       Creates latent vectors if they do not already exist.  The new
+       vectors be equal to the data vectors if the data is real, and
+       will have values of plus or minus one if the data is binary
+       (with +1 for 1 and -1 for 0).
+
+       Note that this operation should be used only in order to set
+       up a run properly - discarding and recreating the latent variables
+       during the course of a run will not preserve the posterior 
+       distribution.
+
+   create-locations
+
+       Creates node locations if they do not already exist.  The new
+       location vectors will all be zero.
+
+       Note that this operation should be used only in order to set
+       up a run properly - discarding and recreating the node locations
+       during the course of a run will not preserve the posterior 
+       distribution.
+
+   slice-positions [ [-]K ]
+
+       Does K passes over the terminal nodes of each tree, performing for 
+       each terminal node an update of the following sort.  One of the
+       direct ancestors of the terminal node is selected uniformly at
+       random.  This ancestral node is moved to a new position along
+       the path from the root to the terminal node, and a new location
+       for this ancestral node is drawn, if node locations are being kept.
+       This new position for the ancestral node is identified by the time of
+       divergence at this node of the path to the first terminal from the path
+       to the second terminal.  This divergence time is updated using slice
+       sampling, with the initial interval being from zero to the divergence
+       time of the ancestor's other child (not on the path to the selected
+       terminal node).  The choice of a new time is made on the basis of the 
+       probability of the new configuration of the tree, with the location of 
+       the ancestral node integrated over.  
+
+       Latent vectors must be present for this operation if the data model
+       is non-Gaussian.  Node locations must be present if there is more
+       than one tree.
+
+       If the average number of points tested before one is accepted is E, 
+       the time required for this operation is O(K*N*T*D*E).  
+
+       If "-" precedes K, incremental recomputation of likelihoods (when
+       node locations are absent) is disabled.  This may be useful as a way 
+       of reducing memory usage, at a large cost in increased time, but it 
+       is mainly intended for testing.
+
+   slice-positions2 [ [-]K ]
+
+       Like slice-positions, except for the method used to choose which
+       ancestor of the terminal node is to be updated.  With slice-positions2,
+       a different terminal node is chosen at random, and the node updated
+       is the most recent common ancestor of this terminal node and the
+       original terminal node.
+
+   met-terminals [ [-]K ]
+
+       Does a series of Metropolis-Hastings updates for each terminal node, 
+       x, in turn, for all the trees, repeating this K times.  Each 
+       update proposes to move x's parent to a segment of the tree and a 
+       time within that segment that are chosen by simulating the generation 
+       of a hypothetical data point from the tree with x omitted.  The point 
+       where this generation process diverges defines the new position of x's 
+       parent; the current segment is a possible position, with a new time.  
+
+       If the move is accepted, the other child of x's present parent becomes 
+       a child of it's grandparent, and the parent of x will have the new 
+       segment's initial node as its parent and the new segment's final node 
+       as its other child.
+       
+       The change is accepted or rejected based on the change in probability
+       excluding the probability associated with the generation of the path 
+       in the tree to x, since this is already accounted for by the 
+       probability of proposing a change.  If latent vectors and/or node 
+       locations are present, the joint probability including these values 
+       is used, except that the location of the x's parent is integrated over.
+       A new location for the parent of x is generated afterward (regardless 
+       of whether the move was accepted or rejected).  If latent vectors or 
+       node locations are absent, the marginal probability integrating over 
+       these values is used.  Note that (as always) the terminal node 
+       locations are integrated over, regardless of whether latent vectors 
+       or non-terminal node locations are present.  
+
+       Latent vectors must be present for this operation if the data model
+       is non-Gaussian.  Node locations must be present if there is more
+       than one tree.
+
+       The time required for this operation is O(K*N*T*D).  
+
+       If "-" precedes K, incremental recomputation of likelihoods (when
+       node locations are absent) is disabled.  This may be useful as a way 
+       of reducing memory usage, at a large cost in increased time, but it 
+       is mainly intended for testing.
+
+   met-terminals-uniform [ [-]K ]
+
+       Like met-terminals, except that the new position of x's parent
+       is found by first choosing a segment of the tree (without x) uniformly 
+       at random, and then choosing a time within this segment uniformly.  
+       The new position is accepted or rejected based on the change in 
+       probability, accounting for the asymmetry of the proposal probabilities 
+       when the current and proposed segments are of different lengths.
+
+   met-nonterminals [ [-]K ]
+
+       Does a series of Metropolis-Hastings updates for each nonterminal node, 
+       x, except the root, for all the trees, repeating this K times.  Each 
+       update proposes to move x's parent to a segment of the tree and a 
+       time within that segment that are chosen by simulating the generation 
+       of a hypothetical data point from the tree with x omitted.  The point 
+       where this generation process diverges defines the new position of x's 
+       parent; the current segment is a possible position, with a new time.  
+       If this new divergence time for x's is later than the divergence time
+       for x itself, the process is repeated, until a valid divergence time
+       is generated, or until 100 attempts have failed.
+
+       If the move is accepted, the other child of x's present parent becomes 
+       a child of it's grandparent, and the parent of x will have the new 
+       segment's initial node as its parent and the new segment's final node 
+       as its other child.
+       
+       The change is accepted or rejected based on the change in probability
+       excluding the probability associated with the generation of the path 
+       in the tree to x, since this is already accounted for by the 
+       probability of proposing a change.  If latent vectors and/or node 
+       locations are present, the joint probability including these values 
+       is used, except that the location of the x's parent is integrated over.
+       A new location for the parent of x is generated afterward (regardless 
+       of whether the move was accepted or rejected).  If latent vectors or 
+       node locations are absent, the marginal probability integrating over 
+       these values is used.  Note that (as always) the terminal node 
+       locations are integrated over, regardless of whether latent vectors 
+       or non-terminal node locations are present.  
+
+       Latent vectors must be present for this operation if the data model
+       is non-Gaussian.  Node locations must be present if there is more
+       than one tree.
+
+       The time required for this operation is O(K*N*T*D).  
+
+       If "-" precedes K, incremental recomputation of likelihoods (when
+       node locations are absent) is disabled.  This may be useful as a way 
+       of reducing memory usage, at a large cost in increased time, but it 
+       is mainly intended for testing.
+
+The 'e' quantity described in mc-quantities.doc is updated by
+slice-params.  The 'r', 'm', and 'D' quantities are updated by the
+Metropolis operations, with 'm' and 'D' being set based on the update
+for one training case, selected at random each time.
+
+Here are some typical sequences of operations for each of the four
+situations described earlier (others are possible too):
+
+  ONLY ONE TREE, GAUSSIAN MODEL:
+
+       slice-positions gibbs-sigmas
+  or:  sample-locations slice-positions gibbs-sigmas
+
+  ONLY ONE TREE, NON-GAUSSIAN MODEL:
+
+       gibbs-latent slice-positions gibbs-sigmas
+  or:  gibbs-latent sample-locations slice-positions gibbs-sigmas
+  or:  mh-latent 0.1 slice-positions gibbs-sigmas
+
+  SEVERAL TREES, GAUSSIAN MODEL:
+
+       gibbs-locations slice-positions gibbs-sigmas
+
+  SEVERAL TREES, NON-GAUSSIAN MODEL:
+
+       create-latent gibbs-locations sample-latent slice-positions gibbs-sigmas
+
+The gibbs-sigmas operation is not needed if there are no variable
+hyperparameters.  A slice-div operation should be added after
+gibbs-sigmas if the parameters of the divergence functions are not
+fixed.  Adding a met-terminals operation after the slice-positions
+operation might speed up convergence.  If the cumulative divergence
+function doesn't tend to infinity at time one a met-terminals
+operation is definitely needed, and an mh-latent operation should be
+used for non-Gaussian models.  It may be advantageous to adjust the
+number of scans for various operations, or to repeat certain sections
+several times, to achieve the right balance of effort.
+
+Annealed importance sampling (AIS) is implemented (but not very well
+tested).  The annealed distributions are based on raising the
+likelihood of the data given latent values to the power of the inverse
+temperature.  Hence, annealing can be used only when there is a data
+model, and only when latent values are represented (at the point where
+importance weights have to be computed - ie, when the "AIS" operation
+is done, except when it starts a new annealing sequence).
+
+Tempered transitions are not implemented.
+
+The current Markov chain operations are not suitable for use with
+circular coupling.
+
+            Copyright (c) 1995-2003 by Radford M. Neal

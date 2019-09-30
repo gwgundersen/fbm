@@ -9,11 +9,12 @@
 
 <h1>Software for Flexible Bayesian Modeling</h1>
 
-Version of 2001-08-31.  Copyright (c) 1995-2001 by Radford M. Neal<P>
+Version of 2003-06-29.  Copyright (c) 1995-2003 by Radford M. Neal<P>
 
 Index to documentation for software that implements flexible Bayesian
-models based on neural networks, Gaussian processes, and mixtures, and
-that demonstrates various Markov chain Monte Carlo methods.
+models based on neural networks, Gaussian processes, mixtures, and
+Dirichlet diffusion trees, and that demonstrates various Markov chain
+Monte Carlo methods.
 
 
 <h2>Introduction, overview, and examples:</h2>
@@ -54,11 +55,12 @@ that demonstrates various Markov chain Monte Carlo methods.
        <LI><a href="Ex-netgp-c.html">A three-way classification problem</a>
        <LI><a href="Ex-netgp-o.html">A regression problem with outliers</a>
     </UL>
-<LI><a href="Ex-mix.html">Examples of Bayesian mixture models</a>
+<LI><a href="Ex-mixdft.html">Examples of Bayesian mixture models and Dirichlet diffusion tree models</a>
     <UL>
-       <LI><a href="Ex-mix-b.html">A probability estimation problem with 
+       <LI><a href="Ex-mixdft-b.html">A probability estimation problem with 
                                       binary data</a>
-       <LI><a href="Ex-mix-r.html">A bivariate density estimation problem</a>
+       <LI><a href="Ex-mixdft-r.html">A bivariate density estimation problem</a>
+       <LI><a href="Ex-dft-a.html">Building an additive model using two diffusion trees</a>
     </UL>
 <LI><a href="Ex-surv.html">Examples of Bayesian neural network survival models
     </a>
@@ -73,6 +75,7 @@ that demonstrates various Markov chain Monte Carlo methods.
 <h2>Notes on the present release and past releases:</h2>
 
 <UL>
+<LI> <a href="Release.2003-06-29.html">Release of 2003-06-29</a>
 <LI> <a href="Release.2001-08-31.html">Release of 2001-08-31</a>
 <LI> <a href="Release.2000-08-21.html">Release of 2000-08-21</a>
 <LI> <a href="Release.1999-12-06.html">Release of 1999-12-06</a>
@@ -105,18 +108,19 @@ that demonstrates various Markov chain Monte Carlo methods.
    <a href="log-types.html">log-types</a>                        
 
 
-   .... NET .....     .... GP .....    .... MIX .....
+   .... NET .....     .... GP .....    .... MIX .....    .... DFT ....
 
-   <a href="net.html">net</a>                <a href="gp.html">gp</a>               <a href="mix.html">mix</a>
-   <a href="net-dvar.html">net-dvar</a>           <a href="gp-cov.html">gp-cov</a>           <a href="mix-cases.html">mix-cases</a>
-   <a href="net-display.html">net-display</a>        <a href="gp-display.html">gp-display</a>       <a href="mix-display.html">mix-display</a>
-   <a href="net-eval.html">net-eval</a>           <a href="gp-eigen.html">gp-eigen</a>         <a href="mix-extensions.html">mix-extensions</a>
-   <a href="net-gd.html">net-gd</a>             <a href="gp-eval.html">gp-eval</a>          <a href="mix-gen.html">mix-gen</a>
-   <a href="net-gen.html">net-gen</a>            <a href="gp-gen.html">gp-gen</a>           <a href="mix-mc.html">mix-mc</a>
-   <a href="net-hist.html">net-hist</a>           <a href="gp-mc.html">gp-mc</a>            <a href="mix-quantities.html">mix-quantities</a> 
-   <a href="net-mc.html">net-mc</a>             <a href="gp-pred.html">gp-pred</a>          <a href="mix-spec.html">mix-spec</a>
-   <a href="net-plt.html">net-plt</a>            <a href="gp-quantities.html">gp-quantities</a>  
-   <a href="net-pred.html">net-pred</a>           <a href="gp-spec.html">gp-spec</a>
+   <a href="net.html">net</a>                <a href="gp.html">gp</a>               <a href="mix.html">mix</a>               <a href="dft.html">dft</a>
+   <a href="net-approx.html">net-approx</a>         <a href="gp-cov.html">gp-cov</a>           <a href="mix-cases.html">mix-cases</a>         <a href="dft-cases.html">dft-cases</a>
+   <a href="net-dvar.html">net-dvar</a>           <a href="gp-display.html">gp-display</a>       <a href="mix-display.html">mix-display</a>       <a href="dft-dendrogram.html">dft-dendrogram</a>
+   <a href="net-display.html">net-display</a>        <a href="gp-eigen.html">gp-eigen</a>         <a href="mix-gen.html">mix-gen</a>           <a href="dft-display.html">dft-display</a>
+   <a href="net-eval.html">net-eval</a>           <a href="gp-eval.html">gp-eval</a>          <a href="mix-mc.html">mix-mc</a>            <a href="dft-gen.html">dft-gen</a>
+   <a href="net-gd.html">net-gd</a>             <a href="gp-gen.html">gp-gen</a>           <a href="mix-pred.html">mix-pred</a>          <a href="dft-mc.html">dft-mc</a>
+   <a href="net-gen.html">net-gen</a>            <a href="gp-mc.html">gp-mc</a>            <a href="mix-quantities.html">mix-quantities</a>    <a href="dft-pred.html">dft-pred</a> 
+   <a href="net-hist.html">net-hist</a>           <a href="gp-pred.html">gp-pred</a>          <a href="mix-spec.html">mix-spec</a>          <a href="dft-quantities.html">dft-quantities</a> 
+   <a href="net-mc.html">net-mc</a>             <a href="gp-quantities.html">gp-quantities</a>                      <a href="dft-spec.html">dft-spec</a>
+   <a href="net-plt.html">net-plt</a>            <a href="gp-spec.html">gp-spec</a>
+   <a href="net-pred.html">net-pred</a>            
    <a href="net-quantities.html">net-quantities</a>
    <a href="net-rej.html">net-rej</a> 
    <a href="net-spec.html">net-spec</a> 
@@ -218,6 +222,7 @@ documentation files marked with an asterisk.<P>
 
   * <a href="net-mc.html">net-mc</a>          Do Markov chain simulation to sample networks
   * <a href="net-gen.html">net-gen</a>         Generate networks from the prior, or with fixed values
+    <a href="net-approx.html">net-approx</a>      Specify quadratic approximation to replace log likelihood
     <a href="net-gd.html">net-gd</a>          Train a network by gradient descent in the error
 
   * <a href="net-display.html">net-display</a>     Print network parameters and/or hyperparameters
@@ -264,9 +269,25 @@ documentation files marked with an asterisk.<P>
   * <a href="mix-display.html">mix-display</a>     Print mixture model parameters, hyperparameters, etc.
   * <a href="mix-quantities.html">mix-quantities</a>  Quantities from log files relating to mixture models
 
+  * <a href="mix-pred.html">mix-pred</a>        Make predictions for tests cases using mixture models
     <a href="mix-cases.html">mix-cases</a>       Generate cases from a mixture model
+</pre>
 
-    <a href="mix-extensions.html">mix-extensions</a>  Possible extensions to the mixture modeling software
+<h2>Bayesian inference for Dirichlet diffusion tree models [dft]:</h2>
+<pre>
+  * <a href="dft.html">dft</a>             Bayesian inference for diffusion tree models
+  * <a href="dft-spec.html">dft-spec</a>        Specify a diffusion tree model, or display existing spec
+
+  * <a href="dft-mc.html">dft-mc</a>          Use Markov chain to do sampling for a diffusion tree model
+  * <a href="dft-gen.html">dft-gen</a>         Generate hyperparameters randomly, or fix them
+
+  * <a href="dft-display.html">dft-display</a>     Print diffusion tree model parameters, hyperparameters, etc.
+    <a href="dft-dendrogram.html">dft-dendrogram</a>  Create Postscript representation of a dendrogram of a tree
+  * <a href="dft-quantities.html">dft-quantities</a>  Quantities from log files relating to diffusion tree models
+
+  * <a href="dft-pred.html">dft-pred</a>        Make predictions for test cases using diffusion tree model
+
+    <a href="dft-cases.html">dft-cases</a>       Generate cases from a diffusion tree model
 </pre>
 
 </body>

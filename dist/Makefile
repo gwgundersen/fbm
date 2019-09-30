@@ -20,7 +20,7 @@ programs:	dist-spec dist-mc dist-plt dist-tbl dist-hist dist-grad-test \
 clean:
 	rm -f *.o dist-spec dist-mc dist-plt dist-tbl dist-hist dist-grad-test \
 	          dist-stepsizes dist-initial dist-display dist-est dist-gen \
-		  dist-genp
+		  dist-genp 
 
 
 include ../util/util.make

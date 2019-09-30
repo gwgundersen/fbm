@@ -12,6 +12,9 @@ For details on the various methods described, see <A HREF="mc-spec.html">mc-spec
 table comparing the performance of the methods on these examples is
 included at the end of this section.
 
+The times reported here are for an older version of the software, run
+on a 550 MHz Pentium III.
+
 
 Specifying the distribution.
 
@@ -68,7 +71,7 @@ metropolis updates) with the following command:
 
     &gt; dist-mc glog.met,1 2000
 
-This takes about three seconds on our 550MHz Pentium III, as will all
+This takes about three seconds on a 550MHz Pentium III, as will all
 the other sampling commands in this section.
 
 We can look at what happened to the three state variables during these
@@ -568,7 +571,9 @@ the expectation of the "x" variable using the various methods (the
 autocorrelation time), determined from estimates of the cumulative
 correlations up to when the autocorrelations are near zero.  The
 repetition counts for the methods were set so that they all required
-about 3 seconds of computation time for 2000 iterations.
+about 3 seconds of computation time for 2000 iterations (on a 550MHz
+Pentium III).
+
 
   METHOD      STEPSIZE   AUTOCORR.  NOTES
                            TIME

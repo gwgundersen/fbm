@@ -47,16 +47,16 @@ series:		series.o	misc.o
 series.o:	series.c	misc.h
 
 
-data-spec:	data-spec.o	log.o numin.o data-trans.o
-		$(CC) $(LFLAGS) data-spec.o log.o numin.o data-trans.o \
+data-spec:	data-spec.o	log.o numin.o data-trans.o misc.o
+		$(CC) $(LFLAGS) data-spec.o log.o numin.o data-trans.o misc.o \
 		-lm -o data-spec
 
-data-spec.o:	data-spec.c	data.h log.h
+data-spec.o:	data-spec.c	data.h log.h misc.h numin.h
 
 
-model-spec:	model-spec.o	log.o rand.o prior.o matrix.o
+model-spec:	model-spec.o	log.o rand.o prior.o matrix.o ars.o
 		$(CC) $(LFLAGS) model-spec.o log.o rand.o prior.o matrix.o \
-		-lm -o model-spec
+		ars.o -lm -o model-spec
 
 model-spec.o:	model-spec.c	log.h prior.h model.h matrix.h
 

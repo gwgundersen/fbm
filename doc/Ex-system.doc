@@ -1,0 +1,8 @@
+
+
+THE COMPUTER SYSTEM USED FOR THE EXAMPLES
+
+The software runs mentioned in the examples were done on a Dell
+Precision 530 workstation with two 1.7 GHz Xeon processors (only one
+of which was used) and 1 GByte of PC800 RDRAM.  The operating system
+was Red Hat 7.1 Linux.  The compiler was gcc, version 2.96.

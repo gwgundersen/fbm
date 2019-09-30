@@ -1,6 +1,6 @@
 # UTILITY MAKEFILE, FOR INCLUSION IN OTHER MAKEFILES.
 
-# Copyright (c) 1995, 1996, 1998 by Radford M. Neal 
+# Copyright (c) 1995-2001 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 
@@ -27,6 +27,8 @@ rand.h:
 	ln -s ../util/rand.h .
 ars.h:
 	ln -s ../util/ars.h .
+uars.h:
+	ln -s ../util/uars.h .
 prior.h:
 	ln -s ../util/prior.h .
 model.h:
@@ -37,6 +39,8 @@ pred.h:
 	ln -s ../util/pred.h .
 extfunc.h:
 	ln -s ../util/extfunc.h .
+phi.h:
+	ln -s ../util/phi.h .
 
 misc.c:
 	ln -s ../util/misc.c .
@@ -56,6 +60,8 @@ rand.c:
 	ln -s ../util/rand.c .
 ars.c:
 	ln -s ../util/ars.c .
+uars.c:
+	ln -s ../util/uars.c .
 numin.c:
 	ln -s ../util/numin.c .
 data-trans.c:
@@ -81,15 +87,20 @@ plt.o:		plt.c		misc.h log.h quantities.h
 tbl.o:		tbl.c		misc.h log.h quantities.h
 hist.o:		hist.c		misc.h log.h quantities.h
 ars.o:		ars.c		rand.h ars.h
+uars.o:		uars.c		rand.h uars.h
 numin.o:	numin.c		numin.h
 data-trans.o:	data-trans.c	data.h
-prior.o:	prior.c		rand.h prior.h 
+prior.o:	prior.c		rand.h prior.h ars.h
 matrix.o:	matrix.c	matrix.h
 formula.o:	formula.c	formula.h extfunc.h rand.h
-pred.o:		pred.c		misc.h rand.h log.h prior.h model.h data.h \
-				mc.h pred.h
 digamma.o:	digamma.c
-phi.o:		phi.c
+phi.o:		phi.c		phi.h
 
 rand.o:		rand.c		rand.h
 	$(CC) $(CFLAGS) -DRAND_FILE=\"`pwd`/../util/randfile\" -c rand.c
+
+pred.o:		pred.c		misc.h rand.h log.h prior.h model.h data.h \
+				mc.h pred.h
+	$(CC) $(CFLAGS) -DPonly=$(Ponly) -c pred.c
+
+Ponly=0		# Default setting

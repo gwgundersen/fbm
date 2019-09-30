@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # DO A CIRCULARLY-COUPLED MARKOV CHAIN SIMULATION.  Linked to under names
 # like dist-circ, net-circ, etc. to get versions for each module.

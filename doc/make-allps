@@ -1,8 +1,0 @@
-make-psmanual
-make-psdir util
-make-psdir mc
-make-psdir dist
-make-psdir bvg
-make-psdir net
-make-psdir gp
-make-psdir mix

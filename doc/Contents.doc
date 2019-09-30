@@ -34,10 +34,10 @@ Ex-netgp.doc        Examples of flexible Bayesian regression and classification
   Ex-netgp-c.doc       A three-way classification problem 
   Ex-netgp-o.doc       A regression problem with outliers   
 
-Ex-mix.doc          Examples of Bayesian mixture models
+Ex-mixdft.doc       Examples of mixture models and Dirichlet diffusion trees
 
-  Ex-mix-b.doc         A probability estimation problem with binary data 
-  Ex-mix-r.doc         A bivariate density estimation problem 
+  Ex-mixdft-b.doc      A probability estimation problem with binary data 
+  Ex-mixdft-r.doc      A bivariate density estimation problem 
 
 Ex-surv.doc         Examples of Bayesian neural network survival models
 

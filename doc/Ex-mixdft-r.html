@@ -1,0 +1,392 @@
+<html>
+<body>
+<pre>
+
+
+A BIVARIATE DENSITY ESTIMATION PROBLEM
+
+As a second illustration of the mixture model and Dirichlet diffusion
+tree software, I generated bivariate real data from a mixture of two
+component distributions, with probabilities 0.3 and 0.7.  These two
+distributions were not exactly Gaussian, and the two real variables
+were not exactly independent within one of these components.
+Accordingly, modeling this data well with a mixture of Gaussian
+distributions will require more than two components in the mixture.
+
+For the exact distribution used, see the source of the generation
+program, in rgen.c.  I generated 1000 cases with this program, stored
+in 'rdata', of which the first 500 are used for training, and the rest
+for testing.
+
+
+A two-component mixture model for the density estimation problem.
+
+We can first see what happens when we model this data with a mixture
+of two Gaussians - even though we know the data cannot be perfectly
+modeled in this way.  We specify this two-component model using the
+'mix-spec' and 'model-spec' commands, as follows:
+
+    &gt; mix-spec rlog.2 0 2 2 / 1 0.05:0.5:0.2 10
+    &gt; model-spec rlog.2 real 0.05:0.5:0.5:1
+
+The 'mix-spec' command creates the log file "rlog.2".  The arguments
+following the log file name are the number of input attributes in a
+case (always 0 at present), the number of target attributes (2 for
+this bivariate problem), and the number of mixture components to use
+(2 for this model).  
+
+The Dirichlet concentration parameter follows the "/".  In this model,
+its value is 1 (unscaled, since there's no 'x'), which produces a
+uniform prior for the single number determining the probabilities of
+the two components.
+
+The "offset" parameters of the two components represent the Gaussian
+means when modeling real data.  Hyperparameters determine the prior
+means and standard deviations of these offsets (separately for the two
+target attributes); priors for these hyperparameters are specified in
+'mix-spec'.  In the above command, the prior for the mean of an offset
+is Gaussian with standard deviation 10 (the last argument).  The
+standard deviations for the offsets are given a hierarchical prior,
+with a higher-level hyperparameter common to both the lower-level
+standard deviations.  The top-level precision (standard deviation to
+the power -2) is given a Gamma prior with mean 0.05 and shape
+parameter 0.5; the precisions for the lower-level hyperparameters have
+Gamma priors with mean given by the higher-level precision, and shape
+parameter 0.2.  This is all specified by the second-to-last argument
+of 'mix-spec'.
+
+A similar hierarchical scheme is used for the "noise" standard
+deviations (the standard deviations of the Gaussian distributions in
+the mixture), except that this scheme has three levels - a top-level
+hyperparameter, a hyperparameter for each target attribute, and
+hyperparameters for each target for each component.  The 'model-spec'
+command gives the top-level mean, and the shape parameters for the
+Gamma priors going down the hierarchy.
+
+We next specify where the data comes from, with 'data-spec':
+
+    &gt; data-spec rlog.2 0 2 / rdata@1:500 . rdata@501:1000 .
+
+This says that there are 0 input attributes and 2 target attributes.
+
+For this finite model, we can specify that all the Markov chain
+updates should be done with Gibbs sampling, as follows:
+
+    &gt; mc-spec rlog.2 repeat 20 gibbs-indicators gibbs-params gibbs-hypers
+
+The "repeat 20" just repeats these operations in a single iteration,
+to reduce the volume of data stored in the log file.
+
+Finally, we run the Markov chain simulation for 100 iterations:
+
+    &gt; mix-mc rlog.2 100
+
+This takes 2.9 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>) Once it
+has finished, we can look at the hyperparameters and component
+parameters at various iterations.  The last iteration should look
+something like the following:
+
+    &gt; mix-display rlog.2
+
+    MIXTURE MODEL IN FILE "rlog.2" WITH INDEX 100
+    
+    HYPERPARAMETERS
+    
+    Standard deviations for component offsets:
+    
+        0.068:     3.259    7.159
+    
+    Means for component offsets:
+    
+                  -1.408  +17.102
+    
+    Standard deviations for Gaussian target distributions:
+    
+        0.173:     0.201    4.680
+    
+    
+    PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
+    
+       1: 0.706   -2.052  +11.597
+    
+                   1.034    5.355
+    
+       2: 0.294   +1.751  +20.920
+    
+                   1.115    6.476
+
+We see above that the two components are associated with fractions of
+approximately 0.7 and 0.3 of the training cases, as expected from the
+way the data was generated.  For each component, the two offset
+parameters, giving the Gaussian means, are shown on the first line,
+and the standard deviation parameters on the following line.  These
+component parameters are approximately what we would expect from
+looking at a plot of the data, but of course the two Gaussian
+components cannot perfectly model the actual distribution.
+
+A quantitative measure of how well the model fits the data can be
+found by looking at the average log probability density of the test
+cases:
+
+    &gt; mix-pred pa rlog.2 21:
+
+    Number of iterations used: 80
+
+    Number of test cases: 500
+
+    Average log probability of targets:    -5.175+-0.048
+
+
+An infinite mixture model for the density estimation problem.
+
+To more closely approximate the true distribution, we can use a
+mixture model with a countably infinite number of Gaussian components.
+An infinite mixture is used if we simply omit the argument giving the
+number of components in the 'mix-spec' command.  We must also change
+the specification for the Dirichlet concentration parameter, preceding
+it with an 'x' to indicate that it should be scaled so as to produce a
+sensible infinite limit.  In the specification below, the moderate
+value of 5 is chosen for this specification in order to indicate that
+we believe that a fairly large number of components will have
+substantial probability (the other prior specifications are the same
+as before):
+
+    &gt; mix-spec rlog.inf 0 2 / x5 0.05:0.5:0.2 10
+
+The 'model-spec' and 'data-spec' commands are the same as before:
+
+    &gt; model-spec rlog.inf real 0.05:0.5:0.5:1
+    &gt; data-spec rlog.inf 0 2 / rdata@1:500 . rdata@501:1000 .
+
+The 'mc-spec' command must be altered, however, since it is not
+possible to do Gibbs sampling for component indicators when there are
+an infinite number of components.  The met-indicators operation is
+used instead, with 10 changes being proposed to every indicator:
+
+    &gt; mc-spec rlog.inf repeat 20 met-indicators 10 gibbs-params gibbs-hypers
+
+We can now run the simulation for 100 iterations:
+
+    &gt; mix-mc rlog.inf 100
+
+This takes 19 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).  If we
+now examine the state with 'mix-display', we will find that quite a
+few (eg, 20) mixture components are associated with training cases -
+though fewer components account for the bulk of the cases.
+
+This model appears to fit the data slightly better than the
+two-component model, as can be seen below:
+
+    &gt; mix-pred pa rlog.inf 21:
+
+    Number of iterations used: 80
+
+    Number of test cases: 500
+
+    Average log probability of targets:    -5.101+-0.048
+
+We can also see how well the model has captured the true distribution
+by generating a sample of cases from a distribution drawn from the
+posterior, as represented by the state at a particular iteration.  We
+do this as follows:
+
+    &gt; mix-cases rlog.inf 100 new 1000
+
+This command generates 1000 new cases based on iteration 100, and
+stores them (one per line) in the file "new".  We can now use a plot
+program to view a scatterplot of the data in "new", and compare it
+with a scatterplot of data from the actual distribution.  Note that
+the data in "new" is taken jointly from one example of a distribution
+from the posterior distribution.  If 'mix-cases' is called for another
+iteration, it will produce data from a different distribution from the
+posterior, which in general could be quite different.  This variation
+represents the uncertainly regarding the true distribution that
+remains when only a finite amount of training data is available.  A
+representation of the predictive distribution for a single new data
+point, which is the average of distributions drawn from the posterior,
+could be obtained by combining the output of 'mix-cases' for a number
+of iterations.
+
+
+Dirichlet diffusion tree models for the density estimation problem.
+
+We can also model this data with a Dirichlet diffusion tree model.
+The Dirichlet diffusion tree can either model the data points
+directly, or model latent value to which noise is added to produce the
+data points.  Different divergence functions can also be used, as well
+as various schemes for Markov chain sampling.
+
+We can start with a model in which the data points are directly
+produced by the Dirichlet diffusion tree.  We start by specifying
+the model and the priors as follows:
+
+    &gt; dft-spec rlog.dft1a 0 2 / 0.5:0.5:0.5 - 0.1:0.5
+
+This command specifies that there are 0 input variables (as required
+at the moment) and 2 target variables.  The first argument after the
+"/" specifies a hierarchical prior for the diffusion standard
+deviations.  The first level of this prior is for a value common to
+both target variables, with the base sigma of 0.5 being followed by
+the shape parameter of 0.5.  The third 0.5 is the shape parameter for
+the next level of the hierarchy, in which a sigma for each variable is
+linked to the common sigma.  The next two arguments specify the values
+of coefficients in the divergence function, which has the form
+
+   a(t) = c0 + c1/(1-t) + c2/(1-t)^2
+
+The "-" indicates that c0 is fixed at zero, the next argument gives a
+prior for c1, and the absense of an argument after tha indicates that
+c2 is fixed at zero.
+
+To indicate that the Dirichlet diffusion tree models the data directly,
+we simply do not include any 'model-spec' command.  We specify the
+source of the data as follows:
+
+    &gt; data-spec rlog.dft1a 0 2 / rdata@1:500 . rdata@501:1000 .
+
+Finally, we need to specify how the Markov chain sampling is to be done:
+
+    &gt; mc-spec rlog.dft1a repeat 25 slice-positions met-terminals \
+    &gt;                              gibbs-sigmas slice-div
+
+The sampling will be done without explicit representation of node
+locations, since none of the operations in this specification create
+node locations.  The 'slice-positions' and 'met-terminals' operations
+update the tree structure and divergence times for nonterminal nodes.
+The 'gibbs-sigmas' and 'slice-div' operations update the diffusion
+standard deviations for the two target variables (as well as the
+common standard deviation linking them) and the c1 parameter of the
+divergence function.
+
+We can now run the Markov chain with these operations in order to
+sample from the posterior distribution of trees and hyperparameters
+given the data:
+
+    &gt; dft-mc rlog.dft1a 100
+
+This takes 2.6 minutes on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).  After
+it has finished, we can look at the result with 'dft-display':
+
+    &gt; dft-display rlog.dft1a       
+
+    DIFFUSION TREE MODEL IN FILE "rlog.dft1a" WITH INDEX 100
+    
+    
+    PARAMETERS OF TREE 1
+    
+    Standard deviation parameters for diffusion process
+    
+        1.665:     2.121   13.638
+    
+    Divergence function parameters: - 1.6233 -
+
+This lists the value at iteration 100 of the common standard
+deviation, the diffusion standard deviations for the two target
+variables, and the c1 parameter of the divergence function.
+
+Other options to 'dft-display' allow examination of the tree
+structure.  For instance,
+
+    &gt; dft-display -n rlog.dft1a 
+
+    DIFFUSION TREE MODEL IN FILE "rlog.dft1a" WITH INDEX 100
+    
+    
+    NON-TERMINAL NODES IN TREE 1
+    
+      Node  Children  Points  Div.Time
+    
+        -1 -336  337       6  0.603746
+        -2  247  370       2  0.913668
+        -3   23  181       2  0.995280
+        -4 -409  334       3  0.944195
+        -5 -211  374       4  0.995491
+        -6 -385 -291      26  0.947063
+        -7   91  209       2  0.926064
+        -8 -493 -149       7  0.848791
+        -9  139  355       2  0.997983
+       -10 -275 -258       5  0.868474
+       -11 -119  171      58  0.834055
+       -12 -400   -1      17  0.583088
+         
+                    etc.
+
+This shows the tree structure in terms of the children of each
+nonterminal node, with nonterminal nodes being given negative numbers,
+and terminal nodes (corresponding to data points) being given positive
+numbers.  The "Points" column is the number of data points descended
+from that node.
+
+For diagnosing convergence, plots over time are more useful.  For
+example, we can look at how the divergence times for the last common
+ancestors of pairs of data points change over the course of the
+simulation:
+
+    &gt; dft-plt t a1003123a14521 rlog.dft1a | plot
+
+This plots the divergence time for the last common ancestor of
+training cases 3 and 123 (numbered starting at 1) and the divergence
+time of the last common ancestor of training cases 45 and 21.  The
+syntax is a bit tricky.  The "a" indicator is followed by the number
+of the tree, which is always 1 for this model, but more complex models
+can have several trees.  This is followed by the indexes for the two
+training cases, which MUST be written using the same number of digits
+(with leading zeros added if necessary).
+
+We can see how well the model has captured the distribution by seeing
+how well it does at predicting test cases, using iterations from the
+point when convergence seems to have been reached:
+
+    &gt; dft-pred tp rlog.dft1a 21:
+
+    Number of iterations used: 80
+    
+    Case Targets         Log Prob
+    
+       1   -1.22   5.83    -4.336
+       2   -2.73  16.33    -4.721
+       3   -1.96   6.04    -3.990
+       4   -0.77   9.24    -4.542
+       5   -0.56   4.78    -5.072
+    
+         (middle lines omitted)
+
+     496   -3.88  18.14    -6.200
+     497    1.38   3.62    -8.357
+     498   -0.40  26.50    -7.663
+     499   -2.79  11.23    -3.938
+     500   -2.28   4.53    -4.768
+    
+    Average log probability of targets:    -5.088+-0.047
+
+This takes 23 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
+Performance is a bit better than for the infinite mixture model above.
+
+Another approach to Markov chain sampling for this model is to keep
+node locations as part of the state of the chain.  Updates to the tree
+structure can then be done faster, but the number of iterations needed
+for convergence and subsequent sampling may be greater.  Here is an
+'mc-spec' command for this approach:
+
+    &gt; mc-spec   rlog.dft1b repeat 10 sample-locations \
+                                     slice-positions met-terminals \
+                                     gibbs-sigmas slice-div
+
+Performing 100 iterations with these operations takes only 38 seconds
+on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>), and for this example,
+predictive performance is nearly identical to that above.
+
+One can also use a model with a different divergence function, as in
+the following specification:
+
+    &gt; dft-spec  rlog.dft2a 0 2 / 0.5:0.5:0.5 0.01:0.5 - 0.01:0.5
+
+The last three arguments of this command give priors for the c0 and c2
+parameters of the divergence function, and specify that the c1
+parameter is zero.  The divergence function therefore has the form
+a(t) = c0 + c1/(1-t)^2.  This prior produces smoother density
+functions, which is more appropriate for this example, although it
+turns out that the difference in predictive performance is negligible.
+</pre>
+</body>
+</html>

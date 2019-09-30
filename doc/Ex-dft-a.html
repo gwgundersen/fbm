@@ -1,0 +1,127 @@
+<html>
+<body>
+<pre>
+
+
+BUILDING AN ADDITIVE MODEL USING TWO DIFFUSION TREES.
+
+Here, I give an example of how a distribution with an additive
+structure can be modeled using more than one diffusion tree.  The data
+for this example (in file 'adata') consists of 30 cases, each with
+eight binary variables.  It was manually constructed so that the first
+four variables were unreleated to the last four variables.  With
+respect to the first four variables, there are two groups, in which
+these variables tend to all be "1", or all be "0".  Similarly, there
+are two groups with respect to the last four variables.  The combined
+effect is that there are four overall groups, corresponding to
+patterns of 00000000, 11110000, 00001111, and 11111111. 
+
+We could model this data as a mixture, or using a single Dirichlet
+diffusion tree.  Even though this fails to capture the division into
+two sets of variables, it does work fairly well.  Here is one way this
+could be done with a diffusion tree model:
+
+    &gt; dft-spec   alog.dft1 0 8 / 0.2:4:2 - 1
+    &gt; model-spec alog.dft1 binary
+    &gt; data-spec  alog.dft1 0 8 2 / adata .
+    &gt; dft-gen    alog.dft1 fix 2
+    &gt; mc-spec    alog.dft1 repeat 50 gibbs-latent slice-positions met-terminals\
+    &gt;                                gibbs-sigmas 
+    &gt; dft-mc     alog.dft1 100
+
+This is similar to what is done in the example of <A HREF="Ex-mixdft-b.html">Ex-mixdft-b.doc</A>.
+The 'dft-gen' command fixes the diffusion standard deviations to 2
+initially.  The subsequent 'gibbs-latent' command will produce values
+for the latent variables that fit the data reasonably, starting the
+chain off in from a reasonable state.  (Without the 'dft-gen' command,
+the latent variables start off rather small.)
+
+The above commands take 82 seconds on the system used (see
+<A HREF="Ex-system.html">Ex-system.doc</A>).  We can look at the tree found using 'dft-display'
+with the "-g" option, or using the following command:
+
+    &gt; dft-dendrogram alog.dft1 100 alabels | ghostview -
+
+The 'dft-dendrogram' command produces a Postscript picture of the
+tree, which is here piped into the ghostview utility (it could instead
+by printed).  This command shows the final tree, at iteration 100, and
+uses the labels for cases in the file 'alabels', which labels the four
+patterns mentioned above with A, B, C, and D .  You should be able to
+see that cases with each of the four patterns are mostly grouped
+together in subtrees.
+
+To better capture the structure of this data, we can use a model with
+two trees, specified as follows:
+
+    &gt; dft-spec   alog.dft2 0 8 / 0.1:4:1 - 1 / 0.1:4:1 - 1
+    &gt; model-spec alog.dft2 binary
+    &gt; data-spec  alog.dft2 0 8 2 / adata .
+
+The two sets of specifications in 'dft-spec' after the slashes
+(identical here) are for two Dirichlet diffusion trees, which are
+generated independently in the prior distribution.  The values at the
+terminal nodes of these trees are added together to produce the latent
+values for the cases, which define the probabilities of the variables
+being "0" or "1".  We hope that this will allow one tree to specialize
+in modeling the first four variables and the other tree to specialize
+in modeling the last four.
+
+Here are the commands used to sample from the posterior distribution:
+
+    &gt; dft-gen  alog.dft2 fix 1.4
+    &gt; mc-spec  alog.dft2 create-latent repeat 50 gibbs-locations sample-latent \
+    &gt;                                            slice-positions met-terminals \
+    &gt;                                            gibbs-sigmas 
+    &gt; dft-mc   alog.dft2 100
+
+Here again, the 'dft-gen' command helps start the chain off in a
+reasonable state.  The 'create-latent' operation ensures that latent
+values exist, which is necessary when there is more than one tree when
+the model is non-Gaussian.  
+
+These commands take 56 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
+We can look at the resulting hyperparameters as follows:
+
+    &gt; dft-display alog.dft2
+    
+    DIFFUSION TREE MODEL IN FILE "alog.dft2" WITH INDEX 100
+    
+    
+    PARAMETERS OF TREE 1
+    
+    Standard deviation parameters for diffusion process
+    
+        0.247:     1.380    0.796    7.847    2.466    0.312
+                   0.169    0.554    0.182
+    
+    Divergence function parameters: - 1.0000 -
+    
+    PARAMETERS OF TREE 2
+    
+    Standard deviation parameters for diffusion process
+    
+        0.147:     0.057    0.350    0.106    0.148    4.766
+                 691.193    4.756    0.956
+    
+    Divergence function parameters: - 1.0000 -
+
+We see that the first tree has mostly larger diffusion standard
+deviations for the first four variables than the last four.  This is
+reversed for the second tree, for which the diffusion standard
+deviations are small for the first four variables and large for the
+last four.  This is consistent with the two trees dividing up the
+modeling task.  (In another run, the roles of the two trees might be
+reversed.)
+
+We can view the two trees as follows:
+
+    &gt; dft-dendrogram alog.dft2 100 1 alabels | ghostview -
+    &gt; dft-dendrogram alog.dft2 100 2 alabels | ghostview -
+
+This should show that one tree divides the A and B cases from the C
+and D cases, whereas the other tree divides the A and C cases from the
+B and D cases.  This shows that the two-tree model has discovered the
+structure of the data.
+</pre>
+</body>
+</html>

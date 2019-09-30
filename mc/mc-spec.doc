@@ -53,6 +53,20 @@ General operations:
         "xxx-mc" command on standard output, preceded by an index that
         is reset to zero every iteration.
 
+    multiply-stepsizes factor [ first[:last] ] ]
+
+        Multiplies the stepsizes for coordinates in the range first:last
+        (default is all if first:last is omitted, just first if last is 
+        omitted) by the given factor.  This modification persists for 
+        the remainder of the operations in the current iteraton, unless 
+        modified again, or unless the automatic stepsizes are overridden
+        by a stepsize specification starting with "-".  (This last provision
+        is just to make implementation easier.)
+
+        If a multiply-stepsizes operation is inside a "repeat", it will 
+        be done repeatedly.  In particular, if factor is less than one, 
+        the stepsizes will be successively smaller for each repetition.
+
     (any operation not otherwise defined here) [ number [ number ] ]
 
         Invoke the application-specific update procedure, passing the
@@ -61,7 +75,7 @@ General operations:
 
         These operations may or may not be allowed when coupling.
 
-Metropolis operations:
+Metropolis/Gibbs operations:
 
 For descriptionsof the stepsize and the "-b" argument, see below.
 
@@ -101,6 +115,17 @@ For descriptionsof the stepsize and the "-b" argument, see below.
         If no -r argument is given, the components are all updated in order;
         with the -r option, just one randomly-chosen component is updated.
 
+    gaussian-gibbs [ -r ] [ first[:last] ] ]
+
+        Do Gibbs sampling updates for the range of corrdinates given
+        (default, is all coordinates; last defaults to first), or do a
+        Gibbs sampling update for one of these coordinates chosen at
+        random, if -r is specified.  The Gibbs sampling is done by just
+        ASSUMING that the conditional distribution is Gaussian, with
+        its mean and variance being found by evaluating the energy at
+        values of -1, 0, and +1 for the coordinate being updated.  This
+        WILL NOT BE VALID if the conditional distribution is not Gaussian.
+
 Dynamical operations:
 
     heatbath [ decay ]
@@ -118,6 +143,15 @@ Dynamical operations:
         which the squared magnitude of the momentum is sampled 
         from a chi-squared distribution, while the direction is
         left unchanged.
+
+    mix-momentum factor
+
+        Does a random rotation of all momentum variables, by adding
+        mean zero Gaussian noise to each momentum variable, and then
+        multiplying all by the factor needed to produce the same
+        kinetic energy as before.  The variance of the noise added is 
+        the average squared magnitude of the current momentum variables
+        times the specified factor squared.
 
     negate
 
@@ -183,8 +217,9 @@ Dynamical operations:
 
 Slicing operations:
 
-    slice-1 [ -r ] [ stepsize-adjust[:stepsize-alpha] 
-                     [ max-steps [ first[:last] ] ] ]
+    slice-1 [ -r ] [ -s [-]factor[/threshold] ] 
+                   [ stepsize-adjust[:stepsize-alpha] 
+                   [ max-steps [ first[:last] ] ] ]
 
         Do single-component slice sampling, for the range of components 
         given.  The default for the range of components (first:last) is 
@@ -203,6 +238,17 @@ Slicing operations:
         results as setting it to 1).  (There is no way to double without
         limit, but setting max-steps to -1000 is the same for all practical
         purposes.)
+
+        With no -s option, when a point is rejected, one end of the interval 
+        shrinks to the rejected point.  If the -s option is given, with no
+        "-" before "factor", the interval may then be shrunk further by 
+        dividing it up into "factor" subintervals, and retaining only the 
+        subinterval that contains the current point.  This additional 
+        shrinkage is done if the energy is more than "threshold" above the 
+        slice level (the default is a threshold of zero).  If "-" is given
+        before "factor", the initial shrinkage to the rejected point is not
+        done - only the shrinkage by "factor" is done.  As a consequence,
+        shrinkage of the interval can be disabled entirely using "-s -1".
 
     slice [ -g | -G ] [ stepsize-adjust[:stepsize-alpha] ] 
 
@@ -389,4 +435,4 @@ their description of opt2 in table 2. b1=1-b2 should be 1-1/sqrt(2).)
 The list of operations is stored in a record of type 'o'; the
 trajectory specification in a record of type 't'.
 
-            Copyright (c) 1995-2000 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal

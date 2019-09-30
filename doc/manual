@@ -4,31 +4,30 @@
 
            FLEXIBLE BAYESIAN MODELS BASED ON NEURAL NETWORKS, 
 
-                   GAUSSIAN PROCESSES, AND MIXTURES
+       GAUSSIAN PROCESSES, MIXTURES, AND DIRICHLET DIFFUSION TREES
 
                          and that demonstrates
 
                    MARKOV CHAIN MONTE CARLO METHODS
 
-              Copyright (c) 1995-2001 by Radford M. Neal 
+              Copyright (c) 1995-2003 by Radford M. Neal 
 
-                         Version of 2001-08-31
+                         Version of 2003-06-29
 
-Permission is granted for anyone to copy, use, or modify these
-programs and accompanying documents for purposes of research or
-education, provided this copyright notice is retained, and note is
-made of any changes that have been made.
+Permission is granted for anyone to copy, use, modify, or distribute
+these programs and accompanying documents for any purpose, provided
+this copyright notice is retained and prominently displayed, along
+with a note saying that the original programs are available from
+Radford Neal's web page, and note is made of any changes made to these
+programs.  These programs and documents are distributed without any
+warranty, express or implied.  As the programs were written for
+research purposes only, they have not been tested to the degree that
+would be advisable in any important application.  All use of these
+programs is entirely at the user's own risk.
 
-These programs and documents are distributed without any warranty,
-express or implied.  As the programs were written for research
-purposes only, they have not been tested to the degree that would be
-advisable in any important application.  All use of these programs is
-entirely at the user's own risk.
+If you have comments, bug reports, or questions, you may contact me at
+the following address:
 
-If you have comments, bug reports, or questions, or if you wish
-permission to use these programs for commercial or any other purposes
-except research or education, you may contact me at the following
-address:
                    Radford Neal
                    Dept. of Statistics
                    University of Toronto
@@ -80,10 +79,10 @@ Ex-netgp.doc        Examples of flexible Bayesian regression and classification
   Ex-netgp-c.doc       A three-way classification problem 
   Ex-netgp-o.doc       A regression problem with outliers   
 
-Ex-mix.doc          Examples of Bayesian mixture models
+Ex-mixdft.doc       Examples of mixture models and Dirichlet diffusion trees
 
-  Ex-mix-b.doc         A probability estimation problem with binary data 
-  Ex-mix-r.doc         A bivariate density estimation problem 
+  Ex-mixdft-b.doc      A probability estimation problem with binary data 
+  Ex-mixdft-r.doc      A bivariate density estimation problem 
 
 Ex-surv.doc         Examples of Bayesian neural network survival models
 
@@ -103,8 +102,9 @@ This software is meant to support research and education regarding:
 
    * Flexible Bayesian models for regression and classification 
      based on neural networks and Gaussian processes, and for
-     probability density estimation using mixtures.  Neural net
-     training using early stopping is also supported.
+     probability density estimation using mixtures and Dirichlet
+     diffusion trees.  Neural network training using early stopping 
+     is also supported.
 
    * Markov chain Monte Carlo methods, and their applications to
      Bayesian modeling, including implementations of Metropolis,
@@ -113,9 +113,7 @@ This software is meant to support research and education regarding:
 These facilities might be useful for actual problems, but you should
 note that many features that might be needed for real problems have
 not been implemented, that the programs have not been tested to the
-extent that would be desirable for important applications, and that
-permission to use the software for free is granted only for purposes
-of research and education.
+extent that would be desirable for important applications.
 
 The complete source code (in C) is provided, allowing researchers to
 modify the program to test new ideas.  It is not necessary to know C
@@ -133,20 +131,20 @@ Markov chain Monte Carlo facilities.
 
 All the Bayesian models are implemented using Markov chains to sample
 from the posterior distribution.  For the elaborate models based on
-neural networks, Gaussian processes, and mixtures, this is done by
-combining general-purpose Markov chain sampling procedures with
-special modules written in C.  Other models could be implemented in
-the same way, but this is a fairly major project.
+neural networks, Gaussian processes, mixtures, and Dirichlet diffusion
+trees, this is done by combining general-purpose Markov chain sampling
+procedures with special modules written in C.  Other models could be
+implemented in the same way, but this is a fairly major project.
 
 To allow people to play around with the various Markov chain methods
 more easily, a facility is provided for defining distributions (on
 R^n) by giving a simple formula for the probability density.  Many
 Markov chain sampling methods, such as the Metropolis algorithm,
-hybrid Monte Carlo, slice sampling, and simulated tempering, may then
-be used to sample from this distribution.  Bayesian posterior
-distributions can be defined by giving a formula for the prior density
-and for the likelihood based on each of the cases (which are assumed
-to be independent).
+hybrid Monte Carlo, slice sampling, simulated tempering, and annealed
+importance sampling may then be used to sample from this distribution.
+Bayesian posterior distributions can be defined by giving a formula
+for the prior density and for the likelihood based on each of the
+cases (which are assumed to be independent).
 
 A long review paper of mine on "Probabilistic Inference Using Markov
 Chain Monte Carlo Methods" can be obtained from my web page.  This
@@ -216,7 +214,7 @@ early stopping method is also described in Carl Rasmussen's thesis
 (see above).
 
 
-Bayesian mixture models.
+Bayesian mixture models and Dirichlet diffusion trees.
 
 The software implements Bayesian mixture models for multivariate real
 or binary data, with both finite and countably infinite numbers of
@@ -227,9 +225,13 @@ implemented for these models are described in my technical report on
 which can be obtained from web page; see also my technical report on
 "Bayesian mixture modeling by Monte Carlo simulation".
 
-The software implements the basic sampling operations for these
-models, but is rather preliminary in some respects, lacking many
-facilities that would be useful in practical applications.
+The software also implements models based on Dirichlet diffusion
+trees, described in my technical report on "Defining priors for
+distributions using Dirichlet diffusion trees", and in my Valencia
+conference paper on "Density modeling and clustering using Dirichlet
+diffusion trees", in the Bayesian Statistics 7.  Dirichlet diffusion
+trees can be seen both as a way of modeling distributions and as a
+method for hierarchical clustering.
 
 
 Software components.
@@ -259,6 +261,9 @@ component has its own directory, as follows:
             for finite and infinite mixture models, using modules
             from util and mc.
 
+    dft     Modules and programs that implement density modeling and
+            clustering methods based on Dirichlet diffusion trees.
+
 In addition, the 'bvg' directory contains modules and programs for
 sampling from a bivariate Gaussian distribution, as a simple
 demonstration of how the Markov chain Monte Carlo facilities can be
@@ -273,9 +278,11 @@ be used, many of which are discussed in the documentation:
     ex-netgp  Examples of Bayesian regression and classification 
               models based on neural networks and Gaussian processes.
 
-    ex-mix    Examples of Bayesian mixture models.  Includes command
-              files for the test in my paper on "Markov chain sampling 
-              methods for Dirichlet process mixture models"
+    ex-mixdft Examples of Bayesian mixture models and Dirichlet diffusion
+              tree models.  Includes command files for the test in my 
+              paper on "Markov chain sampling methods for Dirichlet process 
+              mixture models" and for one of the tests in "Density modeling 
+              and clustering using Dirichlet diffusion trees".
 
     ex-dist   Examples of Markov chain sampling on distributions
               specified by simple formulas.
@@ -305,15 +312,17 @@ Portability of the software.
 
 The software is written in ANSI C, and is meant to be run in a UNIX
 environment.  It is known to work on various Linux systems running on
-a Pentium processor, and on an SGI machine running IRIX Release 6.5.
-It also runs OK on SPARC machine running Solaris, and on Compaq Alpha
-machines, provided that the -ieee and -std options are given to the
-Compaq C compiler.  As far as I know, the software does not depend on
-any peculiarities of these environments (except perhaps for the use of
-the drand48 pseudo-random number generator, and the lgamma function),
-but you may nevertheless have problems getting it to work in
-substantially different environments, and I can offer little or no
-assistance in this regard.
+a Pentium processor, on a Solaris system running on a SPARC processor,
+and on an SGI machine running IRIX Release 6.5.  It also runs OK on
+Compaq Alpha machines, provided that the -ieee and -std options are
+given to the Compaq C compiler (this may no longer be necessary - I
+haven't checked recently).  As far as I know, the software does not
+depend on any peculiarities of these environments (except perhaps for
+the use of the drand48 pseudo-random number generator, and the lgamma
+function, and the Unix facilities used to start programs to evaluate
+"external" functions in the 'dist' module), but you may nevertheless
+have problems getting it to work in substantially different
+environments, and I can offer little or no assistance in this regard.
 
 There is no dependence on any particular graphics package or graphical
 user interface.  The 'xxx-plt' programs are designed to allow their
@@ -479,11 +488,12 @@ The software is organized in a modular fashion.  The 'util' directory
 provides a number of general facilities, some of which may be of use
 for other purposes.  The 'mc' module provides support for Markov chain
 Monte Carlo methods, which the 'dist' module allows you to use for a
-distribution specified by a formula.  The 'net', 'gp', and 'mix' are
-more specialized modules that use the Markov chain methods to support
-Bayesian inference for neural networks, Gaussian process models, and
-finite and infinite mixture models.  This section provides an overview
-of the various components of the software.
+distribution specified by a formula.  The modules 'net', 'gp', 'mix',
+and 'dft' are more specialized modules that use the Markov chain
+methods to support Bayesian inference for neural networks, Gaussian
+process models, finite and infinite mixture models, and Dirichlet
+diffision tree models.  This section provides an overview of the
+various components of the software.
 
 
 Program usage.
@@ -554,8 +564,7 @@ reading of numeric input from data files or other sources, and that
 specify sets of training and test cases.
 
 The models supported include those for regression, classification,
-probability density estimation, and survival analysis.  The survival
-analysis models should be regarded as especially experimental.  See
+probability density estimation, and survival analysis.  See
 model-spec.doc for details.
 
 The data files used must contain numbers in standard ASCII form, with
@@ -580,10 +589,9 @@ arguments to the relevant commands, allowing the final results of
 learning to be applied to any data set for which predictions are
 desired.
 
-Note that mixture models can presently be used only for data in which
-the number of "input" items is zero.  The test data is currently
-ignored for mixture models, since no prediction program has yet been
-implemented.
+Note that mixture models and Dirichlet diffusion tree models can
+presently be used only for data in which the number of "input" items
+is zero. 
 
 See data-spec.doc for further details on how to specify the source and
 format of the data.
@@ -618,23 +626,25 @@ also provide implementations of specialized sampling procedures, such
 as the procedures for doing Gibbs sampling for hyperparameters in the
 neural network application.
 
-For the user of neural network, Gaussian process, and mixture models,
-the most important 'mc' program is 'mc-spec', which is used to specify
-how the Markov chain sampling is to be done.  There are a large number
-of reasonable ways of sampling for neural networks or Gaussian
-processes.  The best way is still the subject of research.  Good
-results can be obtained using several standard approaches, however, as
-described in the examples in other sections of this documentation.
-You can also read all about the various methods in mc-spec.doc.  Note,
-however, that for each model there are also sampling methods specific
-to that model alone, which are documented in net-mc.doc, gp-mc.doc,
-and mix-mc.doc.  At present, sampling for mixture models is done only
-by the specific procedures described in mix-mc.doc.
+For the user of neural network, Gaussian process, mixture, and
+Dirichlet diffusion tree models, the most important 'mc' program is
+'mc-spec', which is used to specify how the Markov chain sampling is
+to be done.  There are a large number of reasonable ways of sampling
+for neural networks or Gaussian processes.  The best way is still the
+subject of research.  Good results can be obtained using several
+standard approaches, however, as described in the examples in other
+sections of this documentation.  You can also read all about the
+various methods in mc-spec.doc.  Note, however, that for each model
+there are also sampling methods specific to that model alone, which
+are documented in net-mc.doc, gp-mc.doc, and mix-mc.doc.  At present,
+sampling for mixture models is done only by the specific procedures
+described in mix-mc.doc.
 
 Tempering methods and Annealed Importance Sampling are currently
-supported for neural network models, but not for Gaussian processes
-and mixture models.  Circular coupling is now supported, but it 
-currently works for only a limited number of Markov chain operations.
+supported for neural network models and Dirichlet diffusion tree
+models, but not for Gaussian processes and mixture models.  Circular
+coupling is now supported, but it currently works for only a limited
+number of Markov chain operations.
 
 
 Sampling from a specified distribution.
@@ -735,22 +745,37 @@ hyperparameters.  The 'model-spec' and 'data-spec' programs are then
 used to complete the specification of the data model and data source.
 For mixture models, the data items are all considered to be "targets",
 with the number of "inputs" being zero.  The Markov chain sampling
-procedures to use are then specified using 'mix-spec', and the
-sampling is done with 'mix-mc'.  At present, there is not all that
-much that can be done with the results - in particular, there is no
-prediction program.  One can look at the parameter values for states
-drawn from the posterior with 'mix-display', however, and generate
+procedures to use are then specified using 'mc-spec', and the sampling
+is done with 'mix-mc'.  One can look at the parameter values for
+states drawn from the posterior with 'mix-display', and generate
 future datasets using 'mix-cases'.
+
+
+Dirichlet diffusion tree models.
+
+The 'dft' directory contains the modules and programs that implement
+density modeling and clustering using Dirichlet diffusion trees,
+making use of the modules in the 'util' and 'mc' directories.  
+
+The 'dft-spec' program specifies the prior for the tree structure.
+The 'model-spec' and 'data-spec' programs are then used to complete
+the specification of the model and data source.  As for mixture
+models, the data items are all considered to be "targets", with the
+number of "inputs" being zero.  The Markov chain sampling procedures
+to use are then specified using 'mc-spec', and the sampling is done
+with 'dft-mc'.  One can then examine the resulting trees with
+'dft-display' or 'dft-dendrogram', or find predictive densities with
+'dft-pred'.
 
 
 Quantities obtainable from log files.
 
-The 'xxx-plt' programs (eg, 'dist-plt', 'net-plt', 'gp-plt', and
-'mix-plt') are the principal means by which simulation runs are
-monitored.  These programs allow one to see the values of various
-"quantities", evaluated for each iteration stored in a log file within
-some range.  Some other programs (eg, 'xxx-hist') also use the same
-set of quantities.
+The 'xxx-plt' programs (eg, 'dist-plt', 'net-plt', 'gp-plt',
+'mix-plt', and 'dft-plt') are the principal means by which simulation
+runs are monitored.  These programs allow one to see the values of
+various "quantities", evaluated for each iteration stored in a log
+file within some range.  Some other programs (eg, 'xxx-hist') also use
+the same set of quantities.
 
 A quantity is specified by an identifying character, perhaps with a
 numeric modifier.  Some quantities are single numeric values
@@ -769,9 +794,9 @@ for neural networks and Gaussian processes - for example, 'b', the
 average squared error on the training set, and 'n', the current value
 of the noise standard deviation (for a regression model) - and for
 mixture models - for example, 'Cn', the total probability for the n
-largest components in the mixture.  For details, see quantities.doc,
-mc-quantities.doc, dist-quantities.doc, net-quantities.doc,
-gp-quantities.doc, and mix-quantities.doc.
+largest components in the mixture.  For details, see quantities.doc
+along with mc-quantities.doc, dist-quantities.doc, net-quantities.doc,
+gp-quantities.doc, mix-quantities.doc, and dft-quantities.doc.
 
 
 
@@ -797,7 +822,7 @@ local mode, the final predictions you obtain (eg, from 'net-pred' or
 'gp-pred'), and the final distributions of model parameters, should be
 close to those reported below.
 
-Some of the examples show the outpu of "xxx-plt" commands being piped
+Some of the examples show the output of "xxx-plt" commands being piped
 into a program called "plot".  Any plot program could be used that
 reads pairs of numbers from standard input and plots them (in some
 cases, a blank line is present to indicate the start of a new
@@ -813,13 +838,15 @@ beginning with "ex", along with the C source of the programs that
 generated the data.  The commands given assume that you are in the
 directory containing the data.  The command sequences used for each
 example are also stored in these directories, in shell files with the
-names like 'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.  The
-'ex-mix' and 'ex-ais' directories also contain other command files
-used for examples in my papers.
+names like 'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.
+Some of these directories also contain other command files used for
+examples in my papers.
 
 Computation times are given for many of the examples.  These are all
-for the current version of the software, run on a Linux system with a
-550MHz Pentium III processor.
+for the current version of the software, run on the system described
+in Ex-system.doc, except for the examples in Ex-dist-g.doc and
+Ex-dist-f.doc, which I've left with times for an older version of the
+software, run on a 550 MHz Pentium III.
 
 
 
@@ -1135,6 +1162,9 @@ For details on the various methods described, see mc-spec.doc.  A
 table comparing the performance of the methods on these examples is
 included at the end of this section.
 
+The times reported here are for an older version of the software, run
+on a 550 MHz Pentium III.
+
 
 Specifying the distribution.
 
@@ -1191,7 +1221,7 @@ metropolis updates) with the following command:
 
     > dist-mc glog.met,1 2000
 
-This takes about three seconds on our 550MHz Pentium III, as will all
+This takes about three seconds on a 550MHz Pentium III, as will all
 the other sampling commands in this section.
 
 We can look at what happened to the three state variables during these
@@ -1691,7 +1721,9 @@ the expectation of the "x" variable using the various methods (the
 autocorrelation time), determined from estimates of the cumulative
 correlations up to when the autocorrelations are near zero.  The
 repetition counts for the methods were set so that they all required
-about 3 seconds of computation time for 2000 iterations.
+about 3 seconds of computation time for 2000 iterations (on a 550MHz
+Pentium III).
+
 
   METHOD      STEPSIZE   AUTOCORR.  NOTES
                            TIME
@@ -1738,6 +1770,9 @@ Here I will illustrate some of the dangers of Markov chain sampling by
 showing how even a rather simple distribution can pose problems, which
 may not be obvious from simple plots.  This example also illustrates
 how the adaptive nature of slice sampling can help prevent disaster.
+
+The times reported here are for an older version of the software, run
+on a 550 MHz Pentium III.
 
 
 Specifying a "funnel" distribution.
@@ -1813,9 +1848,9 @@ for a total of 20 million Metropolis updates altogether:
 The state at the end of each iteration (ie, after each group of 10000
 Metropolis updates) is saved in the log file.
 
-Once this command has finished (which takes 16 minutes on our 550 MHz
-Pentium III machine), we can produce a scatterplot from the points
-obtained in order to see the relationship of x1 to v:
+Once this command has finished (which takes 16 minutes on a 550 MHz
+Pentium III), we can produce a scatterplot from the points obtained in
+order to see the relationship of x1 to v:
 
     > dist-plt x1 v flog.met,1 | plot-points
 
@@ -2059,10 +2094,13 @@ network models.  It can be used for regression models using Gaussian
 processes (if appropriate Markov chain operations are used), but not
 for classification models, or other models requiring latent variables.
 
-More substantial examples will be added in a future release of this
-software, to go with a future revised version of the tech report.
+The example below is pretty simple.  A more interesting example is in
+the latest version of the technical report, but isn't included here.
+There are also some command files demonstrating circular coupling in
+the ex-bayes directory.
 
-The command files for these examples are in ex-circ.
+The command files for the example here and for two other examples are
+in the ex-circ directory.
 
 
 Circularly-coupled sampling for a Cauchy model.
@@ -2327,7 +2365,7 @@ Each iteration will consist of 45 Metropolis updates, done using a
 proposal distribution that adds a normally-distributed offset to each
 variable with standard deviation 0.02.  The 'dist-mc' command does 500
 such iterations (for a total of 22500 Metropolis updates).  This takes
-about 8 seconds on our 550MHz Pentium III.
+4.4 seconds on the system used (see Ex-system.doc).
 
 We can see what the average rejection rate was for these updates as
 follows:
@@ -2453,8 +2491,8 @@ stepsize of 0.01.  This stepsize was picked by trial and error, and
 results in a rejection rate of about 0.13.  In general, the stepsize
 for this standard form of hybrid Monte Carlo should chosen so that the
 rejection rate is somewhere between about 0.05 and 0.25.  The 500
-iterations take about 11 seconds, about the same as the Metropolis
-run above.
+iterations take 4.7 seconds on the system used (see Ex-system.doc),
+about the same as the Metropolis run above.
 
 From examining plots of the state variables over time, it seems that
 the hybrid Monte Carlo chain reaches equilibrium much more quickly
@@ -2587,8 +2625,8 @@ of 1, repeated 10 times each iteration:
     > mc-spec tlog1 repeat 10 metropolis 1
     > dist-mc tlog1 5000
 
-This takes about 5 seconds on our 550MHz Pentium III.  We can look at
-plots such as the following to assess convergence:
+This takes 1.6 seconds on the system used.  We can look at plots such
+as the following to assess convergence:
 
     > dist-plt t uw tlog1 | plot
 
@@ -2789,7 +2827,7 @@ represented by the integers 0, 1, and 2.  This argument could have
 been left out, but including it causes the data to be checked to
 ensure that each item is in the set {0,1,2}.
 
-zThe remaining arguments give the files where the inputs (all zero of
+The remaining arguments give the files where the inputs (all zero of
 them) and targets come from, with the "." for the latter indicating
 that the targets come from the same place as the inputs.
 
@@ -2806,8 +2844,9 @@ algorithm:
     > mc-spec plog.met repeat 10 metropolis 1
     > dist-mc plog.met 1000
 
-This takes about three seconds on our 550MHz Pentium III.  Convergence
-is quite rapid, and the sampling efficiency is reasonably good.
+This takes 1.1 seconds on the system used (see Ex-system.doc).
+Convergence is quite rapid, and the sampling efficiency is reasonably
+good.
 
 We can estimate the probabilities of the three possible values as
 follows:
@@ -2899,12 +2938,12 @@ Otherwise, you must provide a separate program to do the sampling.
 For how this is done, see the documentation on the -read-prior option
 in dist-spec.doc and also the information in dist-mc.doc.
 
-The commands above take about three seconds on 550MHz Pentium III.
-Once they have finished, we can estimate functions of state with
-'dist-est', which will automatically look at only the iterations that
-pertain to the final distribution of interest.  It also computes
-weighted estimates using the weights found during the annealing runs.
-Here is an example:
+The commands above take 1.2 seconds on the system used (see
+Ex-system.doc).  Once they have finished, we can estimate functions of
+state with 'dist-est', which will automatically look at only the
+iterations that pertain to the final distribution of interest.  It
+also computes weighted estimates using the weights found during the
+annealing runs.  Here is an example:
 
     > dist-est "Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.ais
     
@@ -3002,24 +3041,24 @@ found using 'dist-est'.  For example:
     
     NOTE: The standard errors assume points are independent
     
-Doing importance sampling takes less than half a second on our 550MHz
-Pentium III, which is faster than Annealed Importance Sampling.
-However, importance sampling quickly becomes infeasible for problems
-with more parameters or with more data.  Annealed Importance Sampling
-is more feasible for realistic problems, though some work is needed to
-set up a good tempering schedule, which may have to include many more
-distributions than were needed for this easy problem (often hundreds
-or more).  See mc-ais.doc for documentation on how to obtain
-information that is helpful in adjusting the tempering schedule.
+Importance sampling is faster than Annealed Importance Sampling for
+this easy problem.  However, importance sampling quickly becomes
+infeasible for problems with more parameters or with more data.
+Annealed Importance Sampling is more feasible for realistic problems,
+though some work is needed to set up a good tempering schedule, which
+may have to include many more distributions than were needed for this
+easy problem (often hundreds or more).  See mc-ais.doc for
+documentation on how to obtain information that is helpful in
+adjusting the tempering schedule.
 
 The software also supports the related methods of simulated tempering,
 tempered transitions, and tempered hybrid Monte Carlo.  Annealed
 importance sampling and the tempering schemes are also supported for
-neural network models (but not for Gaussian process and mixture
-models).  There's no tutorial documentation on these features,
-however, just the detailed command documentation, and the command
-files in the 'ex-ais' directory that implement the tests done in my
-"Annealed Importance Sampling" paper.
+neural network models and Dirichlet diffusion tree models (but not for
+Gaussian process and mixture models).  There's no tutorial
+documentation on these features, however, just the detailed command
+documentation, and the command files in the 'ex-ais' directory that
+implement the tests done in my "Annealed Importance Sampling" paper.
 
 
 A RANDOM EFFECTS MODEL
@@ -3129,7 +3168,7 @@ We can now sample for 10000 iterations with the following command:
 
     > dist-mc elog.met 10000
 
-This takes a bit over a minute on our 550MHz Pentium III.
+This takes 28 seconds on the system used (see Ex-system.doc).
 
 A scatterplot of the posterior distribution for v1 and v2 can be
 obtained using a command such as
@@ -3163,9 +3202,9 @@ randomly positioning an interval of width 2 around the current point,
 and then sampling successively from this interval until a point within
 the slice is found.  The last argument of "1" specifies that the
 maximum interval size is just one times the width parameter.  Since
-there is no possibility of widening the interval, there is no point in
-evaluating the energy function at the interval's endpoints.  This
-saving may make this approach beneficial in some circumstances.
+there is no possibility of widening the interval, there is no need to
+evaluate the energy function at the interval's endpoints.  This saving
+may make this approach beneficial in some circumstances.
 
 These 5 slice sampling operations take about the same time as the 25
 Metropolis updates of the previous section.  The resulting sampling
@@ -3173,8 +3212,8 @@ efficiency is also about the same for this example.
 
 
 
-EXAMPLES OF FLEXIBLE BAYESIAN REGRESSION AND CLASSIFICATION MODELS BASED ON 
-NEURAL NETWORKS AND GAUSSIAN PROCESSES
+EXAMPLES OF FLEXIBLE BAYESIAN REGRESSION AND CLASSIFICATION MODELS
+BASED ON NEURAL NETWORKS AND GAUSSIAN PROCESSES
 
 Neural networks and Gaussian processes can be used to to predict a
 target value (or values) from a set of input values.  When the target
@@ -3259,7 +3298,7 @@ often appropriate.  Here, the "0.5" after the colon controls how vague
 the prior is (closer to zero is more vague).  The "0.05" specifies the
 location of this vague distribution, but due to the asymmetry of the
 tails, it is closer to being the lower limit of the prior than the
-centre (for vague priors such as this). 
+centre (for vague priors such as this).
 
 The "x" in front of the prior for the hidden-to-output weights
 indicates that the prior should be automatically rescaled based on the
@@ -3275,22 +3314,20 @@ data set.  We do this with the 'model-spec' command:
 In this case, the targets are real-valued, and are modeled as the
 network output plus Gaussian noise, with the noise standard deviation
 being a hyperparameter having the prior given by the last argument of
-the command.  The syntax of the prior specification is the same as 
-for the priors on network parameters.
+the command.  The syntax of the prior specification is the same as for
+the priors on network parameters. 
 
 You can view the architecture and prior specifications stored in the
 log file by invoking 'net-spec' with just a log file argument.  In
 this example, this should give the following result:
 
     > net-spec rlog.net
-    
+
     Network Architecture:
     
-      Size of input layer:    1
-      Sizes of hidden layers: 8
-      Size of output layer:   1
-    
-      Data model: real
+      Input layer:     size 1
+      Hidden layer 0:  size 8  tanh
+      Output layer:    size 1
     
     
     Prior Specifications:
@@ -3340,9 +3377,9 @@ see numin.doc.
 Though it is not done above, the 'data-spec' command also allows you
 to specify transformations to be applied to the inputs or targets
 before they are used.  This is useful, for example, if you wish to use
-inputs that have been "normalized" to have mean zero and variance one,
-based on the training data. See data-spec.doc for the details.  In
-this example, the data already has approximately mean zero and
+inputs that have been "standardized" to have mean zero and variance
+one, based on the training data.  See data-spec.doc for the details.
+In this example, the data already has approximately mean zero and
 variance one, so the priors used are sensible without normalization.
 
 In the training runs reported in the thesis, I used a short "initial
@@ -3393,7 +3430,7 @@ somewhat to the training data.  We can now start serious sampling with
 the following commands:
 
     > mc-spec rlog.net sample-sigmas heatbath hybrid 1000:10 0.4
-    > net-mc rlog.net 100
+    > net-mc rlog.net 400
 
 The 'mc-spec' command appends a new set of Markov chain operations to
 the log file, which will override the previous set.  These operations
@@ -3408,51 +3445,51 @@ experiment in order to find out how large this factor can be while
 keeping the rejection rate low.  The use of a "window" of around 10
 states costs little and is often beneficial.
 
-The 100 iterations of the sampling phase started with the command
-'net-mc rlog.net 100' will take a little while to complete (about one
-minute on our 550MHz Pentium III).  If you put the command in the
-background (or add a '&' to the end of the 'net-mc' command), you will
-be able to monitor progress while you wait.  For example, you can look
-at the last network saved in the log file (or any earlier one) using
+The 399 iterations of the sampling phase started with the command
+'net-mc rlog.net 400' take 160 seconds to complete on the the system
+used (see Ex-system.doc).  If you put the command in the background
+(or add a '&' to the end of the 'net-mc' command), you will be able to
+monitor progress while you wait.  For example, you can look at the
+last network saved in the log file (or any earlier one) using
 'net-display'.  After a few seconds, you might see the following:
 
     > net-display rlog.net
-  
-    Network in file "rlog.net" with index 15
 
+    Network in file "rlog.net" with index 15
+    
     Input to Hidden Layer 0 Weights [1]
     
-     3.57 3.57: -2.75  +2.66  +4.67  +1.67  -2.99  +3.42  -0.94  +2.69
+     1.38 1.38: -0.85  +1.51  -0.39  -0.08  -2.74  -0.92  +0.87  -0.46
     
     Hidden Layer 0 Biases [2]
     
-          3.66: -0.40  +2.96  +9.48  +2.35  -2.66  -3.74  +8.69  -6.43
+          2.49: +1.48  -1.93  -4.53  +2.42  -0.39  +2.29  -3.24  +2.46
     
     Hidden Layer 0 to Output Weights [3]
     
-     0.57 0.57: -0.73
+     1.54 1.54: -2.73
     
-          0.57: -0.59
+          1.54: -2.32
     
-          0.57: +0.26
+          1.54: +0.70
     
-          0.57: +0.07
+          1.54: +1.88
     
-          0.57: -0.51
+          1.54: -0.71
     
-          0.57: -0.57
+          1.54: -0.31
     
-          0.57: +0.64
+          1.54: +0.72
     
-          0.57: +0.82
+          1.54: +1.50
     
     Output Biases [4]
     
-        100.00: +0.51
+        100.00: -0.21
     
     Noise levels
     
-       0.08 -  0.08
+       0.09 -  0.09
 
 This display of network parameters and hyperparameters is divided into
 sections for different parameter groups.  Within each section, the
@@ -3501,28 +3538,28 @@ proceed for quite a long time, but predictions based on shorter runs
 may nevertheless be quite good.
 
 For this problem, let's assume that we have decided to discard the
-first 20 iterations as perhaps not coming from the equilibrium
+first 100 iterations as perhaps not coming from the equilibrium
 distribution.  The following command will use the networks from the
-remaining 80 iterations to produce predictions for all test cases, and
+remaining 300 iterations to produce predictions for all test cases, and
 report the average squared error:
 
-    > net-pred itn rlog.net 21: 
+    > net-pred itn rlog.net 101: 
 
-    Number of networks used: 80
+    Number of iterations used: 300
 
     Case  Inputs Targets   Means Error^2
 
-       1    0.92    1.49    1.58  0.0075
-       2    0.71    1.83    1.79  0.0014
-       3    0.20    1.72    1.68  0.0016
+       1    0.92    1.49    1.57  0.0059
+       2    0.71    1.83    1.78  0.0017
+       3    0.20    1.72    1.68  0.0013
  
             ( middle lines omitted )
 
       98   -0.69    0.35    0.35  0.0000
-      99   -1.33    0.19    0.37  0.0306
-     100   -0.09    1.31    1.24  0.0056
+      99   -1.33    0.19    0.37  0.0303
+     100   -0.09    1.31    1.24  0.0061
 
-    Average squared error guessing mean:   0.00937+-0.00123
+    Average squared error guessing mean:   0.00941+-0.00123
 
 The options "itn" specified ask for a listing of the inputs ("i") and
 targets ("t") for each case, along with the mean ("n") output for that
@@ -3539,7 +3576,7 @@ It is also possible to get predictions for cases that are not in the
 test set that was specified with 'data-spec'.  For example:
 
     > net-pred nb rlog.net 11: / "%echo 2.3"
-      +1.36491809e+00
+      +1.36798018e+00
 
 Here, the options "nb" ask for only the predictive mean, with "bare"
 output (no headings, also higher precision, in exponential format).
@@ -3548,39 +3585,42 @@ just one case) should be taken from the output of the Unix command
 "echo 2.3", which just outputs the number 2.3.
 
 The 'net-pred' program can also find the median and the 10% and 90%
-quantiles of the predictive distribution, as illustrated below:
+quantiles of the predictive distribution.  The program limits the
+number of iterations that can be used when finding medians and
+quantiles, so the command below uses "%5" to look only at the 60
+iterations above 1100 with numbers that are multiples of five:
 
-    > net-pred itdq rlog.net 21:
+    > net-pred itdq rlog.net 101:%5
 
-    Number of iterations used: 80
+    Number of iterations used: 60
     
     Case  Inputs Targets Medians |Error| 10% Qnt 90% Qnt
 
-       1    0.92    1.49    1.58  0.0901    1.46    1.70
-       2    0.71    1.83    1.79  0.0359    1.66    1.91
-       3    0.20    1.72    1.68  0.0376    1.56    1.80
-       4    0.19    1.76    1.65  0.1093    1.54    1.77
-       5    1.18    1.18    1.21  0.0297    1.08    1.34
-       6   -2.10    0.05    0.05  0.0052   -0.10    0.20
-       7   -1.34    0.30    0.37  0.0639    0.25    0.49
-       8   -1.62    0.48    0.42  0.0589    0.28    0.55
-       9   -2.29   -0.41   -0.27  0.1434   -0.54    0.05
-      10   -0.23    0.89    0.98  0.0841    0.86    1.09
-
-                        (some lines omitted)
-
-      91   -0.16    1.21    1.10  0.1058    0.99    1.22
-      92    0.79    1.70    1.72  0.0254    1.60    1.84
-      93   -1.99    0.19    0.18  0.0099    0.05    0.32
-      94    0.18    1.71    1.65  0.0608    1.53    1.77
-      95    1.56    0.84    0.82  0.0167    0.68    0.94
-      96   -0.32    0.80    0.82  0.0217    0.69    0.95
-      97   -0.12    1.23    1.17  0.0588    1.05    1.29
-      98   -0.69    0.35    0.35  0.0021    0.23    0.48
-      99   -1.33    0.19    0.37  0.1810    0.24    0.50
-     100   -0.09    1.31    1.24  0.0749    1.12    1.36
+       1    0.92    1.49    1.57  0.0791    1.45    1.68
+       2    0.71    1.83    1.79  0.0386    1.67    1.90
+       3    0.20    1.72    1.68  0.0338    1.57    1.80
+       4    0.19    1.76    1.66  0.0983    1.55    1.78
+       5    1.18    1.18    1.22  0.0437    1.11    1.34
+       6   -2.10    0.05    0.06  0.0151   -0.08    0.20
+       7   -1.34    0.30    0.37  0.0615    0.24    0.49
+       8   -1.62    0.48    0.40  0.0766    0.27    0.53
+       9   -2.29   -0.41   -0.25  0.1599   -0.46   -0.06
+      10   -0.23    0.89    0.97  0.0782    0.85    1.09
     
-    Average abs. error guessing median:    0.07723+-0.00581
+                        (middle lines omitted)
+
+      91   -0.16    1.21    1.10  0.1079    0.98    1.22
+      92    0.79    1.70    1.72  0.0185    1.60    1.83
+      93   -1.99    0.19    0.19  0.0027    0.05    0.32
+      94    0.18    1.71    1.65  0.0613    1.53    1.77
+      95    1.56    0.84    0.83  0.0060    0.71    0.95
+      96   -0.32    0.80    0.82  0.0153    0.70    0.94
+      97   -0.12    1.23    1.18  0.0524    1.06    1.29
+      98   -0.69    0.35    0.35  0.0025    0.23    0.46
+      99   -1.33    0.19    0.36  0.1724    0.24    0.49
+     100   -0.09    1.31    1.24  0.0784    1.12    1.35
+    
+    Average abs. error guessing median:    0.07807+-0.00594
 
 We see here that all but one of the actual targets for the twenty test
 cases shown lie between the 10% and 90% quantiles.  When the median is
@@ -3703,12 +3743,12 @@ time to compute (the 'E' and 'H' quantities, defined in the "mc"
 module, may also take a long time).  See gp-quantities.doc for
 details.
 
-Once the gp-mc run has completed (which takes about half a minute on
-our 550MHz Pentium III), the iterations from the latter part of the
-run can be used to make predictions for test cases.  This is done
-using 'gp-pred', which operates much like 'net-pred'.  The following
-command makes predictions for the test cases based on the last 80 of
-the 100 iterations, and reports the average squared error:
+Once the gp-mc run has completed, which takes 13 seconds on the system
+used (see Ex-system.doc), iterations from the latter part of the run
+can be used to make predictions for test cases.  This is done using
+'gp-pred', which operates much like 'net-pred'.  The following command
+makes predictions for the test cases based on the last 80 of the 100
+iterations, and reports the average squared error:
 
     > gp-pred na rlog.gp 21:
 
@@ -3716,15 +3756,15 @@ the 100 iterations, and reports the average squared error:
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.00952+-0.00126
+    Average squared error guessing mean:   0.00999+-0.00139
 
-This takes less than a second on our machine.  Predictions will take
-longer when the number of training cases is larger, or if the median
-or log probability are to be found (options "d" or "p" of 'gp-pred').
-As can be seen, the performance of the Gaussian process model is quite
-similar to that of the neural network model for this problem.  (The
-difference in average performance seen is probably not significant,
-considering the standard errors.)
+This takes less than a second on the sytem used (see Ex-system.doc).
+Predictions will take longer when the number of training cases is
+larger, or if the median or log probability are to be found (options
+"d" or "p" of 'gp-pred').  As can be seen, the performance of the
+Gaussian process model is quite similar to that of the neural network
+model for this problem.  (The difference in average performance seen
+is probably not statistically significant.)
 
 The predictions for test cases made above are found directly from the
 covariances between the targets in the training cases and the unknown
@@ -3819,9 +3859,7 @@ similar to those used in the regression problem (see Ex-netgp-r.doc):
     Number of training cases: 300
     Number of test cases: 200
 
-The 'net-spec' command here differs only in the number of input units
-(2) and the number of hidden units (15).  The data model used is
-"binary", with no need for a noise level prior.
+The data model used is "binary", with no need for a noise level prior.
 
 The 'data-spec' command also says that there are two inputs, and one
 target.  It also has a third argument of "2" just before the "/",
@@ -3842,7 +3880,7 @@ well try something different (the mc-spec command needed here is long,
 so it is continued by putting a "\" at the end of the first line):
 
     > mc-spec blog.net repeat 10 sample-sigmas heatbath 0.95 \
-                             hybrid 100:10 0.3 negate
+                                 hybrid 100:10 0.3 negate
     > net-mc blog.net 200
 
 The above 'mc-spec' command specifies the variant of hybrid Monte
@@ -3853,9 +3891,9 @@ rejection rate must be quite small.  This alternative method has the
 advantage that it allows for more frequent hyperparameter updates
 (with 'sample-sigmas').
 
-On our 550MHz Pentium III, the 200 iterations requested above take
-about eleven minutes.  During this time, one can monitor the
-simulation, for instance with the command:
+The 200 iterations requested above take about 7.5 minutes on the
+system used (see Ex-system.doc).  During this time, one can monitor
+the simulation, for instance with the command:
 
     > net-plt t h1h2h3 blog.net | plot
 
@@ -3881,23 +3919,22 @@ right.  We can get such predictions as follows:
     Case  Inputs        Targets  Log Prob  Guesses  Wrong?
 
        1   -1.56   0.90    0.00    -0.001      0       0
-       2    0.09  -0.13    1.00    -0.054      1       0
-       3   -0.79   0.85    0.00    -0.003      0       0
+       2    0.09  -0.13    1.00    -0.057      1       0
+       3   -0.79   0.85    0.00    -0.004      0       0
 
                      (some lines omitted )
 
-      99    0.14   0.86    1.00    -2.590      0       1
-     100    0.21   0.18    1.00    -0.097      1       0
-     101   -1.32  -0.19    0.00    -0.008      0       0
+      99    0.14   0.86    1.00    -2.594      0       1
+     100    0.21   0.18    1.00    -0.103      1       0
+     101   -1.32  -0.19    0.00    -0.006      0       0
 
                      (some lines omitted )
 
-     198    1.49   0.70    0.00    -0.028      0       0
-     199   -2.23  -0.28    0.00    -0.002      0       0
+     198    1.49   0.70    0.00    -0.030      0       0
+     199   -2.23  -0.28    0.00    -0.007      0       0
      200   -0.91  -0.03    0.00    -0.055      0       0
 
-    Average log probability of targets:    -0.245+-0.034
-
+    Average log probability of targets:    -0.244+-0.034
     Fraction of guesses that were wrong:  0.0850+-0.0198
 
 The "itmp" options ask for output listing the inputs, the targets, the
@@ -3963,28 +4000,28 @@ Unfortunately, for the very same reason, the direct "sample-values"
 operation is not available, so one must use Gibbs sampling or
 Metropolis-Hastings updates (the met-values or mh-values operations).
 
-The 50 sampling iterations take about thirteen minutes on our 550MHz
-Pentium III.  While you wait, you can check the progress of the
+The 50 sampling iterations take 5.9 minutes on the system used (see
+Ex-system.doc).  While you wait, you can check the progress of the
 hyperparameters using gp-display:
 
     > gp-display blog.gpl
 
     GAUSSIAN PROCESS IN FILE "blog.gpl" WITH INDEX 10
-
+    
     HYPERPARAMETERS
-
+    
     Constant part:
-
+    
           1.000
-
+    
     Jitter part:
-
+    
             0.1
-
+    
     Exponential parts:
-
-         10.418
-          0.486 :      0.486      0.486
+    
+          5.973
+          0.620 :      0.620      0.620
 
 Note that there are only two variable hyperparameters, since the
 constant and jitter parts are fixed, and the relevance hyperparameters
@@ -4005,8 +4042,8 @@ classification performance:
 
     Fraction of guesses that were wrong:  0.0950+-0.0208
 
-This takes about about five seconds on our machine.  This is slower
-than prediction using a network model, since the Cholesky
+This takes 2.5 seconds on the system used (see Ex-system.doc).  This
+is slower than prediction using a network model, since the Cholesky
 decomposition of the covariance matrix must be found for each
 iteration used (saving these would take up lots of disk space).  The
 accuracy achieved is about the same as for the network model, which is
@@ -4101,7 +4138,7 @@ the same approach as was used above for the binary data set (but the
                                  hybrid 100:10 0.3 negate
     > net-mc clog.net 200
 
-This takes about thirteen minutes on our 550MHz Pentium III.
+This takes 8.7 minutes on the system used (see Ex-system.doc).
 
 We can see the effect of the ARD model by looking at the values of
 the low-level input-hidden hyperparameters over the course of the
@@ -4127,6 +4164,35 @@ use the following command:
 
 Here, the "a" option is used to suppress everything except the summary.
 
+If we are interested in the probabilities for each class, we can use
+the "n" option, as follows:
+
+    > net-pred n clog.net 51:
+
+    Number of iterations used: 150
+
+    Case Targets   Means               Error^2
+
+       1    2.00    0.19   0.00   0.81  0.0726
+       2    2.00    0.23   0.01   0.76  0.1073
+       3    2.00    0.12   0.00   0.87  0.0319
+       4    0.00    0.82   0.04   0.13  0.0524
+                     
+                       . . .
+
+     597    2.00    0.04   0.00   0.96  0.0027
+     598    1.00    0.33   0.65   0.01  0.2346
+     599    0.00    0.23   0.00   0.77  1.1964
+     600    2.00    0.03   0.00   0.97  0.0016
+
+    Average squared error guessing mean:   0.20556+-0.01623
+
+The "Means" columns give the predictive probabilities for the three
+classes for each case.  The "Error^2" column gives the squared error
+found by summing the squared differences of these probabilities with
+the indicator variables that are zero for the wrong classes and one
+for the correct class.  
+
 
 A Gaussian process model for the three-way classification problem.
 
@@ -4150,10 +4216,10 @@ classification problem, using "persistent" hybrid Monte Carlo:
 For the first five iterations, the persistence is fairly small (0.9),
 so that the high initial energy will be dissipated rapidly.  The
 remaining iterations use a larger persistence (0.98) to suppress
-random walks.  The run takes about fifty minutes on our 550MHz Pentium
-III.  The cubic scaling of the computations for the Gaussian process
-models leads to their becoming slower relative to neural network
-models as the number of training cases increases.
+random walks.  This run takes 19 minutes on the system used (see
+Ex-system.doc).  The cubic scaling of the computations for the
+Gaussian process models leads to their becoming slower relative to
+neural network models as the number of training cases increases.
 
 One can observe how the relevance hyperparameters change during the
 run as follows, assuming that the "plot" program can display four
@@ -4184,7 +4250,9 @@ as illustrated below:
     
     Fraction of guesses that were wrong:  0.1350+-0.0140
     
-This takes about eighty seconds on our machine.
+This takes 27 seconds on the system used (see Ex-system.doc).  The "n"
+option can be used to get the predictive probability for each class,
+as illustrated above for net-pred.
 
 A "logistic" style model can be obtained by decreasing the jitter,
 using a 'gp-spec' command such as the following:
@@ -4238,7 +4306,7 @@ The commands used to do this are as follows:
     > net-mc olog.net 1
 
     > mc-spec olog.net sample-sigmas heatbath hybrid 1000:10 0.4
-    > net-mc olog.net 100
+    > net-mc olog.net 400
 
 The crucial difference is in the 'model-spec' command, where the noise
 prior of 0.05:0.5::4 specifies that the per-case noise precision
@@ -4249,31 +4317,31 @@ of the way the noise was actually generated, but its fairly heavy
 tails are enough to prevent the model from paying undue attention to
 the outliers.
 
-The above commands take about one minute on our 550MHz Pentium III.
-The resulting model can be tested on data from the same source using
-net-pred:
+The above commands take 165 seconds on the system used (see
+Ex-system.doc).  The resulting model can be tested on data from the
+same source using net-pred:
 
-    > net-pred na olog.net 31:
+    > net-pred na olog.net 101:
 
-    Number of networks used: 70
+    Number of iterations used: 300
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.02129+-0.01336
+    Average squared error guessing mean:   0.01917+-0.01057
 
 One can also see how well the model does on the uncorrupted data that
 was used originally:
 
-    > net-pred na olog.net 31: / rdata@101:200 .
+    > net-pred na olog.net 101: / rdata@101:200 .
 
-    Number of networks used: 70
+    Number of iterations used: 300
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.01201+-0.00209
+    Average squared error guessing mean:   0.00927+-0.00124
 
-This is not much different than the results obtained earlier with the
-model trained on uncorrupted data.
+This is similar to the results obtained earlier with the model trained
+on uncorrupted data (slightly better, in fact, but that's just luck).
 
 In contrast, the results are substantially worse when the data with
 outliers is used to train a standard model where the noise is
@@ -4298,7 +4366,7 @@ be sampled.  The following commands illustrate how this is done:
     > mc-spec olog.gpt sample-variances heatbath hybrid 20:4 0.5
     > gp-mc olog.gpt 200
 
-This takes a bit over a minute on our 550MHz Pentium III.  The
+This takes 30 seconds on the system used (see Ex-system.doc).  The
 progress of the run can be monitored by examining the case-by-case
 noise standard deviations in (say) the first 8 training cases, as
 follows:
@@ -4318,13 +4386,13 @@ Predictions can be made using 'gp-pred':
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.01926+-0.01111
+    Average squared error guessing mean:   0.01939+-0.01134
 
 This performance is very similar to that of the network model.
 
 
 
-EXAMPLES OF BAYESIAN MIXTURE MODELS
+EXAMPLES OF BAYESIAN MIXTURE AND DIRICHELT DIFFUSION TREE MODELS.
 
 Mixture models can be used to model complex distributions of "target"
 values, without any dependence on input values.  The mixture
@@ -4333,21 +4401,30 @@ representing underlying "latent classes" in the data.  Examples are
 given here of how this can be done for binary and for real-valued
 data.
 
-The data and command files for these examples are in the "ex-mix"
-directory.  This directory also contains the data and command files
-used for the example in my tech report on "Markov chain sampling
-methods for Dirichlet process mixture models".
+Dirchlet diffusion trees can also be used to model such data, and are
+also a way of performing hierarchical clustering.  These models are
+demonstrated on the same examples as are used for the mixture models,
+and also on an example that illustrates the use of two diffusion trees
+to produce an additive model.
+
+The data and command files for these examples are in the "ex-mixdft"
+directory.  The real-valued data was used as one example in my paper
+on "Density modeling and clustering using Dirichlet diffusion trees".
+This directory also contains the data and command files used for the
+example in my tech report on "Markov chain sampling methods for
+Dirichlet process mixture models".
 
 
 A PROBABILITY ESTIMATION PROBLEM WITH BINARY DATA
 
-As a first illustration of the mixture model software, I generated a
-dataset in which each case was composed of ten binary attributes.  The
-distribution of these binary vectors was a mixture of four component
-distributions, in each of which the ten attributes were independent.
-The four components each had probability 0.25 of being chosen to
-generate a case.  The probabilities for each component for each binary
-attributes were as shown below:
+As a first illustration of the mixture model and Dirichlet diffusion
+tree software, I generated a dataset in which each case was composed
+of ten binary attributes.  The distribution of these binary vectors
+was a mixture of four component distributions, in each of which the
+ten attributes were independent.  The four components each had
+probability 0.25 of being chosen to generate a case.  The
+probabilities for each component for each binary attributes were as
+shown below:
 
           1    2    3    4    5    6    7    8    9   10
 
@@ -4365,8 +4442,8 @@ having a small probability of being switched (ranging from 0.1 to 0.3)
 in any particular case.
 
 I generated 1000 cases from this distribution, which are stored in the
-file 'bdata'.  The first 500 are used for training (the others are not
-used at all at the moment).
+file 'bdata'.  The first 500 are used for training, the rest for
+testing.
 
 
 A finite mixture model for the binary data.
@@ -4448,7 +4525,7 @@ binary using the 'model-spec' command, as follows:
 
 We can then specify where the data comes from using 'data-spec':
 
-    > data-spec blog.4 0 10 2 / bdata@1:500 . 
+    > data-spec blog.4 0 10 2 / bdata@1:500 . bdata@501:1000 .
 
 The number of inputs is here specified to be 0 (as it must be at
 present for mixture models), and the number of targets is specified to
@@ -4460,8 +4537,8 @@ come from.  Note that we have to say where the inputs come from even
 though there are 0 of them, but fortunately, we can then say that the
 targets come from the same place by just using the "." argument.  In
 the specification above, the data comes from the first 500 lines of
-the file 'bdata', with one case per line.  See data-spec.doc for more
-details.
+the file 'bdata', with one case per line.  The remaining 500 lines are
+specified to be used for testing.  See data-spec.doc for more details.
 
 Finally, we need to specify how Markov chain sampling is to be done
 for this model.  At present, none of the standard Markov chain methods
@@ -4492,10 +4569,10 @@ means, as specified by hyperparameter values that are also set to
 their prior means.  The 'mix-gen' program could be used to initialize
 things differently (see mix-gen.doc).
 
-The above run takes about half a minute on our 550MHz Pentium III.  It
-can be run in the background, in which case progress can be monitored
-with the 'mix-display' and 'mix-plt' programs.  For example, after a
-while, we might see the following:
+The above run takes 29 seconds on the system used (see Ex-system.doc).
+It can be run in the background, in which case progress can be
+monitored with the 'mix-display' and 'mix-plt' programs.  For example,
+after a while, you might see the following:
 
     > mix-display blog.4
 
@@ -4573,12 +4650,20 @@ in mix-quantities.doc.
 
 As well as examining quantities with 'mix-display' and 'mix-plt', one
 can also produce a sample of cases from the predictive distribution
-using 'mix-cases'.  Unfortunately, these are about the only things one
-can do with the results at the moment.  There are no programs that
-find predictive probabilities, fill in missing values in partial
-cases, or do any of the other useful things that are quite possible
-with these models, but which haven't been implemented.  See
-mix-extensions.doc for a wish list of such facilities.
+using 'mix-cases'.  Predictive probabilities for test cases can be
+found using 'mix-pred'.  The following command gives the average log
+probability for all the test cases, using the last 80 iterations:
+
+    > mix-pred pa blog.4 21:
+
+    Number of iterations used: 80
+
+    Number of test cases: 500
+
+    Average log probability of targets:    -6.097+-0.069
+
+For comparison, the average log probability for these test cases
+using the true mixture distribution is -6.034.
 
 
 A countably infinite mixture model for the binary data.
@@ -4609,7 +4694,7 @@ mixture model.  The 'model-spec' and 'data-spec' commands used are
 also the same:
 
     > model-spec blog.inf binary
-    > data-spec blog.inf 0 10 2 / bdata@1:500 . 
+    > data-spec blog.inf 0 10 2 / bdata@1:500 . bdata@501:1000 .
 
 We must change the 'mc-spec' command, however, since it is impossible
 to do Gibbs sampling for the component indicators associated with
@@ -4636,8 +4721,8 @@ As before, we can now run the simulation with a command such as:
     > mix-mc blog.inf 100
 
 We can examine the states with 'mix-display'.  For example, once the
-'mix-mc' command completes, the state should be something like the
-following:
+'mix-mc' command completes, which takes 63 seconds on the system used
+(see Ex-system.doc), the state should be something like the following:
 
     > mix-display blog.inf
     
@@ -4694,6 +4779,23 @@ four components.  The number of such low-frequency components will
 vary from iteration to iteration, as will other aspects of the state,
 in accordance with the variability in the posterior distribution.
 
+Since there are exactly four components in the real distribution, one
+would expect that the model with four components would perform better
+than a model with an infinite number of components.  Any penalty is
+quite small in this example, however, as can be seen by looking at the
+predictive probabilities:
+
+    > mix-pred pa blog.inf 21:
+
+    Number of iterations used: 80
+
+    Number of test cases: 500
+
+    Average log probability of targets:    -6.105+-0.069
+
+This is almost the same as the average log probability for the four
+component model.
+
 A number of other ways of sampling for the indicators for countably
 infinite mixture models are also available.  Here are two:
 
@@ -4708,20 +4810,126 @@ operation for some models.  See mix-mc.doc for descriptions of these
 and other Markov chain operations for mixture models.
 
 
+A Dirichlet diffusion tree model for the binary data.
+
+Binary data can also be modeled using Dirichlet diffusion trees.  This
+is not the simplest example of how Dirichlet diffusion trees can be
+used, since the trees naturally produce real valued data.  To model
+binary data, these real values are treated as latent values, which are
+put through the logistic function to produce the probabilities for the
+binary data to be "1".  The binary data example here does not have the
+sort of hierarchical structure that would make use of a Dirichlet
+diffusion tree model desirable.  For both these reasons, the following
+example of how to model binary data with a Dirichlet diffusion tree
+may not be the best introduction to such models - you might want to
+read the real-valued example in Ex-mixdft-r.doc first.
+
+Nevertheless, this example does demonstrate how binary data can be
+modeled, and shows that even when there is no hierarchical structure
+to the data, a Dirichlet diffusion tree model can do quite well.
+
+We start by specifying a Dirichlet diffusion tree model, as follows:
+
+    > dft-spec blog.dft 0 10 / 2 - 1
+
+As for a mixture mdoel specification, this says that there are 0
+"input" variables (as there must be at present), and 10 "target"
+variables.  The argument of "2" is the standard deviation for the
+diffusion process that produces the latent variables used to model the
+binary variables (this could have been a prior specification rather
+than a fixed value).  The last two arguments are the parameters of the
+divergence function used to determine (stochastically) when the
+diffusion paths for different cases diverge.  The general form of the
+divergence function is
+
+   a(t) = c0 + c1/(1-t) + c2/(1-t)^2
+
+The parameters c0, c1, c2 are given at the end of the 'dft-spec'
+command, with "-" being equivalent to zero.  Any zero parameters at
+the end can just be omitted.  The specification above therefore
+corresponds to the divergence function a(t) = 1/(1-t).  Any of c0, c1,
+and c2 can be a prior specification, instead of a constant.  See
+dft-spec.doc for details, and Ex-mixdft-r.doc for an example.
+
+We next specify the data model, which is "binary", indicating binary
+data modeled using the logistic function:
+
+    > model-spec blog.dft binary
+
+We go on to specify the source of the data, as for the mixture example
+above:
+
+    > data-spec blog.dft 0 10 2 / bdata@1:500 . bdata@501:1000 .
+
+Finally, we need to specify how to do Markov chain sampling for the
+posterior distribution of the trees and latent values that underly the
+data.  
+
+    > mc-spec blog.dft repeat 10 gibbs-latent slice-positions met-terminals
+
+Since the hyperparameters are all fixed for this model, there is no
+need for Markov chain operations to update them.  The operations above
+will lead to the state of the Markov chain being only the latent
+values and the tree structure, with divergence times, but without the
+locations of non-terminal nodes (which will be integrated over).  The
+'gibbs-latent' operation does a Gibbs sampling scan over the latent
+values associated with the targets in training cases.  (Initially, the
+latent values are taken to be +1 for targets of "1", and -1 for
+targets of "0".)  The 'slice-positions' and 'met-terminals' operations
+both update the tree structure and divergence times.  See dft-mc.doc
+for details.
+
+We can run the Markov chain for 100 iterations with the following
+command:
+
+    > dft-mc blog.dft 100
+
+We can see the progress of the Markov chain by examining various
+quantities, such as the latent values associated with training cases.
+The following command will plot the latent values for the first target
+for the first six training cases:
+
+    > dft-plt t o1@1:6 blog.dft | plot
+
+The first four of these cases have "0" for their first target value,
+the last two have "1".  The plot should show that the latent values
+for the first four cases tend to be negative, whereas the latent
+values for the last two cases tend to be positive, at least once the
+Markov chain has approached convergence.
+
+The 'dft-mc' command above takes 11 minutes of time on the system used
+(see Ex-system.doc).  Once it is done, we can see how well the model
+predicts new data using the following command, which looks at the
+Dirichlet diffusion tree models produced by the last 60 iterations of
+the Markov chain:
+
+    > dft-pred pa blog.dft 41:
+
+    Number of iterations used: 60
+
+    Number of test cases: 500
+
+    Average log probability of targets:    -6.102+-0.067
+
+This takes 3.5 minutes on the system used (see Ex-system.doc).
+Performance is not much worse than for the four-component mixture
+model above, which is based on the true structure of the data.
+
+
 A BIVARIATE DENSITY ESTIMATION PROBLEM
 
-As a second illustration of the mixture model software, I generated
-bivariate real data from a mixture of two component distributions,
-with probabilities 0.3 and 0.7.  These two distributions were not
-exactly Gaussian, and the two real variables were not exactly
-independent within one of these components.  Accordingly, modeling
-this data well with a mixture of Gaussian distributions will require
-more than two components in the mixture.  
+As a second illustration of the mixture model and Dirichlet diffusion
+tree software, I generated bivariate real data from a mixture of two
+component distributions, with probabilities 0.3 and 0.7.  These two
+distributions were not exactly Gaussian, and the two real variables
+were not exactly independent within one of these components.
+Accordingly, modeling this data well with a mixture of Gaussian
+distributions will require more than two components in the mixture.
 
 For the exact distribution used, see the source of the generation
 program, in rgen.c.  I generated 1000 cases with this program, stored
-in 'rdata', of which the first 500 are used for training (the others
-are not used for anything at the moment).
+in 'rdata', of which the first 500 are used for training, and the rest
+for testing.
 
 
 A two-component mixture model for the density estimation problem.
@@ -4770,7 +4978,7 @@ Gamma priors going down the hierarchy.
 
 We next specify where the data comes from, with 'data-spec':
 
-    > data-spec rlog.2 0 2 / rdata@1:500 . 
+    > data-spec rlog.2 0 2 / rdata@1:500 . rdata@501:1000 .
 
 This says that there are 0 input attributes and 2 target attributes.
 
@@ -4786,10 +4994,10 @@ Finally, we run the Markov chain simulation for 100 iterations:
 
     > mix-mc rlog.2 100
 
-This takes about three seconds on our 550MHz Pentium III.  Once it has
-finished, we can look at the hyperparameters and component parameters
-at various iterations.  The last iteration should look something like
-the following:
+This takes 2.9 seconds on the system used (see Ex-system.doc) Once it
+has finished, we can look at the hyperparameters and component
+parameters at various iterations.  The last iteration should look
+something like the following:
 
     > mix-display rlog.2
 
@@ -4829,6 +5037,18 @@ component parameters are approximately what we would expect from
 looking at a plot of the data, but of course the two Gaussian
 components cannot perfectly model the actual distribution.
 
+A quantitative measure of how well the model fits the data can be
+found by looking at the average log probability density of the test
+cases:
+
+    > mix-pred pa rlog.2 21:
+
+    Number of iterations used: 80
+
+    Number of test cases: 500
+
+    Average log probability of targets:    -5.175+-0.048
+
 
 An infinite mixture model for the density estimation problem.
 
@@ -4849,7 +5069,7 @@ as before):
 The 'model-spec' and 'data-spec' commands are the same as before:
 
     > model-spec rlog.inf real 0.05:0.5:0.5:1
-    > data-spec rlog.inf 0 2 / rdata@1:500 . 
+    > data-spec rlog.inf 0 2 / rdata@1:500 . rdata@501:1000 .
 
 The 'mc-spec' command must be altered, however, since it is not
 possible to do Gibbs sampling for component indicators when there are
@@ -4858,17 +5078,28 @@ used instead, with 10 changes being proposed to every indicator:
 
     > mc-spec rlog.inf repeat 20 met-indicators 10 gibbs-params gibbs-hypers
 
-We can now run the simulation for 100 iterations (which takes about
-half a minute our 550MHz Pentium III):
+We can now run the simulation for 100 iterations:
 
     > mix-mc rlog.inf 100
 
-If we now examine the state with 'mix-display', we will find that
-quite a few (eg, 20) mixture components are associated with training
-cases - though fewer components account for the bulk of the cases.
+This takes 19 seconds on the system used (see Ex-system.doc).  If we
+now examine the state with 'mix-display', we will find that quite a
+few (eg, 20) mixture components are associated with training cases -
+though fewer components account for the bulk of the cases.
 
-We can see how well the model has captured the true distribution by
-generating a sample of cases from a distribution drawn from the
+This model appears to fit the data slightly better than the
+two-component model, as can be seen below:
+
+    > mix-pred pa rlog.inf 21:
+
+    Number of iterations used: 80
+
+    Number of test cases: 500
+
+    Average log probability of targets:    -5.101+-0.048
+
+We can also see how well the model has captured the true distribution
+by generating a sample of cases from a distribution drawn from the
 posterior, as represented by the state at a particular iteration.  We
 do this as follows:
 
@@ -4888,6 +5119,308 @@ representation of the predictive distribution for a single new data
 point, which is the average of distributions drawn from the posterior,
 could be obtained by combining the output of 'mix-cases' for a number
 of iterations.
+
+
+Dirichlet diffusion tree models for the density estimation problem.
+
+We can also model this data with a Dirichlet diffusion tree model.
+The Dirichlet diffusion tree can either model the data points
+directly, or model latent value to which noise is added to produce the
+data points.  Different divergence functions can also be used, as well
+as various schemes for Markov chain sampling.
+
+We can start with a model in which the data points are directly
+produced by the Dirichlet diffusion tree.  We start by specifying
+the model and the priors as follows:
+
+    > dft-spec rlog.dft1a 0 2 / 0.5:0.5:0.5 - 0.1:0.5
+
+This command specifies that there are 0 input variables (as required
+at the moment) and 2 target variables.  The first argument after the
+"/" specifies a hierarchical prior for the diffusion standard
+deviations.  The first level of this prior is for a value common to
+both target variables, with the base sigma of 0.5 being followed by
+the shape parameter of 0.5.  The third 0.5 is the shape parameter for
+the next level of the hierarchy, in which a sigma for each variable is
+linked to the common sigma.  The next two arguments specify the values
+of coefficients in the divergence function, which has the form
+
+   a(t) = c0 + c1/(1-t) + c2/(1-t)^2
+
+The "-" indicates that c0 is fixed at zero, the next argument gives a
+prior for c1, and the absense of an argument after tha indicates that
+c2 is fixed at zero.
+
+To indicate that the Dirichlet diffusion tree models the data directly,
+we simply do not include any 'model-spec' command.  We specify the
+source of the data as follows:
+
+    > data-spec rlog.dft1a 0 2 / rdata@1:500 . rdata@501:1000 .
+
+Finally, we need to specify how the Markov chain sampling is to be done:
+
+    > mc-spec rlog.dft1a repeat 25 slice-positions met-terminals \
+    >                              gibbs-sigmas slice-div
+
+The sampling will be done without explicit representation of node
+locations, since none of the operations in this specification create
+node locations.  The 'slice-positions' and 'met-terminals' operations
+update the tree structure and divergence times for nonterminal nodes.
+The 'gibbs-sigmas' and 'slice-div' operations update the diffusion
+standard deviations for the two target variables (as well as the
+common standard deviation linking them) and the c1 parameter of the
+divergence function.
+
+We can now run the Markov chain with these operations in order to
+sample from the posterior distribution of trees and hyperparameters
+given the data:
+
+    > dft-mc rlog.dft1a 100
+
+This takes 2.6 minutes on the system used (see Ex-system.doc).  After
+it has finished, we can look at the result with 'dft-display':
+
+    > dft-display rlog.dft1a       
+
+    DIFFUSION TREE MODEL IN FILE "rlog.dft1a" WITH INDEX 100
+    
+    
+    PARAMETERS OF TREE 1
+    
+    Standard deviation parameters for diffusion process
+    
+        1.665:     2.121   13.638
+    
+    Divergence function parameters: - 1.6233 -
+
+This lists the value at iteration 100 of the common standard
+deviation, the diffusion standard deviations for the two target
+variables, and the c1 parameter of the divergence function.
+
+Other options to 'dft-display' allow examination of the tree
+structure.  For instance,
+
+    > dft-display -n rlog.dft1a 
+
+    DIFFUSION TREE MODEL IN FILE "rlog.dft1a" WITH INDEX 100
+    
+    
+    NON-TERMINAL NODES IN TREE 1
+    
+      Node  Children  Points  Div.Time
+    
+        -1 -336  337       6  0.603746
+        -2  247  370       2  0.913668
+        -3   23  181       2  0.995280
+        -4 -409  334       3  0.944195
+        -5 -211  374       4  0.995491
+        -6 -385 -291      26  0.947063
+        -7   91  209       2  0.926064
+        -8 -493 -149       7  0.848791
+        -9  139  355       2  0.997983
+       -10 -275 -258       5  0.868474
+       -11 -119  171      58  0.834055
+       -12 -400   -1      17  0.583088
+         
+                    etc.
+
+This shows the tree structure in terms of the children of each
+nonterminal node, with nonterminal nodes being given negative numbers,
+and terminal nodes (corresponding to data points) being given positive
+numbers.  The "Points" column is the number of data points descended
+from that node.
+
+For diagnosing convergence, plots over time are more useful.  For
+example, we can look at how the divergence times for the last common
+ancestors of pairs of data points change over the course of the
+simulation:
+
+    > dft-plt t a1003123a14521 rlog.dft1a | plot
+
+This plots the divergence time for the last common ancestor of
+training cases 3 and 123 (numbered starting at 1) and the divergence
+time of the last common ancestor of training cases 45 and 21.  The
+syntax is a bit tricky.  The "a" indicator is followed by the number
+of the tree, which is always 1 for this model, but more complex models
+can have several trees.  This is followed by the indexes for the two
+training cases, which MUST be written using the same number of digits
+(with leading zeros added if necessary).
+
+We can see how well the model has captured the distribution by seeing
+how well it does at predicting test cases, using iterations from the
+point when convergence seems to have been reached:
+
+    > dft-pred tp rlog.dft1a 21:
+
+    Number of iterations used: 80
+    
+    Case Targets         Log Prob
+    
+       1   -1.22   5.83    -4.336
+       2   -2.73  16.33    -4.721
+       3   -1.96   6.04    -3.990
+       4   -0.77   9.24    -4.542
+       5   -0.56   4.78    -5.072
+    
+         (middle lines omitted)
+
+     496   -3.88  18.14    -6.200
+     497    1.38   3.62    -8.357
+     498   -0.40  26.50    -7.663
+     499   -2.79  11.23    -3.938
+     500   -2.28   4.53    -4.768
+    
+    Average log probability of targets:    -5.088+-0.047
+
+This takes 23 seconds on the system used (see Ex-system.doc).
+Performance is a bit better than for the infinite mixture model above.
+
+Another approach to Markov chain sampling for this model is to keep
+node locations as part of the state of the chain.  Updates to the tree
+structure can then be done faster, but the number of iterations needed
+for convergence and subsequent sampling may be greater.  Here is an
+'mc-spec' command for this approach:
+
+    > mc-spec   rlog.dft1b repeat 10 sample-locations \
+                                     slice-positions met-terminals \
+                                     gibbs-sigmas slice-div
+
+Performing 100 iterations with these operations takes only 38 seconds
+on the system used (see Ex-system.doc), and for this example,
+predictive performance is nearly identical to that above.
+
+One can also use a model with a different divergence function, as in
+the following specification:
+
+    > dft-spec  rlog.dft2a 0 2 / 0.5:0.5:0.5 0.01:0.5 - 0.01:0.5
+
+The last three arguments of this command give priors for the c0 and c2
+parameters of the divergence function, and specify that the c1
+parameter is zero.  The divergence function therefore has the form
+a(t) = c0 + c1/(1-t)^2.  This prior produces smoother density
+functions, which is more appropriate for this example, although it
+turns out that the difference in predictive performance is negligible.
+
+
+BUILDING AN ADDITIVE MODEL USING TWO DIFFUSION TREES.
+
+Here, I give an example of how a distribution with an additive
+structure can be modeled using more than one diffusion tree.  The data
+for this example (in file 'adata') consists of 30 cases, each with
+eight binary variables.  It was manually constructed so that the first
+four variables were unreleated to the last four variables.  With
+respect to the first four variables, there are two groups, in which
+these variables tend to all be "1", or all be "0".  Similarly, there
+are two groups with respect to the last four variables.  The combined
+effect is that there are four overall groups, corresponding to
+patterns of 00000000, 11110000, 00001111, and 11111111. 
+
+We could model this data as a mixture, or using a single Dirichlet
+diffusion tree.  Even though this fails to capture the division into
+two sets of variables, it does work fairly well.  Here is one way this
+could be done with a diffusion tree model:
+
+    > dft-spec   alog.dft1 0 8 / 0.2:4:2 - 1
+    > model-spec alog.dft1 binary
+    > data-spec  alog.dft1 0 8 2 / adata .
+    > dft-gen    alog.dft1 fix 2
+    > mc-spec    alog.dft1 repeat 50 gibbs-latent slice-positions met-terminals\
+    >                                gibbs-sigmas 
+    > dft-mc     alog.dft1 100
+
+This is similar to what is done in the example of Ex-mixdft-b.doc.
+The 'dft-gen' command fixes the diffusion standard deviations to 2
+initially.  The subsequent 'gibbs-latent' command will produce values
+for the latent variables that fit the data reasonably, starting the
+chain off in from a reasonable state.  (Without the 'dft-gen' command,
+the latent variables start off rather small.)
+
+The above commands take 82 seconds on the system used (see
+Ex-system.doc).  We can look at the tree found using 'dft-display'
+with the "-g" option, or using the following command:
+
+    > dft-dendrogram alog.dft1 100 alabels | ghostview -
+
+The 'dft-dendrogram' command produces a Postscript picture of the
+tree, which is here piped into the ghostview utility (it could instead
+by printed).  This command shows the final tree, at iteration 100, and
+uses the labels for cases in the file 'alabels', which labels the four
+patterns mentioned above with A, B, C, and D .  You should be able to
+see that cases with each of the four patterns are mostly grouped
+together in subtrees.
+
+To better capture the structure of this data, we can use a model with
+two trees, specified as follows:
+
+    > dft-spec   alog.dft2 0 8 / 0.1:4:1 - 1 / 0.1:4:1 - 1
+    > model-spec alog.dft2 binary
+    > data-spec  alog.dft2 0 8 2 / adata .
+
+The two sets of specifications in 'dft-spec' after the slashes
+(identical here) are for two Dirichlet diffusion trees, which are
+generated independently in the prior distribution.  The values at the
+terminal nodes of these trees are added together to produce the latent
+values for the cases, which define the probabilities of the variables
+being "0" or "1".  We hope that this will allow one tree to specialize
+in modeling the first four variables and the other tree to specialize
+in modeling the last four.
+
+Here are the commands used to sample from the posterior distribution:
+
+    > dft-gen  alog.dft2 fix 1.4
+    > mc-spec  alog.dft2 create-latent repeat 50 gibbs-locations sample-latent \
+    >                                            slice-positions met-terminals \
+    >                                            gibbs-sigmas 
+    > dft-mc   alog.dft2 100
+
+Here again, the 'dft-gen' command helps start the chain off in a
+reasonable state.  The 'create-latent' operation ensures that latent
+values exist, which is necessary when there is more than one tree when
+the model is non-Gaussian.  
+
+These commands take 56 seconds on the system used (see Ex-system.doc).
+We can look at the resulting hyperparameters as follows:
+
+    > dft-display alog.dft2
+    
+    DIFFUSION TREE MODEL IN FILE "alog.dft2" WITH INDEX 100
+    
+    
+    PARAMETERS OF TREE 1
+    
+    Standard deviation parameters for diffusion process
+    
+        0.247:     1.380    0.796    7.847    2.466    0.312
+                   0.169    0.554    0.182
+    
+    Divergence function parameters: - 1.0000 -
+    
+    PARAMETERS OF TREE 2
+    
+    Standard deviation parameters for diffusion process
+    
+        0.147:     0.057    0.350    0.106    0.148    4.766
+                 691.193    4.756    0.956
+    
+    Divergence function parameters: - 1.0000 -
+
+We see that the first tree has mostly larger diffusion standard
+deviations for the first four variables than the last four.  This is
+reversed for the second tree, for which the diffusion standard
+deviations are small for the first four variables and large for the
+last four.  This is consistent with the two trees dividing up the
+modeling task.  (In another run, the roles of the two trees might be
+reversed.)
+
+We can view the two trees as follows:
+
+    > dft-dendrogram alog.dft2 100 1 alabels | ghostview -
+    > dft-dendrogram alog.dft2 100 2 alabels | ghostview -
+
+This should show that one tree divides the A and B cases from the C
+and D cases, whereas the other tree divides the A and C cases from the
+B and D cases.  This shows that the two-tree model has discovered the
+structure of the data.
 
 
 
@@ -4940,7 +5473,7 @@ other models.  Here is one set of commands that work reasonably well:
     > mc-spec clog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     > net-mc clog.net 100
 
-This takes about ten minutes of computing time on our 550MHz Pentium III.
+This takes 7.0 minutes on the system used (see Ex-system.doc).
 
 Predictions for test cases can now be made using net-pred.  For
 example, the following command produces the 10% and 90% quantiles of
@@ -5059,7 +5592,7 @@ The following commands sample from the posterior distribution:
     > mc-spec vlog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     > net-mc vlog.net 100
 
-This takes about 100 minutes on our 550MHz Pentium III.
+This takes 28 minutes on the system used (see Ex-system.doc).
 
 The net-pred command can be used to make predictions for test cases.
 Here is a command to display the median of the predictive distribution
@@ -5132,7 +5665,7 @@ number of leapfrog steps is increased to compensate):
     > mc-spec v2log.net repeat 4 sample-sigmas heatbath hybrid 1000:10 0.25
     > net-mc v2log.net 400
 
-This takes about 24 hours to run on our 550MHz Pentium III.
+This takes 15 hours to run on the system used (see Ex-system.doc).
 
 The model does in fact discover that an additive form for the log
 hazard is appropriate, as can be seen by examining the hyperparameters
@@ -5259,9 +5792,10 @@ sometimes goes up rather than down), the stepsize will have to be
 reduced.  Net-gd does not try to determine relative stepsizes itself,
 but stepsizes for groups of parameters can be set individually.
 
-The above command takes about five minutes on our 550MHz Pentium III.
-While waiting, you can monitor progress using net-plt.  For example,
-the progress of the training error can be viewed with the command:
+The above command takes 200 seconds on the system used (see
+Ex-system.doc).  While waiting, you can monitor progress using
+net-plt.  For example, the progress of the training error can be
+viewed with the command:
 
     > net-plt t l blog.gd | plot
 
@@ -5573,10 +6107,10 @@ by going to the main directory for this software and issuing a command
 such as
 
   lpr doc/manual util/*.doc mc/*.doc dist/*.doc bvg/*.doc \
-      net/*.doc gp/*.doc mix/*.doc doc/Rel*.doc
+      net/*.doc gp/*.doc mix/*.doc dft/*.doc doc/Rel*.doc
  
 (or using whatever command other than 'lpr' you use to print text files).
-This will produce about 150 pages of paper.
+This will produce about 200 pages of paper.
 
 
 Generic utility programs [util]:
@@ -5668,6 +6202,7 @@ Bayesian neural networks [net]:
 
   * net-mc          Do Markov chain simulation to sample networks
   * net-gen         Generate networks from the prior, or with fixed values  
+    net-approx      Specify quadratic approximation to replace log likelihood
     net-gd          Train a network by gradient descent in the error
 
   * net-display     Print network parameters and/or hyperparameters
@@ -5714,9 +6249,24 @@ Bayesian inference for mixture models [mix]:
   * mix-display     Print mixture model parameters, hyperparameters, etc.
   * mix-quantities  Quantities from log files relating to mixture models
 
+  * mix-pred        Make predictions for tests cases using mixture models
     mix-cases       Generate cases from a mixture model
 
-    mix-extensions  Possible extensions to the mixture modeling software
+
+Bayesian inference for Dirichlet diffusion tree models [dft]:
+
+  * dft             Bayesian inference for diffusion tree models
+  * dft-spec        Specify a diffusion tree model, or display existing spec
+
+  * dft-mc          Use Markov chain to do sampling for a diffusion tree model
+  * dft-gen         Generate hyperparameters randomly, or fix them
+
+  * dft-display     Print diffusion tree model parameters, hyperparameters, etc.
+    dft-dendrogram  Create Postscript representation of a dendrogram of a tree
+  * dft-quantities  Quantities from log files relating to diffusion tree models
+
+  * dft-pred        Make predictions using Dirichlet diffusion trees
+    dft-cases       Generate cases from a diffusion tree model
 
 
 
@@ -5732,5 +6282,6 @@ displayed, and used to control the number of iterations, are also
 based on work by Carl Edward Rasmussen.
 
 Thanks also to Tim Howells, Dirk Husmeier, Marcus Lee, David MacKay,
-Tony Plate, Jeff Rosenthal, and Chris Williams for comments on the
-documentation, for testing the programs, and for finding bugs.
+Neil Montgomery, Tony Plate, Jeff Rosenthal, Ricard Ferran Sans, and
+Chris Williams for comments on the documentation, for testing the
+programs, and for finding bugs.

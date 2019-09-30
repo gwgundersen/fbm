@@ -1,0 +1,65 @@
+
+
+MIX-PRED:  Make predictions for test cases using mixture models.
+
+Mix-pred prints the log of the predictive joint probability (or
+density) for the target values in each test case given.  Target values
+and average log probabilities can be displayed as well.
+
+Usage:
+
+    mix-pred options { log-file range } [ / test-inputs [ test-targets ] ]
+
+The final optional arguments give the source of inputs and targets for
+the cases to look at; they default to the test data specification in
+the first log file given.  The mixture models to use for the
+predictions are taken from the records with the given ranges of
+indexes in the given log files.  The predictive probabilities are the
+mixture of these mixtures.
+
+An index range can have one of the forms "[low][:[high]][%mod]" or
+"[low][:[high]]+num", or one of these forms preceded by "@".  When "@"
+is present, "low" and "high" are given in terms of cpu time, otherwise
+they are iteration numbers.  When just "low" is given, only that index
+is used.  If the colon is included, but "high" is not, the range
+extends to the highest index in the log file.  The "mod" form allows
+iterations to be selected whose numbers are multiples of "mod", with
+the default being "mod" of one.  The "num" form allows the total
+number of iterations used to be specified; they are distributed as
+evenly as possible within the specified range.  Note that it is
+possible that the number of mixture models used in the end may not
+equal this number, if records with some indexes are missing.
+
+The 'options' argument consists of one or more of the following letters:
+
+    t   Display the target values for each case.
+
+    r   Use the raw form of the target values, before transformation.
+
+    p   Display the log of the joint probability (or probability density)
+        of the true targets.  Logs are to base e.
+
+    b   Suppress headings and averages - just bare numbers for each case.
+        The numbers are printed in exponential format, to high precision.
+
+    a   Display only the average log probability (density), suppressing 
+        the results for individual cases.  (Makes sense only if 'p' is
+        specified as well, but not 't'.)
+
+For iterations in which not all components are represented explicitly
+(which will always be the case for infinite mixtures), the probability
+(density) with respect to a new component is approximated by randomly
+picking a set of 10 parameter values for the new component.  These
+Monte Carlo estimates are found using a random number stream
+initialized by setting the seed to one at the start of the program.
+Accuracy can be increased by repeating the same log-file/range
+combination several times, effectively increasing the sample size use.
+
+The average log probability figure is accompanied by +- its standard
+error (as long as there is more than one test case).
+
+If only targets are to be displayed (no predictions), one may give
+just a single log file with no range.  Otherwise, at least one mixture
+model must be specified.
+
+            Copyright (c) 1995-2003 by Radford M. Neal

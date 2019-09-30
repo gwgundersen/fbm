@@ -1,0 +1,13 @@
+This directory contains data files, command files, and generation
+programs for the examples of Bayesian learning for finite and
+countably-infinite mixture models and for Dirichlet diffusion tree
+models.  To play with the data as in the manual, all you need to use
+are the data and command files (eg, rdata and rcmds.inf).  If you want
+to change the way the data was generated, you'll need to recompile the
+programs, which is done with a command such as the following:
+
+   cc rgen.c rand.c -DRAND_FILE=\"../util/randfile\" -lm -o rgen
+
+The data in 'sdata' and commands in the scmds-* files are for the test
+in my tech report on "Markov chain sampling methods for Dirichlet
+process mixture models".

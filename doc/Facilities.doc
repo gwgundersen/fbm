@@ -6,8 +6,9 @@ This software is meant to support research and education regarding:
 
    * Flexible Bayesian models for regression and classification 
      based on neural networks and Gaussian processes, and for
-     probability density estimation using mixtures.  Neural net
-     training using early stopping is also supported.
+     probability density estimation using mixtures and Dirichlet
+     diffusion trees.  Neural network training using early stopping 
+     is also supported.
 
    * Markov chain Monte Carlo methods, and their applications to
      Bayesian modeling, including implementations of Metropolis,
@@ -16,9 +17,7 @@ This software is meant to support research and education regarding:
 These facilities might be useful for actual problems, but you should
 note that many features that might be needed for real problems have
 not been implemented, that the programs have not been tested to the
-extent that would be desirable for important applications, and that
-permission to use the software for free is granted only for purposes
-of research and education.
+extent that would be desirable for important applications.
 
 The complete source code (in C) is provided, allowing researchers to
 modify the program to test new ideas.  It is not necessary to know C
@@ -36,20 +35,20 @@ Markov chain Monte Carlo facilities.
 
 All the Bayesian models are implemented using Markov chains to sample
 from the posterior distribution.  For the elaborate models based on
-neural networks, Gaussian processes, and mixtures, this is done by
-combining general-purpose Markov chain sampling procedures with
-special modules written in C.  Other models could be implemented in
-the same way, but this is a fairly major project.
+neural networks, Gaussian processes, mixtures, and Dirichlet diffusion
+trees, this is done by combining general-purpose Markov chain sampling
+procedures with special modules written in C.  Other models could be
+implemented in the same way, but this is a fairly major project.
 
 To allow people to play around with the various Markov chain methods
 more easily, a facility is provided for defining distributions (on
 R^n) by giving a simple formula for the probability density.  Many
 Markov chain sampling methods, such as the Metropolis algorithm,
-hybrid Monte Carlo, slice sampling, and simulated tempering, may then
-be used to sample from this distribution.  Bayesian posterior
-distributions can be defined by giving a formula for the prior density
-and for the likelihood based on each of the cases (which are assumed
-to be independent).
+hybrid Monte Carlo, slice sampling, simulated tempering, and annealed
+importance sampling may then be used to sample from this distribution.
+Bayesian posterior distributions can be defined by giving a formula
+for the prior density and for the likelihood based on each of the
+cases (which are assumed to be independent).
 
 A long review paper of mine on "Probabilistic Inference Using Markov
 Chain Monte Carlo Methods" can be obtained from my web page.  This
@@ -119,7 +118,7 @@ early stopping method is also described in Carl Rasmussen's thesis
 (see above).
 
 
-Bayesian mixture models.
+Bayesian mixture models and Dirichlet diffusion trees.
 
 The software implements Bayesian mixture models for multivariate real
 or binary data, with both finite and countably infinite numbers of
@@ -130,9 +129,13 @@ implemented for these models are described in my technical report on
 which can be obtained from web page; see also my technical report on
 "Bayesian mixture modeling by Monte Carlo simulation".
 
-The software implements the basic sampling operations for these
-models, but is rather preliminary in some respects, lacking many
-facilities that would be useful in practical applications.
+The software also implements models based on Dirichlet diffusion
+trees, described in my technical report on "Defining priors for
+distributions using Dirichlet diffusion trees", and in my Valencia
+conference paper on "Density modeling and clustering using Dirichlet
+diffusion trees", in the Bayesian Statistics 7.  Dirichlet diffusion
+trees can be seen both as a way of modeling distributions and as a
+method for hierarchical clustering.
 
 
 Software components.
@@ -162,6 +165,9 @@ component has its own directory, as follows:
             for finite and infinite mixture models, using modules
             from util and mc.
 
+    dft     Modules and programs that implement density modeling and
+            clustering methods based on Dirichlet diffusion trees.
+
 In addition, the 'bvg' directory contains modules and programs for
 sampling from a bivariate Gaussian distribution, as a simple
 demonstration of how the Markov chain Monte Carlo facilities can be
@@ -176,9 +182,11 @@ be used, many of which are discussed in the documentation:
     ex-netgp  Examples of Bayesian regression and classification 
               models based on neural networks and Gaussian processes.
 
-    ex-mix    Examples of Bayesian mixture models.  Includes command
-              files for the test in my paper on "Markov chain sampling 
-              methods for Dirichlet process mixture models"
+    ex-mixdft Examples of Bayesian mixture models and Dirichlet diffusion
+              tree models.  Includes command files for the test in my 
+              paper on "Markov chain sampling methods for Dirichlet process 
+              mixture models" and for one of the tests in "Density modeling 
+              and clustering using Dirichlet diffusion trees".
 
     ex-dist   Examples of Markov chain sampling on distributions
               specified by simple formulas.
@@ -208,15 +216,17 @@ Portability of the software.
 
 The software is written in ANSI C, and is meant to be run in a UNIX
 environment.  It is known to work on various Linux systems running on
-a Pentium processor, and on an SGI machine running IRIX Release 6.5.
-It also runs OK on SPARC machine running Solaris, and on Compaq Alpha
-machines, provided that the -ieee and -std options are given to the
-Compaq C compiler.  As far as I know, the software does not depend on
-any peculiarities of these environments (except perhaps for the use of
-the drand48 pseudo-random number generator, and the lgamma function),
-but you may nevertheless have problems getting it to work in
-substantially different environments, and I can offer little or no
-assistance in this regard.
+a Pentium processor, on a Solaris system running on a SPARC processor,
+and on an SGI machine running IRIX Release 6.5.  It also runs OK on
+Compaq Alpha machines, provided that the -ieee and -std options are
+given to the Compaq C compiler (this may no longer be necessary - I
+haven't checked recently).  As far as I know, the software does not
+depend on any peculiarities of these environments (except perhaps for
+the use of the drand48 pseudo-random number generator, and the lgamma
+function, and the Unix facilities used to start programs to evaluate
+"external" functions in the 'dist' module), but you may nevertheless
+have problems getting it to work in substantially different
+environments, and I can offer little or no assistance in this regard.
 
 There is no dependence on any particular graphics package or graphical
 user interface.  The 'xxx-plt' programs are designed to allow their

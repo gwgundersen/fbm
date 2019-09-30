@@ -1,5 +1,11 @@
 This directory contains command files for the examples of Markov
 sampling from simple distributions.  The command files match the
 commands given in the documentation, except that the stepsize to use
-is given as an argument to the command file, and the log files include
+is given as an argument to the command file.  The log files include
 the stepsize as part of the name.
+
+Command files for sampling from the "funnel" distribution used in
+Ex-dist-f.doc and as an example in my paper on "Slice Sampling" in
+Annals of Statistics are also included.  The 'frun' command file runs
+all these examples.  (An earlier version of this paper is available as
+a technical report from my web page.)

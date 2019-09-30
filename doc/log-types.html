@@ -10,7 +10,7 @@ program maintainers.  However, these types are visible in the output
 of the log-records program (see <A HREF="log-records.html">log-records.doc</A>).
  
 
-Class of Programs          Type   Description
+CLASS OF PROGRAMS          TYPE   DESCRIPTION
 
 
 * Any                        r    State of random number generator
@@ -41,6 +41,10 @@ Class of Programs          Type   Description
                              X    Point from multivariate Gaussian distribution
 
 
+* Molecular dynamics         M    Specifications of molecular dynamics system
+                             Q    Position coordinates of molecules
+
+
 * Ising system               I    Specification of Ising system
                              S    State of spins in system
                              D    Direction to push 
@@ -55,6 +59,7 @@ Class of Programs          Type   Description
                              P    Specification of priors for network
                              S    Hyperparameters ("sigmas")
                              W    Parameters of network ("weights")
+                             Q    Parameters of quadratic approximation
 
   Gaussian process           P    Specification and priors
                              S    Hyperparameters
@@ -67,10 +72,17 @@ Class of Programs          Type   Description
                              O    Offset parameters for components
                              N    Noise variance parameters
 
+  Diffusion tree model       P    Specification and priors
+                             S    Hyperparameters and tree parameters
+                             T    Tree divergence times
+                             R    Parents of nodes in trees
+                             L    Latent vectors for training cases
+                             N    Locations of nodes in trees
+
   NMR model                  P    Model and prior specification
                              D    Parameters and latent values
 
-        Copyright (c) 1995-1999 by Radford M. Neal
+        Copyright (c) 1995-2003 by Radford M. Neal
 </pre>
 </body>
 </html>

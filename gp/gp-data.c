@@ -1,15 +1,16 @@
 /* GP-DATA.C - Procedures for reading data for Gaussian process model. */
 
-/* Copyright (c) 1996 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 #include <stdlib.h>
@@ -124,8 +125,10 @@ void gp_data_read
     numin_spec (&ns, data_spec->train_inputs, data_spec->N_inputs);
     train_inputs = read_inputs (&ns, &N_train, gp, model, surv);
 
-    numin_spec (&ns, data_spec->train_targets, data_spec->N_targets);
-    train_targets = read_targets (&ns, N_train, gp);
+    if (data_spec->train_targets[0]!=0)
+    { numin_spec (&ns, data_spec->train_targets, data_spec->N_targets);
+      train_targets = read_targets (&ns, N_train, gp);
+    }
   }
 
   if (want_test && data_spec->test_inputs[0]!=0)
@@ -152,7 +155,6 @@ static double *read_inputs
   model_survival *surv
 )
 {
-  double raw_inputs[Max_inputs];
   double *values;
   int N_cases;
   int i, j, j0;
@@ -169,10 +171,10 @@ static double *read_inputs
     else
     { j0 = 0;
     }
-    numin_read(ns,raw_inputs);
+    numin_read(ns,values+data_spec->N_inputs*i+j0);
     for (j = j0; j<gp->N_inputs; j++)
-    { values[data_spec->N_inputs*i+j] 
-        = data_trans (raw_inputs[j-j0], data_spec->input_trans[j-j0]);
+    { values[data_spec->N_inputs*i+j] =
+        data_trans (values[data_spec->N_inputs*i+j], data_spec->trans[j-j0]);
     }
   }
 
@@ -209,7 +211,8 @@ static double *read_targets
 
     for (j = 0; j<data_spec->N_targets; j++)
     { tg[data_spec->N_targets*i+j] =
-         data_trans (tg[data_spec->N_targets*i+j], data_spec->target_trans[j]);
+         data_trans (tg[data_spec->N_targets*i+j], 
+                     data_spec->trans[data_spec->N_inputs+j]);
     }
   }
 

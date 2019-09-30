@@ -13,45 +13,48 @@
 
 include ../make.include
 
-programs:	mix-spec mix-gen mix-display mix-cases mix-mc \
-		mix-plt mix-tbl mix-hist mix-genp
+programs:	mix-spec mix-gen mix-display mix-cases mix-mc mix-pred \
+		mix-plt mix-tbl mix-hist mix-genp 
 
 clean:
-	rm -f *.o mix-spec mix-gen mix-display mix-cases mix-mc \
+	rm -f *.o mix-spec mix-gen mix-display mix-cases mix-mc mix-pred \
 	          mix-plt mix-tbl mix-hist mix-genp
 
 
 include ../util/util.make
+
+Ponly=1		# Overrides setting of 0 in util.make
+
 include ../mc/mc.make
 
 mix-genp: 	# Just a stub, since standard mc methods aren't currently used
 		echo >mix-genp; chmod 755 mix-genp
 
-mix-spec:	mix-spec.o	mix-util.o prior.o misc.o log.o rand.o
-		$(CC) $(LFLAGS) mix-spec.o mix-util.o \
+mix-spec:	mix-spec.o	mix-util.o prior.o misc.o log.o rand.o ars.o
+		$(CC) $(LFLAGS) mix-spec.o mix-util.o ars.o \
 		  prior.o misc.o log.o rand.o -lm -o mix-spec
 
 mix-spec.o:	mix-spec.c	misc.h prior.h model.h log.h data.h mix.h
 
-mix-gen:	mix-gen.o	mix-util.o prior.o misc.o log.o rand.o
+mix-gen:	mix-gen.o	mix-util.o prior.o misc.o log.o rand.o ars.o
 		$(CC) $(LFLAGS) mix-gen.o mix-util.o \
-		  prior.o misc.o log.o rand.o -lm -o mix-gen
+		  prior.o misc.o log.o rand.o ars.o -lm -o mix-gen
 
 mix-gen.o:	mix-gen.c	misc.h prior.h model.h log.h data.h mix.h
 
 mix-display:	mix-display.o	mix-util.o mix-print.o \
-				prior.o misc.o log.o rand.o
+				prior.o misc.o log.o rand.o ars.o
 		$(CC) $(LFLAGS) mix-display.o mix-util.o mix-print.o \
-		  prior.o misc.o log.o rand.o -lm -o mix-display
+		  prior.o misc.o log.o rand.o ars.o -lm -o mix-display
 
 mix-display.o:	mix-display.c	misc.h prior.h model.h log.h data.h mix.h
 
 mix-cases:	mix-cases.o	mix-util.o mix-data.o mix-print.o prior.o \
 				misc.o numin.o model.o data-trans.o log.o \
-				rand.o 
+				rand.o ars.o
 		$(CC) $(LFLAGS) mix-cases.o mix-util.o mix-data.o mix-print.o \
 		  prior.o misc.o numin.o model.o data-trans.o log.o rand.o \
-		  -lm -o mix-cases
+		  ars.o -lm -o mix-cases
 
 mix-cases.o:	mix-cases.c	misc.h prior.h model.h log.h data.h rand.h \
 				mix.h mix-data.h
@@ -108,6 +111,16 @@ mix-mc:		mc.o mix-mc.o	misc.o log.o rand.o numin.o data-trans.o \
 mix-mc.o:	mix-mc.c	misc.h rand.h log.h mc.h data.h prior.h ars.h \
 				model.h mix.h mix-data.h
 
+mix-pred:	pred.o mix-pred.o misc.o log.o rand.o numin.o data-trans.o \
+				mix-plt.o mc-util.o \
+				prior.o mix-util.o mix-data.o \
+				model.o ars.o
+		$(CC) $(LFLAGS) pred.o mix-pred.o misc.o log.o rand.o numin.o \
+		  data-trans.o prior.o mix-util.o mix-data.o model.o ars.o \
+		  -lm -o mix-pred
+
+mix-pred.o:	mix-pred.c	misc.h rand.h log.h model.h data.h prior.h \
+				numin.h mix.h mix-data.h mc.h pred.h
 
 mix-data.o:	mix-data.c	misc.h log.h data.h prior.h model.h numin.h \
 				mix.h mix-data.h

@@ -1,15 +1,16 @@
 /* MC-ITER.C - Procedures for performing Markov chain Monte Carlo iterations. */
 
-/* Copyright (c) 1995-2000 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 #include <stdlib.h>
@@ -202,6 +203,11 @@ void mc_iter_init
   if (need_savet)
   { q_savet = chk_alloc (ds->dim, sizeof *q_savet);
     p_savet = chk_alloc (ds->dim, sizeof *p_savet);
+    if (ds->aux_dim<0)
+    { fprintf(stderr,
+        "Saving of auxiliary state isn't implemented (temp-trans won't work)\n");
+      exit(1);
+    }
     if (ds->aux_dim>0) aux_savet = chk_alloc (ds->aux_dim, sizeof *p_savet);
   }
 
@@ -326,6 +332,7 @@ static void do_group
      || type=='u')
     { 
       stepsize_adjust = ops->op[i].stepsize_adjust;
+
       alpha = ops->op[i].stepsize_alpha;
 
       it->stepsize_factor = 
@@ -337,15 +344,12 @@ static void do_group
                   : pow(10.0,-alpha*(rand_uniopen()-0.5));
       }
 
-      if (!have_ss)
-      {
-        if (stepsize_adjust>0)
-        { mc_app_stepsizes (ds);
-        }
-        else
-        { for (k = 0; k<ds->dim; k++) ds->stepsize[k] = 1.0;
-        }
-
+      if (stepsize_adjust<0)
+      { for (k = 0; k<ds->dim; k++) ds->stepsize[k] = 1.0;
+        have_ss = 0;
+      }
+      else if (!have_ss)
+      { mc_app_stepsizes (ds);
         have_ss = 1;
       }
     }
@@ -363,6 +367,20 @@ static void do_group
         break;
       }
 
+      case 'x':
+      { if (!have_ss)
+        { mc_app_stepsizes (ds);
+          have_ss = 1;
+        }
+        for (k = (ops->op[i].firsti==-1 ? 0 : ops->op[i].firsti); 
+             k <= (ops->op[i].firsti==-1 ? ds->dim : ops->op[i].lasti)
+              && k<ds->dim;
+             k++)
+        { ds->stepsize[k] *= ops->op[i].stepsize_adjust;
+        }
+        break;
+      }
+
       case 'B':
       { double d;
         d = it->decay>=0 ? it->decay : ops->op[i].heatbath_decay;
@@ -372,6 +390,11 @@ static void do_group
 
       case 'r':
       { mc_radial_heatbath (ds, it->temperature);
+        break;
+      }
+
+      case 'X':
+      { mc_mix_momentum (ds, ops->op[i].heatbath_decay);
         break;
       }
 
@@ -401,6 +424,12 @@ static void do_group
       case 'g':
       { mc_rgrid_met_1(ds,it,ops->op[i].firsti,ops->op[i].lasti,
                        ops->op[i].b_accept, ops->op[i].r_update);
+        break;
+      }
+
+      case 'U':
+      { mc_gaussian_gibbs(ds,it,ops->op[i].firsti,ops->op[i].lasti,
+                          ops->op[i].r_update);
         break;
       }
 
@@ -445,7 +474,8 @@ static void do_group
 
       case 'S':
       { mc_slice_1 (ds, it, ops->op[i].firsti, ops->op[i].lasti, 
-                    ops->op[i].steps, ops->op[i].r_update);
+                    ops->op[i].steps, ops->op[i].r_update, ops->op[i].s_factor,
+                    ops->op[i].s_threshold);
         break;
       }
 

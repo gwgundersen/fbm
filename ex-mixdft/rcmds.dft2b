@@ -1,0 +1,6 @@
+dft-spec  rlog.dft2b 0 2 / 0.5:0.5:0.5 0.01:0.5 - 0.01:0.5
+data-spec rlog.dft2b 0 2 / rdata@1:500 . rdata@501:1000 .
+mc-spec   rlog.dft2b repeat 10 sample-locations \
+                               slice-positions met-terminals \
+                               gibbs-sigmas slice-div
+dft-mc    rlog.dft2b 100

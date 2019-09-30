@@ -1,15 +1,16 @@
 /* PRIOR.C - Routines dealing with hierarchical priors specifications. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 #include <stdlib.h>
@@ -18,6 +19,7 @@
 #include <math.h>
 
 #include "rand.h"
+#include "ars.h"
 #include "prior.h"
 
 
@@ -150,4 +152,40 @@ double prior_pick_sigma
   p = alpha==0 ? 1 : rand_gamma(alpha/2) / (alpha/2);
       
   return sigma/sqrt(p);
+}
+
+
+/* ADAPTIVE REJECTION SAMPLING FROM CONDITIONAL DISTRIBUTION FOR A SIGMA VALUE.
+   Draws a random value from the conditional distribution for a sigma that is 
+   defined by its top-down prior and by the sum of the lower-level precision 
+   values that it controls, using the Adaptive Rejection Sampling method. */
+
+typedef struct { double w, a, a0, a1, s; } logp_data;
+
+static double logp (double l, double *d, void *vp)
+{ logp_data *p = vp;
+  double t = exp(l); 
+  double v;
+  *d = p->a/2 - t*p->a0/(2*p->w) + p->a1*p->s/(2*t);
+  v = l*p->a/2 - t*p->a0/(2*p->w) - p->a1*p->s/(2*t);
+  return v;
+}
+
+double cond_sigma
+( double width,		/* Width parameter for top-level prior */
+  double alpha0,	/* Alpha for top-level prior */
+  double alpha1,	/* Alpha for lower-level prior */
+  double sum,		/* Sum of lower-level precisions */
+  int n			/* Number of lower-level precision values */
+)
+{
+  logp_data data;
+
+  data.w  = 1 / (width * width);
+  data.a  = alpha0 - n*alpha1;
+  data.a0 = alpha0;
+  data.a1 = alpha1;
+  data.s  = sum;
+
+  return exp (-0.5*ars(log(data.w),log(1+1/sqrt(alpha0)),logp,&data));
 }

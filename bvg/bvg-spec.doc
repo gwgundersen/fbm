@@ -29,4 +29,4 @@ this record from an existing log file and displays the values stored.
 The specifications are stored in the log file as a single record of
 type 'B' and index -1,
 
-            Copyright (c) 1995 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal

@@ -1,15 +1,16 @@
 /* MC-SLICE.C - Procedures for performing slice sampling updates. */
 
-/* Copyright (c) 1996-2000 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 #include <stdlib.h>
@@ -35,7 +36,7 @@ static int dbl_ok      (mc_dynamic_state *, mc_iter *, int, double, double,
                         double, double);
 
 static void pick_value (mc_dynamic_state *, mc_iter *, int, double, double, int,
-                        double, double);
+                        double, double, int, double);
 
 
 /* PERFORM ONE-VARIABLE SLICE SAMPLING UPDATES FOR COORDINATES IN SOME RANGE. */
@@ -47,7 +48,9 @@ void mc_slice_1
   int lasti,		/* Index of last component to update */
   int max_steps,	/* Maximum number of intervals, zero for unlimited;
 			   if negative, intervals are found by doubling */
-  int r_update		/* Update just one component at random? */
+  int r_update,		/* Update just one component at random? */
+  int s_factor,		/* Factor for faster shrinkage */
+  double s_threshold	/* Threshold for faster shrinkage */
 )
 {
   double curr_q, slice_point, low_bnd, high_bnd;
@@ -84,7 +87,8 @@ void mc_slice_1
     { dbl_out (ds, it, k, slice_point, curr_q, -max_steps, &low_bnd, &high_bnd);
     }
 
-    pick_value (ds, it, k, slice_point, curr_q, max_steps, low_bnd, high_bnd);
+    pick_value (ds, it, k, slice_point, curr_q, max_steps, low_bnd, high_bnd,
+                s_factor, s_threshold);
   }
 
   ds->know_grad = 0;
@@ -294,7 +298,8 @@ void mc_slice_over
     }
 
     if (rand_uniform() < refresh_prob)
-    { pick_value (ds, it, k, slice_point, curr_q, max_steps, low_bnd, high_bnd);
+    { pick_value (ds, it, k, slice_point, curr_q, max_steps, low_bnd, high_bnd,
+                  0, 0.0);
       continue;
     }
 
@@ -552,10 +557,12 @@ static void pick_value
   double curr_q,		/* Current value for coordinate */
   int max_steps,		/* Negative if interval was found by doubling */
   double low_bnd,		/* Low bound for interval */
-  double high_bnd		/* High bound for interval */
+  double high_bnd,		/* High bound for interval */
+  int s_factor,			/* Factor for faster shrinkage */
+  double s_threshold		/* Threshold for faster shrinkage */
 )
 {
-  double nlow_bnd, nhigh_bnd;
+  double nlow_bnd, nhigh_bnd, range;
 
   nlow_bnd = low_bnd;
   nhigh_bnd = high_bnd;
@@ -573,12 +580,27 @@ static void pick_value
     { return;
     }
 
-    if (ds->q[k]<curr_q) 
-    { nlow_bnd = ds->q[k];
+    if (s_factor>=0)
+    { 
+      if (ds->q[k]<curr_q) 
+      { nlow_bnd = ds->q[k];
+      }
+      else
+      { nhigh_bnd = ds->q[k];
+      }
     }
-    else
-    { nhigh_bnd = ds->q[k];
-    }
+
+    if ((s_factor<-1 || s_factor>1) && ds->pot_energy>slice_point+s_threshold)
+    { 
+      range = (nhigh_bnd-nlow_bnd) / (s_factor>0 ? s_factor : -s_factor);
+      if (range<=0) abort();
+      while (nlow_bnd+range<curr_q) 
+      { nlow_bnd += range;
+      }
+      while (nhigh_bnd-range>curr_q) 
+      { nhigh_bnd -= range;
+      }
+    } 
   }
 }
 

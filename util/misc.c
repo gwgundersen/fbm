@@ -1,15 +1,16 @@
 /* MISC.C - Miscellaneous utility procedures. */
 
-/* Copyright (c) 1995, 2001 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  *
  * Some of the "range" facilities are adapted from modifications by
  * Carl Edward Rasmussen, 1995.
@@ -32,6 +33,20 @@ double addlogs
 )
 { 
   return a>b ? a + log(1+exp(b-a)) : b + log(1+exp(a-b));
+}
+
+
+/* SUBTRACT NUMBERS REPRESENTED BY THEIR LOGARITHMS.  If a>=b, computes 
+   log(exp(a)-exp(b)) in such a fashion that it works even when a has
+   large magnitude.  It's an error if a<b.  */
+
+double sublogs
+( double a,
+  double b
+)
+{ 
+  if (a<b) abort();
+  return a + log(1-exp(b-a));
 }
 
 

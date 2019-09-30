@@ -1,0 +1,5 @@
+mix-spec rlog.2 0 2 2 / 1 0.05:0.5:0.2 10
+model-spec rlog.2 real 0.05:0.5:0.5:1
+data-spec rlog.2 0 2 / rdata@1:500 . rdata@501:1000 .
+mc-spec rlog.2 repeat 20 gibbs-indicators gibbs-params gibbs-hypers
+mix-mc rlog.2 100

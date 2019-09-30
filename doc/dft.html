@@ -1,0 +1,43 @@
+<html>
+<body>
+<pre>
+
+
+DFT:  Models based on Dirichlet diffustion trees.
+
+The 'dft' programs implement Bayesian models for multivariate
+probability or probability density estimation that are based on
+Dirichlet diffusion trees.  The results of fitting such a model to
+data (a set of training cases) can be used to make predictions for
+future observations (test cases), or they can be interpreted to
+produce a hierarchical clustering of the training cases.
+
+A 'dft' model consists of one or more Dirichlet diffusion trees, whose
+parameters may be fixed or may be given prior distributions.  Each
+tree produces a real-valued vector for each training case; these are
+added together to produce real-valued "latent" vectors associated with
+each training case.  The latent vector for a case is used to define a
+probability distribution for the case's data.  The data vector for a
+case can be real or binary, but it cannot at present be partly real
+and partly binary.  The model for binary data is that the probability
+of data items being 1 is found by applying the logistic function to
+the corresponding latent value.  Real data is modeled as being
+Gaussian distributed with mean given by the latent vector, or as being
+t-distributed with location parameter given by the latent vector.  A
+t-distribution for the noise is obtained using a hierarhical prior
+specification for Gaussian noise variances that includes a level
+allowing for different noise variances for each variable and for each
+training case, which produces a t-distribution once the case-by-case
+variances are integrated over.
+
+The Markov chain used for sampling from the posterior distribution
+over trees has as its state the structures of the trees, the
+divergence times for each node in each tree, and any variable
+hyperparameters for the trees or the noise distribution.  The latent
+latent vectors for the training case and the locations of non-terminal
+nodes may are also present (and must be in some circumstances).
+
+            Copyright (c) 1995-2003 by Radford M. Neal
+</pre>
+</body>
+</html>

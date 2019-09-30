@@ -12,5 +12,6 @@ displayed, and used to control the number of iterations, are also
 based on work by Carl Edward Rasmussen.
 
 Thanks also to Tim Howells, Dirk Husmeier, Marcus Lee, David MacKay,
-Tony Plate, Jeff Rosenthal, and Chris Williams for comments on the
-documentation, for testing the programs, and for finding bugs.
+Neil Montgomery, Tony Plate, Jeff Rosenthal, Ricard Ferran Sans, and
+Chris Williams for comments on the documentation, for testing the
+programs, and for finding bugs.

@@ -9,6 +9,6 @@ dist-spec rlog.circ \
 
 data-spec rlog.circ 2 1 / rdata .
 
-mc-spec rlog.circ repeat 5 heatbath hybrid 50 0.005 end metu 0.01
+mc-spec rlog.circ repeat 5 heatbath hybrid 50 0.005 end rgrid-met 0.01
 
-mc-circ dist rlog.circ 10 50 10
+dist-circ rlog.circ 10 50 10

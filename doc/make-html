@@ -1,11 +1,17 @@
 #!/bin/sh
 
-base=`echo $1 | sed s/\\.doc\$//`
+while test -n "$1"; do
 
-echo Converting $base.doc to $base.html
+  base=`echo $1 | sed s/\\.doc\$//`
 
-( cat header; \
-  cat $base.doc \
-   | sed "s/&/&amp;/g" | sed "s/</\&lt;/g" | sed "s/>/\&gt;/g" \
-   | sed "s/\([A-Za-z][-a-z]*[a-z]\)\.doc/<A HREF=\"\1.html\">\1.doc<\/A>/g"; \
-  cat trailer ) > $base.html
+  echo Converting $base.doc to $base.html
+
+  ( cat header; \
+    cat $base.doc \
+    | sed "s/&/&amp;/g" | sed "s/</\&lt;/g" | sed "s/>/\&gt;/g" \
+    | sed "s/\([A-Za-z][-a-z]*[a-z]\)\.doc/<A HREF=\"\1.html\">\1.doc<\/A>/g"; \
+    cat trailer ) > $base.html
+
+  shift
+
+done

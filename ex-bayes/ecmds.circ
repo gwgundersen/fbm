@@ -7,6 +7,5 @@ dist-spec elog.circ \
  "t0~Normal(u,Exp(v1)+Exp(v2)/i) + \
   (1-Delta(i-1)) * ExpGamma2(Log(t1),i-1,Exp(v2))"
 data-spec elog.circ 1 2 / edata .
-#mc-spec elog.circ repeat 5 heatbath hybrid 20 0.05 end metu 0.01
-mc-spec elog.circ repeat 2000 heatbath hybrid 1 0.05 end metu 0.01
-mc-circ dist elog.circ 5 100 5
+mc-spec elog.circ repeat 2000 heatbath hybrid 1 0.05 end rgrid-met 0.01
+dist-circ elog.circ 5 100 5

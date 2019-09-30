@@ -1,1 +1,0 @@
-ls ../$1/*.doc | sed "s/.*\/\(.*\)\.doc/cat \1.ps/" | sh

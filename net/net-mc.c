@@ -1,15 +1,16 @@
 /* NET-MC.C - Interface between neural network and Markov chain modules. */
 
-/* Copyright (c) 1995, 1996, 1997, 1998, 2001 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  */
 
 #include <stdlib.h>
@@ -19,7 +20,6 @@
 
 #include "misc.h"
 #include "rand.h"
-#include "ars.h"
 #include "log.h"
 #include "mc.h"
 #include "data.h"
@@ -64,6 +64,8 @@ static double *train_sumsq;	/* Sums of squared training input values */
 static net_values *deriv;	/* Derivatives for training cases */
 static net_params grad;		/* Pointers to gradient for network parameters*/
 
+static double *quadratic_approx;/* Quadratic approximation to log likelihood */
+
 
 /* PROCEDURES. */
 
@@ -95,8 +97,6 @@ static double sum_squares (net_param *, net_sigma *, int);
 
 static double rgrid_sigma (double, mc_iter *, double, 
                            double, double, double, double, int);
-
-static double cond_sigma (double, double, double, double, int);
 
 
 /* SET UP REQUIRED RECORD SIZES PRIOR TO GOBBLING RECORDS. */
@@ -138,6 +138,10 @@ void mc_app_initialize
     { fprintf(stderr,"Can't handle autocorrelated noise in net-mc\n");
       exit(1);
     }
+
+    /* Look for quadratic approximation record.  If there is one, we use it. */
+
+    quadratic_approx = logg->data['Q'];
   
     /* Locate existing network, if one exists. */
   
@@ -201,6 +205,12 @@ void mc_app_initialize
       exit(1);
     }
 
+    if (data_spec && logg->actual_size['D'] !=
+                       data_spec_size(data_spec->N_inputs,data_spec->N_targets))
+    { fprintf(stderr,"Data specification record is the wrong size!\n");
+      exit(1);
+    }
+
     train_sumsq = chk_alloc (arch->N_inputs, sizeof *train_sumsq);
     for (j = 0; j<arch->N_inputs; j++) train_sumsq[j] = 0;
   
@@ -256,6 +266,15 @@ void mc_app_initialize
   ds->temp_state = 0;
   
   ds->stepsize = stepsizes.param_block;
+
+  if (quadratic_approx && logg->actual_size['Q'] 
+       != (1+ds->dim+ds->dim*ds->dim) * sizeof *quadratic_approx)
+  { fprintf(stderr,"Approximation record is the wrong size (%d!=%d)\n",
+       logg->actual_size['Q'], 
+       (1+ds->dim+ds->dim*ds->dim) * sizeof *quadratic_approx);
+    exit(1);
+  }
+
 }
 
 
@@ -1019,7 +1038,7 @@ void mc_app_energy
     return;
   }
 
-  if (data_spec!=0 && inv_temp!=0)
+  if (inv_temp!=0 && (data_spec!=0 || quadratic_approx))
   {
     if (N_approx>1 && gr)
     { for (i = 0; i<ds->dim; i++) gr[i] /= N_approx;
@@ -1029,88 +1048,116 @@ void mc_app_energy
     { for (i = 0; i<ds->dim; i++) gr[i] /= inv_temp;
     }
 
-    low  = (N_train * (w_approx-1)) / N_approx;
-    high = (N_train * w_approx) / N_approx;
-
-    for (i = (energy ? 0 : low); i < (energy ? N_train : high); i++)
+    if (quadratic_approx)
     {
-      if (model->type=='V'          /* Handle piecewise-constant hazard      */
-       && surv->hazard_type=='P')   /*   model specially                     */
-      { 
-        double ot, ft, t0, t1;
-        int censored;
-        int w;
+      double *b, *V;
+      int i, j;
 
-        if (inv_temp!=1)
-        { fprintf(stderr,
-            "Can't handle tempering with piecewise-constant hazard models\n");
-          exit(1);
+      if (energy) *energy += *quadratic_approx;
+
+      b = quadratic_approx + 1;
+      V = quadratic_approx + 1 + ds->dim;
+
+      for (i = 0; i<ds->dim; i++)
+      { for (j = 0; j<ds->dim; j++)
+        { if (energy) 
+          { *energy += (ds->q[i]-b[i]) * (ds->q[j]-b[j]) * *V / 2;
+          }
+          if (gr)
+          { gr[i] += (ds->q[j]-b[j]) * *V / 2;
+            gr[j] += (ds->q[i]-b[i]) * *V / 2;
+          }
+          V += 1;
         }
+      }
+    }
 
-        if (train_targets[i]<0)
-        { censored = 1;
-          ot = -train_targets[i];
+    else /* Not approximated */
+    {
+      low  = (N_train * (w_approx-1)) / N_approx;
+      high = (N_train * w_approx) / N_approx;
+  
+      for (i = (energy ? 0 : low); i < (energy ? N_train : high); i++)
+      {
+        if (model->type=='V'          /* Handle piecewise-constant hazard    */
+         && surv->hazard_type=='P')   /*   model specially                   */
+        { 
+          double ot, ft, t0, t1;
+          int censored;
+          int w;
+  
+          if (inv_temp!=1)
+          { fprintf(stderr,
+              "Can't handle tempering with piecewise-constant hazard models\n");
+            exit(1);
+          }
+  
+          if (train_targets[i]<0)
+          { censored = 1;
+            ot = -train_targets[i];
+          }
+          else
+          { censored = 0;
+            ot = train_targets[i];
+          }
+  
+          t0 = 0;
+          t1 = surv->time[0];
+          train_values[i].i[0] = surv->log_time ? log(t1) : t1;
+  
+          w = 0;
+  
+          for (;;)
+          {
+            net_func (&train_values[i], 0, arch, flgs, &params);
+            
+            ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+  
+            net_model_prob(&train_values[i], &ft,
+                           &log_prob, gr ? &deriv[i] : 0, arch, model, surv, 
+                           &sigmas, Cheap_energy);
+  
+            if (energy) *energy -= inv_temp * log_prob;
+  
+            if (gr && i>=low && i<high)
+            { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
+                        arch, flgs, &params);
+              net_grad (&grad, &params, &train_values[i], &deriv[i], 
+                        arch, flgs);
+            }
+  
+            if (ot<=t1) break;
+   
+            t0 = t1;
+            w += 1;
+            
+            if (surv->time[w]==0) 
+            { t1 = ot;
+              train_values[i].i[0] = surv->log_time ? log(t0) : t0;
+            }
+            else
+            { t1 = surv->time[w];
+              train_values[i].i[0] = surv->log_time ? (log(t0)+log(t1))/2
+                                                    : (t0+t1)/2;
+            }
+          }
         }
-        else
-        { censored = 0;
-          ot = train_targets[i];
-        }
-
-        t0 = 0;
-        t1 = surv->time[0];
-        train_values[i].i[0] = surv->log_time ? log(t1) : t1;
-
-        w = 0;
-
-        for (;;)
-        {
+  
+        else /* Everything except piecewise-constant hazard model */
+        { 
           net_func (&train_values[i], 0, arch, flgs, &params);
-          
-          ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
-
-          net_model_prob(&train_values[i], &ft,
-                         &log_prob, gr ? &deriv[i] : 0, arch, model, surv, 
+  
+          net_model_prob(&train_values[i], train_targets+data_spec->N_targets*i,
+                         &log_prob, gr ? &deriv[i] : 0, arch, model, surv,
                          &sigmas, Cheap_energy);
-
+    
           if (energy) *energy -= inv_temp * log_prob;
-
+  
           if (gr && i>=low && i<high)
           { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
                       arch, flgs, &params);
             net_grad (&grad, &params, &train_values[i], &deriv[i], arch, flgs);
           }
-
-          if (ot<=t1) break;
- 
-          t0 = t1;
-          w += 1;
-          
-          if (surv->time[w]==0) 
-          { t1 = ot;
-            train_values[i].i[0] = surv->log_time ? log(t0) : t0;
-          }
-          else
-          { t1 = surv->time[w];
-            train_values[i].i[0] = surv->log_time ? (log(t0)+log(t1))/2
-                                                  : (t0+t1)/2;
-          }
-        }
-      }
-
-      else /* Everything except piecewise-constant hazard model */
-      { 
-        net_func (&train_values[i], 0, arch, flgs, &params);
-
-        net_model_prob(&train_values[i], train_targets + data_spec->N_targets*i,
-                       &log_prob, gr ? &deriv[i] : 0, arch, model, surv,
-                       &sigmas, Cheap_energy);
-  
-        if (energy) *energy -= inv_temp * log_prob;
-
-        if (gr && i>=low && i<high)
-        { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
-                    arch, flgs, &params);
-          net_grad (&grad, &params, &train_values[i], &deriv[i], arch, flgs);
         }
       }
     }
@@ -1385,89 +1432,3 @@ static double rgrid_sigma
 
   return exp (-0.5*logcur);
 }
-
-
-/* ADAPTIVE REJECTION SAMPLING FROM CONDITIONAL DISTRIBUTION FOR A SIGMA VALUE.
-   Draws a random value from the conditional distribution for a sigma that is 
-   defined by its top-down prior and by the sum of the lower-level precision 
-   values that it controls, using the Adaptive Rejection Sampling method. */
-
-typedef struct { double w, a, a0, a1, s; } logp_data;
-
-static double logp (double l, double *d, void *vp)
-{ logp_data *p = vp;
-  double t = exp(l); 
-  double v;
-  *d = p->a/2 - t*p->a0/(2*p->w) + p->a1*p->s/(2*t);
-  v = l*p->a/2 - t*p->a0/(2*p->w) - p->a1*p->s/(2*t);
-  /* fprintf(stderr,"%.3f %g %g\n",t,v,*d); */
-  return v;
-}
-
-static double cond_sigma
-( double width,		/* Width parameter for top-level prior */
-  double alpha0,	/* Alpha for top-level prior */
-  double alpha1,	/* Alpha for lower-level prior */
-  double sum,		/* Sum of lower-level precisions */
-  int n			/* Number of lower-level precision values */
-)
-{
-  logp_data data;
-
-  data.w  = 1 / (width * width);
-  data.a  = alpha0 - n*alpha1;
-  data.a0 = alpha0;
-  data.a1 = alpha1;
-  data.s  = sum;
-
-  /* fprintf(stderr,"\n"); */
-  return exp (-0.5*ars(log(data.w),log(1+1/sqrt(alpha0)),logp,&data));
-}
-
-
-#if 0 /* No longer used */
-
-/* SAMPLE FROM CONDITIONAL DISTRIBUTION FOR SIGMA - OLD VERSION, NOW OBSOLETE.
-   Draws a random value from the conditional distribution for a sigma that is 
-   defined by its top-down prior and by the sum of the lower-level precision 
-   values that it controls. */
-
-static double cond_sigma
-( double width,		/* Width parameter for top-level prior */
-  double alpha0,	/* Alpha for top-level prior */
-  double alpha1,	/* Alpha for lower-level prior */
-  double sum,		/* Sum of lower-level precisions */
-  int n			/* Number of lower-level precision values */
-)
-{
-  static int warned = 0;
-
-  double a, w, v;
-  int tries;
-
-  w = 1 / (width * width);
-  a = n*alpha1 - alpha0;
-
-  if (a<=0)
-  { /* Can't handle this situation */
-    abort();
-  }
-
-  tries = 0;
-
-  do 
-  { 
-    v = rand_gamma(a/2) / (sum*alpha1/2);
-    tries += 1;
-
-    if (tries>10000 && !warned) 
-    { fprintf(stderr,"WARNING: Over 10000 tries in one call of cond_sigma\n");
-      warned = 1;
-    }
-
-  } while (rand_uniform() > exp(-alpha0/(2*w*v)));
-
-  return sqrt(v);
-}
-
-#endif

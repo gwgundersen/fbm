@@ -107,4 +107,4 @@ The following application-specific sampling procedures are implemented:
 Tempering methods and Annealed Importance Sampling are not currently
 supported.
 
-            Copyright (c) 1996, 1998 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal

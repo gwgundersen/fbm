@@ -1,0 +1,37 @@
+<html>
+<body>
+<pre>
+
+
+DFT-DENDROGRAM:  Create Postscript representation of a dendrogram of a tree
+
+Dft-dendrogram produces a representation of the diffusion tree
+underlying the training cases in the form of a dendrogram, which is
+output as an Embedded Postscript document suitable for printing or for
+inclusion in another document.
+
+Usage:
+
+  dft-dendrogram [ -r ] log-file index [ tree ] [ label-file ] 
+
+Writes Postscript to draw a dendrogram on standard output.  The tree
+for which the dendrogram is produced is from the log file given, at
+the index given.  If the model has more than one tree, the first one
+is used by default, but this can be changed by including a "tree"
+argument (from 1 up to the number of trees in the model).  
+
+The terminal nodes of the dendrogram are by default labelled with the
+indexes of the training cases (from 1 up).  If a label file in given,
+these labels are replaced with labels read from this file (delimited
+by whitespace).
+
+If the "-r" option is given, the dendrogram is rotated so that the
+"fingers" point down, rather than to the right.
+
+Similar output in text format is produced by dft-display with the "-g"
+option (see <A HREF="dft-display.html">dft-display.doc</A>).
+
+            Copyright (c) 1995-2003 by Radford M. Neal
+</pre>
+</body>
+</html>

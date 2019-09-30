@@ -76,7 +76,7 @@ the same approach as was used above for the binary data set (but the
                                  hybrid 100:10 0.3 negate
     &gt; net-mc clog.net 200
 
-This takes about thirteen minutes on our 550MHz Pentium III.
+This takes 8.7 minutes on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
 
 We can see the effect of the ARD model by looking at the values of
 the low-level input-hidden hyperparameters over the course of the
@@ -102,6 +102,35 @@ use the following command:
 
 Here, the "a" option is used to suppress everything except the summary.
 
+If we are interested in the probabilities for each class, we can use
+the "n" option, as follows:
+
+    &gt; net-pred n clog.net 51:
+
+    Number of iterations used: 150
+
+    Case Targets   Means               Error^2
+
+       1    2.00    0.19   0.00   0.81  0.0726
+       2    2.00    0.23   0.01   0.76  0.1073
+       3    2.00    0.12   0.00   0.87  0.0319
+       4    0.00    0.82   0.04   0.13  0.0524
+                     
+                       . . .
+
+     597    2.00    0.04   0.00   0.96  0.0027
+     598    1.00    0.33   0.65   0.01  0.2346
+     599    0.00    0.23   0.00   0.77  1.1964
+     600    2.00    0.03   0.00   0.97  0.0016
+
+    Average squared error guessing mean:   0.20556+-0.01623
+
+The "Means" columns give the predictive probabilities for the three
+classes for each case.  The "Error^2" column gives the squared error
+found by summing the squared differences of these probabilities with
+the indicator variables that are zero for the wrong classes and one
+for the correct class.  
+
 
 A Gaussian process model for the three-way classification problem.
 
@@ -125,10 +154,10 @@ classification problem, using "persistent" hybrid Monte Carlo:
 For the first five iterations, the persistence is fairly small (0.9),
 so that the high initial energy will be dissipated rapidly.  The
 remaining iterations use a larger persistence (0.98) to suppress
-random walks.  The run takes about fifty minutes on our 550MHz Pentium
-III.  The cubic scaling of the computations for the Gaussian process
-models leads to their becoming slower relative to neural network
-models as the number of training cases increases.
+random walks.  This run takes 19 minutes on the system used (see
+<A HREF="Ex-system.html">Ex-system.doc</A>).  The cubic scaling of the computations for the
+Gaussian process models leads to their becoming slower relative to
+neural network models as the number of training cases increases.
 
 One can observe how the relevance hyperparameters change during the
 run as follows, assuming that the "plot" program can display four
@@ -159,7 +188,9 @@ as illustrated below:
     
     Fraction of guesses that were wrong:  0.1350+-0.0140
     
-This takes about eighty seconds on our machine.
+This takes 27 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).  The "n"
+option can be used to get the predictive probability for each class,
+as illustrated above for net-pred.
 
 A "logistic" style model can be obtained by decreasing the jitter,
 using a 'gp-spec' command such as the following:

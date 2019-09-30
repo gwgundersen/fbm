@@ -1,0 +1,64 @@
+<html>
+<body>
+<pre>
+
+
+DFT-CASES:  Generate cases from a Dirichlet diffusion tree model.
+
+Dft-cases produces a data file containing the target values for cases
+generated from a diffusion tree model.  The diffusion tree(s)
+underlying these cases may optionally be displayed as well.
+
+Usage:
+
+    dft-cases [ -# ] [ -b ] [ -h ] [ -p ] [ -l ] [ -t ] [ -g ] [ -n | -N ]
+      log-file index output-file n-cases [ random-seed ] [ new-log-file ]
+
+Values for the targets in n-cases cases are generated and stored in
+the specified output file, one per line, overwriting any data it
+previously contained.  If no training data has been specified, the
+generated cases will come from the prior distribution conditional on
+the overall hyperparameters and diffusion tree parameters stored in
+the log file under the specified index.  If training data has been
+supplied, the cases will be generated from the posterior distribution
+given the training data, as represented by the hyperparameters,
+parameters, latent vectors, and diffusion trees(s) for training cases
+that are stored under that index.
+
+Including a flag of the form -#, where # is a digit from 1 up to the
+number of trees in the model, causes the data written to output-file
+to be the values generated at the terminal nodes for that tree, rather
+than the final values for observable variables.  This allows one to
+examine the contributions of the different trees, since running
+dft-cases more than once with different values for this option, or
+without it, but with other arguments such as the random number seed
+the same, will display components of the same randomly-generated data.
+
+If one or more other flags are specified, the overall hyperparameters,
+diffusion tree parameters, latent vectors, tree structures, or node
+descriptions will be displayed on standard output, in the format
+documented in <A HREF="dft-display.html">dft-display.doc</A>, with the newly generated cases
+following the training cases (if any).  By default, none of this
+information is displayed.  When -l or -N is specified, values for
+latent vectors or node locations are displayed even if they are not
+stored in the log file - they are randomly generated if necessary
+(assuming that this is possible for the model being used).
+
+The random number seed used for generating the cases may be specified
+at the end of the command line.  If it is omitted, index is used as
+the seed.
+
+If the final new-log-file argument is present, records of the overall
+hyperparameters, diffusion tree parameters, latent vectors, tree
+structures, and node locations for both the original cases and the
+newly-generated cases will be appended to the log file with this name,
+with an index one greater than the index of the current last record.
+This log file should already contain model and data specifications,
+which must be compatible with the records written (though this is not
+checked).  This facility allows a new chain to be run starting from
+the generated state, which is useful for testing.
+
+            Copyright (c) 1995-2003 by Radford M. Neal
+</pre>
+</body>
+</html>

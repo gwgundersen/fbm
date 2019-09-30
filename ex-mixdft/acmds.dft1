@@ -1,0 +1,7 @@
+dft-spec   alog.dft1 0 8 / 0.2:4:2 - 1
+model-spec alog.dft1 binary
+data-spec  alog.dft1 0 8 2 / adata .
+dft-gen    alog.dft1 fix 2
+mc-spec    alog.dft1 repeat 50 gibbs-latent slice-positions met-terminals \
+                               gibbs-sigmas 
+dft-mc     alog.dft1 100

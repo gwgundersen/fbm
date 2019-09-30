@@ -76,7 +76,7 @@ represented by the integers 0, 1, and 2.  This argument could have
 been left out, but including it causes the data to be checked to
 ensure that each item is in the set {0,1,2}.
 
-zThe remaining arguments give the files where the inputs (all zero of
+The remaining arguments give the files where the inputs (all zero of
 them) and targets come from, with the "." for the latter indicating
 that the targets come from the same place as the inputs.
 
@@ -93,8 +93,9 @@ algorithm:
     &gt; mc-spec plog.met repeat 10 metropolis 1
     &gt; dist-mc plog.met 1000
 
-This takes about three seconds on our 550MHz Pentium III.  Convergence
-is quite rapid, and the sampling efficiency is reasonably good.
+This takes 1.1 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
+Convergence is quite rapid, and the sampling efficiency is reasonably
+good.
 
 We can estimate the probabilities of the three possible values as
 follows:
@@ -186,12 +187,12 @@ Otherwise, you must provide a separate program to do the sampling.
 For how this is done, see the documentation on the -read-prior option
 in <A HREF="dist-spec.html">dist-spec.doc</A> and also the information in <A HREF="dist-mc.html">dist-mc.doc</A>.
 
-The commands above take about three seconds on 550MHz Pentium III.
-Once they have finished, we can estimate functions of state with
-'dist-est', which will automatically look at only the iterations that
-pertain to the final distribution of interest.  It also computes
-weighted estimates using the weights found during the annealing runs.
-Here is an example:
+The commands above take 1.2 seconds on the system used (see
+<A HREF="Ex-system.html">Ex-system.doc</A>).  Once they have finished, we can estimate functions of
+state with 'dist-est', which will automatically look at only the
+iterations that pertain to the final distribution of interest.  It
+also computes weighted estimates using the weights found during the
+annealing runs.  Here is an example:
 
     &gt; dist-est "Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.ais
     
@@ -289,24 +290,24 @@ found using 'dist-est'.  For example:
     
     NOTE: The standard errors assume points are independent
     
-Doing importance sampling takes less than half a second on our 550MHz
-Pentium III, which is faster than Annealed Importance Sampling.
-However, importance sampling quickly becomes infeasible for problems
-with more parameters or with more data.  Annealed Importance Sampling
-is more feasible for realistic problems, though some work is needed to
-set up a good tempering schedule, which may have to include many more
-distributions than were needed for this easy problem (often hundreds
-or more).  See <A HREF="mc-ais.html">mc-ais.doc</A> for documentation on how to obtain
-information that is helpful in adjusting the tempering schedule.
+Importance sampling is faster than Annealed Importance Sampling for
+this easy problem.  However, importance sampling quickly becomes
+infeasible for problems with more parameters or with more data.
+Annealed Importance Sampling is more feasible for realistic problems,
+though some work is needed to set up a good tempering schedule, which
+may have to include many more distributions than were needed for this
+easy problem (often hundreds or more).  See <A HREF="mc-ais.html">mc-ais.doc</A> for
+documentation on how to obtain information that is helpful in
+adjusting the tempering schedule.
 
 The software also supports the related methods of simulated tempering,
 tempered transitions, and tempered hybrid Monte Carlo.  Annealed
 importance sampling and the tempering schemes are also supported for
-neural network models (but not for Gaussian process and mixture
-models).  There's no tutorial documentation on these features,
-however, just the detailed command documentation, and the command
-files in the 'ex-ais' directory that implement the tests done in my
-"Annealed Importance Sampling" paper.
+neural network models and Dirichlet diffusion tree models (but not for
+Gaussian process and mixture models).  There's no tutorial
+documentation on these features, however, just the detailed command
+documentation, and the command files in the 'ex-ais' directory that
+implement the tests done in my "Annealed Importance Sampling" paper.
 </pre>
 </body>
 </html>

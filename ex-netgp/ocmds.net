@@ -12,4 +12,4 @@ mc-spec olog.net repeat 10 sample-noise heatbath hybrid 100:10 0.2
 net-mc olog.net 1
 
 mc-spec olog.net sample-sigmas heatbath hybrid 1000:10 0.4
-net-mc olog.net 100
+net-mc olog.net 400

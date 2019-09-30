@@ -100,7 +100,7 @@ by the inverse temperature.  The distribution at inverse temperature
 one is thus the usual posterior, whereas that at inverse temperature
 zero is the prior.  
 
-The 'dist' programs known how to sample from the prior distribution
+The 'dist' programs know how to sample from the prior distribution
 only when it is specified as a sum of terms of the form v~D(...),
 where D is one of the parameterized distributions as described in
 formula.doc, and where the parameters of the distribution refer only
@@ -115,4 +115,4 @@ which case points from the prior are obtained by reading from standard
 input, which must be a file of points, or a pipe from a separate
 program for sampling from the prior.  See dist-mc.doc for details.
 
-            Copyright (c) 1998-2000 by Radford M. Neal
+            Copyright (c) 1995-2003 by Radford M. Neal

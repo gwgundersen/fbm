@@ -1,0 +1,507 @@
+<html>
+<body>
+<pre>
+
+
+A PROBABILITY ESTIMATION PROBLEM WITH BINARY DATA
+
+As a first illustration of the mixture model and Dirichlet diffusion
+tree software, I generated a dataset in which each case was composed
+of ten binary attributes.  The distribution of these binary vectors
+was a mixture of four component distributions, in each of which the
+ten attributes were independent.  The four components each had
+probability 0.25 of being chosen to generate a case.  The
+probabilities for each component for each binary attributes were as
+shown below:
+
+          1    2    3    4    5    6    7    8    9   10
+
+     1   0.1  0.2  0.2  0.2  0.2  0.8  0.8  0.8  0.8  0.7
+     2   0.1  0.8  0.8  0.8  0.8  0.2  0.2  0.2  0.2  0.7
+     3   0.9  0.2  0.2  0.8  0.8  0.2  0.2  0.8  0.8  0.7
+     4   0.9  0.8  0.8  0.2  0.2  0.8  0.8  0.2  0.2  0.7
+
+Each row gives the probabilities of each of the attributes being '1'
+for one component of the mixture.  The columns are for the ten binary
+attributes in each case.  The vectors generated in this way can be
+seen as coming from one of four "patterns": 0000011111, 0111100001,
+1001100111, and 1110011001, but with each bit of the chosen pattern
+having a small probability of being switched (ranging from 0.1 to 0.3)
+in any particular case.
+
+I generated 1000 cases from this distribution, which are stored in the
+file 'bdata'.  The first 500 are used for training, the rest for
+testing.
+
+
+A finite mixture model for the binary data.
+
+We will first see what happens when we model this data as a mixture of
+four components, which is the true number of components for this
+problem.  Each component of the mixture will give each target
+attribute a certain probability of being '1' rather than '0'.  These
+probabilities are determined from the "offset" parameters for each
+target, by means of the "logistic" function:
+
+   Pr(target=1)  =  1 / (1 + exp(-offset))
+
+The offset parameters for each attribute for each component are given
+Gaussian prior distributions, with means and standard deviations that
+are hyperparameters.  These hyperparameters could be fixed, but here
+we will make them variable, separately for each target attribute, but
+with each of them linked to a top-level hyperparameter, common to all
+targets.
+
+We set up this mixture model with the 'mix-spec' command, as follows:
+
+    &gt; mix-spec blog.4 0 10 4 / x1 0.05:0.5:0.2 10
+
+Here, "blog.4" is the name of the log file used for this run, which is
+created by the 'mix-spec' command.  The arguments of 'mix-spec' that
+follow the name of the log file are the number of input attributes
+(always 0 for mixture models at present), the number of target
+attributes (10 for this problem), and the number of mixture components
+(set to the true value of 4 in the command above).  The specifications
+for priors are given following these arguments, after a "/" separator.
+
+The first prior specification gives the concentration parameter of the
+Dirichlet distribution for the mixing proportions for the components.
+If this specification starts with "x", this value is automatically
+divided by the number of components, which is the scaling required for
+the model to reach a sensible limit as the number of components goes
+to infinity.  The specification of "x1" above mildly favours unequal
+mixing proportions (recall that the true proportions are equal).
+
+The second argument after the "/" specifies the prior for the standard
+deviations of the "offsets" for components (which determine the
+probabilities for the binary target attributes).  In the hierarchical
+scheme specified here (described in general in <A HREF="prior.html">prior.doc</A>), there is a
+top-level standard deviation hyperparameter, given a prior in which
+the corresponding "precision" (standard deviation to the power -2) has
+a gamma distribution with mean 0.05 and shape parameter 0.5.  There is
+a lower-level standard deviation hyperparameter for each target; for
+each of these, the corresponding precision has a gamma distribution
+with mean given by the higher-level precision, and shape parameter of
+0.2.  Both these priors are rather vague (but the shape parameter of
+0.2 is vaguer than 0.5), so these hyperparameters can adapt to the
+structure of the data.
+
+The last argument of 'mix-spec' is the standard deviation for the
+means of the offsets for each of the targets, here set to 10.
+Currently, this standard deviation for the mean offset is the same for
+all targets, and is fixed in the 'mix-spec' command (it cannot be a
+variable hyperparameter).
+
+We can look at these specifications by calling 'mix-spec' with just
+the log file as an argument:
+
+    &gt; mix-spec blog.4
+
+    Number of inputs:      0
+    Number of targets:     10
+
+    Number of components:  4
+
+    Dirichlet concentration parameter: x1.000
+    Prior for SD hyperparameters:       0.050:0.50:0.20
+    Prior for mean component offsets:   10.000
+
+After the 'mix-spec' command, we need to specify that the targets are
+binary using the 'model-spec' command, as follows:
+
+    &gt; model-spec blog.4 binary
+
+We can then specify where the data comes from using 'data-spec':
+
+    &gt; data-spec blog.4 0 10 2 / bdata@1:500 . bdata@501:1000 .
+
+The number of inputs is here specified to be 0 (as it must be at
+present for mixture models), and the number of targets is specified to
+be 10.  These must match the values given to 'mix-spec'.  We also
+specify that the targets must be the integers 0 or 1 putting in a
+following argument of 2 (meaning that there are 2 possible values,
+which start at 0).  After a slash, we say where the inputs and targets
+come from.  Note that we have to say where the inputs come from even
+though there are 0 of them, but fortunately, we can then say that the
+targets come from the same place by just using the "." argument.  In
+the specification above, the data comes from the first 500 lines of
+the file 'bdata', with one case per line.  The remaining 500 lines are
+specified to be used for testing.  See <A HREF="data-spec.html">data-spec.doc</A> for more details.
+
+Finally, we need to specify how Markov chain sampling is to be done
+for this model.  At present, none of the standard Markov chain methods
+are allowed for mixture models, only the specialized procedures
+documented in <A HREF="mix-mc.html">mix-mc.doc</A>.  Each of these procedures updates one of the
+three parts of the state - the values of the hyperparameters, the
+values of the parameters for the various mixture components, and the
+values of the indicator variables saying which mixture component is
+currently associated with each training case.  The values in each of
+these parts of the state can be updated by Gibbs sampling, using the
+corresponding procedure.  The following call of 'mc-spec' sets this
+up:
+
+    &gt; mc-spec blog.4 repeat 20 gibbs-indicators gibbs-params gibbs-hypers
+
+Here, the three Gibbs sampling operations are repeated 20 times each
+iteration, just to cut down on the number of states saved in the log
+file.
+
+We can now run the Markov chain simulation for 100 iterations with the
+following command:
+
+    &gt; mix-mc blog.4 100
+
+The simulation starts with a state in which all the training cases are
+associated with the same component, whose parameters are set to their
+means, as specified by hyperparameter values that are also set to
+their prior means.  The 'mix-gen' program could be used to initialize
+things differently (see <A HREF="mix-gen.html">mix-gen.doc</A>).
+
+The above run takes 29 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
+It can be run in the background, in which case progress can be
+monitored with the 'mix-display' and 'mix-plt' programs.  For example,
+after a while, you might see the following:
+
+    &gt; mix-display blog.4
+
+    MIXTURE MODEL IN FILE "blog.4" WITH INDEX 50
+    
+    HYPERPARAMETERS
+    
+    Standard deviations for component offsets:
+    
+        0.326:     1.407    1.159    1.213    3.331    1.417
+                   1.557    3.433    2.203    4.990    0.192
+    
+    Means for component offsets:
+    
+                  -0.370   -0.126   -0.538   +0.521   -0.620
+                  -1.642   +1.510   -1.206   -1.502   +0.941
+    
+    
+    PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
+    
+       1: 0.286   -1.799   +0.931   +1.753   +1.481   +0.853
+                  -1.503   -1.433   -0.942   -1.245   +1.165
+    
+       2: 0.252   +1.905   +1.054   +1.749   -2.588   -1.594
+                  +1.062   +1.625   -1.532   -1.227   +1.252
+    
+       3: 0.250   -2.109   -1.505   -2.220   -0.961   -1.402
+                  +2.265   +1.635   +1.463   +2.015   +1.082
+    
+       4: 0.212   +1.743   -1.050   -1.470   +1.502   +1.553
+                  -1.593   -1.376   +1.569   +1.025   +0.864
+
+This displays the state at the last iteration computed so far (here
+iteration 50).  The hyperparameter values are shown first, with
+top-level hyperparameters on the left, before the colon.  The
+lower-level hyperparameters follow, ordered by the target attribute
+that they pertain to.  Values for the component parameters follow,
+sorted by the fraction of training cases that they are currently
+associated with.  These fractions are the first numbers after 1:, 2:,
+etc.; note that the actual mixing probabilities are not explicitly
+represented, but are instead always integrated over.  Any components
+that are not associated with any training case are omitted from the
+output, and are not explicitly represented in the state.  The other
+numbers shown for each component are the "offset" parameters for each
+target attribute.
+
+In this example, the simulation appears to have learned the essence of
+the distribution by the iteration shown above.  Recall that a positive
+offset corresponds to the probability of a 1 being greater than 1/2, a
+negative offset to the probability of a 1 being less than 1/2.  The
+four components shown above can thus be seen to correspond to the four
+patterns used to generate the cases, as described earlier.  Note that
+the last of the offset standard deviation hyperparameters (for the
+last target attribute) is quite small.  This indicates that the model
+has "learned" that the probabilities for the last target are the same
+for all components, and hence can be modeled most efficiently at the
+hyperparameter level, by the mean for that offset, rather than
+separately for each component.
+
+The indicators of which components are associated with each training
+case can also be examined with 'mix-display', and of course iterations
+other than the last can be viewed.  See <A HREF="mix-display.html">mix-display.doc</A> for details.
+
+One can also look at the progress of the simulation using 'mix-plt'.
+For example, the following will produce a time-plot of the cumulative
+proportions of the training cases associated with the four components
+(as sorted by decreasing frequency):
+
+    &gt; mix-plt t C1C2C3C4 blog.4 | plot
+
+Here, 'plot' is some suitable plotting program.  One can also just let
+the output of 'mix-plt' go to standard output, and then examine the
+numbers manually.  Other quantities can also be plotted, as described
+in <A HREF="mix-quantities.html">mix-quantities.doc</A>.
+
+As well as examining quantities with 'mix-display' and 'mix-plt', one
+can also produce a sample of cases from the predictive distribution
+using 'mix-cases'.  Predictive probabilities for test cases can be
+found using 'mix-pred'.  The following command gives the average log
+probability for all the test cases, using the last 80 iterations:
+
+    &gt; mix-pred pa blog.4 21:
+
+    Number of iterations used: 80
+
+    Number of test cases: 500
+
+    Average log probability of targets:    -6.097+-0.069
+
+For comparison, the average log probability for these test cases
+using the true mixture distribution is -6.034.
+
+
+A countably infinite mixture model for the binary data.
+
+Even though the true distribution for this example is a mixture of
+four components, good results can nevertheless be obtained using a
+mixture with a countably infinite number of components.  The prior for
+mixture proportions used with such a model is designed so that a few
+of the infinite number of components have substantial probability, so
+the model does not result in an "overfitted" solution, in which every
+training case is "explained" as coming from a different component.
+
+We specify a countably infinite mixture model by simply omitting the
+argument to 'mix-spec' that gives the number of components.  For this
+example, we change the 'mix-spec' command used above to the following:
+
+    &gt; mix-spec blog.inf 0 10 / x1 0.05:0.5:0.2 10
+
+The Dirichlet prior specification for mixing proportions of "x1" is
+the same as for the mixture model with four components.  The "x"
+specifies scaling downward with the number of components, which
+produces a sensible limit as the number of components goes to
+infinity, as here.  The "x" is therefore required for infinite
+mixtures.
+
+The other arguments of 'mix-spec' are as described for the finite
+mixture model.  The 'model-spec' and 'data-spec' commands used are
+also the same:
+
+    &gt; model-spec blog.inf binary
+    &gt; data-spec blog.inf 0 10 2 / bdata@1:500 . bdata@501:1000 .
+
+We must change the 'mc-spec' command, however, since it is impossible
+to do Gibbs sampling for the component indicators associated with
+training cases - since their number is infinite, we can't compute all
+the required conditional probabilities.  However, we can instead use a
+specialized Metropolis-Hastings update, in which a new component to go
+with a training case is proposed with probability determined by the
+frequencies with which components are associated with other training
+cases.  The proposal is accepted or rejected based on the resulting
+change in likelihood.  The process can then be repeated any desired
+number of times, to produce an approximation to Gibbs sampling (the
+"approximation" is only with respect to convergence speed, the answer
+is exact, asymptotically).  With this change, we can use the following
+'mc-spec' command for this model:
+
+    &gt; mc-spec blog.inf repeat 20 met-indicators 10 gibbs-params gibbs-hypers
+
+This is the same as for the finite mixture model, except that 10
+repetitions of the Metropolis-Hastings update for the indicators are
+specified using 'met-indicators 10', in place of 'gibbs-indicators'.
+
+As before, we can now run the simulation with a command such as:
+
+    &gt; mix-mc blog.inf 100
+
+We can examine the states with 'mix-display'.  For example, once the
+'mix-mc' command completes, which takes 63 seconds on the system used
+(see <A HREF="Ex-system.html">Ex-system.doc</A>), the state should be something like the following:
+
+    &gt; mix-display blog.inf
+    
+    MIXTURE MODEL IN FILE "blog.inf" WITH INDEX 100
+    
+    HYPERPARAMETERS
+    
+    Standard deviations for component offsets:
+    
+        0.359:     2.747    4.294    1.280    3.530    1.353
+                   2.461    5.661    2.928    1.506    0.080
+    
+    Means for component offsets:
+    
+                  +0.023   +0.452   +0.792   +0.507   -0.084
+                  -0.634   -4.794   +4.560   -0.293   +1.124
+    
+    
+    PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
+    
+       1: 0.310   -1.565   +0.617   +1.467   +1.191   +0.468
+                  -0.569   -1.192   -0.397   -0.749   +1.003
+    
+       2: 0.254   -1.374   -1.134   -2.009   -1.008   -1.825
+                  +2.384   +2.377   +1.579   +2.553   +1.080
+    
+       3: 0.238   +2.949   +0.979   +2.419   -2.694   -1.331
+                  +1.597   +1.590   -1.689   -1.190   +1.124
+    
+       4: 0.168   +1.565   -1.687   -1.958   +1.762   +1.633
+                  -1.365   -6.917   +1.001   +1.180   +0.919
+    
+       5: 0.012   +1.780   -3.038   -0.664   +5.257   -3.499
+                  -8.315   -5.443   +0.816   -0.774   +1.143
+    
+       6: 0.012   +1.892   -0.991   +3.387   +0.513   +1.287
+                  -4.129   +1.283   +8.346   +1.452   +0.882
+    
+       7: 0.004   +5.850   +1.412   +0.295   -5.867   +0.701
+                  -0.403   -9.392   +7.748   -2.211   +1.163
+    
+       8: 0.002   +1.028   -3.102   +2.383   -1.070   +1.691
+                  +0.497   +0.062   +0.505   -0.762   +1.226
+    
+The output is similar to that seen for the mixture model with four
+components, except that eight components are associated with at least
+one training case at iteration 100, as shown above.  (The infinite
+number of remaining components are not explicitly represented, and are
+not displayed by 'mix-display'.)  Four of these components are
+associated with very few training cases, however (as seen from the
+fractions of the training set after the component number).  This is to
+be expected when the true distribution can be expressed using only
+four components.  The number of such low-frequency components will
+vary from iteration to iteration, as will other aspects of the state,
+in accordance with the variability in the posterior distribution.
+
+Since there are exactly four components in the real distribution, one
+would expect that the model with four components would perform better
+than a model with an infinite number of components.  Any penalty is
+quite small in this example, however, as can be seen by looking at the
+predictive probabilities:
+
+    &gt; mix-pred pa blog.inf 21:
+
+    Number of iterations used: 80
+
+    Number of test cases: 500
+
+    Average log probability of targets:    -6.105+-0.069
+
+This is almost the same as the average log probability for the four
+component model.
+
+A number of other ways of sampling for the indicators for countably
+infinite mixture models are also available.  Here are two:
+
+    &gt; mc-spec blog.inf2 repeat 20 \
+                gibbs-ext-indicators 2 gibbs-params gibbs-hypers
+
+    &gt; mc-spec blog.inf3 repeat 20 \
+                met1-indicators gibbs1-indicators gibbs-params gibbs-hypers
+
+These methods may be more efficient than using the "met-indicators"
+operation for some models.  See <A HREF="mix-mc.html">mix-mc.doc</A> for descriptions of these
+and other Markov chain operations for mixture models.
+
+
+A Dirichlet diffusion tree model for the binary data.
+
+Binary data can also be modeled using Dirichlet diffusion trees.  This
+is not the simplest example of how Dirichlet diffusion trees can be
+used, since the trees naturally produce real valued data.  To model
+binary data, these real values are treated as latent values, which are
+put through the logistic function to produce the probabilities for the
+binary data to be "1".  The binary data example here does not have the
+sort of hierarchical structure that would make use of a Dirichlet
+diffusion tree model desirable.  For both these reasons, the following
+example of how to model binary data with a Dirichlet diffusion tree
+may not be the best introduction to such models - you might want to
+read the real-valued example in <A HREF="Ex-mixdft-r.html">Ex-mixdft-r.doc</A> first.
+
+Nevertheless, this example does demonstrate how binary data can be
+modeled, and shows that even when there is no hierarchical structure
+to the data, a Dirichlet diffusion tree model can do quite well.
+
+We start by specifying a Dirichlet diffusion tree model, as follows:
+
+    &gt; dft-spec blog.dft 0 10 / 2 - 1
+
+As for a mixture mdoel specification, this says that there are 0
+"input" variables (as there must be at present), and 10 "target"
+variables.  The argument of "2" is the standard deviation for the
+diffusion process that produces the latent variables used to model the
+binary variables (this could have been a prior specification rather
+than a fixed value).  The last two arguments are the parameters of the
+divergence function used to determine (stochastically) when the
+diffusion paths for different cases diverge.  The general form of the
+divergence function is
+
+   a(t) = c0 + c1/(1-t) + c2/(1-t)^2
+
+The parameters c0, c1, c2 are given at the end of the 'dft-spec'
+command, with "-" being equivalent to zero.  Any zero parameters at
+the end can just be omitted.  The specification above therefore
+corresponds to the divergence function a(t) = 1/(1-t).  Any of c0, c1,
+and c2 can be a prior specification, instead of a constant.  See
+<A HREF="dft-spec.html">dft-spec.doc</A> for details, and <A HREF="Ex-mixdft-r.html">Ex-mixdft-r.doc</A> for an example.
+
+We next specify the data model, which is "binary", indicating binary
+data modeled using the logistic function:
+
+    &gt; model-spec blog.dft binary
+
+We go on to specify the source of the data, as for the mixture example
+above:
+
+    &gt; data-spec blog.dft 0 10 2 / bdata@1:500 . bdata@501:1000 .
+
+Finally, we need to specify how to do Markov chain sampling for the
+posterior distribution of the trees and latent values that underly the
+data.  
+
+    &gt; mc-spec blog.dft repeat 10 gibbs-latent slice-positions met-terminals
+
+Since the hyperparameters are all fixed for this model, there is no
+need for Markov chain operations to update them.  The operations above
+will lead to the state of the Markov chain being only the latent
+values and the tree structure, with divergence times, but without the
+locations of non-terminal nodes (which will be integrated over).  The
+'gibbs-latent' operation does a Gibbs sampling scan over the latent
+values associated with the targets in training cases.  (Initially, the
+latent values are taken to be +1 for targets of "1", and -1 for
+targets of "0".)  The 'slice-positions' and 'met-terminals' operations
+both update the tree structure and divergence times.  See <A HREF="dft-mc.html">dft-mc.doc</A>
+for details.
+
+We can run the Markov chain for 100 iterations with the following
+command:
+
+    &gt; dft-mc blog.dft 100
+
+We can see the progress of the Markov chain by examining various
+quantities, such as the latent values associated with training cases.
+The following command will plot the latent values for the first target
+for the first six training cases:
+
+    &gt; dft-plt t o1@1:6 blog.dft | plot
+
+The first four of these cases have "0" for their first target value,
+the last two have "1".  The plot should show that the latent values
+for the first four cases tend to be negative, whereas the latent
+values for the last two cases tend to be positive, at least once the
+Markov chain has approached convergence.
+
+The 'dft-mc' command above takes 11 minutes of time on the system used
+(see <A HREF="Ex-system.html">Ex-system.doc</A>).  Once it is done, we can see how well the model
+predicts new data using the following command, which looks at the
+Dirichlet diffusion tree models produced by the last 60 iterations of
+the Markov chain:
+
+    &gt; dft-pred pa blog.dft 41:
+
+    Number of iterations used: 60
+
+    Number of test cases: 500
+
+    Average log probability of targets:    -6.102+-0.067
+
+This takes 3.5 minutes on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
+Performance is not much worse than for the four-component mixture
+model above, which is based on the true structure of the data.
+</pre>
+</body>
+</html>

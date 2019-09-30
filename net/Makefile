@@ -15,12 +15,12 @@ include ../make.include
 
 programs:	net-spec net-gen net-rej net-eval net-display net-pred net-mc \
 		net-gd net-plt net-tbl net-hist net-dvar \
-		net-grad-test net-stepsizes net-genp
+		net-grad-test net-stepsizes net-genp net-approx
 
 clean:
 	rm -f *.o net-spec net-gen net-rej net-eval net-display net-pred net-mc\
 	          net-gd net-plt net-tbl net-hist net-dvar \
-	          net-grad-test net-stepsizes net-genp
+	          net-grad-test net-stepsizes net-genp net-approx
 
 
 include ../util/util.make
@@ -41,50 +41,51 @@ net-quantities.o: net-quantities.c misc.h prior.h model.h net.h data.h \
 				net-data.h quantities.h log.h
 
 
-net-spec:	net-spec.o	net-util.o prior.o net-prior.o \
+net-spec:	net-spec.o	net-util.o prior.o net-prior.o ars.o \
 				misc.o log.o rand.o
-		$(CC) $(LFLAGS) net-spec.o net-util.o prior.o net-prior.o \
+		$(CC) $(LFLAGS) net-spec.o net-util.o prior.o net-prior.o ars.o\
 		  misc.o log.o rand.o -lm -o net-spec
 
 net-spec.o:	net-spec.c	misc.h prior.h model.h net.h log.h data.h
 
 net-gen:	net-gen.o	net-util.o prior.o net-prior.o net-setup.o \
-				misc.o log.o rand.o
+				misc.o log.o rand.o ars.o
 		$(CC) $(LFLAGS) net-gen.o net-util.o prior.o net-prior.o \
-		  net-setup.o misc.o log.o rand.o -lm -o net-gen
+		  net-setup.o misc.o log.o rand.o ars.o -lm -o net-gen
 
 net-gen.o:	net-gen.c	misc.h prior.h model.h net.h data.h log.h rand.h
 
 net-rej:	net-rej.o	net-util.o prior.o net-prior.o net-setup.o \
 				net-data.o model.o net-func.o net-model.o \
-				misc.o log.o numin.o data-trans.o rand.o
+				misc.o log.o numin.o data-trans.o rand.o ars.o
 		$(CC) $(LFLAGS) net-rej.o net-util.o prior.o net-prior.o \
 		  net-setup.o net-data.o model.o net-func.o net-model.o misc.o \
-		  log.o numin.o data-trans.o rand.o -lm -o net-rej
+		  log.o numin.o data-trans.o rand.o ars.o -lm -o net-rej
 
 net-rej.o:	net-rej.c	misc.h prior.h model.h net.h data.h log.h rand.h
 
 net-eval:	net-eval.o	net-util.o prior.o net-prior.o net-setup.o \
 				net-func.o net-model.o model.o misc.o \
-				log.o rand.o 
+				log.o rand.o ars.o
 		$(CC) $(LFLAGS) net-eval.o net-util.o prior.o net-prior.o \
 		  net-setup.o net-func.o net-model.o model.o misc.o \
-		  log.o rand.o -lm -o net-eval
+		  log.o rand.o ars.o -lm -o net-eval
 
 net-eval.o:	net-eval.c	misc.h prior.h model.h net.h data.h log.h 
 
 net-values:	net-values.o	net-util.o prior.o net-prior.o net-setup.o \
-				net-func.o net-model.o misc.o log.o rand.o 
+				net-func.o net-model.o misc.o log.o rand.o ars.o
 		$(CC) $(LFLAGS) net-values.o net-util.o prior.o net-prior.o \
 		  net-setup.o net-func.o net-model.o \
-		  misc.o log.o rand.o -lm -o net-values
+		  misc.o log.o rand.o ars.o -lm -o net-values
 
 net-values.o:	net-values.c	misc.h prior.h model.h net.h data.h log.h 
 
 net-display:	net-display.o	net-util.o prior.o net-prior.o net-setup.o \
-				net-print.o misc.o log.o rand.o
+				net-print.o misc.o log.o rand.o ars.o
 		$(CC) $(LFLAGS) net-display.o net-util.o prior.o net-prior.o \
-		  net-setup.o net-print.o misc.o log.o rand.o -lm -o net-display
+		  net-setup.o net-print.o misc.o log.o rand.o ars.o \
+		  -lm -o net-display
 
 net-display.o:	net-display.c	misc.h prior.h model.h net.h data.h log.h
 
@@ -113,7 +114,7 @@ net-grad-test:	mc-grad-test.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 				mc-slice.o net-setup.o prior.o net-prior.o \
 				net-model.o net-func.o net-back.o net-grad.o \
 				net-data.o model.o net-util.o net-quantities.o \
-				mc-quantities.o quantities.o mc-heatbath.o
+				mc-quantities.o quantities.o mc-heatbath.o 
 		$(CC) $(LFLAGS) mc-grad-test.o net-mc.o ars.o misc.o log.o \
 		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
@@ -129,7 +130,7 @@ net-stepsizes:	mc-stepsizes.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 				net-setup.o prior.o net-prior.o net-model.o \
 				net-func.o net-back.o net-grad.o net-data.o \
 				model.o net-util.o net-quantities.o \
-				mc-quantities.o quantities.o
+				mc-quantities.o quantities.o 
 		$(CC) $(LFLAGS) mc-stepsizes.o net-mc.o ars.o misc.o log.o \
 		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
@@ -145,7 +146,7 @@ net-genp:	mc-genp.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 				net-setup.o prior.o net-prior.o net-model.o \
 				net-func.o net-back.o net-grad.o net-data.o \
 				model.o net-util.o net-quantities.o \
-				mc-quantities.o quantities.o
+				mc-quantities.o quantities.o 
 		$(CC) $(LFLAGS) mc-genp.o net-mc.o ars.o misc.o log.o \
 		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
@@ -154,13 +155,20 @@ net-genp:	mc-genp.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 		  net-plt.o net-quantities.o mc-quantities.o quantities.o \
 		  -lm -o net-genp
 
+net-approx:	net-approx.o	net-util.o net-setup.o \
+				misc.o log.o rand.o
+		$(CC) $(LFLAGS) net-approx.o net-util.o net-setup.o \
+		  misc.o log.o rand.o -lm -o net-approx
+
+net-approx.o:	net-approx.c	misc.h prior.h model.h net.h log.h data.h
+
 net-mc:		mc.o net-mc.o	ars.o misc.o log.o rand.o numin.o data-trans.o \
 				net-plt.o mc-iter.o mc-traj.o mc-util.o \
 				mc-metropolis.o mc-hybrid.o mc-slice.o \
 				net-setup.o prior.o net-prior.o net-model.o \
 				net-func.o net-back.o net-grad.o net-data.o \
 				model.o net-util.o net-quantities.o \
-				mc-quantities.o quantities.o mc-heatbath.o
+				mc-quantities.o quantities.o mc-heatbath.o 
 		$(CC) $(LFLAGS) mc.o net-mc.o ars.o misc.o log.o rand.o numin.o\
 		  data-trans.o mc-iter.o mc-traj.o mc-util.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
@@ -169,17 +177,17 @@ net-mc:		mc.o net-mc.o	ars.o misc.o log.o rand.o numin.o data-trans.o \
 		  net-back.o net-grad.o net-data.o model.o net-util.o \
 		  -lm -o net-mc
 
-net-mc.o:	net-mc.c	misc.h rand.h ars.h log.h mc.h data.h prior.h \
+net-mc.o:	net-mc.c	misc.h rand.h log.h mc.h data.h prior.h \
 				model.h net.h net-data.h
 
 net-gd:		net-gd.o	net-setup.o net-func.o net-model.o net-data.o \
 				net-back.o net-grad.o net-prior.o net-util.o \
 				model.o misc.o log.o rand.o numin.o \
-				data-trans.o prior.o 
+				data-trans.o prior.o ars.o
 		$(CC) $(LFLAGS) net-gd.o net-setup.o net-func.o net-model.o \
 		  net-back.o net-grad.o net-data.o net-prior.o net-util.o \
 		  model.o misc.o log.o rand.o numin.o data-trans.o prior.o \
-		  -lm -o net-gd
+		  ars.o -lm -o net-gd
 
 net-gd.o:	net-gd.c	misc.h rand.h log.h mc.h data.h prior.h model.h\
 				net.h net-data.h
@@ -188,23 +196,25 @@ net-plt:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 				net-func.o net-data.o model.o net-quantities.o \
 				net-back.o net-grad.o net-util.o net-model.o \
 				mc-quantities.o mc-util.o plt.o quantities.o \
-				misc.o log.o rand.o numin.o data-trans.o
+				misc.o log.o rand.o numin.o data-trans.o 
 		$(CC) $(LFLAGS) net-plt.o net-mc.o ars.o net-setup.o prior.o \
 		  net-model.o net-func.o net-data.o model.o net-quantities.o \
 		  net-back.o net-grad.o net-util.o net-prior.o \
 		  mc-quantities.o mc-util.o plt.o quantities.o \
-		  misc.o log.o rand.o numin.o data-trans.o -lm -o net-plt
+		  misc.o log.o rand.o numin.o data-trans.o \
+		  -lm -o net-plt
 
 net-tbl:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 				net-func.o net-data.o model.o net-quantities.o \
 				net-back.o net-grad.o net-util.o net-model.o \
 				mc-quantities.o mc-util.o tbl.o quantities.o \
-				misc.o log.o rand.o numin.o data-trans.o
+				misc.o log.o rand.o numin.o data-trans.o 
 		$(CC) $(LFLAGS) net-plt.o net-mc.o ars.o net-setup.o prior.o \
 		  net-model.o net-func.o net-data.o model.o net-quantities.o \
 		  net-back.o net-grad.o net-util.o net-prior.o \
 		  mc-quantities.o mc-util.o tbl.o quantities.o \
-		  misc.o log.o rand.o numin.o data-trans.o -lm -o net-tbl
+		  misc.o log.o rand.o numin.o data-trans.o \
+		  -lm -o net-tbl
 
 net-hist:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 				net-func.o net-data.o model.o net-quantities.o \
@@ -215,6 +225,7 @@ net-hist:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 		  net-prior.o net-model.o net-func.o net-data.o model.o \
 		  net-quantities.o net-back.o net-grad.o net-util.o \
 		  mc-quantities.o mc-util.o hist.o quantities.o \
-		  misc.o log.o rand.o numin.o data-trans.o -lm -o net-hist
+		  misc.o log.o rand.o numin.o data-trans.o \
+		  -lm -o net-hist
 
 net-plt.o:	net-plt.c	misc.h log.h quantities.h mc.h

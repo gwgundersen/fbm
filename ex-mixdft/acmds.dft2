@@ -1,0 +1,8 @@
+dft-spec   alog.dft2 0 8 / 0.1:4:1 - 1 / 0.1:4:1 - 1
+model-spec alog.dft2 binary
+data-spec  alog.dft2 0 8 2 / adata .
+dft-gen    alog.dft2 fix 1.4
+mc-spec    alog.dft2 create-latent repeat 50 gibbs-locations sample-latent \
+                                             slice-positions met-terminals \
+                                             gibbs-sigmas 
+dft-mc     alog.dft2 100

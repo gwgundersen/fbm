@@ -1,0 +1,5 @@
+dft-spec   blog.dft 0 10 / 2 - 1
+model-spec blog.dft binary
+data-spec  blog.dft 0 10 2 / bdata@1:500 . bdata@501:1000 .
+mc-spec    blog.dft repeat 10 gibbs-latent slice-positions met-terminals
+dft-mc     blog.dft 100

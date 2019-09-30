@@ -1,15 +1,16 @@
 /* GP-PRED.C - Make predictions for test cases using Gaussian processes. */
 
-/* Copyright (c) 1996, 1998 by Radford M. Neal 
+/* Copyright (c) 1995-2003 by Radford M. Neal 
  *
- * Permission is granted for anyone to copy, use, or modify this program 
- * for purposes of research or education, provided this copyright notice 
- * is retained, and note is made of any changes that have been made. 
- *
- * This program is distributed without any warranty, express or implied.
- * As this program was written for research purposes only, it has not been
- * tested to the degree that would be advisable in any important application.
- * All use of this program is entirely at the user's own risk.
+ * Permission is granted for anyone to copy, use, modify, or distribute this
+ * program and accompanying programs and documents for any purpose, provided 
+ * this copyright notice is retained and prominently displayed, along with
+ * a note saying that the original programs are available from Radford Neal's
+ * web page, and note is made of any changes made to the programs.  The
+ * programs and documents are distributed without any warranty, express or
+ * implied.  As the programs were written for research purposes only, they have
+ * not been tested to the degree that would be advisable in any important
+ * application.  All use of these programs is entirely at the user's own risk.
  *
  * Features allowing selection of a given number of iterations and 
  * specification of ranges by cpu-time are adapted from code written
@@ -82,6 +83,11 @@ void pred_app_record_sizes (void)
 
 void pred_app_init (void)
 {
+  if (op_p && m==0)
+  { fprintf(stderr,"Illegal combination of options with data model\n");
+    exit(1);
+  } 
+ 
   if (op_N && keep[0])
   { fprintf(stderr,
 "Option '0' not allowed: Non-linear components are numbered starting with '1'\n"
@@ -171,8 +177,8 @@ int pred_app_use_index (void)
     /* See if we want the variance for this output. */
 
     want_variance = op_p || op_d || op_q 
-                         || op_r && data_spec->target_trans[j].take_log
-                         || m!=0 && m->type!='R';
+                     || op_r && data_spec->trans[data_spec->N_inputs+j].take_log
+                     || m!=0 && m->type!='R';
 
     /* Compute covariance matrix for training cases, and its Cholesky
        decomposition and maybe from that its inverse. Don't redo computations 
@@ -308,7 +314,7 @@ int pred_app_use_index (void)
 
         if (op_r) 
         { 
-          tr = &data_spec->target_trans[j];
+          tr = &data_spec->trans[data_spec->N_inputs+j];
 
           meanp[i*gp->N_outputs+j] = 
             data_inv_trans(meanp[i*gp->N_outputs+j], *tr);
@@ -342,7 +348,7 @@ int pred_app_use_index (void)
                  / (2*varp[i*gp->N_outputs+j]);
 
           if (op_r)
-          { tr = &data_spec->target_trans[j];
+          { tr = &data_spec->trans[data_spec->N_inputs+j];
             test_log_prob[i] += log(tr->scale);
             if (tr->take_log)
             { test_log_prob[i] -= log (data_inv_trans 
@@ -360,7 +366,7 @@ int pred_app_use_index (void)
 
             if (op_r)
             { guessp = data_inv_trans (guessp, 
-                                       data_spec->target_trans[j]);
+                                       data_spec->trans[data_spec->N_inputs+j]);
             }
 
             median_sample[i][j][ms_count+k] = guessp;

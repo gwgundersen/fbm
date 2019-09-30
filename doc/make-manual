@@ -18,8 +18,8 @@ cat Ex-bayes-r.doc Ex-bayes-t.doc Ex-bayes-p.doc Ex-bayes-e.doc
 catff Ex-netgp.doc
 cat Ex-netgp-r.doc Ex-netgp-b.doc Ex-netgp-c.doc Ex-netgp-o.doc
 
-catff Ex-mix.doc
-cat Ex-mix-b.doc Ex-mix-r.doc
+catff Ex-mixdft.doc
+cat Ex-mixdft-b.doc Ex-mixdft-r.doc Ex-dft-a.doc
 
 catff Ex-surv.doc
 

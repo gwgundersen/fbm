@@ -1,0 +1,128 @@
+<html>
+<body>
+<pre>
+
+
+NOTES ON THE VERSION OF 2003-06-29
+
+WARNING: Because of changes in this version of the software, it cannot
+read log files produced by previous versions.
+
+
+A major new facility was added in this version:
+
+   Models for density estimation and hierarchical clustering based on
+   Dirichlet diffusion trees are now implemented.  See <A HREF="dft.html">dft.doc</A>.
+
+
+Another major change:
+ 
+   The copyright notice no longer restricts use of the software to purposes 
+   of research and education.  Use for any purpose is now allowed.
+
+
+Other changes in this version;
+
+1) A new 'mix-pred' command has been added, for producing predictive 
+   probabilities for test cases using mixture models.
+
+2) A list of transformation specifications for data-spec may now end
+   with "...", indicating that the remaining transformations are the
+   same as the preceding one.  See <A HREF="data-spec.html">data-spec.doc</A> for details.
+
+3) The log-last program can now take a list of log files, and it outputs
+   the index of the last record for each.  The format of this message 
+   has changed slightly as well.
+
+4) A new "-n" option is now available for data-spec, which prevents
+   it from trying to read the data file to check it for errors.  See
+   <A HREF="data-spec.html">data-spec.doc</A> for details.
+
+5) The record written by data-spec is now of variable size, allowing the
+   limits on the numbers of inputs and targets to be set to large values
+   without wasting space.  Consequently, these limits have been increased
+   to 10000. 
+
+6) A multiply-stepsizes operation has been added, to allow more detailed
+   control of stepsizes.  See <A HREF="mc-spec.html">mc-spec.doc</A> for details.
+
+7) A mix-momentum operation has been added.  See <A HREF="mc-spec.html">mc-spec.doc</A> for details.
+
+8) An -s option for faster shrinkage has been added to slice-1.  See 
+   <A HREF="mc-spec.html">mc-spec.doc</A> for details.
+
+9) A new gaussian-gibbs Markov chain update has been added, mainly for
+   comparison purposes, not for real use.  See <A HREF="mc-spec.html">mc-spec.doc</A> for details.
+
+10) It is no longer necessary to provide target values for gp-cov (which
+    has never needed them).
+
+11) The xxx-wrap and xxx-circ shell files now use /bin/bash rather than
+    /bin/sh as the shell.  If you don't have bash, you can try changing
+    this back.  It might or might not work.
+
+12) A new net-approx program can be used to specify that the log likelihood
+    for a network model should be replaced by a quadratic approximation.
+    See <A HREF="net-approx.html">net-approx.doc</A> for details.  An example of how this can be used
+    in conjunction with coupling to improve performance for a logistic 
+    regression model may be added in future.
+
+13) <A HREF="Ex-netgp.html">Ex-netgp.doc</A> now includes an example using the "n" option of net-pred
+    (or gp-pred) to produce predictive probabilities for class models.
+
+14) The limit on optional memory usage for Gaussian process models in 
+    gp/gp-mc.c was doubled to 20 MBytes.  
+
+15) The "<A HREF="mix-extensions.html">mix-extensions.doc</A>" file has been deleted.  One of the possible
+    extensions described has been implemented (mix-pred), the others 
+    will probably never be.
+
+16) Various other changes were made to the documentation and the examples.
+
+
+Bug fixes.
+
+1) Fixed a bug that caused the n and m options in net-pred to not work 
+   correctly with multi-way "class" models.  This bug was introduced in
+   the version of 2001-08-31; earlier versions were fine.  The bug was
+   in the net_model_guess procedure in net-model.c (just in case you
+   want to copy the fix over to the version of 2001-08-31).
+
+2) Fixed a bug that caused the n option to gp-pred to not work correctly
+   whenever more than one iteration was used for prediction.
+
+3) Fixed a bug in mix-gen that caused it to set hyperparameters that were
+   supposed to be constant, when the "fix" option was used.
+
+4) Fixed a bug in argument checking in gp-cov that meant that non-numeric 
+   indexes were accepted, and interpreted as zero.
+
+5) Fixed a bug that would have caused problems if automatic stepsizes 
+   for Markov chain operations were mixed with stepsizes set manually
+   (by using a "-" before the stepsize).
+
+
+Known bugs and other deficiencies.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The latent value update operations for Gaussian processes may recompute 
+   the inverse covariance matrix even when an up-to-date version was 
+   computed for the previous Monte Carlo operation.
+
+4) Covariance matrices are stored in full, even though they are symmetric,
+   which sometimes costs a factor of two in memory usage.
+
+5) Giving net-pred several log files that have different network architectures
+   doesn't work, but an error message is not always produced (the results may
+   just be nonsense).
+</pre>
+</body>
+</html>
