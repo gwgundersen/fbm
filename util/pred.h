@@ -20,9 +20,9 @@ extern char *pred_app_name;	/* Name of application (eg, "net" or "gp") */
 
 /* SOME CONSTANTS. */
 
-#define Median_sample 11	/* Size of median sample per iteration, should
-                                   be at least 11, else 10% and 90% quantiles 
-                                   won't work with only one iteration */
+#define Median_sample 101	/* Size of median sample per iteration, should
+                                   not be too small, or quantiles won't work
+				   with few iterations. */
 
 #define Max_median_points 200	/* Max iterations allowed finding median/quant*/
 
@@ -43,7 +43,8 @@ extern double *test_targets;	/* True targets for test cases */
 extern int op_i, op_t, op_r, 	/* Options specified in the xxx-pred command; */
            op_p, op_m, op_n, 	/*   op_N is the number of digit options      */
            op_d, op_l, op_b, 
-           op_a, op_q, op_N;
+           op_a, op_q, op_Q,
+           op_D, op_N;
 
 extern int keep[10];		/* Which components to keep, when op_N != 0 */
 
@@ -68,8 +69,11 @@ extern int alt_mean;		/* Use alternate mean computation in gp-pred? */
 
 /* SHARED VARIABLES SET BY THE PRED_APP_USE_INDEX PROCEDURE. */
 
-extern double *test_targ_pred;	/* Predictions for test cases at this iteration;
-				   array with M_targets * N_test entries */
+extern double *test_targ_pred;	/* Mean predictions for test cases at this 
+				   iteration; array of size M_targets*N_test */
+
+extern double *test_targ_med;	/* Median predictions for test cases at this 
+				   iteration; array of size M_targets*N_test */
 
 extern double *test_log_prob;	/* Log probabilities of test cases based on this
 				   iteration - array with N_test entries */

@@ -1,6 +1,6 @@
 /* NET-MODEL.C - Module dealing with the interpretation of network outputs. */
 
-/* Copyright (c) 1995, 1996, 1999 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1999, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,6 +21,7 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
+#include "data.h"
 #include "net.h"
 #include "rand.h"
 
@@ -47,7 +48,7 @@
    probabilities from these calls should then be added together (though the 
    derivatives will generally be required in separate form).
 
-   If the 'op' parameter is 2, the probability may be computed ignoring factors 
+   If the 'op' parameter is 2, the probability may be computed ignoring factors
    that depend only on the overall and per-unit noise hyperparameters, and this
    freedom will be used to ensure that values greater than zero will not be
    returned, except for survival models; if 'op' is 1, factors that are 
@@ -318,12 +319,13 @@ void net_model_max_second
 /* MAKE GUESSES AT TARGET VALUES.  The guesses are based on the outputs
    of the network (which must already have been computed), except for
    piecewise-constant survival models (see below).  The noise sigma/prior
-   may also be relevant.  Guesses can be either "mean" values, or values 
-   randomly drawn from the target distribution, depending on the setting 
-   of the 'rnd' argument.
+   may also be relevant.  Guesses can be "mean" values, "median" values,
+   or values randomly drawn from the target distribution, depending on 
+   the setting of the 'type' argument.  Median guesses are not allowed
+   for binary and class targets.
 
-   For binary targets, the "mean" guess is the probability of the target 
-   being one.  The random guess is a 0 or 1, with 1 having the specified
+   For binary targets, the "mean" gueses is the probability of the target 
+   being one.  The random guess is a 0 or 1, with 1 having the specified 
    probability.
 
    For class targets, the "mean" guess is a vector of probabilities for the 
@@ -332,15 +334,16 @@ void net_model_max_second
    zero on up), chosen according to this distribution.  (In this case, only
    a single target is produced.)
  
-   For real-valued data, the "mean" guess is just the network output.  The
-   random guess is chosen from a Gaussian distribution with this mean and
-   with a standard deviation determined from the noise hyperparameters.
-   (When each case has a different noise level, the noise is effectively 
-   from a t distribution.) 
+   For real-valued data, the "mean" and "median" guesses are both just the 
+   network output.  The random guess is chosen from a Gaussian distribution 
+   with this mean and with a standard deviation determined from the noise 
+   hyperparameters.  (When each case has a different noise level, the noise 
+   is effectively from a t distribution.) 
 
    For a survival model, the "mean" guess is the mean of the distribution
-   of survival times, the random guess is a value drawn from this distribution.
-   For piecewise-constant hazards, the network output at the start of this
+   of survival times, the "median" is the median of this distribution, and
+   the random guess is a value drawn from this distribution.  For 
+   piecewise-constant hazards, the network output at the start of this
    procedure is ignored.  The output is instead evaluated several times
    by this procedure, with different settings for the first input (time).
 
@@ -351,11 +354,12 @@ void net_model_guess
 ( net_values *v,	/* Values for units in network */
   double *t,		/* Place to store guesses at targets */
   net_arch *a,		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
   model_specification *m, /* Data model */
   model_survival *sv,	/* Type of hazard function for survival model, or null*/
   net_params *params,	/* Network parameters (used only for pw-const-hazard) */
   net_sigmas *s,	/* Hyperparameters, including noise sigmas */
-  int rnd		/* Make random guess, rather than use mean? */
+  int type		/* 0=mean, 1=random, 2=median */
 )
 {
   double z, pr, r, noise, alpha;
@@ -365,9 +369,11 @@ void net_model_guess
   {
     case 'B':  /* Binary data values */
     { 
+      if (type==2) abort();
+
       for (i = 0; i<a->N_outputs; i++)
       { pr = 1 / (1+exp(-v->o[i]));
-        t[i] = rnd ? rand_uniform()<pr : pr;
+        t[i] = type==1 ? rand_uniform()<pr : pr;
       }
 
       break;
@@ -375,20 +381,22 @@ void net_model_guess
 
     case 'C':  /* Single class with multiple possible values */
     {
+      if (type==2) abort();
+
       z = v->o[0];
 
       for (i = 1; i<a->N_outputs; i++)
       { z = addlogs(z,v->o[i]);
       }
 
-      if (rnd)
+      if (type=1)
       { r = rand_uniform();
         *t = 0; /* just in case */
       }
 
       for (i = 0; i<a->N_outputs; i++)
       { pr = exp (v->o[i] - z);
-        if (rnd)
+        if (type==1)
         { r -= pr;
           if (r<0) 
           { *t = i;
@@ -407,7 +415,7 @@ void net_model_guess
     { 
       for (i = 0; i<a->N_outputs; i++)
       { t[i] = v->o[i];
-        if (rnd && m->type!=0)
+        if (type==1 && m->type!=0)
         { noise = s->noise[i];
           alpha = m->noise.alpha[2];
           if (alpha!=0)
@@ -422,19 +430,23 @@ void net_model_guess
   
     case 'V': 
     {
+      double U;
+
+      U = type==1 ? rand_uniopen() : 0.5;
+
       switch (sv->hazard_type)
       {
         case 'C':  /* Constant hazard */
         {
           double h;
           h = exp(v->o[0]);
-          t[0] = rnd ? rand_exp()/h : 1/h;
+          t[0] = type==0 ? 1/h : -log(U)/h;
           break;
         }
 
         case 'P':  /* Piecewise constant hazard */ 
         {
-          double t0, t1, h, pr;
+          double t0, t1, h, pr, T;
           int w;
 
           t0 = 0;
@@ -444,18 +456,13 @@ void net_model_guess
           t[0] = 0;
           pr = 1;
           w = 0;
-
+ 
           for (;;)
           {
-            net_func (v, 0, a, params);
+            net_func (v, 0, a, flgs, params);
             h = exp(v->o[0]);
             
-            if (rnd)
-            {
-              t[0] = t0 + rand_exp()/h;
-              if (t1==-1 || t[0]<=t1) break;
-            }
-            else
+            if (type==0)
             {
               t[0] += pr * (t0 + 1/h);
               if (t1==-1) 
@@ -463,6 +470,15 @@ void net_model_guess
               }
               pr *= exp(-h*(t1-t0));
               t[0] -= pr * (t1 + 1/h);
+            }
+            else
+            {
+              t[0] = t0 - log(U)/h;
+              if (t1==-1 || t[0]<=t1) 
+              { break;       
+              }
+              T = exp(-h*(t1-t0));
+              U /= T;
             }
 
             t0 = t1;

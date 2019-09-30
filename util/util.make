@@ -35,6 +35,8 @@ formula.h:
 	ln -s ../util/formula.h .
 pred.h:
 	ln -s ../util/pred.h .
+extfunc.h:
+	ln -s ../util/extfunc.h .
 
 misc.c:
 	ln -s ../util/misc.c .
@@ -83,7 +85,7 @@ numin.o:	numin.c		numin.h
 data-trans.o:	data-trans.c	data.h
 prior.o:	prior.c		rand.h prior.h 
 matrix.o:	matrix.c	matrix.h
-formula.o:	formula.c	formula.h rand.h
+formula.o:	formula.c	formula.h extfunc.h rand.h
 pred.o:		pred.c		misc.h rand.h log.h prior.h model.h data.h \
 				mc.h pred.h
 digamma.o:	digamma.c

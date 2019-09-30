@@ -1,6 +1,6 @@
 /* NET-SPEC.C - Program to specify a new network (and create log file). */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,6 +21,7 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
+#include "data.h"
 #include "net.h"
 
 
@@ -36,13 +37,15 @@ main
 {
   static net_arch    arch,   *a = &arch;   /* Static so irrelevant fields are */
   static net_priors  priors, *p = &priors; /*   set to zero (just in case)    */
+  static net_flags   flags,  *flgs = &flags;
+  int any_flags;
 
   log_file logf;
   log_gobbled logg;
 
-  char ps[100];
+  char ps[1000];
   char **ap;
-  int l;
+  int i, j, l;
 
   /* Look for log file name. */
 
@@ -74,17 +77,31 @@ main
       exit(0);
     }
 
+    flgs = logg.data['F'];
+
     printf("Network Architecture:\n\n");
   
-    printf ("  Size of input layer:    %d\n", a->N_inputs);  
-    if (a->N_layers>0)
-    { printf ("  Sizes of hidden layers:");
-      for (l = 0; l<a->N_layers; l++) 
-      { printf(" %d",a->N_hidden[l]);
+    printf ("  Input layer:     size %d\n", a->N_inputs);  
+
+    for (l = 0; l<a->N_layers; l++) 
+    { printf("  Hidden layer %d:  size %d",l,a->N_hidden[l]);
+      if (flgs==0 || flgs->layer_type[l]==Tanh_type) printf("  tanh");
+      else if (flgs->layer_type[l]==Identity_type)   printf("  identity");
+      else if (flgs->layer_type[l]==Sin_type)        printf("  sin");
+      else                                           printf("  UNKNOWN TYPE!");
+      if (flgs!=0 && l<7 
+       && list_flags (flgs->omit, a->N_inputs, 1<<(l+1), ps) > 0)
+      { printf("  omit%s",ps);
       }
       printf("\n");
     }
-    printf ("  Size of output layer:   %d\n", a->N_outputs);
+
+    printf ("  Output layer:    size %d", a->N_outputs);
+    if (flgs!=0 && l<7 
+     && list_flags (flgs->omit, a->N_inputs, 1, ps) > 0)
+    { printf("  omit%s",ps);
+    }
+    printf("\n");
   
     printf("\n");
     
@@ -164,22 +181,70 @@ main
 
   /* Otherwise, figure out architecture and priors from program arguments. */
 
+  any_flags = 0;
+
   a->N_layers = 0;
   
   ap = argv+2;
 
   if (*ap==0 || (a->N_inputs = atoi(*ap++))<=0) usage();
 
-  while (*ap!=0 && *(ap+1)!=0 && strcmp(*(ap+1),"/")!=0)
-  { if (a->N_layers==Max_layers)
-    { fprintf(stderr,"Too many layers specified (maximum is %d)\n",Max_layers);
+  while (*ap!=0 && strcmp(*ap,"/")!=0)
+  { 
+    double size;
+    int omit, type;
+    int i;
+
+    if ((size = atoi(*ap++))<=0) usage();
+
+    omit = 0;
+    type = -1;
+
+    while ((*ap)[0]>='a' && (*ap)[0]<='z')
+    { if ((*ap)[0]=='o' && (*ap)[1]=='m' && (*ap)[2]=='i' && (*ap)[3]=='t' 
+       && (*ap)[4]==':')
+      { if (omit) usage();
+        omit = 1;
+        parse_flags (*ap+4, flgs->omit, a->N_inputs, 1);
+      }
+      else if (strcmp(*ap,"tanh")==0)
+      { if (type>=0) usage();
+        type = Tanh_type;
+      }
+      else if (strcmp(*ap,"identity")==0)
+      { if (type>=0) usage();
+        type = Identity_type;
+      }
+      else if (strcmp(*ap,"sin")==0)
+      { if (type>=0) usage();
+        type = Sin_type;
+      }
+      else
+      { usage();
+      }
+      any_flags = 1;
+      ap += 1;
+    }
+
+    if (a->N_layers == (Max_layers>7 ? 7 : Max_layers))
+    { fprintf(stderr,"Too many layers specified (maximum is %d)\n",
+                      Max_layers>7 ? 7 : Max_layers);
       exit(1);
     }
-    if ((a->N_hidden[a->N_layers] = atoi(*ap++))<=0) usage();
-    a->N_layers += 1;
-  }
 
-  if (*ap==0 || (a->N_outputs = atoi(*ap++))<=0) usage();
+    if (*ap!=0 && strcmp(*ap,"/")!=0)
+    { a->N_hidden[a->N_layers] = size;
+      flgs->layer_type[a->N_layers] = type==-1 ? Tanh_type : type;
+      for (i = 0; i<a->N_inputs; i++) 
+      { flgs->omit[i] = (flgs->omit[i] | ((flgs->omit[i]&1)<<(a->N_layers+1))) & ~1;
+      }
+      a->N_layers += 1;
+    }
+    else
+    { a->N_outputs = size;
+      if (type!=-1) usage();
+    }
+  }
 
   if (*ap==0 || strcmp(*ap,"/")!=0) usage();
 
@@ -270,6 +335,13 @@ main
   logf.header.size = sizeof *a;
   log_file_append(&logf,a);
 
+  if (any_flags)
+  { logf.header.type = 'F';
+    logf.header.index = -1;
+    logf.header.size = sizeof *flgs;
+    log_file_append(&logf,flgs);
+  }
+
   logf.header.type = 'P';
   logf.header.index = -1;
   logf.header.size = sizeof *p;
@@ -286,7 +358,7 @@ main
 static void usage(void)
 {
   fprintf(stderr,
-   "Usage: net-spec log-file N-inputs { N-hidden } N-outputs \n");
+   "Usage: net-spec log-file N-inputs { N-hidden { flag } } N-outputs { flag }\n");
 
   fprintf(stderr,
    "                / ti [ ih bh th { hh ih bh th } ] { ho } io bo  [ / { ah } ao ]\n");

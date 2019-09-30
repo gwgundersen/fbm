@@ -1,6 +1,6 @@
 /* NET-PRIOR.C - Routines dealing with priors for networks. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,6 +21,7 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
+#include "data.h"
 #include "net.h"
 #include "rand.h"
 
@@ -66,6 +67,7 @@ void net_prior_generate
 ( net_params *w,	/* Arrays to store weights, biases, and offsets in */
   net_sigmas *s,	/* Arrays to store hyperparameters in */
   net_arch *a,		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
   model_specification *m, /* Specification for data model */
   net_priors *p,	/* Network priors */
   int centre,		/* Choose "centre" rather than random value? */
@@ -77,6 +79,12 @@ void net_prior_generate
 
   if (a->has_ti) 
   { pick_unit_params (w->ti, s->ti_cm, a->N_inputs, 0, p->ti, centre, value);
+  }
+
+  if (a->has_ao)
+  { for (i = 0; i<a->N_outputs; i++)
+    { s->ao[i] = centre ? 1.0 : prior_pick_sigma(1.0,p->ao);
+    }
   }
 
   for (l = 0; l<a->N_layers; l++)
@@ -94,8 +102,8 @@ void net_prior_generate
     }
 
     if (a->has_ih[l]) pick_weights (w->ih[l], s->ih_cm[l], s->ih[l], 
-                                    a->N_inputs, a->N_hidden[l], 
-                                    s->ah[l], p->ih[l], centre, value);
+         not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1)), a->N_hidden[l], 
+         s->ah[l], p->ih[l], centre, value);
 
     if (a->has_bh[l]) pick_unit_params (w->bh[l], s->bh_cm[l], a->N_hidden[l], 
                                         s->ah[l], p->bh[l], centre, value);
@@ -108,15 +116,9 @@ void net_prior_generate
                                     s->ao, p->ho[l], centre, out_value);
   }
 
-  if (a->has_ao)
-  { for (i = 0; i<a->N_outputs; i++)
-    { s->ao[i] = centre ? 1.0 : prior_pick_sigma(1.0,p->ao);
-    }
-  }
-
   if (a->has_io) pick_weights (w->io, s->io_cm, s->io,
-                               a->N_inputs, a->N_outputs, 
-                               s->ao, p->io, centre, out_value);
+       not_omitted(flgs?flgs->omit:0,a->N_inputs,1), a->N_outputs, 
+       s->ao, p->io, centre, out_value);
 
   if (a->has_bo) pick_unit_params (w->bo, s->bo_cm, a->N_outputs, 
                                    s->ao, p->bo, centre, value);
@@ -228,11 +230,12 @@ void net_prior_prob
   double *lp,		/* Place to store log probability, zero if not wanted */
   net_params *dp,	/* Place to store minus log prob. derivative, or zero */
   net_arch *a, 		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
   net_priors *p,	/* Network prior specifications */
   int op		/* Can we ignore some factors? */
 )
 {
-  int l, i;
+  int l, i, k;
 
   if (lp!=0)  
   { *lp = 0;
@@ -258,10 +261,14 @@ void net_prior_prob
     }
 
     if (a->has_ih[l])
-    { for (i = 0; i<a->N_inputs; i++)
-      { compute_prior (w->ih[l] + i*a->N_hidden[l], a->N_hidden[l], lp, 
-                       dp ? dp->ih[l] + i*a->N_hidden[l] : 0,
-                       s->ih[l][i], p->ih[l].alpha[2], s->ah[l], op);
+    { k = 0;
+      for (i = 0; i<a->N_inputs; i++)
+      { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
+        { compute_prior (w->ih[l] + k*a->N_hidden[l], a->N_hidden[l], lp, 
+                         dp ? dp->ih[l] + k*a->N_hidden[l] : 0,
+                         s->ih[l][k], p->ih[l].alpha[2], s->ah[l], op);
+          k += 1;
+        }
       }
     }
 
@@ -283,10 +290,14 @@ void net_prior_prob
   }
 
   if (a->has_io) 
-  { for (i = 0; i<a->N_inputs; i++)
-    { compute_prior (w->io + i*a->N_outputs, a->N_outputs, lp, 
-                     dp ? dp->io + i*a->N_outputs : 0,
-                     s->io[i], p->io.alpha[2], s->ao, op); 
+  { k = 0;
+    for (i = 0; i<a->N_inputs; i++)
+    { if (flgs==0 || (flgs->omit[i]&1)==0)
+      { compute_prior (w->io + k*a->N_outputs, a->N_outputs, lp, 
+                       dp ? dp->io + k*a->N_outputs : 0,
+                       s->io[k], p->io.alpha[2], s->ao, op); 
+        k += 1;
+      }
     }
   }
 
@@ -393,10 +404,11 @@ void net_prior_max_second
 ( net_params *d,	/* Place to store maximum second derivatives */
   net_sigmas *s,	/* Hyperparameters */
   net_arch *a,		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
   net_priors *p		/* Network priors */
 )
 {
-  int i, l;
+  int i, k, l;
 
   if (a->has_ti) 
   { max_second (d->ti, a->N_inputs, *s->ti_cm, 0, p->ti.alpha[1]);
@@ -415,9 +427,13 @@ void net_prior_max_second
     }
 
     if (a->has_ih[l])
-    { for (i = 0; i<a->N_inputs; i++)
-      { max_second (d->ih[l] + i*a->N_hidden[l], a->N_hidden[l], 
-                    s->ih[l][i], s->ah[l], p->ih[l].alpha[2]);
+    { k = 0;
+      for (i = 0; i<a->N_inputs; i++)
+      { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
+        { max_second (d->ih[l] + k*a->N_hidden[l], a->N_hidden[l], 
+                      s->ih[l][k], s->ah[l], p->ih[l].alpha[2]);
+          k += 1;
+        }
       }
     }
 
@@ -437,9 +453,13 @@ void net_prior_max_second
   }
 
   if (a->has_io)
-  { for (i = 0; i<a->N_inputs; i++)
-    { max_second (d->io + i*a->N_outputs, a->N_outputs,
-                  s->io[i], s->ao, p->io.alpha[2]);
+  { k = 0; 
+    for (i = 0; i<a->N_inputs; i++)
+    { if (flgs==0 || (flgs->omit[i]&1)==0)
+      { max_second (d->io + k*a->N_outputs, a->N_outputs,
+                    s->io[k], s->ao, p->io.alpha[2]);
+        k += 1;
+      }
     }
   }
 

@@ -1,6 +1,6 @@
 /* NET-PRINT.C - Procedures to print network parameters and hyperprameters. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,6 +21,7 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
+#include "data.h"
 #include "net.h"
 
 
@@ -39,10 +40,12 @@ void net_print_params
 ( net_params *w,	/* Network parameters */
   net_sigmas *s,	/* Network sigmas, null if none to display */
   net_arch *a, 		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
   model_specification *m /* Data model, may be null */
 )
 {
-  int i, l, g;
+  int i, j, l, g;
+  char ps[1000];
 
   g = 1; 
 
@@ -66,14 +69,23 @@ void net_print_params
     }
   
     if (a->has_ih[l])
-    { printf("\nInput to Hidden Layer %d Weights [%d]\n\n",l,g++);
-      if (s!=0) printf("%5.2f",*s->ih_cm[l]);
-      for (i = 0; i<a->N_inputs; i++)
-      { if (i>0) printf("\n");
-        if (s!=0 && i>0) printf("     ");
-        if (s!=0) printf(" %4.2f:",s->ih[l][i]);
-        print_param_array(w->ih[l]+a->N_hidden[l]*i, a->N_hidden[l], s!=0);
+    { printf("\nInput to Hidden Layer %d Weights [%d]",l,g++);
+      if (flgs && list_flags(flgs->omit,a->N_inputs,1<<(l+1),ps)!=0)
+      { printf(" (omit%s)",ps);
       }
+      printf("\n\n");
+      if (s!=0) printf("%5.2f",*s->ih_cm[l]);
+      j = 0;
+      for (i = 0; i<a->N_inputs; i++)
+      { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
+        { if (j>0) printf("\n");
+          if (s!=0 && j>0) printf("     ");
+          if (s!=0) printf(" %4.2f:",s->ih[l][j]);
+          print_param_array(w->ih[l]+a->N_hidden[l]*j, a->N_hidden[l], s!=0);
+          j += 1;
+        }
+      }
+      if (j==0) printf("\n");
     }
 
     if (a->has_bh[l])
@@ -112,14 +124,23 @@ void net_print_params
   }
 
   if (a->has_io)
-  { printf("\nInput to Output Weights [%d]\n\n",g++);
-    if (s!=0) printf("%5.2f",*s->io_cm);
-    for (i = 0; i<a->N_inputs; i++)
-    { if (i>0) printf("\n");
-      if (s!=0 && i>0) printf("     ");
-      if (s!=0) printf(" %4.2f:",s->io[i]);
-      print_param_array (w->io+a->N_outputs*i, a->N_outputs, s!=0);
+  { printf("\nInput to Output Weights [%d]",g++);
+    if (flgs && list_flags(flgs->omit,a->N_inputs,1,ps)!=0)
+    { printf(" (omit%s)",ps);
     }
+    printf("\n\n");
+    if (s!=0) printf("%5.2f",*s->io_cm);
+    j = 0;
+    for (i = 0; i<a->N_inputs; i++)
+    { if (flgs==0 || (flgs->omit[i]&1)==0)
+      { if (j>0) printf("\n");
+        if (s!=0 && j>0) printf("     ");
+        if (s!=0) printf(" %4.2f:",s->io[j]);
+        print_param_array (w->io+a->N_outputs*j, a->N_outputs, s!=0);
+        j += 1;
+      }
+    }
+    if (j==0) printf("\n");
   }
 
   if (a->has_bo)
@@ -148,9 +169,10 @@ void net_print_params
 /* PRINT HYPERPARAMETERS. */
 
 void net_print_sigmas
-( net_sigmas *s,
-  net_arch *a,
-  model_specification *m
+( net_sigmas *s,	/* Network sigmas, null if none to display */
+  net_arch *a, 		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
+  model_specification *m /* Data model, may be null */
 )
 {
   int l, g;
@@ -173,7 +195,8 @@ void net_print_sigmas
     if (a->has_ih[l])
     { printf("\nInput to Hidden Layer %d Weights [%d]\n\n",l,g++);
       printf("%7.2f - ",*s->ih_cm[l]);
-      print_sigma_array(s->ih[l],a->N_inputs);
+      print_sigma_array(s->ih[l],
+        not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1)));
     }
 
     if (a->has_bh[l])
@@ -204,7 +227,8 @@ void net_print_sigmas
   if (a->has_io)
   { printf("\nInput to Output Weights [%d]\n\n",g++);
     printf("%7.2f - ",*s->io_cm);
-    print_sigma_array(s->io,a->N_inputs);
+    print_sigma_array(s->io,
+        not_omitted(flgs?flgs->omit:0,a->N_inputs,1));
   }
 
   if (a->has_bo)

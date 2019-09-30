@@ -1,6 +1,6 @@
 /* NET-QUANTITIES.C - Module defining quantities for neural networks. */
 
-/* Copyright (c) 1995, 1996, 1997 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1997, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -22,14 +22,15 @@
 #include "quantities.h"
 #include "prior.h"
 #include "model.h"
-#include "net.h"
 #include "data.h"
+#include "net.h"
 #include "net-data.h"
 
 
 /* NETWORK VARIABLES. */
 
 static net_arch *arch;
+static net_flags *flgs;
 static model_specification *model;
 static net_priors *priors;
 static model_survival *surv;
@@ -79,6 +80,7 @@ void net_initialize
   /* Check that required specification records are present. */
 
   arch   = logg->data['A'];
+  flgs   = logg->data['F'];
   model  = logg->data['M'];
   priors = logg->data['P'];
   surv   = logg->data['V'];
@@ -87,8 +89,8 @@ void net_initialize
 
   /* Check that network is present, and set up pointers. */
 
-  sigmas.total_sigmas = net_setup_sigma_count(arch,model);
-  params.total_params = net_setup_param_count(arch);
+  sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
+  params.total_params = net_setup_param_count(arch,flgs);
 
   sigmas.sigma_block = logg->data['S'];
   params.param_block = logg->data['W'];
@@ -105,12 +107,12 @@ void net_initialize
     exit(1);
   }
 
-  net_setup_sigma_pointers (&sigmas, arch, model);
-  net_setup_param_pointers (&params, arch);
+  net_setup_sigma_pointers (&sigmas, arch, flgs, model);
+  net_setup_param_pointers (&params, arch, flgs);
 
   grad.total_params = params.total_params;
   grad.param_block = chk_alloc (grad.total_params, sizeof (net_param));
-  net_setup_param_pointers (&grad, arch);
+  net_setup_param_pointers (&grad, arch, flgs);
 
   net_setup_value_pointers (&deriv, 
     chk_alloc (net_setup_value_count(arch), sizeof (net_value)), arch);
@@ -191,7 +193,8 @@ void net_available
       { qd[v].available = mod==-1 ? 1 : -1;
       }
       else if (letter=='h')
-      { qd[v].available = net_setup_hyper_group(arch,mod,&o,&n,&s) ? 1 : -1;
+      { qd[v].available = 
+           net_setup_hyper_group(arch,flgs,mod,&o,&n,&s) ? 1 : -1;
         if (qd[v].available==1 && qd[v].low==-1 && s)
         { qd[v].available = -1;
         }
@@ -201,8 +204,8 @@ void net_available
         }
       }
       else if (letter=='w')
-      { qd[v].available = 
-          qd[v].low!=-1 && net_setup_param_group(arch,mod,&o,&n,&s) ? 1 : -1;
+      { qd[v].available = qd[v].low!=-1 && 
+           net_setup_param_group(arch,flgs,mod,&o,&n,&s) ? 1 : -1;
         if (qd[v].available==1)
         { if (qd[v].high==-1) qd[v].high = n-1;
           if (qd[v].high>n-1 || qd[v].low>n-1) qd[v].available = -1;
@@ -216,7 +219,8 @@ void net_available
       { qd[v].available = mod<arch->N_layers ? 1 : -1;
       }
       else if (letter=='W')
-      { qd[v].available = net_setup_param_group(arch,mod,&o,&n,&s) ? 1 : -1;
+      { qd[v].available = 
+           net_setup_param_group(arch,flgs,mod,&o,&n,&s) ? 1 : -1;
         if (qd[v].available==1 && qd[v].low!=-1)
         { if (qd[v].high==-1) qd[v].high = s-1;
           if (s==0 || qd[v].high>s-1 || qd[v].low>s-1) qd[v].available = -1;
@@ -354,7 +358,7 @@ void net_evaluate
       && (strchr("uoyglbacv",letter)!=0 || letter=='n' && model_type=='C'))
       { if (!have_train_data) abort();
         for (i = 0; i<N_train; i++)
-        { net_func (&train_values[i], 0, arch, &params);
+        { net_func (&train_values[i], 0, arch, flgs, &params);
         }
         ev_train = 1;
       }
@@ -363,7 +367,7 @@ void net_evaluate
       && (strchr("OYGLBACV",letter)!=0 || letter=='N' && model_type=='C'))
       { if (!have_test_data) abort();
         for (i = 0; i<N_test; i++)
-        { net_func (&test_values[i], 0, arch, &params);
+        { net_func (&test_values[i], 0, arch, flgs, &params);
         }
         ev_test = 1;
       }
@@ -390,7 +394,7 @@ void net_evaluate
 
         case 'y': case 'Y':
         { for (i = low; i<=high; i++)
-          { net_model_guess (&cases[i], target_guess, arch, model, surv,
+          { net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
                              &params, &sigmas, 0);
             qh->value[v][i-low] = target_guess[mod];
           }
@@ -400,7 +404,7 @@ void net_evaluate
 
         case 'g': case 'G':                                
         { for (i = low; i<=high; i++)
-          { net_model_guess (&cases[i], target_guess, arch, model, surv,
+          { net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
                              &params, &sigmas, 1);
             qh->value[v][i-low] = target_guess[mod];
           }
@@ -422,7 +426,8 @@ void net_evaluate
         }
 
         case 'P':
-        { net_prior_prob (&params, &sigmas, qh->value[v], 0, arch, priors, 0);
+        { net_prior_prob (&params, &sigmas, qh->value[v], 0, 
+                          arch, flgs, priors, 0);
           qh->updated[v] = 1;
           break;
         }
@@ -460,7 +465,7 @@ void net_evaluate
 
               for (;;)
               {
-                net_func (&cases[i], 0, arch, &params);
+                net_func (&cases[i], 0, arch, flgs, &params);
           
                 ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
 
@@ -516,7 +521,7 @@ void net_evaluate
 
           for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
           { 
-            net_model_guess (&cases[i], target_guess, arch, model, surv,
+            net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
                              &params, &sigmas, 0);
 
             if (low!=-1) 
@@ -554,7 +559,7 @@ void net_evaluate
 
           for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
           { 
-            net_model_guess (&cases[i], target_guess, arch, model, surv,
+            net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
                              &params, &sigmas, 0);
 
             if (low!=-1) 
@@ -592,7 +597,7 @@ void net_evaluate
 
           for (i = 0; i<N_cases; i++)
           { 
-            net_model_guess (&cases[i], target_guess, arch, model, surv,
+            net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
                              &params, &sigmas, 0);
 
             p = qd[v].modifier==-1 ? target_guess[0] 
@@ -623,7 +628,7 @@ void net_evaluate
             n = params.total_params;
           }
           else
-          { if (!net_setup_param_group (arch, mod, &o, &n, &s)) abort();
+          { if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s)) abort();
           }
           
           for (j = o; j<o+n; j++) 
@@ -637,9 +642,9 @@ void net_evaluate
                             0, &deriv, arch, model, surv, &sigmas, 2);
   
             net_back (&train_values[i], &deriv, arch->has_ti ? -1 : 0,
-                      arch, &params);
+                      arch, flgs, &params);
 
-            net_grad (&grad, &params, &train_values[i], &deriv, arch);
+            net_grad (&grad, &params, &train_values[i], &deriv, arch,flgs);
           }
 
           u = 0;
@@ -665,7 +670,7 @@ void net_evaluate
             n = params.total_params;
           }
           else
-          { if (!net_setup_param_group (arch, mod, &o, &n, &s)) abort();
+          { if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s)) abort();
           }
           
           u = 0;
@@ -681,9 +686,9 @@ void net_evaluate
                             0, &deriv, arch, model, surv, &sigmas, 2);
   
             net_back (&train_values[i], &deriv, arch->has_ti ? -1 : 0,
-                      arch, &params);
+                      arch, flgs, &params);
 
-            net_grad (&grad, &params, &train_values[i], &deriv, arch);
+            net_grad (&grad, &params, &train_values[i], &deriv, arch, flgs);
 
             for (j = o; j<o+n; j++) 
             { u += grad.param_block[j] * grad.param_block[j];
@@ -702,7 +707,7 @@ void net_evaluate
         { 
           int o, n, s;
 
-          if (!net_setup_hyper_group (arch, mod, &o, &n, &s)) abort();
+          if (!net_setup_hyper_group (arch, flgs, mod, &o, &n, &s)) abort();
 
           if (low==-1) 
           { *qh->value[v] = sigmas.sigma_block[o]; 
@@ -722,7 +727,7 @@ void net_evaluate
         { 
           int o, n, s;
 
-          if (!net_setup_param_group (arch, mod, &o, &n, &s)) abort();
+          if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s)) abort();
 
           for (i = low; i<=high; i++)
           { qh->value[v][i-low] = params.param_block[o+i];
@@ -738,7 +743,7 @@ void net_evaluate
           int o, n, s, j;
           double t, q;
 
-          if (!net_setup_param_group (arch, mod, &o, &n, &s)) abort();
+          if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s)) abort();
 
           if (low==-1)
           { q = 0;
@@ -790,7 +795,7 @@ void net_evaluate
   
             for (i = 0; i<N_cases; i++)
             { 
-              net_model_guess (&cases[i], target_guess, arch, model, surv,
+              net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
                                &params, &sigmas, 0);
   
               for (c = 0; c<arch->N_outputs; c++)

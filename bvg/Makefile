@@ -25,7 +25,7 @@ include ../util/util.make
 include ../mc/mc.make
 
 bvg-spec:	bvg-spec.o	misc.o log.o
-		$(CC) bvg-spec.o misc.o log.o -lm -o bvg-spec
+		$(CC) $(LFLAGS) bvg-spec.o misc.o log.o -lm -o bvg-spec
 
 bvg-spec.o:	bvg-spec.c	misc.h log.h mc.h bvg.h
 

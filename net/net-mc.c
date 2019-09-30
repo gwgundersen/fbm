@@ -1,6 +1,6 @@
 /* NET-MC.C - Interface between neural network and Markov chain modules. */
 
-/* Copyright (c) 1995, 1996, 1997, 1998 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1997, 1998, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -46,6 +46,7 @@
 static int initialize_done = 0;	/* Has this all been set up? */
 
 static net_arch *arch;		/* Network architecture */
+static net_flags *flgs;		/* Network flags, null if none */
 static model_specification *model; /* Data model */
 static net_priors *priors;	/* Network priors */
 static model_survival *surv;	/* Hazard type for survival model */
@@ -66,21 +67,34 @@ static net_params grad;		/* Pointers to gradient for network parameters*/
 
 /* PROCEDURES. */
 
-static void gibbs_noise (double);
+static void gibbs_noise (int, double);
 
-static void gibbs_unit (net_param *, net_sigma *, net_sigma *, 
+static void gibbs_unit (int, net_param *, net_sigma *, net_sigma *, 
                         int, prior_spec *);
 
-static void gibbs_conn (net_param *, net_sigma *, net_sigma *, net_sigma *,
+static void gibbs_conn (int, net_param *, net_sigma *, net_sigma *, net_sigma *,
                         int, int, prior_spec *);
 
 static void gibbs_adjustments (net_sigma *, double, int,
                                net_param *, net_sigma *, double,
                                net_param *, net_sigma *, double, int,
                                int, int *, net_param **, net_sigma **, 
-                                 prior_spec *, int *);
+                               prior_spec *, int *);
+
+static void rgrid_met_noise (double, mc_iter *, double);
+
+static void rgrid_met_unit (double, mc_iter *,
+                            net_param *, net_sigma *, net_sigma *, 
+                            int, prior_spec *);
+
+static void rgrid_met_conn (double, mc_iter *,
+                            net_param *, net_sigma *, net_sigma *, net_sigma *,
+                            int, int, prior_spec *);
 
 static double sum_squares (net_param *, net_sigma *, int);
+
+static double rgrid_sigma (double, mc_iter *, double, 
+                           double, double, double, double, int);
 
 static double cond_sigma (double, double, double, double, int);
 
@@ -113,6 +127,7 @@ void mc_app_initialize
     /* Check that required specification records are present. */
   
     arch   = logg->data['A'];
+    flgs   = logg->data['F'];
     model  = logg->data['M'];
     priors = logg->data['P'];
     surv   = logg->data['V'];
@@ -126,8 +141,8 @@ void mc_app_initialize
   
     /* Locate existing network, if one exists. */
   
-    sigmas.total_sigmas = net_setup_sigma_count(arch,model);
-    params.total_params = net_setup_param_count(arch);
+    sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
+    params.total_params = net_setup_param_count(arch,flgs);
   
     sigmas.sigma_block = logg->data['S'];
     params.param_block = logg->data['W'];
@@ -149,18 +164,18 @@ void mc_app_initialize
         exit(1);
       }
   
-      net_setup_sigma_pointers (&sigmas, arch, model);
-      net_setup_param_pointers (&params, arch);
+      net_setup_sigma_pointers (&sigmas, arch, flgs, model);
+      net_setup_param_pointers (&params, arch, flgs);
     }
     else
     {
       sigmas.sigma_block = chk_alloc (sigmas.total_sigmas, sizeof (net_sigma));
       params.param_block = chk_alloc (params.total_params, sizeof (net_param));
   
-      net_setup_sigma_pointers (&sigmas, arch, model);
-      net_setup_param_pointers (&params, arch);
+      net_setup_sigma_pointers (&sigmas, arch, flgs, model);
+      net_setup_param_pointers (&params, arch, flgs);
    
-      net_prior_generate (&params, &sigmas, arch, model, priors, 1, 0, 0);
+      net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 1, 0, 0);
     }
 
     /* Set up stepsize structure. */
@@ -168,7 +183,7 @@ void mc_app_initialize
     stepsizes.total_params = params.total_params;
     stepsizes.param_block = chk_alloc (params.total_params, sizeof (net_param));
   
-    net_setup_param_pointers (&stepsizes, arch);
+    net_setup_param_pointers (&stepsizes, arch, flgs);
 
     /* Set up second derivative structure. */
 
@@ -274,7 +289,8 @@ void mc_app_save
 
 /* APPLICATION-SPECIFIC SAMPLING PROCEDURE.  Does gibbs sampling for 
    hyperparameters ("sample-hyper"), or for noise levels ("sample-noise"),
-   or for both ("sample-sigmas"). */
+   or for both ("sample-sigmas"), or does things separately for "upper"
+   or "lower" level hyperparameters. */
 
 int mc_app_sample 
 ( mc_dynamic_state *ds,
@@ -285,10 +301,12 @@ int mc_app_sample
   mc_temp_sched *sch
 )
 {
-  int sample_hyper, sample_noise;
+  int sample_hyper, sample_noise, rgrid_hyper, rgrid_noise;
   int l;
 
-  sample_hyper = sample_noise = 0;
+  if (pm==0) pm = 0.1;
+
+  sample_hyper = sample_noise = rgrid_hyper = rgrid_noise = 0;
 
   if (strcmp(op,"sample-sigmas")==0)
   { sample_hyper = sample_noise = 1;
@@ -299,41 +317,120 @@ int mc_app_sample
   else if (strcmp(op,"sample-noise")==0)
   { sample_noise = 1;
   }
+  else if (strcmp(op,"sample-lower-sigmas")==0)
+  { sample_hyper = sample_noise = -1;
+  }
+  else if (strcmp(op,"sample-lower-hyper")==0)
+  { sample_hyper = -1;
+  }
+  else if (strcmp(op,"sample-lower-noise")==0)
+  { sample_noise = -1;
+  }
+  else if (strcmp(op,"rgrid-upper-sigmas")==0)
+  { rgrid_hyper = rgrid_noise = 1;
+  }
+  else if (strcmp(op,"rgrid-upper-hyper")==0)
+  { rgrid_hyper = 1;
+  }
+  else if (strcmp(op,"rgrid-upper-noise")==0)
+  { rgrid_noise = 1;
+  }
   else
   { return 0;
   }
 
-  if (sample_noise && model->type=='R')
-  { 
-    gibbs_noise (!ds->temp_state ? 1 : ds->temp_state->inv_temp);
+  if (rgrid_noise && model->type=='R')
+  { rgrid_met_noise (pm, it, !ds->temp_state ? 1 : ds->temp_state->inv_temp);
   }
 
-  if (sample_hyper)
+  if (rgrid_hyper)
   {
-    if (arch->has_ti) gibbs_unit (params.ti, sigmas.ti_cm, 0,
+    if (arch->has_ti) rgrid_met_unit (pm, it, 
+                                  params.ti, sigmas.ti_cm, 0,
                                   arch->N_inputs, &priors->ti);
   
     for (l = 0; l<arch->N_layers; l++)
     {
       if (l>0)
       { if (arch->has_hh[l-1]) 
-        { gibbs_conn (params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
+        { rgrid_met_conn (pm, it,
+                      params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
                       sigmas.ah[l], arch->N_hidden[l-1], arch->N_hidden[l], 
                       &priors->hh[l-1]);
         }
       }
     
       if (arch->has_ih[l]) 
-      { gibbs_conn (params.ih[l], sigmas.ih_cm[l], sigmas.ih[l], 
-                    sigmas.ah[l], arch->N_inputs, arch->N_hidden[l], 
-                    &priors->ih[l]); 
+      { rgrid_met_conn (pm, it,
+                    params.ih[l], sigmas.ih_cm[l], sigmas.ih[l], sigmas.ah[l], 
+                    not_omitted(flgs?flgs->omit:0,arch->N_inputs,1<<(l+1)), 
+                    arch->N_hidden[l], &priors->ih[l]); 
       }
 
-      if (arch->has_bh[l]) gibbs_unit (params.bh[l], sigmas.bh_cm[l], 
+      if (arch->has_bh[l]) rgrid_met_unit (pm, it,
+                                       params.bh[l], sigmas.bh_cm[l], 
                                        sigmas.ah[l], arch->N_hidden[l], 
                                        &priors->bh[l]);
       
-      if (arch->has_th[l]) gibbs_unit (params.th[l], sigmas.th_cm[l], 0,
+      if (arch->has_th[l]) rgrid_met_unit (pm, it,
+                                       params.th[l], sigmas.th_cm[l], 0,
+                                       arch->N_hidden[l], &priors->th[l]);
+  
+      if (arch->has_ho[l]) 
+      { rgrid_met_conn (pm, it,
+                    params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], sigmas.ao,
+                    arch->N_hidden[l], arch->N_outputs, &priors->ho[l]);
+      }
+          
+    }
+  
+    if (arch->has_io) 
+    { rgrid_met_conn (pm, it,
+                  params.io, sigmas.io_cm, sigmas.io, sigmas.ao,
+                  not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
+                  arch->N_outputs, &priors->io);
+    }
+  
+    if (arch->has_bo) rgrid_met_unit (pm, it,
+                                  params.bo, sigmas.bo_cm, sigmas.ao,
+                                  arch->N_outputs, &priors->bo);
+  }
+
+  if (sample_noise && model->type=='R')
+  { 
+    gibbs_noise (sample_noise, !ds->temp_state ? 1 : ds->temp_state->inv_temp);
+  }
+
+  if (sample_hyper)
+  {
+    if (arch->has_ti) gibbs_unit (sample_hyper, params.ti, sigmas.ti_cm, 0,
+                                  arch->N_inputs, &priors->ti);
+  
+    for (l = 0; l<arch->N_layers; l++)
+    {
+      if (l>0)
+      { if (arch->has_hh[l-1]) 
+        { gibbs_conn (sample_hyper, 
+                      params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
+                      sigmas.ah[l], arch->N_hidden[l-1], arch->N_hidden[l], 
+                      &priors->hh[l-1]);
+        }
+      }
+    
+      if (arch->has_ih[l]) 
+      { gibbs_conn (sample_hyper, 
+                    params.ih[l], sigmas.ih_cm[l], sigmas.ih[l], sigmas.ah[l], 
+                    not_omitted(flgs?flgs->omit:0,arch->N_inputs,1<<(l+1)), 
+                    arch->N_hidden[l], &priors->ih[l]); 
+      }
+
+      if (arch->has_bh[l]) gibbs_unit (sample_hyper, 
+                                       params.bh[l], sigmas.bh_cm[l], 
+                                       sigmas.ah[l], arch->N_hidden[l], 
+                                       &priors->bh[l]);
+      
+      if (arch->has_th[l]) gibbs_unit (sample_hyper, 
+                                       params.th[l], sigmas.th_cm[l], 0,
                                        arch->N_hidden[l], &priors->th[l]);
 
       if (arch->has_ah[l])
@@ -341,24 +438,29 @@ int mc_app_sample
           arch->has_bh[l] ? params.bh[l] : 0, sigmas.bh_cm[l], 
             priors->bh[l].alpha[1],
           arch->has_ih[l] ? params.ih[l] : 0, sigmas.ih[l], 
-            priors->ih[l].alpha[2], arch->N_inputs,
+            priors->ih[l].alpha[2], 
+            not_omitted(flgs?flgs->omit:0,arch->N_inputs,1<<(l+1)), 
           l>0, &arch->has_hh[l-1], &params.hh[l-1], &sigmas.hh[l-1], 
             &priors->hh[l-1], &arch->N_hidden[l-1]);
       }
   
       if (arch->has_ho[l]) 
-      { gibbs_conn (params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], sigmas.ao,
+      { gibbs_conn (sample_hyper, 
+                    params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], sigmas.ao,
                     arch->N_hidden[l], arch->N_outputs, &priors->ho[l]);
       }
           
     }
   
     if (arch->has_io) 
-    { gibbs_conn (params.io, sigmas.io_cm, sigmas.io, sigmas.ao,
-                  arch->N_inputs, arch->N_outputs, &priors->io);
+    { gibbs_conn (sample_hyper, 
+                  params.io, sigmas.io_cm, sigmas.io, sigmas.ao,
+                  not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
+                  arch->N_outputs, &priors->io);
     }
   
-    if (arch->has_bo) gibbs_unit (params.bo, sigmas.bo_cm, sigmas.ao,
+    if (arch->has_bo) gibbs_unit (sample_hyper, 
+                                  params.bo, sigmas.bo_cm, sigmas.ao,
                                   arch->N_outputs, &priors->bo);
 
     if (arch->has_ao)
@@ -370,7 +472,7 @@ int mc_app_sample
         arch->has_io ? params.io : 0,   
           sigmas.io, 
           priors->io.alpha[2], 
-          arch->N_inputs,
+          not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
         arch->N_layers, arch->has_ho, params.ho, sigmas.ho,
           priors->ho, arch->N_hidden);
     }
@@ -386,14 +488,17 @@ int mc_app_sample
 /* DO GIBBS SAMPLING FOR NOISE SIGMAS. */
 
 static void gibbs_noise 
-( double inv_temp
+( int sample_noise,	/* +1 for all, -1 for lower only */
+  double inv_temp
 )
 {
   double nalpha, nprec, sum, d, ps;
   prior_spec *pr;
   int i, j;
 
-  for (i = 0; i<N_train; i++) net_func (&train_values[i], 0, arch, &params);
+  for (i = 0; i<N_train; i++) 
+  { net_func (&train_values[i], 0, arch, flgs, &params);
+  }
 
   pr = &model->noise;
 
@@ -414,7 +519,7 @@ static void gibbs_noise
     }
   }
 
-  if (pr->alpha[1]!=0 && pr->alpha[2]!=0)
+  if (pr->alpha[1]!=0 && pr->alpha[2]!=0 && sample_noise>0)
   {
     for (j = 0; j<arch->N_outputs; j++)
     {
@@ -450,7 +555,7 @@ static void gibbs_noise
     }
   }
 
-  if (pr->alpha[0]!=0 && pr->alpha[1]==0 && pr->alpha[2]!=0)
+  if (pr->alpha[0]!=0 && pr->alpha[1]==0 && pr->alpha[2]!=0 && sample_noise>0)
   {
     ps = pr->alpha[2] * (*sigmas.noise_cm * *sigmas.noise_cm);
 
@@ -470,7 +575,7 @@ static void gibbs_noise
     }
   }
 
-  if (pr->alpha[0]!=0 && pr->alpha[1]!=0)
+  if (pr->alpha[0]!=0 && pr->alpha[1]!=0 && sample_noise>0)
   {
     sum = 0;
     for (j = 0; j<arch->N_outputs; j++) 
@@ -483,10 +588,82 @@ static void gibbs_noise
 }
 
 
+/* DO RANDOM-GRID METROPOLIS UPDATES FOR UPPER NOISE SIGMAS. */
+
+static void rgrid_met_noise 
+( double stepsize,	/* Stepsize for update */
+  mc_iter *it,
+  double inv_temp
+)
+{
+  double nalpha, nprec, sum, d, ps;
+  prior_spec *pr;
+  int i, j;
+
+  for (i = 0; i<N_train; i++) 
+  { net_func (&train_values[i], 0, arch, flgs, &params);
+  }
+
+  pr = &model->noise;
+
+  if (pr->alpha[1]!=0 && pr->alpha[2]!=0)
+  {
+    for (j = 0; j<arch->N_outputs; j++)
+    {
+      ps = pr->alpha[2] * (sigmas.noise[j] * sigmas.noise[j]);
+
+      sum = 0;
+      for (i = 0; i<N_train; i++)
+      { d = train_values[i].o[j] - train_targets[i*arch->N_outputs+j];
+        sum += rand_gamma((pr->alpha[2]+inv_temp)/2) / ((ps+inv_temp*d*d)/2);
+      }
+
+      sigmas.noise[j] = rgrid_sigma (stepsize, it, sigmas.noise[j],
+                                     *sigmas.noise_cm, pr->alpha[1],
+                                     pr->alpha[2], sum, N_train);
+    }
+  }
+
+  if (pr->alpha[0]!=0 && pr->alpha[1]==0 && pr->alpha[2]!=0)
+  {
+    ps = pr->alpha[2] * (*sigmas.noise_cm * *sigmas.noise_cm);
+
+    sum = 0;
+    for (i = 0; i<N_train; i++)
+    { for (j = 0; j<arch->N_outputs; j++) 
+      { d = train_values[i].o[j] - train_targets[i*arch->N_outputs+j];
+        sum += rand_gamma((pr->alpha[2]+inv_temp)/2) / ((ps+inv_temp*d*d)/2);
+      }
+    }
+
+    *sigmas.noise_cm = rgrid_sigma (stepsize, it, *sigmas.noise_cm,
+                                    pr->width, pr->alpha[0],
+                                    pr->alpha[2], sum, arch->N_outputs*N_train);
+
+    for (j = 0; j<arch->N_outputs; j++)
+    { sigmas.noise[j] = *sigmas.noise_cm;
+    }
+  }
+
+  if (pr->alpha[0]!=0 && pr->alpha[1]!=0)
+  {
+    sum = 0;
+    for (j = 0; j<arch->N_outputs; j++) 
+    { sum += 1 / (sigmas.noise[j] * sigmas.noise[j]);
+    }
+
+    *sigmas.noise_cm = rgrid_sigma (stepsize, it, *sigmas.noise_cm,
+                                    pr->width, pr->alpha[0],
+                                    pr->alpha[1], sum, arch->N_outputs);
+  }
+}
+
+
 /* DO GIBBS SAMPLING FOR SIGMA ASSOCIATED WITH GROUP OF UNITS. */
 
 static void gibbs_unit
-( net_param *wt,	/* Parameters associated with each unit */
+( int sample_hyper,	/* +1 for all, -1 for lower only */
+  net_param *wt,	/* Parameters associated with each unit */
   net_sigma *sg_cm,	/* Common sigma controlling parameter distribution */
   net_sigma *adj,	/* Adjustments for each unit, or zero */
   int n,		/* Number of units */
@@ -506,7 +683,7 @@ static void gibbs_unit
     *sg_cm = prior_pick_sigma (1/sqrt(nprec), nalpha);
   }
 
-  if (pr->alpha[0]!=0 && pr->alpha[1]!=0)
+  if (pr->alpha[0]!=0 && pr->alpha[1]!=0 && sample_hyper>0)
   { 
     ps = pr->alpha[1] * (*sg_cm * *sg_cm);
 
@@ -522,10 +699,43 @@ static void gibbs_unit
 }
 
 
+/* DO RANDOM-GRID UPDATES FOR UPPER SIGMA ASSOCIATED WITH GROUP OF UNITS. */
+
+static void rgrid_met_unit
+( double stepsize,	/* Stepsize for update */
+  mc_iter *it,
+  net_param *wt,	/* Parameters associated with each unit */
+  net_sigma *sg_cm,	/* Common sigma controlling parameter distribution */
+  net_sigma *adj,	/* Adjustments for each unit, or zero */
+  int n,		/* Number of units */
+  prior_spec *pr		/* Prior for sigmas */
+)
+{ 
+  double nalpha, nprec, sum, ps, d;
+  int i;
+
+  if (pr->alpha[0]!=0 && pr->alpha[1]!=0)
+  { 
+    ps = pr->alpha[1] * (*sg_cm * *sg_cm);
+
+    sum = 0;
+    for (i = 0; i<n; i++)
+    { d = adj==0 ? wt[i] : wt[i]/adj[i];
+      sum += rand_gamma((pr->alpha[1]+1)/2) / ((ps+d*d)/2);
+    }
+
+    *sg_cm = rgrid_sigma (stepsize, it, *sg_cm,
+                          pr->width, pr->alpha[0], pr->alpha[1], sum, n);
+  }
+  
+}
+
+
 /* DO GIBBS SAMPLING FOR SIGMAS ASSOCIATED WITH GROUP OF CONNECTIONS. */
 
 static void gibbs_conn
-( net_param *wt,	/* Weights on connections */
+( int sample_hyper,	/* +1 for all, -1 for lower only */
+  net_param *wt,	/* Weights on connections */
   net_sigma *sg_cm,	/* Common sigma controlling weights */
   net_sigma *sg,	/* Individual sigmas for source units */
   net_sigma *adj,	/* Adjustments for each destination unit, or zero */
@@ -551,7 +761,7 @@ static void gibbs_conn
     }
   }
 
-  if (pr->alpha[1]!=0 && pr->alpha[2]!=0)
+  if (pr->alpha[1]!=0 && pr->alpha[2]!=0 && sample_hyper>0)
   { 
     for (i = 0; i<ns; i++)
     { 
@@ -584,7 +794,7 @@ static void gibbs_conn
     }
   }
 
-  if (pr->alpha[0]!=0 && pr->alpha[1]==0 && pr->alpha[2]!=0)
+  if (pr->alpha[0]!=0 && pr->alpha[1]==0 && pr->alpha[2]!=0 && sample_hyper>0)
   {
     ps = pr->alpha[2] * (*sg_cm * *sg_cm);
 
@@ -603,7 +813,7 @@ static void gibbs_conn
     }
   }
 
-  if (pr->alpha[0]!=0 && pr->alpha[1]!=0)
+  if (pr->alpha[0]!=0 && pr->alpha[1]!=0 && sample_hyper>0)
   {
     sum = 0;
     for (i = 0; i<ns; i++) 
@@ -611,6 +821,76 @@ static void gibbs_conn
     }
 
     *sg_cm = cond_sigma (width, pr->alpha[0], pr->alpha[1], sum, ns);
+  }
+}
+
+
+/* DO RANDOM-GRID UPDATES FOR UPPER SIGMAS ASSOCIATED WITH GROUP OF CONNECTIONS.
+ */
+
+static void rgrid_met_conn
+( double stepsize,	/* Stepsize for update */
+  mc_iter *it,
+  net_param *wt,	/* Weights on connections */
+  net_sigma *sg_cm,	/* Common sigma controlling weights */
+  net_sigma *sg,	/* Individual sigmas for source units */
+  net_sigma *adj,	/* Adjustments for each destination unit, or zero */
+  int ns,		/* Number of source units */
+  int nd,		/* Number of destination units */
+  prior_spec *pr		/* Prior for sigmas */
+)
+{ 
+  double width, nalpha, nprec, sum, ps, d;
+  int i, j;
+
+  width = prior_width_scaled(pr,ns);
+
+  if (pr->alpha[1]!=0 && pr->alpha[2]!=0)
+  { 
+    for (i = 0; i<ns; i++)
+    { 
+      ps = pr->alpha[2] * (sg[i]*sg[i]);
+
+      sum = 0;        
+      for (j = 0; j<nd; j++)
+      { d = adj==0 ? wt[nd*i+j] : wt[nd*i+j]/adj[j];
+        sum += rand_gamma((pr->alpha[2]+1)/2) / ((ps+d*d)/2);
+      }  
+
+      sg[i] = rgrid_sigma (stepsize, it, sg[i],
+                           *sg_cm, pr->alpha[1], pr->alpha[2], sum, nd);
+    }
+  }
+
+  if (pr->alpha[0]!=0 && pr->alpha[1]==0 && pr->alpha[2]!=0)
+  {
+    ps = pr->alpha[2] * (*sg_cm * *sg_cm);
+
+    sum = 0;        
+    for (i = 0; i<ns; i++)
+    { for (j = 0; j<nd; j++)
+      { d = adj==0 ? wt[nd*i+j] : wt[nd*i+j]/adj[j];
+        sum += rand_gamma((pr->alpha[2]+1)/2) / ((ps+d*d)/2);
+      }     
+    }
+
+    *sg_cm = rgrid_sigma (stepsize, it, *sg_cm,
+                          width, pr->alpha[0], pr->alpha[2], sum, ns*nd);
+
+    for (i = 0; i<ns; i++)
+    { sg[i] = *sg_cm;
+    }
+  }
+
+  if (pr->alpha[0]!=0 && pr->alpha[1]!=0)
+  {
+    sum = 0;
+    for (i = 0; i<ns; i++) 
+    { sum += 1 / (sg[i] * sg[i]);
+    }
+
+    *sg_cm = rgrid_sigma (stepsize, it, *sg_cm,
+                          width, pr->alpha[0], pr->alpha[1], sum, ns);
   }
 }
 
@@ -723,10 +1003,11 @@ void mc_app_energy
 
   if (gr && gr!=grad.param_block)
   { grad.param_block = gr;
-    net_setup_param_pointers (&grad, arch);
+    net_setup_param_pointers (&grad, arch, flgs);
   }
 
-  net_prior_prob (&params, &sigmas, &log_prob, gr ? &grad : 0, arch, priors, 2);
+  net_prior_prob (&params, &sigmas, &log_prob, gr ? &grad : 0, 
+                  arch, flgs, priors, 2);
 
   if (energy) *energy = -log_prob;
 
@@ -783,7 +1064,7 @@ void mc_app_energy
 
         for (;;)
         {
-          net_func (&train_values[i], 0, arch, &params);
+          net_func (&train_values[i], 0, arch, flgs, &params);
           
           ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
 
@@ -795,8 +1076,8 @@ void mc_app_energy
 
           if (gr && i>=low && i<high)
           { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
-                      arch, &params);
-            net_grad (&grad, &params, &train_values[i], &deriv[i], arch);
+                      arch, flgs, &params);
+            net_grad (&grad, &params, &train_values[i], &deriv[i], arch, flgs);
           }
 
           if (ot<=t1) break;
@@ -818,7 +1099,7 @@ void mc_app_energy
 
       else /* Everything except piecewise-constant hazard model */
       { 
-        net_func (&train_values[i], 0, arch, &params);
+        net_func (&train_values[i], 0, arch, flgs, &params);
 
         net_model_prob(&train_values[i], train_targets + data_spec->N_targets*i,
                        &log_prob, gr ? &deriv[i] : 0, arch, model, surv,
@@ -828,8 +1109,8 @@ void mc_app_energy
 
         if (gr && i>=low && i<high)
         { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
-                    arch, &params);
-          net_grad (&grad, &params, &train_values[i], &deriv[i], arch);
+                    arch, flgs, &params);
+          net_grad (&grad, &params, &train_values[i], &deriv[i], arch, flgs);
         }
       }
     }
@@ -852,7 +1133,7 @@ int mc_app_zero_gen
 ( mc_dynamic_state *ds	/* Current dynamical state */
 )
 { 
-  net_prior_generate (&params, &sigmas, arch, model, priors, 0, 0, 0);
+  net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 0, 0, 0);
 
   return 1;
 }
@@ -901,7 +1182,18 @@ void mc_app_stepsizes
         }
       }
 
-      seconds.s[l][i] = seconds.h[l][i];
+      switch (flgs==0 ? Tanh_type : flgs->layer_type[l])
+      { case Tanh_type: 
+        case Identity_type:
+        { seconds.s[l][i] = seconds.h[l][i];
+          break;
+        }
+        case Sin_type:
+        { seconds.s[l][i] = 4*seconds.h[l][i];
+          break;
+        }
+        default: abort();
+      }
     }
   }
 
@@ -911,7 +1203,7 @@ void mc_app_stepsizes
     { 
       seconds.i[i] = 0;
 
-      if (arch->has_io)
+      if (arch->has_io && (flgs==0 || (flgs->omit[i]&1)==0))
       { for (j = 0; j<arch->N_outputs; j++)
         { w = sigmas.io[i];
           if (sigmas.ao!=0) w *= sigmas.ao[j];
@@ -920,7 +1212,7 @@ void mc_app_stepsizes
       }
 
       for (l = 0; l<arch->N_layers; l++)
-      { if (arch->has_ih[l])
+      { if (arch->has_ih[l] && (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0))
         { for (j = 0; j<arch->N_hidden[l]; j++)
           { w = sigmas.ih[l][i];
             if (sigmas.ah[l]!=0) w *= sigmas.ah[l][j];
@@ -933,7 +1225,7 @@ void mc_app_stepsizes
 
   /* Initialize stepsize variables to second derivatives of minus log prior. */
 
-  net_prior_max_second (&stepsizes, &sigmas, arch, priors);
+  net_prior_max_second (&stepsizes, &sigmas, arch, flgs, priors);
 
   /* Add second derivatives of minus log likelihood to stepsize variables. */
 
@@ -958,10 +1250,14 @@ void mc_app_stepsizes
     }
 
     if (arch->has_ih[l])
-    { for (i = 0; i<arch->N_inputs; i++)
-      { for (j = 0; j<arch->N_hidden[l]; j++)
-        { stepsizes.ih [l] [i*arch->N_hidden[l] + j] 
-            += train_sumsq[i] * seconds.s[l][j];
+    { k = 0;
+      for (i = 0; i<arch->N_inputs; i++)
+      { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
+        { for (j = 0; j<arch->N_hidden[l]; j++)
+          { stepsizes.ih [l] [k*arch->N_hidden[l] + j] 
+              += train_sumsq[i] * seconds.s[l][j];
+          }
+          k += 1;
         }
       }
     }
@@ -985,9 +1281,13 @@ void mc_app_stepsizes
   }
 
   if (arch->has_io)
-  { for (i = 0; i<arch->N_inputs; i++)
-    { for (j = 0; j<arch->N_outputs; j++)
-      { stepsizes.io [i*arch->N_outputs + j] += train_sumsq[i] * seconds.o[j];
+  { k = 0;
+    for (i = 0; i<arch->N_inputs; i++)
+    { if (flgs==0 || (flgs->omit[i]&1)==0)
+      { for (j = 0; j<arch->N_outputs; j++)
+        { stepsizes.io [k*arch->N_outputs + j] += train_sumsq[i] * seconds.o[j];
+        }
+        k += 1;
       }
     }
   }
@@ -1033,6 +1333,57 @@ static double sum_squares
   }
 
   return sum_sq;
+}
+
+
+/* RANDOM-GRID METROPOLIS UPDATE FOR AN UPPER SIGMA VALUE.  The value is
+   taken in and returned in standard deviation form, but the Metropolis
+   update is done in log precision form. */
+
+static double rgrid_sigma
+( double stepsize,	/* Stepsize for update */
+  mc_iter *it,
+  double current,	/* Current value of hyperparameter */
+  double width,		/* Width parameter for top-level prior */
+  double alpha0,	/* Alpha for top-level prior */
+  double alpha1,	/* Alpha for lower-level prior */
+  double sum,		/* Sum of lower-level precisions */
+  int n			/* Number of lower-level precision values */
+)
+{
+  double logcur, lognew, U;
+  double Ecur, Enew;  
+  double w, a;
+
+  w  = 1 / (width * width);
+  a  = alpha0 - n*alpha1;
+
+  logcur = -2.0 * log(current);
+
+  Ecur = -logcur*a/2 + exp(logcur)*alpha0/(2*w) + exp(-logcur)*alpha1*sum/2;
+
+  U = rand_uniopen() - 0.5;
+  lognew = (2*stepsize) * (U + floor (0.5 + logcur/(2*stepsize) - U));
+
+  Enew = -lognew*a/2 + exp(lognew)*alpha0/(2*w) + exp(-lognew)*alpha1*sum/2;
+
+  it->proposals += 1;
+  it->delta = Enew - Ecur;
+
+  U = rand_uniform(); /* Do every time to keep in sync for coupling purposes */
+
+  if (U<exp(-it->delta))
+  { 
+    it->move_point = 1;
+    logcur = lognew;
+  }
+  else
+  { 
+    it->rejects += 1;
+    it->move_point = 0;
+  }
+
+  return exp (-0.5*logcur);
 }
 
 

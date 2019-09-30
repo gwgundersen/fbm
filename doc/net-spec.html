@@ -12,7 +12,7 @@ in that log file.
 
 Usage:
 
-    net-spec log-file N-inputs { N-hidden } N-outputs 
+    net-spec log-file N-inputs { N-hidden { flag } } N-outputs { flag }
              / ti [ ih bh th { hh ih bh th } ] { ho } io bo  [ / { ah } ao ] 
 or: 
 
@@ -20,7 +20,32 @@ or:
 
 N-inputs and N-outputs are the numbers of units in the input and
 output layers.  The sizes of zero or more hidden layers are specified
-between these.
+between these.  Flags pertaining to a layer may be specified after the
+argument giving the size of the layer.  
+
+The following flag is supported for hidden layers and the output
+layer:
+
+    omit:[-]&lt;input&gt;{,&lt;input&gt;}
+
+This specifies that connections from certain inputs are to be omitted
+from those feeding into this layer (assuming that any inputs at all
+are looked at, as specifed by later arguments).  If the "-" is placed
+before the list of inputs, the list gives the inputs that are NOT
+omitted.  Inputs are numbered starting with 1.
+
+For hidden layers, the activation function to use may be specified
+using one of the following flags:
+
+    tanh identity sin
+
+The default is tanh, the hyperbolic tangent function.  The identity
+flag causes the output of a hidden unit in the layer to be identical
+its summed input.  The sin flag specifies that the activation function
+to be h(u) = sqrt(2)*sin(sqrt(2)*u).  The multiplications by sqrt(2)
+in this activation function make a network with one hidden layer of
+this type correspond in the limit of many hidden units to a Gaussian
+process model with covariance function given by exp(-distance^2).
 
 Following a "/", the priors for groups of weights, biases, and offsets
 are specified.  "ti" is the prior for the offsets of input units, "hh"
@@ -52,12 +77,13 @@ if any learning is to be done.
 
 Two records are written to the newly created log file - one with type
 'A' with a net_arch structure as data, and one with type 'P' with a
-net_priors structure as data.  Both have an index of -1.  When the
-second form of the command is used (with just the log file as
+net_priors structure as data.  A record of type 'F' will be written as
+well if any flags were specified.  These records have an index of -1.
+When the second form of the command is used (with just the log file as
 argument), these records are read and the information they contain is
 displayed on standard output.
 
-            Copyright (c) 1995 by Radford M. Neal
+            Copyright (c) 1995, 2001 by Radford M. Neal
 </pre>
 </body>
 </html>

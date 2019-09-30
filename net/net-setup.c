@@ -1,6 +1,6 @@
 /* NET-SETUP.C - Procedures for setting up network data structures. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,6 +21,7 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
+#include "data.h"
 #include "net.h"
 
 
@@ -43,6 +44,7 @@
    
 int net_setup_sigma_count
 ( net_arch *a,		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
   model_specification *m /* Data model */
 )
 { 
@@ -57,14 +59,18 @@ int net_setup_sigma_count
   { 
     if (l>0 && a->has_hh[l-1]) count += 1 + a->N_hidden[l-1];
 
-    if (a->has_ih[l]) count += 1 + a->N_inputs;
+    if (a->has_ih[l]) 
+    { count += 1 + not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1));
+    }
     if (a->has_bh[l]) count += 1;
     if (a->has_ah[l]) count += a->N_hidden[l];
     if (a->has_th[l]) count += 1;
     if (a->has_ho[l]) count += 1 + a->N_hidden[l];
   }
 
-  if (a->has_io) count += 1 + a->N_inputs;
+  if (a->has_io) 
+  { count += 1 + not_omitted(flgs?flgs->omit:0,a->N_inputs,1);
+  }
   if (a->has_bo) count += 1;
   if (a->has_ao) count += a->N_outputs;
 
@@ -78,7 +84,8 @@ int net_setup_sigma_count
    biases, and offsets in a network with the given architecture. */
 
 int net_setup_param_count
-( net_arch *a		/* Network architecture */
+( net_arch *a,		/* Network architecture */
+  net_flags *flgs	/* Network flags, null if none */
 )
 {
   int count;
@@ -92,13 +99,21 @@ int net_setup_param_count
   {
     if (l>0 && a->has_hh[l-1]) count += a->N_hidden[l-1]*a->N_hidden[l];
 
-    if (a->has_ih[l]) count += a->N_inputs*a->N_hidden[l];
+    if (a->has_ih[l]) 
+    { count += not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1))
+                 * a->N_hidden[l];
+    }
+
     if (a->has_bh[l]) count += a->N_hidden[l];
     if (a->has_th[l]) count += a->N_hidden[l];
     if (a->has_ho[l]) count += a->N_hidden[l]*a->N_outputs;
   }
 
-  if (a->has_io) count += a->N_inputs*a->N_outputs;
+  if (a->has_io) 
+  { count += not_omitted(flgs?flgs->omit:0,a->N_inputs,1)
+              * a->N_outputs;
+  }
+
   if (a->has_bo) count += a->N_outputs;
   
   return count;
@@ -138,6 +153,7 @@ int net_setup_value_count
 void net_setup_sigma_pointers
 ( net_sigmas *s,	/* Structure to set up pointers in */
   net_arch *a,		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
   model_specification *m /* Data model */
 )
 { 
@@ -163,7 +179,7 @@ void net_setup_sigma_pointers
     s->ih[l] = 0;
     if (a->has_ih[l]) 
     { s->ih[l] = b;
-      b += a->N_inputs;
+      b += not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1));
     }
 
     s->bh_cm[l] = a->has_bh[l] ? b++ : 0;
@@ -190,7 +206,7 @@ void net_setup_sigma_pointers
   s->io = 0;
   if (a->has_io) 
   { s->io = b;
-    b += a->N_inputs;
+    b += not_omitted(flgs?flgs->omit:0,a->N_inputs,1);
   }
 
   s->bo_cm = a->has_bo ? b++ : 0;
@@ -222,7 +238,8 @@ void net_setup_sigma_pointers
 
 void net_setup_param_pointers
 ( net_params *w,	/* Structure to set up pointers in */
-  net_arch *a		/* Network architecture */
+  net_arch *a,		/* Network architecture */
+  net_flags *flgs	/* Network flags, null if none */
 )
 {
   net_param *b;
@@ -249,7 +266,8 @@ void net_setup_param_pointers
     w->ih[l] = 0;
     if (a->has_ih[l]) 
     { w->ih[l] = b;
-      b += a->N_inputs*a->N_hidden[l];
+      b += not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1))
+            * a->N_hidden[l];
     }
   
     w->bh[l] = 0;
@@ -276,7 +294,7 @@ void net_setup_param_pointers
   w->io = 0;
   if (a->has_io) 
   { w->io = b;
-    b += a->N_inputs*a->N_outputs;
+    b += not_omitted(flgs?flgs->omit:0,a->N_inputs,1) * a->N_outputs;
   }
 
   w->bo = 0;
@@ -325,6 +343,7 @@ void net_setup_value_pointers
 
 int net_setup_hyper_group
 ( net_arch *a,		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
   int grp,		/* Index of group */
   int *offset,		/* Set to offset of group within block */
   int *number,		/* Set to number of items in group */
@@ -357,7 +376,7 @@ int net_setup_hyper_group
 
     if (a->has_ih[l]) 
     { *offset = i; 
-      i += 1 + a->N_inputs; 
+      i += 1 + not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1)); 
       if (--grp==0) goto done;
     }
 
@@ -390,7 +409,7 @@ int net_setup_hyper_group
 
   if (a->has_io) 
   { *offset = i;   
-    i += 1 + a->N_inputs; 
+    i += 1 + not_omitted(flgs?flgs->omit:0,a->N_inputs,1); 
     if (--grp==0) goto done;
   }
 
@@ -421,6 +440,7 @@ done:
 
 int net_setup_param_group
 ( net_arch *a,		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
   int grp,		/* Index of group */
   int *offset,		/* Set to offset of group within block */
   int *number,		/* Set to number of items in group */
@@ -454,8 +474,8 @@ int net_setup_param_group
 
     if (a->has_ih[l]) 
     { *offset = i; 
-      *source = a->N_inputs;
-      i += a->N_inputs*a->N_hidden[l]; 
+      *source = not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1));
+      i += *source * a->N_hidden[l]; 
       if (--grp==0) goto done;
     }
 
@@ -489,8 +509,8 @@ int net_setup_param_group
 
   if (a->has_io) 
   { *offset = i;    
-    *source = a->N_inputs;
-    i += a->N_inputs*a->N_outputs; 
+    *source = not_omitted(flgs?flgs->omit:0,a->N_inputs,1);
+    i += *source * a->N_outputs; 
     if (--grp==0) goto done;
   }
 

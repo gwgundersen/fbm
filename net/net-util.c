@@ -1,6 +1,6 @@
 /* NET-UTIL.C - Various utility procedures for use in neural network code. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -33,6 +33,7 @@ void net_record_sizes
 )
 {
   logg->req_size['A'] = sizeof (net_arch);
+  logg->req_size['F'] = sizeof (net_flags);
   logg->req_size['M'] = sizeof (model_specification);
   logg->req_size['V'] = sizeof (model_survival);
   logg->req_size['P'] = sizeof (net_priors);

@@ -289,8 +289,6 @@ int pred_app_use_index (void)
 
   for (i = 0; i<N_test; i++) 
   { 
-    rand_seed(101*logg.last_index+i);
-
     if (m==0 || m->type=='R') /* Model for real data */
     {
       test_log_prob[i] = 0;
@@ -329,6 +327,10 @@ int pred_app_use_index (void)
         }
 
         test_targ_pred[M_targets*i+j] = meanp[i*gp->N_outputs+j];
+
+        if (op_D)
+        { test_targ_med[M_targets*i+j] = meanp[i*gp->N_outputs+j];
+        }
       
         if (have_targets && op_p) 
         { 

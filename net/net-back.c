@@ -1,6 +1,6 @@
 /* NET-BACK.C - Routine for backpropagating the "error" through the network. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,6 +21,7 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
+#include "data.h"
 #include "net.h"
 
 
@@ -31,9 +32,11 @@
    these derivatives only back to a certain layer.
 */
 
+#define sqrt_2 1.4142135623730950488
 
 static void zero_derivatives (net_value *, int),
-            sum_derivatives  (net_value *, int, net_value *, int, net_param *);
+            sum_derivatives  (net_value *, int, net_value *, int, net_param *, 
+                              char *, int);
 
 
 /* BACKPROPAGATE ERROR DERIVATIVES.  The first argument must contain the 
@@ -49,6 +52,7 @@ void net_back
   net_values *d,	/* Place to get output derivatives, and store others */
   int start,		/* Earliest layer to find derivatives for */
   net_arch *a,		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
   net_params *w		/* Network parameters */
 )
 {
@@ -62,16 +66,34 @@ void net_back
     
     if (a->has_ho[l])
     { sum_derivatives (d->o, a->N_outputs, d->h[l], a->N_hidden[l], 
-                       w->ho[l]);
+                       w->ho[l], (char *) 0, 0);
     }
 
     if (l<a->N_layers-1 && a->has_hh[l])
     { sum_derivatives (d->s[l+1], a->N_hidden[l+1], d->h[l], a->N_hidden[l], 
-                       w->hh[l]);
+                       w->hh[l], (char *) 0, 0);
     }
 
-    for (i = 0; i<a->N_hidden[l]; i++)
-    { d->s[l][i] = (1 - v->h[l][i]*v->h[l][i]) * d->h[l][i];
+    switch (flgs==0 ? Tanh_type : flgs->layer_type[l])
+    { case Tanh_type:
+      { for (i = 0; i<a->N_hidden[l]; i++)
+        { d->s[l][i] = (1 - v->h[l][i]*v->h[l][i]) * d->h[l][i];
+        }
+        break;
+      }
+      case Sin_type:
+      { for (i = 0; i<a->N_hidden[l]; i++)
+        { d->s[l][i] = 2 * cos(v->s[l][i]*sqrt_2) * d->h[l][i];
+        }
+        break;
+      }
+      case Identity_type: 
+      { for (i = 0; i<a->N_hidden[l]; i++)
+        { d->s[l][i] = d->h[l][i];
+        }
+        break;
+      }
+      default: abort();
     }
   }
 
@@ -82,12 +104,14 @@ void net_back
     zero_derivatives (d->i, a->N_inputs);
 
     if (a->has_io)
-    { sum_derivatives (d->o, a->N_outputs, d->i, a->N_inputs, w->io);
+    { sum_derivatives (d->o, a->N_outputs, d->i, a->N_inputs, w->io,
+                       flgs ? flgs->omit : 0, 1);
     }
  
     for (l = 0; l<a->N_layers; a++)
     { if (a->has_ih[l])
-      { sum_derivatives (d->s[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l]);
+      { sum_derivatives (d->s[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
+                         flgs ? flgs->omit : 0, 1<<(l+1));
       }
     }
   }
@@ -117,26 +141,58 @@ static void zero_derivatives
 static void sum_derivatives
 ( net_value *dd,	/* Derivatives with respect to destination units */
   int nd,		/* Number of destination units */
-  net_value *ds,	/* Derivatives with respect to source units to add to */
+  net_value *ds,	/* Derivatives w.r.t. source units to add to */
   int ns,		/* Number of source units */
-  net_param *w		/* Connection weights */
+  net_param *w,		/* Connection weights */
+  char *omit,		/* Omit flags, null if not present */
+  int b			/* Bit to look at in omit flags */
 )
 {
   net_value tv;
-  int i, j;
+  int i, j, k;
 
-  if (nd==1)
-  { for (i = 0; i<ns; i++)
-    { ds[i] += *w++ * dd[0];
+  if (omit==0)
+  {
+    if (nd==1)
+    { 
+      for (i = 0; i<ns; i++)
+      { ds[i] += *w++ * dd[0];
+      }
+    }
+    else
+    {
+      for (i = 0; i<ns; i++)
+      { tv = *w++ * dd[0];
+        j = 1;
+        do { tv += *w++ * dd[j]; j += 1; } while (j<nd);
+        ds[i] += tv;
+      }
     }
   }
   else
   {
-    for (i = 0; i<ns; i++)
-    { tv = *w++ * dd[0];
-      j = 1;
-      do { tv += *w++ * dd[j]; j += 1; } while (j<nd);
-      ds[i] += tv;
+    if (nd==1)
+    { k = 0;
+      for (i = 0; i<ns; i++)
+      { if ((omit[i]&b)==0)
+        { ds[k] += *w++ * dd[0];
+          k += 1;
+        }
+      }
+    }
+    else
+    {
+      k = 0;
+      for (i = 0; i<ns; i++)
+      { if ((omit[i]&b)==0)
+        { tv = *w++ * dd[0];
+          j = 1;
+          do { tv += *w++ * dd[j]; j += 1; } while (j<nd);
+          ds[k] += tv;
+          k += 1;
+        }
+      }
     }
   }
+
 }

@@ -15,6 +15,9 @@ Ex-dist.doc         Examples of Markov chain sampling for simple distributions
 
   Ex-dist-n.doc        Sampling from a univariate normal distribution
   Ex-dist-g.doc        Sampling from a ring distribution in three dimensions
+  Ex-dist-f.doc        Sampling from a funnel distribution in ten dimensions
+
+Ex-circ.doc         Examples of circularly-coupled Markov chain sampling
 
 Ex-bayes.doc        Examples of Markov chain sampling for simple Bayesian models
   

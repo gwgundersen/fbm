@@ -1,6 +1,6 @@
 /* NET-DVAR.C - Program to find variance of function difference. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,6 +21,7 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
+#include "data.h"
 #include "net.h"
 
 
@@ -35,6 +36,7 @@ main
 )
 {
   net_arch   *a;
+  net_flags  *flgs;
   net_priors *p;
 
   net_params params, *w = &params;
@@ -100,7 +102,9 @@ main
     exit(1);
   }
 
-  w->total_params = net_setup_param_count(a);
+  flgs = logg.data['F'];
+
+  w->total_params = net_setup_param_count(a,flgs);
 
   logg.req_size['W'] = w->total_params * sizeof(net_param);
 
@@ -152,7 +156,7 @@ main
     {
       w->param_block = logg.data['W'];
 
-      net_setup_param_pointers (w, a);
+      net_setup_param_pointers (w, a, flgs);
 
       if (hidden)
       { 
@@ -160,9 +164,9 @@ main
         { width = low_width==0 ? high_width*i/n_pairs
                 : low_width*pow(high_width/low_width,(double)i/n_pairs);
           v1->i[0] = centre + width/2;
-          net_func (v1, 0, a, w);
+          net_func (v1, 0, a, flgs, w);
           v2->i[0] = centre - width/2;
-          net_func (v2, 0, a, w);
+          net_func (v2, 0, a, flgs, w);
           for (j = 0; j<a->N_hidden[a->N_layers-1]; j++)
           { f1 = v1->h[a->N_layers-1][j];
             f2 = v2->h[a->N_layers-1][j];
@@ -179,9 +183,9 @@ main
         { width = low_width==0 ? high_width*i/n_pairs
                 : low_width*pow(high_width/low_width,(double)i/n_pairs);
           v1->i[0] = centre + width/2;
-          net_func (v1, 0, a, w);
+          net_func (v1, 0, a, flgs, w);
           v2->i[0] = centre - width/2;
-          net_func (v2, 0, a, w);
+          net_func (v2, 0, a, flgs, w);
           f1 = v1->o[0];
           f2 = v2->o[0];
           dvar[i] += (f1-f2)*(f1-f2);

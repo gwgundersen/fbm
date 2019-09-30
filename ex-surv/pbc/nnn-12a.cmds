@@ -1,0 +1,20 @@
+# Non-linear time, non-linear covariates, non-linear both, 12 predictors.
+
+log=nnn-12a.log.$1
+
+net-spec   $log 13 5 omit:-1 8 omit:1 10 1 \
+            / - 0.05:1 0.05:1 - - 0.05:1:1 0.05:1 - - 0.05:1:1 0.5:1 - \
+              x0.05:1 x0.05:1 x0.05:1 - 10
+model-spec $log survival pw-const-hazard \
+            0.5 1.5 2.5 3.5 4.5 5.5 6.5 7.5 8.5 9.5 10.5 11.5 12.5
+data-spec  $log 12 1 / data.$1 . \
+            / I -50x0.1 I I I I I L L-1 L-7 L-5 L-2 / x0.002737851
+
+net-gen    $log fix 0.2
+mc-spec    $log \
+           repeat 10 heatbath hybrid 100:10 0.01 heatbath hybrid 100:10 0.05 
+net-mc     $log 1
+
+mc-spec    $log \
+           repeat 100 sample-sigmas heatbath 0.95 hybrid 100:10 0.12 negate
+net-mc     $log 300

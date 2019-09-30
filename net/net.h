@@ -1,6 +1,6 @@
 /* NET.H - Interface to neural network modules. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -20,7 +20,9 @@
 
    Stored in log files under type 'A'.  Changes may invalidate old log files. */
 
-#define Max_layers 10	/* Maximum number of hidden layers in a network */
+#define Max_layers 10 /* Maximum number of hidden layers in a network */
+                      /* Note:  The actual maximum can be no more than 7, but
+                         Max_layers can be larger so old log files can be read*/
 
 typedef struct
 { 
@@ -42,6 +44,34 @@ typedef struct
   int has_ao;			/* Does output layer have adjustments? */
 
 } net_arch;
+
+
+/* FLAGS MODIFYING ARCHITECTURE.  This record records extra flags modifying
+   the architecture, which are recorded here to avoid invalidating log files
+   created before these features were added, and to avoid taking up space
+   when the flags aren't used. 
+
+   The omit flags are 1 when an input is omitted for a layer.  The low-order
+   bit pertains to the output, with bits above that pertaining to successive
+   hidden layers.  The layer flags are currently unused.
+
+   Stored in log files under type 'F', but may be omitted if all the flags
+   are zero.  Changes may invalidate old log files. */
+
+#define Tanh_type 0		/* Tanh units */
+#define Identity_type 1		/* Identity units */
+#define Sin_type 2		/* Sine units */
+
+typedef struct
+{
+  char omit[Max_inputs];	/* Whether inputs are omitted for each layer */
+
+  char layer_type[Max_layers];	/* Type of hidden units in layer */
+  char layer_flags[Max_layers];	/* Flags pertaining to each layer */
+
+  int reserved[4];		/* Reserved for future use */
+
+} net_flags;
 
 
 /* NETWORK PRIORS.  Defines the priors to be used for various groups of 
@@ -162,31 +192,34 @@ typedef struct
 
 /* PROCEDURES. */
 
-int net_setup_sigma_count (net_arch *, model_specification *);
-int net_setup_param_count (net_arch *);
+int net_setup_sigma_count (net_arch *, net_flags *, model_specification *);
+int net_setup_param_count (net_arch *, net_flags *);
 
-void net_setup_sigma_pointers (net_sigmas *, net_arch *, model_specification *);
-void net_setup_param_pointers (net_params *, net_arch *);
+void net_setup_sigma_pointers (net_sigmas *, net_arch *, net_flags *, 
+                               model_specification *);
+void net_setup_param_pointers (net_params *, net_arch *, net_flags *);
 
-int net_setup_hyper_group (net_arch *, int, int *, int *, int *);
-int net_setup_param_group (net_arch *, int, int *, int *, int *);
+int net_setup_hyper_group (net_arch *, net_flags *, int, int *, int *, int *);
+int net_setup_param_group (net_arch *, net_flags *, int, int *, int *, int *);
 
 int net_setup_value_count (net_arch *);
 void net_setup_value_pointers (net_values *, net_value *, net_arch *);
 
-void net_prior_generate (net_params *, net_sigmas *, net_arch *, 
+void net_prior_generate (net_params *, net_sigmas *, net_arch *, net_flags *,
                          model_specification *m, net_priors *, int, 
                          double, double);
 
 void net_prior_prob (net_params *, net_sigmas *, double *, net_params *,
-                     net_arch *, net_priors *, int);
+                     net_arch *, net_flags *, net_priors *, int);
 
-void net_prior_max_second(net_params *, net_sigmas *, net_arch *, net_priors *);
+void net_prior_max_second (net_params *, net_sigmas *, net_arch *, net_flags *,
+                           net_priors *);
 
-void net_func (net_values *, int, net_arch *, net_params *);
-void net_back (net_values *, net_values *, int, net_arch *, net_params *);
+void net_func (net_values *, int, net_arch *, net_flags *, net_params *);
+void net_back (net_values *, net_values *, int, net_arch *, net_flags *, 
+               net_params *);
 void net_grad (net_params *, net_params *, net_values *, net_values *, 
-               net_arch *);
+               net_arch *, net_flags *);
 
 void net_model_prob(net_values *, double *, double *, net_values *, net_arch *,
                     model_specification *, model_survival *, net_sigmas *, int);
@@ -194,13 +227,14 @@ void net_model_prob(net_values *, double *, double *, net_values *, net_arch *,
 void net_model_max_second (net_value *, net_arch *, model_specification *,
                            model_survival *, net_sigmas *);
 
-void net_model_guess (net_values *, double *, net_arch *, 
+void net_model_guess (net_values *, double *, net_arch *, net_flags *,
                       model_specification *, model_survival *, net_params *,
                       net_sigmas *, int);
 
-void net_print_params (net_params *, net_sigmas *, net_arch *, 
+void net_print_params (net_params *, net_sigmas *, net_arch *, net_flags *,
                        model_specification *);
-void net_print_sigmas (net_sigmas *, net_arch *, model_specification *);
+void net_print_sigmas (net_sigmas *, net_arch *, net_flags *,
+                       model_specification *);
 
 void net_record_sizes        (log_gobbled *);
 void net_check_specs_present (net_arch *, net_priors *, int,

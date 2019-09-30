@@ -1,6 +1,6 @@
 /* NET-REJ.C - Generate networks from posterior by rejection sampling. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,8 +21,8 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
-#include "net.h"
 #include "data.h"
+#include "net.h"
 #include "net-data.h"
 #include "rand.h"
 
@@ -35,6 +35,7 @@ main
 )
 {
   net_arch *a;
+  net_flags *flgs;
   net_priors *p;
   model_specification *m;
   model_survival *sv;
@@ -81,18 +82,20 @@ main
   m = logg.data['M'];
   sv = logg.data['V'];
 
+  flgs = logg.data['F'];
+
   net_check_specs_present(a,p,1,m,sv);
 
   /* Allocate space for parameters and hyperparameters. */
 
-  s->total_sigmas = net_setup_sigma_count(a,m);
-  w->total_params = net_setup_param_count(a);
+  s->total_sigmas = net_setup_sigma_count(a,flgs,m);
+  w->total_params = net_setup_param_count(a,flgs);
 
   s->sigma_block = chk_alloc (s->total_sigmas, sizeof (net_sigma));
   w->param_block = chk_alloc (w->total_params, sizeof (net_param));
 
-  net_setup_sigma_pointers (s, a, m);
-  net_setup_param_pointers (w, a);
+  net_setup_sigma_pointers (s, a, flgs, m);
+  net_setup_param_pointers (w, a, flgs);
 
   /* Read last records in log file to see where to start, and to get random
      number state left after last network was generated. */
@@ -130,7 +133,7 @@ main
   {
     for (;;)
     {
-      net_prior_generate (w, s, a, m, p, 0, 0, 0);
+      net_prior_generate (w, s, a, flgs, m, p, 0, 0, 0);
 
       if (m->type=='R') 
       { 
@@ -163,7 +166,7 @@ main
         }
         else
         { 
-          net_func (&train_values[i], 0, a, w);
+          net_func (&train_values[i], 0, a, flgs, w);
           net_model_prob (&train_values[i], 
                           train_targets + data_spec->N_targets*i,
                           &lp, 0, a, m, sv, s, 2);

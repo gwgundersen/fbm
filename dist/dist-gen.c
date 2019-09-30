@@ -32,10 +32,11 @@ main
 )
 {
   dist_spec *dst;
+  char *a, *f;
   double *q;
-  int n;
 
   int max_index, index;
+  int c, i, n;
 
   log_file logf;
   log_gobbled logg;
@@ -75,6 +76,16 @@ main
   { fprintf(stderr,
       "Generation from the prior can be done only with Bayesian models\n");
     exit(1);
+  }
+
+  a = dst->energy + strlen(dst->energy) + 1;
+  if (dst->Bayesian) a += strlen(a) + 1;
+
+  while (*a)
+  { f = formula_def(a,&c,&i);
+    formula_var[c][i] = formula(f,0,1,0);
+    formula_var_exists[c][i] = 1;
+    a += strlen(a) + 1;
   }
 
   (void) formula (dst->energy, 1, 0, 0);

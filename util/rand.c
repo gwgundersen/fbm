@@ -75,7 +75,7 @@ static void initialize (void)
 
   if (!initialized)
   {
-    f = fopen(RAND_FILE,"r");
+    f = fopen(RAND_FILE,"rb");
     
     if (f==NULL)
     { fprintf(stderr,"Can't open file of random numbers (%s)\n",RAND_FILE);

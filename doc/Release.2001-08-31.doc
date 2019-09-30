@@ -1,0 +1,89 @@
+
+
+NOTES ON THE VERSION OF 2001-08-31
+
+Changes in this version;
+
+1) New sampling methods for neural networks were added that assist
+   with coupling.  See net-mc.doc for details.
+
+2) One can now specify that connections to certain inputs should be
+   omitted for a hidden or output layer of a network, analogous to
+   the "omit" option for Gaussian process models.  This is useful
+   when explicitly setting up additive models.  The output format
+   of net-spec and net-display has changed to accomodate display of 
+   this information.  See net-spec.doc for details.  
+
+3) The maximum number of hidden layers is now limited to seven, so that 
+   the "omit" flags (see point above) will fit in a byte.
+
+4) One can now specify that the activation function for hidden units in
+   a particular layer should be h(u) = sqrt(2)*sin(sqrt(2)*u) or the 
+   identity function, in place of the default of tanh.  See net-spec.doc 
+   for details.
+
+5) Formulas used by the 'dist' module (and by 'calc') can now refer
+   to functions that are defined by external C programs.  Communication
+   with these programs is done via pipes.  Currently, only function 
+   evaluation is supported, not gradient evaluation or random number
+   generation.  See formula.doc for details.
+
+6) The "p" option to net-pred has now been implemented for survival models
+   with piecewise-constant hazard. 
+
+7) A "Q" option has been added to net-pred and gp-pred for displaying 1%
+   and 99% quantiles.  See net-pred.doc and gp-pred.doc for details.
+
+8) The number of sample points used to estimate medians and quantiles has
+   been increased from 11 to 101 per iteration.  This gives more accurate 
+   results, at the cost of extra computation and extra memory usage.  The
+   way the random number seed is set has also changed.  See net-pred.doc
+   and gp-pred.doc for details.
+
+9) A "D" option for net-pred has been added, which finds the mean (over 
+   multiple iterations) of the median response (using the network at a
+   single iteration).  It's useful mainly as a way of accurately computing 
+   the median response with one network for a survival analysis model
+   (without using Monte Carlo as 'd' does).  See net-pred.doc for details.
+
+10) The data and command files used to produce the examples for my talk on
+    "Survival analysis using a Bayesian neural network", at the 2001 Joint
+    Statistical Meetings in Atlanta, are included as a sub-directory of
+    ex-surv.
+
+
+Bug fixes.
+
+1) Fixed a bug in dist-gen that led it to ignore any constant definitions
+   in dist-spec (the constants were treated as zero).
+
+2) Fixed a bug that prevented "Gaussian" from being a synonym for "Normal".
+
+3) Fixed a bug that prevented coalescence in the first stage of xxx-circ
+   when the coupled chains used dynamical sampling methods involving 
+   momentum variables.
+
+4) Fixed a bug (not initializing a variable to 0) in mc-spec that could
+   cause spurious errors or other problems when "repeat/end" were used.
+
+5) Fixed a bug in net-gen that caused hidden-output weights to always
+   be generated as zeros when output unit "adjustments" were present.
+
+
+Known bugs and other deficiencies.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The latent value update operations for Gaussian processes may recompute 
+   the inverse covariance matrix even when an up-to-date version was 
+   computed for the previous Monte Carlo operation.
+
+4) Covariance matrices are stored in full, even though they are symmetric,
+   which sometimes costs a factor of two in memory usage.

@@ -1,6 +1,6 @@
 /* NET-GD.C - Program to train a network by gradient descent in the error. */
 
-/* Copyright (c) 1997 by Radford M. Neal 
+/* Copyright (c) 1997, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -43,6 +43,7 @@
 /* NETWORK VARIABLES. */
 
 static net_arch *arch;		/* Network architecture */
+static net_flags *flgs;		/* Network flags, null if none */
 static model_specification *model; /* Data model */
 static net_priors *priors;	/* Network priors */
 static model_survival *surv;	/* Hazard type for survival model */
@@ -194,6 +195,7 @@ main
   /* Check that required network specification records are present. */
   
   arch   = logg.data['A'];
+  flgs   = logg.data['F'];
   model  = logg.data['M'];
   priors = logg.data['P'];
   surv   = logg.data['V'];
@@ -207,8 +209,8 @@ main
   
   /* Locate existing network, if one exists, or set one up randomly. */
   
-  sigmas.total_sigmas = net_setup_sigma_count(arch,model);
-  params.total_params = net_setup_param_count(arch);
+  sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
+  params.total_params = net_setup_param_count(arch,flgs);
 
   sigmas.sigma_block = logg.data['S'];
   params.param_block = logg.data['W'];
@@ -230,18 +232,18 @@ main
       exit(1);
     }
   
-    net_setup_sigma_pointers (&sigmas, arch, model);
-    net_setup_param_pointers (&params, arch);
+    net_setup_sigma_pointers (&sigmas, arch, flgs, model);
+    net_setup_param_pointers (&params, arch, flgs);
   }
   else
   {
     sigmas.sigma_block = chk_alloc (sigmas.total_sigmas, sizeof (net_sigma));
     params.param_block = chk_alloc (params.total_params, sizeof (net_param));
   
-    net_setup_sigma_pointers (&sigmas, arch, model);
-    net_setup_param_pointers (&params, arch);
+    net_setup_sigma_pointers (&sigmas, arch, flgs, model);
+    net_setup_param_pointers (&params, arch, flgs);
    
-    net_prior_generate (&params, &sigmas, arch, model, priors, 1, 0, 0);
+    net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 1, 0, 0);
 
     for (j = 0; j<np; j++) 
     { params.param_block[j] += 0.01 - 0.02*rand_uniopen();
@@ -273,7 +275,7 @@ main
   /* See how many groups there are, and how divided into subgroups. */
 
   for (n_groups = 0; 
-       net_setup_param_group (arch, n_groups+1, &o, &n, &s); 
+       net_setup_param_group (arch, flgs, n_groups+1, &o, &n, &s); 
        n_groups++)
   { 
     if (n_groups>=Max_groups) 
@@ -318,19 +320,19 @@ main
   
   grad.total_params = params.total_params;
   grad.param_block  = chk_alloc (params.total_params, sizeof (net_param));
-  net_setup_param_pointers (&grad, arch);
+  net_setup_param_pointers (&grad, arch, flgs);
 
   gradp.total_params = params.total_params;
   gradp.param_block  = chk_alloc (params.total_params, sizeof (net_param));
-  net_setup_param_pointers (&gradp, arch);
+  net_setup_param_pointers (&gradp, arch, flgs);
 
   tgrad.total_params = params.total_params;
   tgrad.param_block  = chk_alloc (params.total_params, sizeof (net_param));
-  net_setup_param_pointers (&tgrad, arch);
+  net_setup_param_pointers (&tgrad, arch, flgs);
 
   ograd.total_params = params.total_params;
   ograd.param_block  = chk_alloc (params.total_params, sizeof (net_param));
-  net_setup_param_pointers (&ograd, arch);
+  net_setup_param_pointers (&ograd, arch, flgs);
 
   it = logg.data['i']==0 ? &it0 : (mc_iter *) logg.data['i'];
 
@@ -338,20 +340,20 @@ main
 
   if (diff && method==Online)
   { 
-    net_prior_prob (&params, &sigmas, 0, &ograd, arch, priors, 2);
+    net_prior_prob (&params, &sigmas, 0, &ograd, arch, flgs, priors, 2);
 
     for (i = 0; i<N_train; i++)
     { 
-      net_func (&train_values[i], 0, arch, &params);
+      net_func (&train_values[i], 0, arch, flgs, &params);
     
       net_model_prob (&train_values[i], 
                       train_targets + data_spec->N_targets*i,
                       0, deriv, arch, model, surv, &sigmas, 2);
   
       net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
-                arch, &params);
+                arch, flgs, &params);
 
-      net_grad (&ograd, &params, &train_values[i], deriv, arch);
+      net_grad (&ograd, &params, &train_values[i], deriv, arch, flgs);
     }
   }
 
@@ -366,20 +368,20 @@ main
     {
       case Batch:
       { 
-        net_prior_prob (&params, &sigmas, 0, &grad, arch, priors, 2);
+        net_prior_prob (&params, &sigmas, 0, &grad, arch, flgs, priors, 2);
 
         for (i = 0; i<N_train; i++)
         { 
-          net_func (&train_values[i], 0, arch, &params);
+          net_func (&train_values[i], 0, arch, flgs, &params);
   
           net_model_prob (&train_values[i], 
                           train_targets + data_spec->N_targets*i,
                           0, deriv, arch, model, surv, &sigmas, 2);
   
           net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
-                    arch, &params);
+                    arch, flgs, &params);
 
-          net_grad (&grad, &params, &train_values[i], deriv, arch);
+          net_grad (&grad, &params, &train_values[i], deriv, arch, flgs);
         }
 
         for (g = 0; g<n_groups; g++)
@@ -436,7 +438,7 @@ main
         { for (j = 0; j<np; j++) tgrad.param_block[j] = 0;
         }
 
-        net_prior_prob (&params, &sigmas, 0, &gradp, arch, priors, 2);
+        net_prior_prob (&params, &sigmas, 0, &gradp, arch, flgs, priors, 2);
 
         for (j = 0; j<np; j++) gradp.param_block[j] /= N_train;
 
@@ -444,16 +446,16 @@ main
         { 
           for (j = 0; j<np; j++) grad.param_block[j] = gradp.param_block[j];
 
-          net_func (&train_values[i], 0, arch, &params);
+          net_func (&train_values[i], 0, arch, flgs, &params);
     
           net_model_prob (&train_values[i], 
                          train_targets + data_spec->N_targets*i,
                          0, deriv, arch, model, surv, &sigmas, 2);
   
           net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
-                    arch, &params);
+                    arch, flgs, &params);
 
-          net_grad (&grad, &params, &train_values[i], deriv, arch);
+          net_grad (&grad, &params, &train_values[i], deriv, arch, flgs);
 
           if (diff)
           { for (j = 0; j<np; j++) tgrad.param_block[j] += grad.param_block[j];

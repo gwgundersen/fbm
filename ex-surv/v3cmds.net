@@ -1,0 +1,17 @@
+
+# Commands for neural network survival model with piecewise-constant hazard,
+# with two hidden layers that are explicitly set up to produce an additive 
+# (proportional hazard) model.
+
+net-spec v3log.net 2 8 omit:1 8 omit:2 1 \
+          / - 0.05:1:1 0.05:1 - - 0.05:1:1 0.05:1 - x0.05:1 x0.05:1 - 100 
+model-spec v3log.net survival pw-const-hazard 0.05 0.1 0.2 0.35 0.5 0.7 1.0 1.5
+
+data-spec v3log.net 1 1 / vdata@1:700 . vdata@-1:700 .
+
+net-gen v3log.net fix 0.5
+mc-spec v3log.net repeat 10 heatbath hybrid 100:10 0.1
+net-mc v3log.net 1
+
+mc-spec v3log.net repeat 4 sample-sigmas heatbath hybrid 1000:10 0.25
+net-mc v3log.net 100

@@ -123,6 +123,7 @@ main
   ap = argv+2; 
 
   o = 0;
+  depth = 0;
 
   while (*ap && strcmp(*ap,"/")!=0)
   {

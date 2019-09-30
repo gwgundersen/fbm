@@ -87,8 +87,8 @@ for ix in ${chainseq}; do
   log-copy ${logfile} - ${logfile}.0.${ix}
   rand-seed ${logfile}.0.${ix} ${ix}1${seed:=1}
   ${module}-gen ${logfile}.0.${ix}
-  ${module}-genp ${logfile}.0.${ix}
   log-append ${logfile} 0 ${logfile}.0.${ix} -
+  ${module}-genp ${logfile}.0.${ix}
   rand-seed ${logfile}.0.${ix} ${ix}2${seed:=1}
 
   if [ ${parallel} -eq 1 ]; then

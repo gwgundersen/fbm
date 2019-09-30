@@ -13,7 +13,7 @@
  */
 
 
-#define Max_inputs 200	/* Maximum number of "input" values allowed */
+#define Max_inputs 4000	/* Maximum number of "input" values allowed */
 #define Max_targets 20	/* Maximum number of "target" values allowed */
 
 

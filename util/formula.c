@@ -1,6 +1,6 @@
 /* FORMULA.C - Parse and evaluate a mathematical formula. */
 
-/* Copyright (c) 1998-2000 by Radford M. Neal 
+/* Copyright (c) 1998-2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,6 +18,7 @@
 #include <math.h>
 
 #include "formula.h"
+#include "extfunc.h"
 #include "rand.h"
 
 extern double lgamma(double), digamma(double);
@@ -36,6 +37,19 @@ char formula_var_exists[26][11]; /* Whether variables exist */
 double formula_var[26][11];	 /* Values of variables */
 double formula_gradient[26][11]; /* Derivatives of expression with 
 				    respect to certain variables */
+
+
+/* TABLE OF EXTERNAL FUNCTIONS. */
+
+static struct		/* Table of external functions */
+{ 
+  char name[Max_ext_name+1];  /* Name of external function */
+  FILE *to, *from;	      /* Pipes to write args to and read value from*/
+
+} ext_funcs[Max_ext_funcs];
+
+static int next_ext_func; /* Next free slot in table */
+
 
 /* LOCAL VARIABLES. */
 
@@ -63,6 +77,7 @@ static double gaussian  (int, double, double [26][11]),
               expgamma  (int, double, double [26][11]);
 
 static void error(void);
+static double ext_func(int,double);
 
 
 /* MACRO TO MOVE TO NEXT NON-SPACE CHARACTER. */
@@ -490,7 +505,7 @@ static double prefactor
       if (nch[0]=='G' && nch[1]=='a' && nch[2]=='u' && nch[3]=='s'
                       && nch[4]=='s' && nch[5]=='i' && nch[6]=='a'
                       && nch[7]=='n' && !LOWER(nch[8]))
-      { nch += 5;
+      { nch += 7;
         next();
         v = gaussian(0,v,gr);
       }
@@ -785,8 +800,12 @@ static double prefactor
         v = expgamma(1,v,gr);
       }
 
-      else
+      else if (UPPER(nch[0]))
       { goto unknown_distribution;
+      }
+
+      else
+      { error();
       }
 
       break;
@@ -808,25 +827,11 @@ static double prefactor
 
 unknown_function:
 
-  fprintf(stderr,"Unknown function: %c",*nch);
-  next();
-  while (*nch && LOWER(*nch))
-  { fprintf(stderr,"%c",*nch);
-    next();
-  }
-  fprintf(stderr,"\n");
-  exit(1);
+  return ext_func(0,v);
 
 unknown_distribution:
 
-  fprintf(stderr,"Unknown distribution: %c",*nch);
-  next();
-  while (*nch && (LOWER(*nch) || UPPER(*nch)))
-  { fprintf(stderr,"%c",*nch);
-    next();
-  }
-  fprintf(stderr,"\n");
-  exit(1);
+  return ext_func(1,v);
 }
 
 static double var
@@ -1262,6 +1267,12 @@ void formula_sample
       formula_var[c][i] = log (rand_gamma(v2) / v3);
     }
 
+    else if (UPPER(nch[0]))
+    { fprintf(stderr,
+   "Generation of values from external distributions is not yet implemented\n");
+      exit(1);
+    }
+
     else
     { abort();
     }
@@ -1350,4 +1361,160 @@ static void error(void)
 # endif
 
   exit(1);
+}
+
+
+/* HANDLE REFERENCE TO EXTERNAL FUNCTION. */
+
+static double ext_func
+( int tilde,		/* Is this a reference via tilde notation? */
+  double v		/* Set to value if tilde syntax used */
+)
+{
+  char *type = tilde ? "distribution" : "function";
+
+  ext_header ext_head;  
+  double ext_args[Max_ext_args]; 
+  char name[Max_ext_name+1];
+  int pipe_to[2], pipe_from[2];
+  char close_bracket;
+  int ei, i;
+
+  if (gradvars)
+  { fprintf(stderr,"Gradients of external functions aren't implemented yet\n");
+    exit(1);
+  }
+
+  /* Extract function/distribution name from expression. */
+
+  i = 0;
+
+  while (LOWER(nch[i]) || UPPER(nch[i]) || DIGIT(nch[i]))
+  { if (i==Max_ext_name)
+    { fprintf(stderr,"External function name is too long (max %d)\n",
+              Max_ext_name);
+      exit(1);
+    }
+    name[i] = nch[i];
+    i += 1;
+  }
+
+  name[i] = 0;
+
+  nch += i-1;
+  next();
+
+  /* Note first argument if tilde syntax used. */
+
+  ext_head.n_args = tilde;
+  if (tilde)
+  { ext_args[0] = v;
+  }
+
+  /* Parse and evaluate arguments of function/distribution. */
+
+  if (*nch=='(') close_bracket = ')';
+  else if (*nch=='[') close_bracket = ']';
+  else if (*nch=='{') close_bracket = '}';
+  else error();
+
+  next();
+
+  while (*nch!=close_bracket)
+  { 
+    if (ext_head.n_args==Max_ext_args)
+    { fprintf(stderr,"Too many arguments to external %s (max %d)",
+              type, Max_ext_args);
+      exit(1);
+    }
+
+    v = expr(0);
+
+    ext_args[ext_head.n_args] = v;
+    ext_head.n_args += 1;
+
+    if (*nch==',') 
+    { next();
+    }
+    else if (*nch!=close_bracket)
+    { error();
+    }
+  }
+
+  next();
+
+  /* Look for a function by this name in the table. */
+
+  for (ei = next_ext_func-1; ei>=0; ei--)
+  { if (strcmp(name,ext_funcs[ei].name)==0) 
+    { break;
+    }
+  }
+
+  /* If function not found in table, add it, start up a new process for it. */
+
+  if (ei<0)
+  { if (next_ext_func==Max_ext_funcs)
+    { fprintf(stderr,"Too many external functions in use (max %d)\n",
+              Max_ext_funcs);
+      exit(1);
+    }
+    ei = next_ext_func;
+    next_ext_func += 1;
+    strcpy(ext_funcs[ei].name,name);
+    if (pipe(pipe_to)!=0 || pipe(pipe_from)!=0)
+    { fprintf(stderr,"Can't create pipes for external %s\n",type);
+      exit(1);
+    }
+    switch (fork())
+    { case -1: 
+      { fprintf(stderr,"Can't create process for external %s\n",type);
+        exit(1);
+      }
+      case 0:			/* child */
+      { close(pipe_to[1]);
+        close(pipe_from[0]);
+        close(0);
+        dup(pipe_to[0]);
+        close(1);
+        dup(pipe_from[1]);
+        execl(name,name,(char*)0);
+        fprintf(stderr,"Can't run program for external %s %s\n",type,name);
+        exit(1);
+      }
+      default:			/* parent */
+      { close(pipe_to[0]);
+        close(pipe_from[1]);
+        ext_funcs[ei].to = fdopen(pipe_to[1],"wb");
+        ext_funcs[ei].from = fdopen(pipe_from[0],"rb");
+        break;
+      }
+    }
+  }
+
+  /* Send request to evaluate this function/distribution. */
+
+  if (eval)
+  {
+    ext_head.want = gradvars ? Value_and_gradient : Value;
+  
+    if (fwrite (&ext_head, sizeof ext_head, 1, ext_funcs[ei].to) != 1
+     || fwrite (ext_args, sizeof (double), ext_head.n_args, 
+                ext_funcs[ei].to) != ext_head.n_args
+     || fflush (ext_funcs[ei].to) == EOF)
+    { fprintf (stderr, "Error writing arguments for external %s %s\n",
+               type, ext_funcs[ei].name);
+      exit(1);
+    }
+  
+    if (fread (&v, sizeof (double), 1, ext_funcs[ei].from) != 1)
+    { fprintf (stderr, "Error reading value for external %s %s\n",
+               type, ext_funcs[ei].name);
+      exit(1);
+    }
+  }
+  
+  /* Return value. */
+
+  return v;
 }

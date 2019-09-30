@@ -48,9 +48,12 @@ The 'options' argument consists of one or more of the following letters:
     m   Display the guess based on the mode, and whether it is in error
     n   Display the guess based on the mean, and its squared error
     d   Display the guess based on the median, and its absolute error
+    D   Display the guess based on the mean of the median for each iteration.
+        This is mostly useful to get an accurate median for one network.
 
     q   Display the 10% and 90% quantiles of the predictive distributions
         for the targets.  Note that these distributions include the noise.
+    Q   Display the 1% and 99% quantiles of the predictive distributions.
 
     b   Suppress headings and averages - just bare numbers for each case.
         The numbers are printed in exponential format, to high precision.
@@ -73,12 +76,12 @@ combinations are marked with an 'X' in the following table:
 
         binary  class  real-valued  survival  no-model
 
-     r    X       X
-     p                                           X
-     m                     X           X         X
-     n                  
-     d    X       X    
-     q    X       X    
+    r     X       X
+    p                                            X
+    m                      X           X         X
+    n                   
+    d/D   X       X    
+    q/Q   X       X    
 
 Furthermore, the 'a' option is incompatible with 'b', 'i', 't', or
 'q', and the 't', 'p', and 'a' options may be used only if the true
@@ -87,16 +90,24 @@ only if the true targets are known. The 'n' option for class models
 displays the mean probabilities for each class, and computes a single
 figure for squared error that is the sum of the squares of the
 differences between these probabilities and the indicator variables
-that are one for the right class and zero for the wrong classes.  The
-'p' option is currently not implemented for survival models with
-piecewise-constant hazard functions.
+that are one for the right class and zero for the wrong classes. 
 
-The median and the 10% and 90% quantiles are calculated by Monte
-Carlo, using a sample consisting of eleven points from each network's
-target distribution.  The random number seed used to generate these
-points is 101*x+i, where x is the index of the network and i is the
-number of the test case.  These computations are not allowed if the
-data is weighted, as produced with Annealed Importance Sampling.
+The median and quantiles for the 'd', 'q', and 'Q' options are
+calculated by Monte Carlo, using a sample consisting of 101 points
+from each network's target distribution.  These computations are not
+allowed if the data is weighted, as produced with Annealed Importance
+Sampling.  These Monte Carlo estimates are found using a random number
+stream initialized by setting the seed to one at the start of the
+program.  Accuracy can be increased by repeating the same
+log-file/range combination several times, effectively increasing the
+sample size use.
+
+The mean median found using 'D' is calculated exactly, without Monte
+Carlo.  This option is mostly useful for survival models, when a
+single iteration specified, since it then produces an accurate value
+for the median prediction with that one network (more accurate than
+would be obtained using 'd').  No error value is produced to go with
+the mean median.
 
 Each average performance figure is accompanied by +- its standard
 error (as long as there is more than one test case).  If Annealed
@@ -108,14 +119,15 @@ error if the AIS runs have missed an important part of the
 distribution.
 
 For survival data, if the survival time in a test case is censored,
-the censoring time is used as the time of death for the purpose of
-computing squared or absolute error.  This is not very meaningful.
+the censoring time (coded as negative) is used as the time of death
+for the purpose of computing squared or absolute error.  This is not
+very meaningful.
 
 If only inputs and targets are to be displayed (no predictions), one
 may give just a single log file with no range.  Otherwise, at least
 one network must be specified.
 
-            Copyright (c) 1995, 1998, 1999 by Radford M. Neal
+            Copyright (c) 1995, 1998, 1999, 2001 by Radford M. Neal
 </pre>
 </body>
 </html>

@@ -1,0 +1,29 @@
+This directory contains data and command files for the examples used
+in the talk on ``Survival analysis using a Bayesian neural network''
+that I gave at the 2001 Joint Statistical Meetings in Atlanta.  The
+slides from this talk are available via the following web page:
+
+    http://www.cs.toronto.edu/~radford/misc-docs.html
+
+The data set used is from a clinical trial of a drug to treat Primary
+Biliary Cirrhosis (PBC), which was used as an example by Fleming and
+Harrington in their book on Counting Processes and Survival Analysis.
+This data was obtained from Statlib (http://lib.stat.cmu.edu/).  The
+file statlib-src contains the data and documentation as obtained from
+their.
+
+The entire data set in slightly different format is in the file
+"data".  The R script process.r is used to process this data and write
+just the cases pertaining to the clinical trial and just the variables
+used to the file "data.use".  The files "data.trn" and "data.tst" are
+a random split of this data into "training" and "test" sets.  
+
+The shell files ending with .cmds fit various neural network models to
+either all the data in data.use, or just the data in data.trn,
+depending on whether "use" or "trn" is given as the argument.  The log
+files produced have the corresponding name ending in .log.use or
+.log.trn.
+
+The process.r script defines various R functions for displaying the
+results of these runs.  The scripts plot1.r, plot2.r, etc. were used
+to produce various graphs in the talk.

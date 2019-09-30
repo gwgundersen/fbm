@@ -45,7 +45,11 @@ In the second form, the energy function is minus the log of the
 posterior density for a Bayesian model, whose parameters are a subset
 of the state variables (of the same form as described above).  The
 model is specified by giving formulas for minus the log of the prior
-density and for minus the log likelihood for a single observation.
+density and for minus the log likelihood for a single observation, or
+for the entire data set.  For both the log prior and the log
+likelihood, constants can be omitted if the objective is only to find
+expectations with respect to the posterior (but constants in the log
+likelihood cannot be omitted if the marginal likelihood is desired).
 
 The likelihood may be given as a single formula, in which any data
 values are written explicitly, as constants.  In this case, no

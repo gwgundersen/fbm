@@ -1,6 +1,6 @@
 /* NET-GRAD.C - Routine for calculating gradient from backpropagated info. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,6 +21,7 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
+#include "data.h"
 #include "net.h"
 
 
@@ -32,7 +33,7 @@
 
 static void add_grad1 (net_param *, net_value *, int);
 static void add_grad2 (net_param *, net_value *, net_param *, int, 
-                       net_value *, int);
+                       net_value *, int, char *, int);
 
 
 /* ADD TO GRADIENT OF ERROR WITH RESPECT TO NETWORK PARAMETERS.  Adds to 
@@ -50,7 +51,8 @@ void net_grad
   net_params *w,	/* Network parameters */
   net_values *v,	/* Values for units in network for a case */
   net_values *d,	/* Backpropagated derivatives for a case */
-  net_arch *a		/* Network architecture */
+  net_arch *a,		/* Network architecture */
+  net_flags *flgs	/* Network flags, null if none */
 )
 { 
   int l;
@@ -67,12 +69,12 @@ void net_grad
 
     if (a->has_ih[l])
     { add_grad2 (g->ih[l], v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
-                 d->s[l], a->N_hidden[l]);
+                 d->s[l], a->N_hidden[l], flgs?flgs->omit:0, 1<<(l+1));
     }
 
     if (l>0 && a->has_hh[l-1])
     { add_grad2 (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
-                 a->N_hidden[l-1], d->s[l], a->N_hidden[l]);
+                 a->N_hidden[l-1], d->s[l], a->N_hidden[l], (char *) 0, 0);
     }
 
     if (a->has_th[l]) 
@@ -81,13 +83,13 @@ void net_grad
 
     if (a->has_ho[l])
     { add_grad2 (g->ho[l], v->h[l], a->has_th[l] ? w->th[l] : 0,
-                 a->N_hidden[l], d->o, a->N_outputs);
+                 a->N_hidden[l], d->o, a->N_outputs, (char *) 0, 0);
     }
   }
 
   if (a->has_io) 
   { add_grad2 (g->io, v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
-               d->o, a->N_outputs);
+               d->o, a->N_outputs, flgs?flgs->omit:0, 1);
   }
 
   if (a->has_bo) 
@@ -120,27 +122,54 @@ static void add_grad2
   net_param *t,		/* Offsets for source units, or zero if no offsets */
   int nv,		/* Number of source units */
   net_value *d,		/* Derivatives with respect to destination units */
-  int nd		/* Number of destination units */
+  int nd,		/* Number of destination units */
+  char *omit,		/* Omit flags, null if not present */
+  int b			/* Bit to look at in omit flags */
 )
 { 
   double tv;
   int i, j;
 
-  if (t!=0)
+  if (omit==0)
   {
-    for (i = 0; i<nv; i++)
-    { tv = v[i] + *t++;
-      j = 0;
-      do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
+    if (t!=0)
+    {
+      for (i = 0; i<nv; i++)
+      { tv = v[i] + *t++;
+        j = 0;
+        do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
+      }
+    }
+    else
+    {
+      for (i = 0; i<nv; i++)
+      { tv = v[i];
+        j = 0;
+        do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
+      }
     }
   }
   else
   {
-    for (i = 0; i<nv; i++)
-    { tv = v[i];
-      j = 0;
-      do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
+    if (t!=0)
+    {
+      for (i = 0; i<nv; i++)
+      { if ((omit[i]&b)==0)
+        { tv = v[i] + *t++;
+          j = 0;
+          do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
+        }
+      }
+    }
+    else
+    {
+      for (i = 0; i<nv; i++)
+      { if ((omit[i]&b)==0)
+        { tv = v[i];
+          j = 0;
+          do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
+        }
+      }
     }
   }
 }
-

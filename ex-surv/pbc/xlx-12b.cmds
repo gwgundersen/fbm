@@ -1,0 +1,15 @@
+# Constant time, linear covariate model, 12 predictors, using const-hazard.
+
+log=xlx-12b.log.$1
+
+net-spec   $log 12 1 / - 10 10
+model-spec $log survival const-hazard 
+data-spec  $log 12 1 / data.$1 . \
+            / I -50x0.1 I I I I I L L-1 L-7 L-5 L-2 / x0.002737851
+
+net-gen    $log fix 0.5
+mc-spec    $log repeat 10 heatbath hybrid 50:5 0.01 heatbath hybrid 50:5 0.05 
+net-mc     $log 1
+
+mc-spec    $log repeat 10 sample-sigmas heatbath 0.9 hybrid 100:10 0.07 negate
+net-mc     $log 100

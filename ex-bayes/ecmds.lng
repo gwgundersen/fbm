@@ -1,0 +1,13 @@
+
+# These commands sample from the posterior distribution for the random
+# effects model using Langevin updates.
+
+dist-spec elog.lng \
+ "u~Normal(0,10^2) + v1~Normal(0,2^2) + v2~Normal(0,2^2)" \
+ "t0~Normal(u,Exp(v1)+Exp(v2)/i) + \
+  (1-Delta(i-1)) * ExpGamma2(Log(t1),i-1,Exp(v2))"
+data-spec elog.lng 1 2 / edata .
+mc-spec elog.lng repeat 25 metropolis 0.1
+dist-mc elog.lng 1
+mc-spec elog.lng repeat 25 heatbath hybrid 1 0.0001
+dist-mc elog.lng 10000

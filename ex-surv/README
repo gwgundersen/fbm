@@ -10,3 +10,7 @@ programs, which is done with a command such as the following:
 The cmed.c and vmed.c programs compute the median time of death for
 the same covariate values as in the data.  The output of these
 programs is in 'cmedians' and 'vmedians'.
+
+The subdirectory "pbc" contains files relating to the example used in
+my talk on "Survival analysis using a Bayesian neural network" at the
+2001 Joint Statistical Meetings in Atlanta.

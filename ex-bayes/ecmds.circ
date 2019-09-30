@@ -1,0 +1,12 @@
+
+# These commands sample from the posterior distribution for the random
+# effects model using circular coupling and the Langevin method.
+
+dist-spec elog.circ \
+ "u~Normal(0,10^2) + v1~Normal(0,2^2) + v2~Normal(0,2^2)" \
+ "t0~Normal(u,Exp(v1)+Exp(v2)/i) + \
+  (1-Delta(i-1)) * ExpGamma2(Log(t1),i-1,Exp(v2))"
+data-spec elog.circ 1 2 / edata .
+#mc-spec elog.circ repeat 5 heatbath hybrid 20 0.05 end metu 0.01
+mc-spec elog.circ repeat 2000 heatbath hybrid 1 0.05 end metu 0.01
+mc-circ dist elog.circ 5 100 5

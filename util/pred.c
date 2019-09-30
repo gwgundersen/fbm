@@ -1,6 +1,6 @@
 /* PRED.C - Skeleton for programs that make predictions for test cases. */
 
-/* Copyright (c) 1995, 1996, 1998, 1999 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1998, 1999, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -42,7 +42,8 @@
 int op_i, op_t, op_r, 
     op_p, op_m, op_n, 
     op_d, op_l, op_b, 
-    op_a, op_q, op_N;
+    op_a, op_q, op_Q,
+    op_D, op_N;
 
 int keep[10];
 
@@ -57,6 +58,7 @@ int M_targets;
 
 int N_records_used;
 double *test_targ_pred;
+double *test_targ_med;
 double *test_log_prob;
 
 float ***median_sample;
@@ -87,6 +89,7 @@ main
   double ave_log_prob, ave_log_prob_sq;
   double *guess, *error;
   double *sum_targets;
+  double *sum_targets_med;
   double *log_prob;
 
   char test_inputs_spec[100];
@@ -165,7 +168,9 @@ main
   op_m = strchr(options,'m')!=0;
   op_n = strchr(options,'n')!=0;
   op_d = strchr(options,'d')!=0;
+  op_D = strchr(options,'D')!=0;
   op_q = strchr(options,'q')!=0;
+  op_Q = strchr(options,'Q')!=0;
   op_l = strchr(options,'l')!=0;
   op_b = strchr(options,'b')!=0 || strchr(options,'B')!=0;
   op_a = strchr(options,'a')!=0;
@@ -182,11 +187,11 @@ main
   }
 
   if (strlen(options) 
-       != op_i+op_t+op_r+op_p+op_m+op_n+op_d+op_b+op_a+op_q+op_l+op_N)
+       != op_i+op_t+op_r+op_p+op_m+op_n+op_d+op_D+op_b+op_a+op_q+op_Q+op_l+op_N)
   { usage();
   }
 
-  guessing = op_p || op_m || op_n || op_d;
+  guessing = op_p || op_m || op_n || op_d || op_D;
 
   put_in_blanks = strchr(options,'B')!=0;
 
@@ -232,11 +237,12 @@ main
 
   /* Check for illegal option combinations. */
 
-  if (op_a && (op_t || op_i || op_q)
+  if (op_a && (op_t || op_i || op_q || op_Q)
    || op_r && (m!=0 && m->type=='B' || m!=0 && m->type=='C')
    || op_p && (m==0) || op_l && (m==0 || m->type!='R')
    || op_m && (m==0 || m->type=='R' || m->type=='V')
-   || (op_d || op_q) && (m!=0 && m->type=='B' || m!=0 && m->type=='C'))
+   || (op_d || op_D || op_q || op_Q) 
+        && (m!=0 && m->type=='B' || m!=0 && m->type=='C'))
   { fprintf(stderr,"Illegal combination of options with data model\n");
     exit(1);
   }
@@ -264,8 +270,10 @@ main
   
     log_prob       = chk_alloc (N_test, sizeof (double));
     sum_targets    = chk_alloc (M_targets*N_test, sizeof (double));
+    sum_targets_med= chk_alloc (M_targets*N_test, sizeof (double));
     test_log_prob  = chk_alloc (N_test, sizeof (double));
     test_targ_pred = chk_alloc (M_targets*N_test, sizeof (double));
+    test_targ_med  = chk_alloc (M_targets*N_test, sizeof (double));
     sq_error       = chk_alloc (M_targets, sizeof (double));
     sq_error_sq    = chk_alloc (M_targets, sizeof (double));
     guess          = chk_alloc (M_targets, sizeof (double));
@@ -275,7 +283,7 @@ main
     abs_error_sq   = chk_alloc (data_spec->N_targets, sizeof (double));
     wrong_sq       = chk_alloc (data_spec->N_targets, sizeof (double));
 
-    if (op_d || op_q)
+    if (op_d || op_q || op_Q)
     { 
       median_sample = chk_alloc (N_test, sizeof *median_sample);
   
@@ -296,12 +304,15 @@ main
     for (i = 0; i<N_test; i++)
     { for (j = 0; j<M_targets; j++)
       { sum_targets[M_targets*i+j] = 0;
+        sum_targets_med[M_targets*i+j] = 0;
       }
     }
 
     ms_count = 0;
   
     /* Go through all the iterations, taken from all the log files. */
+
+    rand_seed(1);
   
     N_records_used = 0;
     has_weights = 0;
@@ -419,7 +430,7 @@ main
             logfile.file_name, logg.last_index);
         }
 
-        if ((op_d || op_q) && N_records_used>=Max_median_points)
+        if ((op_d || op_q || op_Q) && N_records_used>=Max_median_points)
         { fprintf(stderr,
            "Too many iterations being used to find median/quantiles (max %d)\n",
             Max_median_points);
@@ -434,7 +445,7 @@ main
                ? logg.data['b'] : 0;
 
         if (it!=0 && it->log_weight!=0)
-        { if (op_d || op_q)
+        { if (op_d || op_q || op_Q)
           { fprintf(stderr,
            "Median/quantiles are not implemented for weighted data from AIS\n");
             exit(1);
@@ -475,6 +486,7 @@ main
             }
             for (j = N_test*M_targets-1; j>=0; j--) 
             { sum_targets[j] *= f;
+              sum_targets_med[j] *= f;
             }
             max_log_weight = w;
             lf = 0;
@@ -497,6 +509,7 @@ main
 
           for (j = N_test*M_targets-1; j>=0; j--) 
           { sum_targets[j] += f * test_targ_pred[j];
+            sum_targets_med[j] += f * test_targ_med[j];
           }
 
           ms_count += Median_sample; 
@@ -591,9 +604,18 @@ main
       }
     }
 
+    if (op_D)
+    { printf(" %-*s",7*M_targets,"MeanMed");
+    }
+
     if (op_q)
     { printf(" %-*s",7*M_targets,"10% Qnt");
       printf(" %-*s",7*M_targets,"90% Qnt");
+    }
+
+    if (op_Q)
+    { printf(" %-*s",7*M_targets," 1% Qnt");
+      printf(" %-*s",7*M_targets,"99% Qnt");
     }
 
     printf("\n\n");
@@ -782,22 +804,69 @@ main
       }
     }
 
-    if (op_q)
+    if (op_D)
+    { 
+      for (j = 0; j<M_targets; j++)
+      { guess[j] = sum_targets_med[M_targets*i+j] / sum_weights;
+      }
+
+      if (!op_a) 
+      { printf(" ");
+        for (j = 0; j<M_targets; j++) 
+        { printf(op_b ? " %+.8e" : " %6.2f",guess[j]);
+        }
+      }
+    }
+
+    if (op_q || op_Q)
     { 
       for (j = 0; j<data_spec->N_targets; j++)
       { (void) find_median (median_sample[i][j], ms_count);
       }
 
-      printf(" ");
-      for (j = 0; j<data_spec->N_targets; j++) 
-      { printf(op_b ? " %+.8e" : " %6.2f",
-               median_sample[i][j][(int)(0.5 + 0.1*ms_count)]);
-      }
+    }
 
-      printf(" ");
-      for (j = 0; j<data_spec->N_targets; j++) 
-      { printf(op_b ? " %+.8e" : " %6.2f",
-               median_sample[i][j][(int)(0.5 + 0.9*ms_count)]);
+    if (op_q)
+    {
+      int o;
+
+      o = (int) (0.5 + 0.1*ms_count);
+
+      if (!op_a)
+      {
+        printf(" ");
+        for (j = 0; j<data_spec->N_targets; j++) 
+        { printf(op_b ? " %+.8e" : " %6.2f",
+                 median_sample[i][j][o]);
+        }
+
+        printf(" ");
+        for (j = 0; j<data_spec->N_targets; j++) 
+        { printf(op_b ? " %+.8e" : " %6.2f",
+                 median_sample[i][j][ms_count-1-o]);
+        }
+      }
+    }
+
+    if (op_Q)
+    {
+      int o;
+
+      o = (int)(0.5 + 0.01*ms_count);
+
+      if (!op_a)
+      {
+        printf(" ");
+        for (j = 0; j<data_spec->N_targets; j++) 
+        { printf(op_b ? " %+.8e" : " %6.2f",
+                 median_sample[i][j][o]);
+        }
+
+        printf(" ");
+        for (j = 0; j<data_spec->N_targets; j++) 
+        { printf(op_b ? " %+.8e" : " %6.2f",
+                 median_sample[i][j][ms_count-1-o]);
+        }
       }
     }
  
@@ -933,8 +1002,8 @@ static void usage(void)
   fprintf(stderr,
    "Usage: %s-pred options { log-file range } [ / test-inputs [ test-targets ] ]\n", pred_app_name);
   fprintf(stderr,
-    "  Opt: i=inputs, t=targets, p=prob, m=mode, n=mean, d=median, q=quantiles\n");
+   "  Opt: i=inputs, t=targets, p=prob, m=mode, n=mean, d/D=median, q/Q=quantiles\n");
   fprintf(stderr,
-    "       <digit> = select component, r = raw data, b/B = bare, a = averages only\n");
+   "       <digit> = select component, r = raw data, b/B = bare, a = averages only\n");
   exit(1);
 }

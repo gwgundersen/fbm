@@ -1,0 +1,11 @@
+
+# These commands fit a univariate t-distribution with d degrees of freedom
+# to the data in the file "tdata".  The prior for the location parameter 
+# is Normal(0,10^2).  The prior for the log of the scale parameter is 
+# Normal(0,1).  
+
+dist-spec tlog.circ d=2 "u ~ Normal(0,10^2) + w ~ Normal(0,1)" \
+                    "w + [(d+1)/2] Log { 1 + [(t-u)/Exp(w)]^2/d }"
+data-spec tlog.circ 0 1 / tdata .
+mc-spec tlog.circ repeat 10 heatbath hybrid 1 0.1 end metu 0.01
+mc-circ dist tlog.circ 10 100 10

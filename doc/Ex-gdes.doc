@@ -71,7 +71,7 @@ The "+" is actually translated to a very large number, with the result
 that the "prior" for these parameters has virtually no effect.
 Instead of a "+", one can put a positive number, s, which produces the
 effect of "weight decay" with penalty equal to the sum of the squares
-of these weights time 1/(2*s^2).  More elaborate hierarchical priors
+of these weights times 1/(2*s^2).  More elaborate hierarchical priors
 are meaningless if training is to be done by gradient descent.
 
 Next, we must specify the data model.  For this problem, the response

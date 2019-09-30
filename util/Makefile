@@ -19,7 +19,7 @@ programs:	data-spec model-spec log-records log-copy log-append log-last \
 		log-equal rand-seed grid series extract combine find-min calc
 
 modules:	misc.o matrix.o log.o quantities.o plt.o hist.o rand.o numin.o \
-		data-trans.o model.o prior.o ars.o digamma.o
+		data-trans.o model.o prior.o ars.o digamma.o 
 
 clean:
 	rm -f *.o data-spec model-spec log-records log-copy log-append log-last\
@@ -111,3 +111,5 @@ find-min:	find-min.o
 		$(CC) $(LFLAGS) find-min.o -lm -o find-min
 
 find-min.o:	find-min.c
+
+formula.o:	formula.c	formula.h extfunc.h rand.h

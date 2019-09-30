@@ -1,6 +1,6 @@
 /* NET-DISPLAY.C - Program to print network parameters and other such info. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,6 +21,7 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
+#include "data.h"
 #include "net.h"
 
 
@@ -32,6 +33,7 @@ main
 )
 {
   net_arch *a;
+  net_flags *flgs;
   model_specification *m;
 
   net_params  params, *w = &params;
@@ -83,14 +85,15 @@ main
 
   a = logg.data['A'];
   m = logg.data['M'];
+  flgs = logg.data['F'];
   
   if (a==0)
   { fprintf(stderr,"No architecture specification in log file\n");
     exit(1);
   }
 
-  s->total_sigmas = net_setup_sigma_count(a,m);
-  w->total_params = net_setup_param_count(a);
+  s->total_sigmas = net_setup_sigma_count(a,flgs,m);
+  w->total_params = net_setup_param_count(a,flgs);
 
   logg.req_size['S'] = s->total_sigmas * sizeof(net_sigma);
   logg.req_size['W'] = w->total_params * sizeof(net_param);
@@ -135,8 +138,8 @@ main
   s->sigma_block = logg.data['S'];
   w->param_block = logg.data['W'];
 
-  net_setup_sigma_pointers (s, a, m);
-  net_setup_param_pointers (w, a);
+  net_setup_sigma_pointers (s, a, flgs, m);
+  net_setup_param_pointers (w, a, flgs);
 
   /* Print values of the parameters and hyperparameters, or whatever. */
 
@@ -144,13 +147,13 @@ main
     sigmas_only ? " (sigmas only)" : params_only ? " (parameters only)" : "");
 
   if (params_only)
-  { net_print_params(w,0,a,m);
+  { net_print_params(w,0,a,flgs,m);
   }
   else if (sigmas_only)
-  { net_print_sigmas(s,a,m);
+  { net_print_sigmas(s,a,flgs,m);
   }
   else
-  { net_print_params(w,s,a,m);
+  { net_print_params(w,s,a,flgs,m);
   }
 
   printf("\n");

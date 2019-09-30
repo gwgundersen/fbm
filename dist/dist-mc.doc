@@ -25,7 +25,7 @@ dist-spec, which tells dist-mc to obtain points drawn from the prior
 from an external source.  It does this by reading them from standard
 input, as a free-form list of numbers in standard text form, with the
 the state variables being read in the order: u0, ..., u9, u, v0, ...,
-v9, v, w0, ..., w0, w, x0, ..., x9, x, y0, ..., y9, y, z0, ..., z9, z.
+v9, v, w0, ..., w9, w, x0, ..., x9, x, y0, ..., y9, y, z0, ..., z9, z.
 
 There are no "application specific" operations implemented by dist-mc.
 

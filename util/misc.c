@@ -1,6 +1,6 @@
 /* MISC.C - Miscellaneous utility procedures. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -420,6 +420,29 @@ int list_flags
   }
 
   *s = 0;
+
+  return c;
+}
+
+
+/* COUNT INPUTS NOT OMITTED. */
+
+int not_omitted
+( char *a,		/* Char array holding omit flag bits, null if none */
+  int  n,		/* Length of a (ie, total number of inputs) */
+  int  flag		/* Bit set in a to indicate input omitted */
+)
+{
+  int c, i;
+
+  if (a==0) return n;
+
+  c = n;
+  for (i = 0; i<n; i++)
+  { if (a[i]&flag) 
+    { c -= 1;
+    }
+  }
 
   return c;
 }

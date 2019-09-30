@@ -1,6 +1,6 @@
 /* NET-GEN.C - Program to generate networks (eg, from prior distribution). */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,6 +21,7 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
+#include "data.h"
 #include "net.h"
 #include "rand.h"
 
@@ -33,6 +34,7 @@ main
 )
 {
   net_arch *a;
+  net_flags *flgs;
   net_priors *p;
 
   model_specification *m;
@@ -84,18 +86,20 @@ main
   p = logg.data['P'];
   v = logg.data['V'];
 
+  flgs = logg.data['F'];
+
   net_check_specs_present(a,p,0,m,v);
 
   /* Allocate space for parameters and hyperparameters. */
 
-  s->total_sigmas = net_setup_sigma_count(a,m);
-  w->total_params = net_setup_param_count(a);
+  s->total_sigmas = net_setup_sigma_count(a,flgs,m);
+  w->total_params = net_setup_param_count(a,flgs);
 
   s->sigma_block = chk_alloc (s->total_sigmas, sizeof (net_sigma));
   w->param_block = chk_alloc (w->total_params, sizeof (net_param));
 
-  net_setup_sigma_pointers (s, a, m);
-  net_setup_param_pointers (w, a);
+  net_setup_sigma_pointers (s, a, flgs, m);
+  net_setup_param_pointers (w, a, flgs);
 
   /* Read last records in log file to see where to start, and to get random
      number state left after last network was generated. */
@@ -119,7 +123,7 @@ main
 
   for ( ; index<=max_index; index++)
   {
-    net_prior_generate (w, s, a, m, p, argv[fix]!=0, value, out_value);
+    net_prior_generate (w, s, a, flgs, m, p, argv[fix]!=0, value, out_value);
 
     logf.header.type = 'S';
     logf.header.index = index;

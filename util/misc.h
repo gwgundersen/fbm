@@ -26,3 +26,4 @@ void parse_time_range (char *, double *, double *, int *);
 
 void parse_flags (char *, char *, int, int);
 int list_flags (char *, int, int, char *);
+int not_omitted (char *, int, int);

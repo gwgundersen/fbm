@@ -1,6 +1,6 @@
 /* NET-EVAL.C - Program to evaluate the network function at a grid of points. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -20,12 +20,9 @@
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
+#include "data.h"
 #include "model.h"
 #include "net.h"
-
-
-#define Max_inputs  100		/* Maximum number of input dimensions allowed */
-#define Max_targets 100		/* Maximum number of targets allowed */
 
 static void usage(void);
 
@@ -38,6 +35,7 @@ main
 )
 {
   net_arch *a;
+  net_flags *flgs;
   model_specification *m;
   model_survival *sv;
 
@@ -48,11 +46,11 @@ main
   net_value *value_block;
   int value_count;
 
-  net_value grid_low[Max_inputs];
-  net_value grid_high[Max_inputs];
+  static net_value grid_low[Max_inputs];
+  static net_value grid_high[Max_inputs];
 
-  int grid_size[Max_inputs];
-  int grid_point[Max_inputs];
+  static int grid_size[Max_inputs];
+  static int grid_point[Max_inputs];
 
   log_file logf;
   log_gobbled logg;
@@ -115,6 +113,7 @@ main
   }
 
   a = logg.data['A'];
+  flgs = logg.data['F'];
   m = logg.data['M'];
   sv = logg.data['V'];
 
@@ -151,8 +150,8 @@ main
     exit(1);
   }
 
-  s->total_sigmas = net_setup_sigma_count(a,m);
-  w->total_params = net_setup_param_count(a);
+  s->total_sigmas = net_setup_sigma_count(a,flgs,m);
+  w->total_params = net_setup_param_count(a,flgs);
 
   logg.req_size['S'] = s->total_sigmas * sizeof(net_sigma);
   logg.req_size['W'] = w->total_params * sizeof(net_param);
@@ -195,7 +194,7 @@ main
     }
   
     w->param_block = logg.data['W'];
-    net_setup_param_pointers (w, a);
+    net_setup_param_pointers (w, a, flgs);
   
     if (gen_targets) 
     {
@@ -206,7 +205,7 @@ main
       }
   
       s->sigma_block = logg.data['S'];
-      net_setup_sigma_pointers (s, a, m);
+      net_setup_sigma_pointers (s, a, flgs, m);
     }
   
     /* Print the value of the network function, or targets generated from it, 
@@ -226,12 +225,12 @@ main
   
     for (;;)
     {
-      net_func (v, 0, a, w);
+      net_func (v, 0, a, flgs, w);
   
       for (i = 0; i<a->N_inputs; i++) printf(" %8.5f",v->i[i]);
   
       if (gen_targets)
-      { net_model_guess (v, targets, a, m, sv, w, s, 1);
+      { net_model_guess (v, targets, a, flgs, m, sv, w, s, 1);
         for (j = 0; j<N_targets; j++) printf(" %+.6e",targets[j]);
       }
       else

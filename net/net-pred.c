@@ -1,6 +1,6 @@
 /* NET-PRED.C - Make predictions for for test cases using neural networks. */
 
-/* Copyright (c) 1995, 1996, 1998, 1999 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1998, 1999, 2001 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -26,8 +26,8 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
-#include "net.h"
 #include "data.h"
+#include "net.h"
 #include "numin.h"
 #include "net-data.h"
 #include "mc.h"
@@ -47,6 +47,7 @@ double *test_inputs;
 /* LOCAL VARIABLES. */
 
 static net_arch *a;
+static net_flags *flgs;
 static net_priors *p;
 static net_sigmas sigmas, *s = &sigmas;
 static net_params params, *w = &params;
@@ -77,17 +78,12 @@ void pred_app_init (void)
   a  = logg.data['A'];
   p  = logg.data['P'];
 
+  flgs = logg.data['F'];
+
   net_check_specs_present(a,p,0,m,sv);
 
-  if (op_p && m!=0 && m->type=='V' && sv->hazard_type!='C')
-  { fprintf(stderr,
-"Option p is implemented for survival models only when the hazard is constant\n"
-    );
-    exit(1);
-  }
-
-  s->total_sigmas = net_setup_sigma_count(a,m);
-  w->total_params = net_setup_param_count(a);
+  s->total_sigmas = net_setup_sigma_count(a,flgs,m);
+  w->total_params = net_setup_param_count(a,flgs);
 
   logg.req_size['S'] = s->total_sigmas * sizeof(net_sigma);
   logg.req_size['W'] = w->total_params * sizeof(net_param);
@@ -123,8 +119,8 @@ int pred_app_use_index (void)
   s->sigma_block = logg.data['S'];
   w->param_block = logg.data['W'];
   
-  net_setup_sigma_pointers (s, a, m);
-  net_setup_param_pointers (w, a);
+  net_setup_sigma_pointers (s, a, flgs, m);
+  net_setup_param_pointers (w, a, flgs);
 
   if (op_N)
   { for (l = 0; l<a->N_layers; l++)
@@ -148,14 +144,71 @@ int pred_app_use_index (void)
     
   for (i = 0; i<N_test; i++)
   { 
-    net_func (&test_values[i], 0, a, w);
+
+    if (m==0 || m->type!='V' || sv->hazard_type=='C')
+    {
+      net_func (&test_values[i], 0, a, flgs, w);
+    }
     
     if (have_targets) 
     { 
-      net_model_prob (&test_values[i], 
-                      test_targets + data_spec->N_targets * i, 
-                      &test_log_prob[i],
-                      0, a, m, sv, s, 0);
+      if (op_p && m!=0 && m->type=='V' && sv->hazard_type!='C')
+      {
+        double ot, ft, t0, t1, lp;
+        int censored;
+        int x;
+        
+        if (test_targets[i]<0)
+        { censored = 1;
+          ot = -test_targets[i];
+        }
+        else
+        { censored = 0;
+          ot = test_targets[i];
+        }
+
+        t0 = 0;
+        t1 = sv->time[0];
+        test_values[i].i[0] = sv->log_time ? log(t1) : t1;
+
+        x = 0;
+        test_log_prob[i] = 0;
+
+        for (;;)
+        {
+          net_func (&test_values[i], 0, a, flgs, w);
+          
+          ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+
+          net_model_prob(&test_values[i], &ft,
+                         &lp, 0, a, m, sv, s, 0);
+
+          test_log_prob[i] += lp;
+
+          if (ot<=t1) break;
+ 
+          t0 = t1;
+          x += 1;
+          
+          if (sv->time[x]==0) 
+          { t1 = ot;
+            test_values[i].i[0] = sv->log_time ? log(t0) : t0;
+          }
+          else
+          { t1 = sv->time[x];
+            test_values[i].i[0] = sv->log_time ? (log(t0)+log(t1))/2
+                                                  : (t0+t1)/2;
+          }
+        }
+      }
+      else
+      {
+        net_model_prob (&test_values[i], 
+                        test_targets + data_spec->N_targets * i, 
+                        &test_log_prob[i],
+                        0, a, m, sv, s, 0);
+      }
+
       if (op_r)
       { for (j = 0; j<data_spec->N_targets; j++)
         { tr = &data_spec->target_trans[j];
@@ -169,8 +222,13 @@ int pred_app_use_index (void)
     }
     
     net_model_guess (&test_values[i], test_targ_pred + i*M_targets, 
-                     a, m, sv, w, s, 0);
-    
+                     a, flgs, m, sv, w, s, 0);
+
+    if (op_D)
+    { net_model_guess (&test_values[i], test_targ_med + i*M_targets, 
+                       a, flgs, m, sv, w, s, 2);
+    }
+
     for (j = 0; j<M_targets; j++)
     { 
       if (op_r) 
@@ -194,14 +252,12 @@ int pred_app_use_index (void)
       }
     }
 
-    if (op_d || op_q)
+    if (op_d || op_q || op_Q)
     {
-      rand_seed(101*logg.last_index+i);
-
       for (k = 0; k<Median_sample; k++)
       {
         net_model_guess (&test_values[i], curr_targets, 
-                         a, m, sv, w, s, 1);
+                         a, flgs, m, sv, w, s, 1);
 
         for (j = 0; j<M_targets; j++)
         { if (op_r)

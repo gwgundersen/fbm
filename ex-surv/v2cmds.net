@@ -13,4 +13,4 @@ mc-spec v2log.net repeat 10 heatbath hybrid 100:10 0.1
 net-mc v2log.net 1
 
 mc-spec v2log.net repeat 4 sample-sigmas heatbath hybrid 1000:10 0.25
-net-mc v2log.net 100
+net-mc v2log.net 400

@@ -8,7 +8,9 @@ catff Overview.doc
 catff Ex-intro.doc
 
 catff Ex-dist.doc 
-cat Ex-dist-n.doc Ex-dist-g.doc 
+cat Ex-dist-n.doc Ex-dist-g.doc Ex-dist-f.doc
+
+catff Ex-circ.doc
 
 catff Ex-bayes.doc
 cat Ex-bayes-r.doc Ex-bayes-t.doc Ex-bayes-p.doc Ex-bayes-e.doc

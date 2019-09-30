@@ -42,9 +42,12 @@ The 'options' argument consists of one or more of the following letters:
     m   Display the guess based on the mode, and whether it is in error
     n   Display the guess based on the mean, and its squared error
     d   Display the guess based on the median, and its absolute error
+    D   Display the guess based on the mean of the median for each iteration.
+        Not really useful for gp-pred.
 
     q   Display the 10% and 90% quantiles of the predictive distributions
         for the targets.  Note that these distributions include the noise.
+    Q   Display the 1% and 99% quantiles of the predictive distributions.
 
     l   Use stored latent values for predictions with a regression model
         (if available).  Normally, predictions for regression models are 
@@ -74,12 +77,12 @@ combinations are marked with an 'X' in the following table:
 
         binary  class  real-valued  no-model
 
-     r    X       X
-     p                                 X
-     m                     X           X
-     n                  
-     d    X       X    
-     q    X       X    
+    r     X       X
+    p                                  X
+    m                      X           X
+    n                   
+    d/D   X       X    
+    q/Q   X       X    
 
 Furthermore, the 'a' option is incompatible with 'b', 'i', 't', or
 'q', and the 't', 'p', and 'a' options may be used only if the true
@@ -101,20 +104,25 @@ take much longer to compute the median or log probability predictions
 mean predictions (option "n").  For binary and class models, all 
 sorts of predictions take about the same amount of time.
 
-The median is calculated by Monte Carlo, using a sample consisting of
-eleven points from the predictive distribution for each Gaussian
-process.  A sample of one hundred points for each Gaussian process is
+The median and quantiles are calculated by Monte Carlo, using a sample
+consisting of 101 points from the predictive distribution for each
+Gaussian process.  A sample of 100 points for each Gaussian process is
 used to calculate predictive probabilities for binary and class
 models.  If the model has case-by-case noise variances, a single
 test-case variance is chosen randomly for each Gaussian process (this
 is a bit sub-optimal, as it would be better to pick a new variance for
-each of the eleven points used to compute the median, and to integrate
+each of the 101 points used to compute the median, and to integrate
 the variance away to produce a t-distribution when computing the log
 predictive probability - but the programming was easier this way).
 
-In all these cases, the random number seed used in making predictions
-is 101*x+i, where x is the iteration number and i is the number of the
-test case.
+These Monte Carlo estimates are found using a random number stream
+initialized by setting the seed to one at the start of the program.
+Accuracy can be increased by repeating the same log-file/range
+combination several times, effectively increasing the sample size use.
+
+The 'D' option is implemented, but is of no real use, since models for
+survival analysis aren't supported, and individual medians for other
+models are the same as means.  It's here only because of net-pred.
 
 Each average performance figure is accompanied by +- its standard
 error (as long as there is more than one test case).
@@ -125,9 +133,9 @@ one Gaussian process must be specified.
 
 An additional option of -use-inverse or -alt-mean may appear before
 the "options" argument above.  These control the way the matrix
-operations are done, and are primarily mean for testing purposes.
+operations are done, and are primarily meant for testing purposes.
 However, users might have a use for -alt-mean, which forces a possibly
 more accurate computation of the mean prediction (which is, however,
 slower, if only the mean is being computed).
 
-            Copyright (c) 1996, 1998 by Radford M. Neal
+            Copyright (c) 1996, 1998, 2001 by Radford M. Neal

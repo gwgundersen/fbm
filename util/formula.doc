@@ -32,7 +32,9 @@ written in pretty much the usual way, with the following conventions:
 The constant Pi=3.14159... is defined.  Use Exp(1), defined below, to
 get the value of e=2.71828...
 
-The following univariate functions are known:
+A number of functions are built in; others can be defined by external
+programs, as described below.  The following univariate functions are
+built in:
 
   Sin   Cos   Tan   Log   Exp     Abs   Theta  Delta
   Sinh  Cosh  Tanh  Sqrt  LGamma  Frac  Sign   
@@ -125,8 +127,8 @@ that can occur zero or more times).
                | "[" <formula> { "," <formula> } "]"
                | "{" <formula> { "," <formula> } "}"
 
- <ufunction> ::= <one of the univariate functions listed above>
- <dfunction> ::= <one of the log density functions listed above>
+ <ufunction> ::= <one of the univariate functions built in or defined externally>
+ <dfunction> ::= <one of the log density functions built in or defined externally>
  <variable>  ::= <lower-case-letter> [ <digit> ]
  <constant>  ::= Pi
  <number>    ::= <integer> [ "." { <digit> } ] [ <exponent> ]
@@ -138,3 +140,45 @@ Spaces may be inserted anywhere except inside variable names, function
 names, or numbers.
 
 See calc.doc for some examples of formulas.
+
+
+Defining new functions.
+
+A new function can be defined by writing a program for computing its
+value, typically in C.  New distributions can also be defined in this
+way.  However, at present, gradients for these functions are not
+handled, and random generation from distributions is also not
+implemented.
+
+Such an externally-defined function or distribution must have a name
+consisting of an upper-case letter followed by zero or more upper-case
+or lower-case letters or digits.  A program with this same name must
+exist in the current directory.  When the value of the function is
+first needed, this program will be started as a subprocess connected
+via pipes replacing standard input and output.  The program should
+consist of a loop that reads a request to evaluate the function for
+specific values of its arguments from standard input, and then writes
+the corresponding function value to standard output.  The program
+should exit when it encounters EOF on standard input.
+
+Each function evaluation request will start with the following header,
+defined in extfunc.h in the util directory:
+
+  typedef struct	
+  { enum { Value, Value_and_gradient, Random_variate} want;
+    int n_args;
+  } ext_header;
+
+This should be read from standard input using fread.  The 'want' field
+says what type of operation has been requested.  Currently, only
+'Value' is used.  The 'n_args' field says how many arguments were
+passed to the function.  After the header has been read, this many
+double-precision floating-point arguments should be read from standard
+input using fread.  The value of the function with these arguments
+should then be written to standard output as a double-precision
+floating-point number using fwrite, and the output forced out using
+fflush.
+
+Note that this procedure makes use of Unix-specific facilities.
+
+            Copyright (c) 1998-2001 by Radford M. Neal

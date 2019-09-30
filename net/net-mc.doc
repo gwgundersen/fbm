@@ -9,15 +9,74 @@ xxx-mc.doc for the generic features of this program.
 
 The following applications-specific sampling procedures are implemented:
 
-   sample-hyper   Does Gibbs sampling for the hyperparameters controlling
-                  the distributions of parameters (weights, etc.).
+   sample-hyper       
 
-   sample-noise   Does Gibbs sampling for the noise variances.
+       Does Gibbs sampling for the hyperparameters controlling the 
+       distributions of parameters (weights, biases, etc.).
 
-   sample-sigmas  Does both sample-hyper and sample-noise.
+   sample-noise       
 
-Default stepsizes are set by a complicated heuristic procedure that is
-described in Appendix A of the thesis.
+       Does Gibbs sampling for the noise variances.
+
+   sample-lower-hyper 
+
+       Does Gibbs sampling for all lower-level hyperparameters.
+
+   rgrid--upper-hyper [ stepsize ]
+
+       Does random-grid Metropolis updates (one at a time) for 
+       the logs of all upper-level hyperparameters, in "precision" 
+       form.  The default stepsize is 0.1.
+
+   sample-lower-noise
+
+       Does Gibbs sampling for all lower-level noise variances.
+
+   rgrid-upper-noise [ stepsize ]
+
+       Does random-grid Metropolis updates (one at a time) for the 
+       logs of all upper-level hyperameters controlling noise
+       variances, in "precison" form.  The default stepsize is 0.1.
+
+   sample-sigmas  
+
+       Does the equivalent of both sample-hyper and sample-noise.
+
+   sample-lower-sigmas
+
+       Does the equivalent of both sample-lower-hyper and 
+       sample-lower-noise.
+
+   sample-upper-sigmas
+
+       Does the equivalent of both sample-upper-hyper and 
+       sample-upper-noise.
+
+An "upper-level" hyperparameter is one that controls the distribution
+of lower-level hyperparameters or noise variances (which may be either
+explicit or implicit).  The "lower-level" hyperparameters directly
+control the distributions of weights.  Looked at another way, the
+lower-level hyperparameters are the ones at the bottom level of the
+hierarchy, or for which all lower-level hyperparameters have
+degenerate distributions concentrated on the value of the higher-level
+hyperparameter.
+
+The random grid metropolis updates done with the above commands record
+information (eg, rejection rate) for later display in the same way as
+generic rgrid-met-1 updates.  
+
+When coupling is being done, upper-level hyperparameters should be
+updated only with random-grid updates; Gibbs sampling for these
+upper-level hyperparamters will desynchronize the random number
+streams (because of the way it is implemented using ARS), preventing
+coalescence.  Lower-level hyperparameters can be updated with Gibbs
+sampling, and they will exactly coalesce once the parameters they
+control and the upper-level hyperparameters that control them have
+exactly coalesced.
+
+Default stepsizes for updates of parameters (weigths, biases, etc.) by
+the generic Markov chain operations are set by a complicated heuristic
+procedure that is described in Appendix A of the thesis.
 
 Tempering methods and Annealed Importance sampling are supported.  The
 effect of running at an inverse temperature other than one is to
@@ -27,4 +86,4 @@ hyperparameters and weights.  The marginal likelihood for a model can
 be found using Annealed Importance Sampling, since the log likelihood
 part of the energy has all the appropriate normalizing constants.
 
-            Copyright (c) 1995, 1998 by Radford M. Neal
+            Copyright (c) 1995-2001 by Radford M. Neal
