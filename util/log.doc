@@ -1,0 +1,27 @@
+
+
+LOG:  Facilities for handling log files.
+
+Log files are repositories of data produced by iterative programs.  A
+log file contains a series of records, each identified by its type and
+its numerical index.  Programs may create new log files, or read and
+append records to an existing log file.
+
+Normally, a newly created log file will have various specifications
+stored in the first few records, with index -1.  Other programs will
+then be able to obtain this data without requiring further user input.
+Programs of an iterative nature may write indefinite numbers of other
+records, with the iteration to which each record pertains being
+identified by its index, from zero on up.  By convention, index zero
+is used for special initialization purposes; iterations normally
+starting at index one.  The indexes of successive records in a log
+file must be non-decreasing.
+
+Log files contain binary data.  They are not human readable, and they
+may not be portable between different computer systems.
+
+Access by programs to log files is supported by the 'log' module.  The
+'log-copy', 'log-last', and 'log-records' utilities may be useful to
+the users of programs that use log files.
+
+            Copyright (c) 1995 by Radford M. Neal

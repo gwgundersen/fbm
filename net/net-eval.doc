@@ -1,0 +1,35 @@
+
+
+NET-EVAL:  Evaluate network functions over a grid.  
+
+Net-eval displays the functions defined by a set of networks at a grid
+of points.  Optionally, the functions may instead be used to generate
+target points at random in accordance with the data model.
+
+Usage:
+
+    net-eval log-file range { / low high grid-size } [ "targets" ]
+
+The networks are taken from the named log-file, with the specified
+range.  The range has the usual form, "[low][:[high]][%mod]", with
+'high' defaulting to 'low' if the colon is absent, and to the end of
+the file if the colon is present.
+
+Each group of the remaining arguments describes the grid along one
+input dimension, with 'low' and 'high' being the range of the grid
+along that dimension, and grid-size + 1 being the number of grid
+points spread across that range.  The number of such argument groups
+must be the same as the number of input dimensions.
+
+The output consists of a section for each network, with sections
+separated by blank lines.  Each section contains as many lines as
+there are grid points, with each line giving the input values followed
+by the output values.  When there is more than one input variable, a
+blank line is output between groups of points where all but the last
+variable are the same.
+
+If the final argument is "targets", then rather than writing the
+network outputs, the program instead generates target values from
+these outputs, as defined by the data model.
+
+            Copyright (c) 1995 by Radford M. Neal

@@ -1,0 +1,18 @@
+
+
+GRID:  Output a grid of points.  
+
+Grid is meant for use as a source of input in a 'numin' specification,
+when one wants, for instance, to test the performance of a network at
+a grid of points in the input space.
+
+Usage:
+
+    grid { low:high%mod }
+
+Each argument gives the range and increment for one dimension of the
+grid.  The grid in that dimension consists of all points that are
+multiples of 'mod' and that lie between low and high, inclusive.  The
+last dimension specified is the one that changes fastest.
+
+            Copyright (c) 1995 by Radford M. Neal

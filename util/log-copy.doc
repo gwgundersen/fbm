@@ -1,0 +1,30 @@
+
+
+LOG-COPY:  Copy part of a log file to a new log file.
+
+Log-copy copies certain records from an existing log file to a new log
+file.  This is useful for decimating log files or repairing log files
+with junk at the end, such as could arise if a program crashes in the
+middle of writing a record.
+
+Usage:
+
+   log-copy input-log-file range output-log-file [ low[%mod] ]
+
+Records with negative indexes or with indexes in the indicated range
+are copied from input-log-file to a newly-created output-log-file.
+The range has the usual form of [low][:[high]][%modulus], as described
+in parse_range in misc.c.  If high and the colon are omitted, high
+defaults to low.  If high is omitted but the colon is present, the
+range extends to the end of the file.
+
+If the optional trailing argument is present, the indexes of the
+records written (other than those with negative indexes) are changed
+so that the first record has index 'low' and subsequent indexes
+increase by 'mod'.  The default for 'mod' is the modulus in the input
+range.
+
+As a special fudge, an input file range of "-" causes only records
+with negative indexes to be copied.
+
+            Copyright (c) 1995 by Radford M. Neal

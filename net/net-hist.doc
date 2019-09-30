@@ -1,0 +1,20 @@
+
+
+NET-HIST:  Build a histogram for a quantity obtained from a net log file.
+
+The net-hist program is a specialization of xxx-hist to the neural
+network application.  It can access any of the quantities documented
+in net-quantities.doc, mc-quantities.doc, and quantities.doc.
+
+The form of the net-hist command is 
+
+    net-hist quantities low high bins { log-file [ range ] }
+             [ / test-inputs [ test-targets ] ]
+
+The optional arguments at the end allow the quantities relating to test
+cases to be evaluated with respect to a test set other than the one
+specified with data-spec.
+
+For the generic features of net-hist, see xxx-hist.doc.
+
+            Copyright (c) 1995 by Radford M. Neal

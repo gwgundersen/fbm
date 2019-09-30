@@ -1,0 +1,27 @@
+
+
+XXX-STEPSIZES:  Display and evaluate stepsizes used for dynamics.
+
+There is a version of this program for each 'mc' application (eg,
+net-stepsizes).  These programs display the stepsizes selected by the
+application-specific module linked with the 'mc' modules, along with
+the stepsizes that would come from taking the second derivatives,
+computed by differences using the application-specific procedure for
+computing the gradient of the energy.  
+
+These programs are meant primarily for use in debugging, but they
+might occasionally be useful in checking whether the heuristic choice
+of stepsizes has worked well in a particular situation.
+
+Usage:
+
+    xxx-stepsizes log-file index [ delta ]
+ 
+Here 'xxx' is a prefix identifying the particular incarnation of this
+program.  The stepsizes are computed for the state stored with the
+specified index in the log file.  If a delta is given, the stepsizes
+that would be selected based on the second derivatives at that point
+are also displayed, the second derivatives being found by differences
+of first derivatives, using the given delta.
+
+            Copyright (c) 1995 by Radford M. Neal

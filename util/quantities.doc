@@ -1,0 +1,41 @@
+
+
+QUANTITIES:  Numeric quantities obtainable from log files.
+
+Several programs (eg, the xxx-plt family) deal with quantities
+obtained from log files.  Each such quantity is associated with a
+single character, whose meaning may be modified by a positive integer.
+Such a character/modifier combination may be associated with a single
+numeric value, or an array of values, as determined by the application
+module.
+
+A set of quantities is specified by a string consisting of one or more
+quantity specifications of the following form:
+
+   {letter[modifier][@[low[:[high]]]]}
+
+I.e. each quantity specification starts with an identitying letter,
+optionally followed by a non-negative integer modifier.  This may be
+followed by a specification for a range of values of this type, as
+indicated by the presence of an '@'.  If nothing follows the '@', the
+low bound is assumed to be zero and the high bound whatever is the
+maximum, or zero as well, if there is no maximum.  If the low bound
+alone is specified, the high bound is assumed equal to the low bound.
+If the colon is present but no high bound is given the high bound
+defaults to the maximum, or to the low bound if there is no maximum.
+Note that the absence of any range specification may be different from
+a full range specification - the application might treat it either as
+a full array or as a single-valued quantity.
+
+The following quantity specifications are universally known (unless
+redefined):
+
+    t   The index of the current iteration.  No modifier or range allowed.
+
+    #   An array with values equal to indexes.
+
+Other quantities are as defined by the application, or other by other
+higher-level modules.  For documentation, see mc-quantities, net-quantities, 
+etc.
+
+            Copyright (c) 1995 by Radford M. Neal

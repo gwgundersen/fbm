@@ -1,0 +1,24 @@
+
+
+NET-MC:  Do Markov chain simulation to sample networks.
+
+The net-mc program is the specialization of xxx-mc to the task of
+sampling from the posterior distribution for a neural network model,
+or from the prior distribution, if no training set is specified.  See
+xxx-mc.doc for the generic features of this program.s
+
+The following applications-specific sampling procedures are implemented:
+
+   sample-hyper   Does Gibbs sampling for the hyperparameters controlling
+                  the distributions of parameters (weights, etc.).
+
+   sample-noise   Does Gibbs sampling for the noise variances.
+
+   sample-sigmas  Does both sample-hyper and sample-noise.
+
+Default stepsizes are set by a complicated heuristic procedure that is
+described in Appendix A of the thesis.
+
+Tempering methods are not currently supported.
+
+            Copyright (c) 1995 by Radford M. Neal

@@ -1,0 +1,37 @@
+
+
+BVG-MC:  Do Markov chain simulation to sample from a bivariate Gaussian.
+
+The bvg-mc program is the specialization of xxx-mc to the task of
+sampling from a bivariate Gaussian.  See xxx-mc.doc for the generic
+features of this program.
+
+The following applications-specific sampling procedures are implemented:
+
+    gibbs          Does a Gibbs sampling update for all replications 
+                   of the bivariate Gaussian.  A update consists of 
+                   sampling first from the conditional distribution for 
+                   the first component, and then from the conditional 
+                   distribution for the second component.
+
+    gibbs0 alpha   Does an Adler-style overrelaxed update for the first 
+                   component (separately for all replications).  The 
+                   new value of the offset of the component from its
+                   conditional mean is alpha times the old offset plus
+                   Gaussian noise of variance 1-alpha^2 times the
+                   conditional variance.
+
+    gibbs1 alpha   Does an Adler-style overrelaxed update for the second
+                   component.
+
+To do Adler-style successive overrelaxation, gibbs0 and gibbs1 should
+be done alternately.
+
+The inverse temperature used in tempering methods is interpreted in
+the standard way, as a power to raise the (unnormalized) probability
+density to, or equivalently, a factor to multiply the energy by.
+
+The default dynamical stepsizes are all set to one, except that they
+are appropriately scaled during tempering.
+
+            Copyright (c) 1995 by Radford M. Neal

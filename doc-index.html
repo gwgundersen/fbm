@@ -1,0 +1,120 @@
+<html>
+<head>
+
+<title>Bayesian Neural Network Software</title>
+
+</head>
+
+<body>
+
+<h1>Bayesian Neural Network Software</h1>
+
+Copyright (c) 1995 by Radford M. Neal<P>
+
+This is an index to documenation for software implementing Bayesian
+neural network learning using Markov chain Monte Carlo methods.
+
+<h2><a href="documentation">Overview and tutorial examples</a></h2>
+
+<h2><a href="release-notes">Notes on current and past releases</a></h2>
+
+<h2>Alphabetical index within directories:</h2>
+<pre>
+       UTIL              MC              NET             BVG
+
+     <a href="util/data-spec.doc">data-spec</a>      <a href="mc/mc.doc">mc</a>                <a href="net/net.doc">net</a>              <a href="bvg/bvg.doc">bvg</a>
+     <a href="util/extract.doc">extract</a>        <a href="mc/mc-quantities.doc">mc-quantities</a>     <a href="net/net-dvar.doc">net-dvar</a>         <a href="bvg/bvg-plt.doc">bvg-plt</a>
+     <a href="util/grid.doc">grid</a>           <a href="mc/mc-spec.doc">mc-spec</a>           <a href="net/net-display.doc">net-display</a>      <a href="bvg/bvg-mc.doc">bvg-mc</a>
+     <a href="util/log.doc">log</a>            <a href="mc/mc-temp-filter.doc">mc-temp-filter</a>    <a href="net/net-eval.doc">net-eval</a>         <a href="bvg/bvg-spec.doc">bvg-spec</a>
+     <a href="util/log-copy.doc">log-copy</a>       <a href="mc/mc-temp-sched.doc">mc-temp-sched</a>     <a href="net/net-gen.doc">net-gen</a>
+     <a href="util/log-last.doc">log-last</a>       <a href="mc/xxx-grad-test.doc">xxx-grad-test</a>     <a href="net/net-hist.doc">net-hist</a>
+     <a href="util/log-records.doc">log-records</a>    <a href="mc/xxx-mc.doc">xxx-mc</a>            <a href="net/net-mc.doc">net-mc</a>
+     <a href="util/log-types.doc">log-types</a>      <a href="mc/xxx-stepsizes.doc">xxx-stepsizes</a>     <a href="net/net-plt.doc">net-plt</a>
+     <a href="util/numin.doc">numin</a>                            <a href="net/net-pred.doc">net-pred</a>
+     <a href="util/numin-test.doc">numin-test</a>                       <a href="net/net-prior.doc">net-prior</a>
+     <a href="util/quantities.doc">quantities</a>                       <a href="net/net-quantities.doc">net-quantities</a>
+     <a href="util/rand-seed.doc">rand-seed</a>                        <a href="net/net-rej.doc">net-rej</a>
+     <a href="util/rand-test.doc">rand-test</a>                        <a href="net/net-spec.doc">net-spec</a>
+     <a href="util/series.doc">series</a>
+     <a href="util/xxx-hist.doc">xxx-hist</a>
+     <a href="util/xxx-plt.doc">xxx-plt</a>
+</pre>
+
+<h2>Generic utilitiy programs [util]:<h2>
+<pre>
+  * <a href="util/log.doc">log</a>             Facilities for handling log files
+    <a href="util/log-types.doc">log-types</a>       Types of log file records used by various programs
+
+    <a href="util/log-copy.doc">log-copy</a>        Copy part of a log file to a new log file
+    <a href="util/log-last.doc">log-last</a>        Display the index of the last record in a log file
+    <a href="util/log-records.doc">log-records</a>     List all records in a log file
+
+  * <a href="util/data-spec.doc">data-spec</a>       Specify data sets for training and testing
+  * <a href="util/numin.doc">numin</a>           Facilities for input of numeric data
+    <a href="util/numin-test.doc">numin-test</a>      Test numeric input module
+
+    <a href="util/grid.doc">grid</a>            Output a grid of points
+    <a href="util/extract.doc">extract</a>         Extract items at random from a data file
+
+  * <a href="util/rand-seed.doc">rand-seed</a>       Specify a random number seed
+    <a href="util/rand-test.doc">rand-test</a>       Test random number generators
+
+  * <a href="util/quantities.doc">quantities</a>      Numeric quantities obtainable from log files
+
+  * <a href="util/xxx-plt.doc">xxx-plt</a>         Write quantities from a log file, suitable for plotting
+    <a href="util/xxx-hist.doc">xxx-hist</a>        Build a histogram for a quantity obtained from a log file
+
+  * <a href="util/series.doc">series</a>          Analyse stationary time series data
+</pre>
+
+
+<h2>Markov chain Monte Carlo facilities [mc]:</h2>
+<pre>
+  * <a href="mc/mc.doc">mc</a>              Programs and modules supporting Markov chain Monte Carlo
+  * <a href="mc/mc-spec.doc">mc-spec</a>         Specify how to do the Markov chain simulation
+  * <a href="mc/xxx-mc.doc">xxx-mc</a>          Run Markov chain simulation
+
+  * <a href="mc/mc-quantities.doc">mc-quantities</a>   Quantities from log files relating to Monte Carlo
+
+    <a href="mc/mc-temp-sched.doc">mc-temp-sched</a>   Specify temperature schedule for tempering methods
+    <a href="mc/mc-temp-filter.doc">mc-temp-filter</a>  Copy only iterations at a given temperature
+
+    <a href="mc/xxx-grad-test.doc">xxx-grad-test</a>   Test the correctness of the energy gradient computations
+    <a href="mc/xxx-stepsizes.doc">xxx-stepsizes</a>   Display and evaluate stepsizes used for dynamics
+</pre>
+
+
+<h2>Bayesian neural networks [net]:</h2>
+<pre>
+  * <a href="net/net.doc">net</a>             Bayesian inference for neural networks using MCMC
+  * <a href="net/net-spec.doc">net-spec</a>        Create a new network, or display existing specifications
+  * <a href="net/net-prior.doc">net-prior</a>       Form of prior specifications for network models
+
+  * <a href="net/net-mc.doc">net-mc</a>          Do Markov chain simulation to sample networks
+  * <a href="net/net-gen.doc">net-gen</a>         Generate networks from the prior, or with fixed values
+
+  * <a href="net/net-display.doc">net-display</a>     Print network parameters and/or hyperparameters
+
+  * <a href="net/net-quantities.doc">net-quantities</a>  Quantities from log files relating to networks
+  * <a href="net/net-plt.doc">net-plt</a>         Get quantities from a net log file, suitable for plotting
+    <a href="net/net-hist.doc">net-hist</a>        Build histogram for quantity obtained from a net log file
+
+  * <a href="net/net-pred.doc">net-pred</a>        Make predictions for test cases
+
+    <a href="net/net-eval.doc">net-eval</a>        Evaluate network functions over a grid
+    <a href="net/net-dvar.doc">net-dvar</a>        Find the variance of a difference in function values
+
+    <a href="net/net-rej.doc">net-rej</a>         Generate networks from the posterior by rejection sampling
+</pre>
+
+
+<h2>Markov chain sampling for a bivariate Gaussian [bvg]:</h2>
+<pre>
+    <a href="bvg/bvg.doc">bvg</a>             Demo of Markov chain sampling from a bivariate Gaussian
+    <a href="bvg/bvg-spec.doc">bvg-spec</a>        Specify a bivariate Gaussian distribution to sample from
+    <a href="bvg/bvg-mc.doc">bvg-mc</a>          Do Markov chain simulation for a bivariate Gaussian
+    <a href="bvg/bvg-plt.doc">bvg-plt</a>         Get quantities from a bvg log file, suitable to plot
+</pre>
+
+</body>
+</html>

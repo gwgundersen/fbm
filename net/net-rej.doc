@@ -1,0 +1,36 @@
+
+
+NET-REJ:  Generate networks from the posterior by rejection sampling.
+
+Net-rej generates networks from the posterior distribution given
+training data using the architecture, priors, and data specifications
+obtained from the given log file, to which the generated networks are
+also written.  The rejection sampling procedure used is exceedingly
+inefficient, and is useful only in providing a check (in very small
+examples) on whether the Markov chain methods are working properly.
+
+Usage:
+
+    net-rej log-file max-index [ rejection-limit ]
+
+The networks with indexes from zero up to the indicated index are
+generated, as long as the number of rejections does not exceed the
+limit (default is infinity).  If the log file already contains
+networks with some of these indexes, only the networks with indexes
+greater than the last one in the log file are generated.
+
+Networks are generated from the posterior by sampling from the prior
+(with an adjustment for noise variances in the case of real-valued
+outputs), and then rejecting some generated states based on the
+likelihood.
+
+The observed acceptance rate is displayed on standard error at the end
+of the program.
+
+Two records are written to the log file for every network generated -
+an 'S' record containing the hyperparameters ('sigma' values), and a
+'W' record containing the parameters (weights, biases, and offsets).
+An 'r' record recording the random number generator state is written
+as well.
+
+            Copyright (c) 1995 by Radford M. Neal

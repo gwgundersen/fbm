@@ -1,0 +1,66 @@
+
+
+NET-SPEC:  Create a new network, or display specifications for existing net.
+
+Net-spec creates a log file containing records describing the network
+architecture and the associated priors.  When invoked with just a log
+file as argument, it displays the specifications of the network stored
+in that log file.
+
+Usage:
+
+    net-spec log-file N-inputs { N-hidden } N-outputs 
+                 / ti [ ih bh th { hh ih bh th } ] { ho } io bo
+               [ / { ah } ao ] [ / Data-model ]
+or: 
+
+    net-spec log-file
+
+N-inputs and N-outputs are the numbers of units in the input and
+output layers.  The sizes of zero or more hidden layers are specified
+between these.
+
+Following a "/", the priors for groups of weights, biases, and offsets
+are specified.  "ti" is the prior for the offsets of input units, "hh"
+the prior for hidden-hidden weights, "ih" the prior for input-hidden
+weights, "bh" the prior for hidden biases, "th" the prior for hidden
+unit offsets, "ho" the prior for weights from a hidden layer to the
+outputs, "io" the prior for input-output weights, and "bo" the prior
+for output biases.  The order of priors relating to hidden layers is
+from the first layer to the last (the last being the one closest to
+the output layer).  All the priors relating to a network with the
+given number of hidden layers must be present, except that some or all
+of the hidden-output priors may be omitted.  The order of "ho" priors
+is last to first; if not all are present, it is the priors for
+connections from the earlier layers that are absent.
+
+For the syntax of a prior specification, see the comments in
+net-prior.c.  If "-" is given instead of a prior specification (or,
+for "ho" priors, if they are omitted entirely), the parameters in
+question do not exist at all, which is equivalent to their being zero.
+
+The alpha values that specify the prior for the "adjustments" to the
+distributions of weights and biases going into a given unit are
+specified following these priors.  A value of "-" corresponds to
+infinity (effectively eliminating the adjustment).  The entire set of
+adjustments may be omitted, eliminating them all.
+
+A data model may optionally be specified.  In a regression model,
+specified by "real" followed by a noise prior, the data for each case
+consists of N-outputs real values.  In the "binary" data model, the
+data for each case consists of N-outputs binary values.  In the
+"class" data model, it consists of a single class identifier having
+N-outputs possible values.  The data specification used with a binary
+model must specify that the data is binary (i.e. data-spec must be
+called with 'int-target' being "2").  The data specification used with
+a class model must specify that the data consists of integers in the
+range [0,N-outputs).
+
+Two records are written to the newly created log file - one with type
+'A' with a net_arch structure as data, and one with type 'P' with a
+net_priors structure as data.  Both have an index of -1.  When the
+second form of the command is used (with just the log file as
+argument), these records are read and the information they contain is
+displayed on standard output.
+
+            Copyright (c) 1995 by Radford M. Neal

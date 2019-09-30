@@ -1,0 +1,32 @@
+
+
+BVG-SPEC:  Specify a bivariate Gaussian distribution to sample from.
+
+BVG-spec creates a log file with a record specifying a bivariate
+Gaussian distribution, or displays the specification in an existing
+log file.
+
+Usage:
+
+   bvg-spec log-file std1 std2 corr [ replication ]
+
+or:
+
+   bvg-spec log-file
+
+When called with arguments other than a log file name, it creates a
+log file of that name, and stores in it the standard deviations of the
+bivariate Gaussian along the two axes, and the correlation of the two
+axes.
+
+The optional replication argument results in a multivariate Gaussian
+distribution obtained by creating that number of independent bivariate
+Gaussian variables.
+
+When called with only the log file as an argument, the program reads
+this record from an existing log file and displays the values stored.
+
+The specifications are stored in the log file as a single record of
+type 'B' and index -1,
+
+            Copyright (c) 1995 by Radford M. Neal

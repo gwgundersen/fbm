@@ -1,0 +1,90 @@
+
+
+NET-PRED:  Make predictions for test cases.
+
+Net-pred prints guesses at the target values for a set of test cases.
+Guesses are as defined by a network or set of networks.  If the true
+targets are known, performance of the guesses can also be evaluated.
+Inputs can be printed as well.
+
+Usage:
+
+    net-pred options { log-file range } [ / test-inputs [ test-targets ] ]
+
+The final optional arguments give the source of inputs and targets for
+the case to look at; they default to the test data specification in
+the first log file given.  The networks to use in making guesses are
+taken from the records with the given ranges of indexes in the given
+log files.  The outputs of all these networks are combined to give a
+single guess for each case.
+
+An index range can have one of the forms "[low][:[high]][%mod]" or
+"[low][:[high]]+num", or one of these forms preceded by "@".  When "@"
+is present, "low" and "high" are given in terms of cpu time, otherwise
+they are iteration numbers.  When just "low" is given, only that index
+is used.  If the colon is included, but "high" is not, the range
+extends to the highest index in the log file.  The "mod" form allows
+networks to be selected whose iteration numbers are multiples of
+"mod", with the default being "mod" of one.  The "num" form allows the
+total number of networks used to be specified; they are distributed as
+evenly as possible within the specified range.  Note that it is
+possible that the number of networks used in the end may not equal
+this number, if records with some indexes are missing.
+
+The 'options' argument consists of one or more of the following letters:
+
+    i   Display the input values for each case
+    t   Display the target values for each case
+    r   Use the raw form of the target values, before transformation
+
+    p   Display the log probability of the true targets
+
+    m   Display the guess based on the mode, and whether it is in error
+    n   Display the guess based on the mean, and its squared error
+    d   Display the guess based on the median, and its absolute error
+
+    b   Suppress headings and averages - just bare numbers for each case
+    B   Bare numbers, but with blank lines whenever first input changes
+
+    a   Display only average log probabilities and errors, suppressing 
+        the results for individual cases (makes sense only in combination 
+        with one or more of 'p', 'm', 'n', and 'd', and not with 'i' or 't')
+
+    z   Merge probabilities of class 0 and class 1, guessing 0 if the
+        combined total exceeds that of the others.  This is a fudge to
+        handle the forensic glass data.
+
+    0-9 If any of these characters are used, output connections from 
+        hidden layers other than those named are suppressed.  Input-output
+        connections and output biases are also suppressed.  This option
+        is useful in seeing the components of an additive network model.
+
+Some of these options are illegal for some data models.  The illegal
+combinations are marked with an 'X' in the following table:
+
+        binary  class  real-valued  no-model
+
+     r    X       X
+     p                                X
+     m                     X          X
+     n            X
+     d    X       X
+
+Furthermore, the 'a' and 'b' options are incompatible, and the 't',
+'p', and 'a' options may be used only if the true targets are given.
+The errors for individual cases are also displayed only if the true
+targets are known.
+
+The median is calculated by Monte Carlo, using a sample consisting of
+eleven points from each network's target distribution.  The random
+number seed used to generate these points is 101*x+i, where x is the
+index of the network and i is the number of the test case.
+
+Each average performance figure is accompanied by +- its standard
+error (as long as there is more than one test case).
+
+If only inputs and targets are to be displayed (no predictions), one
+may give just a single log file with no range.  Otherwise, at least
+one network must be specified.
+
+            Copyright (c) 1995 by Radford M. Neal

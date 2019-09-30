@@ -1,0 +1,16 @@
+
+
+BVG:  Programs demonstrating Markov chain sampling from a bivariate Gaussian.
+
+The 'bvg' programs implement sampling from a bivariate Gaussian
+distribution (or several independent replications of a bivariate
+Gaussian), using the Markov chain Monte Carlo package.  This is done
+primarily for testing and demonstration purposes.
+
+The specification of the bivariate Gaussian distribution is stored in
+the log file as a record of type 'B' and index -1.  The coordinates
+found each iteration are stored in records of type 'X'.  The Markov
+chain Monte Carlo package will of course put various other records in
+the log file as well.
+
+            Copyright (c) 1995 by Radford M. Neal

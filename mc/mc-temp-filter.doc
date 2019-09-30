@@ -1,0 +1,26 @@
+
+
+MC-TEMP-FILTER:  Copy only iterations at a given temperature.
+
+MC-temp-filter copies records from an existing log file to a new log
+file, keeping only those with negative indexes and those with the same
+index as a simulated tempering ('b') record with a given index, or
+optionally either the given index or an index of zero.
+
+Usage:
+
+   mc-temp-filter [ [-]temp-index ] input-log-file output-log-file 
+
+If the temperature index is a positive integer, only records with that
+temperature index are copied.  If the index is a negative integer,
+those with the negation of that index and those with an index of zero
+(highest temperature) are copied.  The default index is the biggest
+one, associated with the lowest temperature.
+
+The record indexes in the output file are resequenced to start at one,
+with an increment of one.
+
+The number of full tours from low to high temperature and back is
+printed on standard error.
+
+            Copyright (c) 1995 by Radford M. Neal

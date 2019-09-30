@@ -1,0 +1,13 @@
+
+# Commands to apply a Bayesian neural network to the binary response problem.
+
+net-spec blog 2 15 1 / - 0.05:0.5 0.05:0.5 - x0.05:0.5 - 100 / binary
+
+data-spec blog 2 1 2 / bdata@1:300 . bdata@301:500 .
+
+net-gen blog fix 0.5
+mc-spec blog repeat 10 sample-noise heatbath hybrid 100:10 0.2
+net-mc blog 1
+
+mc-spec blog repeat 10 sample-sigmas heatbath 0.95 hybrid 100:10 0.3 negate
+net-mc blog 200

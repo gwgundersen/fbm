@@ -1,0 +1,12 @@
+
+
+LOG-LAST:  Display the index of the last record in a log file.
+
+Usage:
+
+   log-last log-file
+
+Displays the index of the last record in the log file on standard
+output.
+
+            Copyright (c) 1995 by Radford M. Neal

@@ -1,0 +1,26 @@
+
+
+RAND-SEED:  Specify a random number seed.  
+
+Usage:
+
+    rand_seed log-file seed
+
+or:
+
+    rand_seed log-file
+
+Writes a random number generator state structure derived from the
+specified seed to the given log file (which must already exist and be
+non-empty), in a record with type 'r' and index equal to that of the
+last existing record.
+
+If invoked with just a log file as argument, the program prints the
+random number seed from the state stored in the log file with index -1.  
+(Note, however, that the random number seed in use may have been
+changed by a later call of rand-seed, after some iterations have been
+written to the log file.)
+
+When rand_seed is not called, programs generally default to a seed of 1.
+
+            Copyright (c) 1995 by Radford M. Neal

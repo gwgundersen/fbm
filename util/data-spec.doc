@@ -1,0 +1,57 @@
+
+
+DATA-SPEC:  Specify data sets for training and testing.
+
+Data-spec writes specifications of data sets to use for training and
+testing to the given log file (which must already exist).  If invoked
+with just a log file as argument, the program prints the data
+specifications already stored in the log file.
+
+Usage:
+
+    data-spec log-file N-inputs N-targets [ int-target ]
+          / train-inputs train-targets [ test-inputs [ test-targets ] ]
+        [ / { input-trans } [ / { target-trans } ] ]
+
+or:
+
+    data-spec log-file
+
+The number of "input" and "target" values must be specified.  The user
+can require the targets to be integers by including an 'int-target'
+argument.  The permitted range of these integer targets is from zero
+to 'int-target' minus one.
+
+The training and (optionally) test sets are given in the form of
+'numin' specifications.  The default specification for training and
+test inputs is "data@1,1".  The training input specification provides
+the default for the training target specification - i.e. the file and
+line range are used for the inputs is used for targets if not
+overridden, and the item indexes for the targets start by default
+after the last index for the inputs.  Similarly, the test input
+specification is used as the default for the test targets.
+
+The data files are read and checked for errors.  The number of lines
+of training inputs must match the number of lines of training targets,
+and similarly for test inputs and targets.
+
+The final optional arguments specify the transformations to be applied
+to inputs and targets.  A transformation specification has one of the
+forms
+
+               [L][+T][xS]  or  [L][-T][xS]  or  I
+
+If "L" is present in the two forms, the raw data is first transformed
+by taking the logarithm.  T is then added or subtracted, and the
+result multiplied by S.  The "I" form specifies an identity
+transformation.  This is the default for any inputs or targets for
+which no transformation is specified.
+
+The translation and scaling amounts ("T" and "S") may be "@", in which
+case they are computed from the training data, so as to produce a mean
+of zero (for translation), or a variance of one (for scaling).
+
+The specifications are written to the log file as a record with type
+'D' and index -1.
+
+            Copyright (c) 1995 by Radford M. Neal

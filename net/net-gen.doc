@@ -1,0 +1,34 @@
+
+
+NET-GEN:  Generate networks randomly from the prior, or with fixed values.  
+
+Net-gen writes a series of independently-generated networks to a log
+file, with the architecture specified in that log file.
+
+Usage:
+
+    net-gen log-file [ max-index ] [ "fix" [ value ] ]
+
+The networks with indexes from zero up to the indicated index are
+generated (the default is max-index of zero).  If the log file already
+contains networks with some of these indexes, only the networks with
+indexes greater than the last one in the log file are generated.
+
+If just max-index is specified, the networks are generated randomly
+from the prior, using the random number seed taken from the log file
+(eg, as specified by rand-seed).
+
+If the "fix" option is given, the networks are not generated at
+random, but rather the parameters are set to zero and the hyperparameters 
+are set to the value given.  If no value is given, the hyperparameters
+are each set to the top-level width for that hyperparameter.  This
+option is useful for initializing iterative programs.
+
+Two records are written for every network generated - an 'S' record
+containing the hyperparameters ('sigma' values), and a 'W' record
+containing the parameters (weights, biases, and offsets).  An 'r'
+record recording the random number generator state is written as well
+(unless "fix" was used).
+
+            Copyright (c) 1995 by Radford M. Neal
+

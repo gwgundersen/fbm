@@ -1,0 +1,47 @@
+
+
+XXX-PLT:  Write quantities from a log file, in a form suitable for plotting.
+
+There is a version of this program for each application (eg, net-plt).
+Each version allows the quantities defined for that application to be
+plotted.  The data for plotting is written to standard output, in a
+form appropriate for plotting.  It may be convenient to pipe this
+output into an suitable plot program (but xxx-plot does not actually
+invoke such a plot program itself).  
+
+The output of xxx-plt may also be piped into the 'series' program
+(which will look only at the 'x-axis' quantity, ignoring the 'y-axis'
+quantity).
+
+Usage:
+  
+   xxx-plt x-axis y-axis { log-file [ range ] } [ / { app-args } ]
+
+Here 'xxx' is a prefix identifying the particular incarnation of this
+program.  The 'x-axis' and 'y-axis' specifications give the quantities
+to plot on the two axes.  These are followed by specifications of
+where the data comes from.  Depending on the application, further
+arguments may follow after a slash (for which, see the documentation
+specific to that application - eg, net-plt).
+
+For the format of the quantity specifications, see the documentation
+on generic quantities, quantities for Monte Carlo runs, quantities for
+neural networks, etc.  The number of values specified for each axis
+must either be the same, or one axis must have only a single value
+(which will be reused).  For each x-axis value and the corresponding
+y-axis value, a continuous trace of data from each log file will be
+output.  Breaks will be inserted at the start of each log file and at
+the start of each new combination of values.
+
+Data comes from records with indexes in the specified ranges within
+the log files mentioned.  The ranges have the form "[low][:[high]]][%mod]".  
+The low bound defaults to one.  If no high bound is given, the range
+extends to the highest index in the log file.  If the "%mod" option is
+present, only iterations within the range whose index is a multiple of
+"mod" are used (e.g. "5:12%3" is equivalent to 6 9 12).  If no range
+is given, the default is "1:".
+
+Everything is reset between log files, so it is possible that the number 
+of values for a particular quantity will change from log file to log file.
+
+            Copyright (c) 1995 by Radford M. Neal

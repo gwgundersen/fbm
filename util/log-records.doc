@@ -1,0 +1,12 @@
+
+
+LOG-RECORDS:  List all records in a log file.  
+
+Usage:
+
+   log-records log-file
+
+For each index present in a log file, log-records lists the types and
+sizes of all the records found with that index, in order.
+
+            Copyright (c) 1995 by Radford M. Neal

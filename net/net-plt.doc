@@ -1,0 +1,20 @@
+
+
+NET-PLT:  Get quantities from a net log file, in a form suitable to plot.
+
+The net-plt program is a specialization of xxx-plt to the neural network 
+application.  It is capable of plotting any of the quantities documented 
+in net-quantities.doc, mc-quantities.doc, and quantities.doc.
+
+The form of the net-plt command is 
+
+    net-plt x-axis y-axis { log-file [ range ] } 
+            [ / test-inputs [ test-targets ] ]
+
+The optional arguments at the end allow the quantities relating to test
+cases to be evaluated with respect to a test set other than the one
+specified with data-spec.
+
+For the generic features of net-plt, see xxx-plt.doc.
+
+            Copyright (c) 1995 by Radford M. Neal
