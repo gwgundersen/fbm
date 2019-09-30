@@ -389,7 +389,7 @@ void net_model_guess
       { z = addlogs(z,v->o[i]);
       }
 
-      if (type=1)
+      if (type==1)
       { r = rand_uniform();
         *t = 0; /* just in case */
       }

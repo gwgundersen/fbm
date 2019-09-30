@@ -11,4 +11,4 @@ gp-gen clog.gpp100 fix 0.5 1
 mc-spec clog.gpp100 repeat 5 scan-values 100 heatbath 0.9 hybrid 1 0.5 negate
 gp-mc clog.gpp100 5
 mc-spec clog.gpp100 repeat 5 scan-values 100 heatbath 0.98 hybrid 1 0.5 negate
-gp-mc clog.gpp100 100
+gp-mc clog.gpp100 200

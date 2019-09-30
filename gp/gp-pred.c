@@ -437,7 +437,7 @@ int pred_app_use_index (void)
       }
 
       for (j = 0; j<M_targets; j++) 
-      { test_targ_pred[M_targets*i+j] += prb_dist1[j];
+      { test_targ_pred[M_targets*i+j] = prb_dist1[j];
       }
 
       if (have_targets && op_p)
