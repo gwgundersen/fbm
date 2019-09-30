@@ -23,3 +23,6 @@ void parse_range (char *, int *, int *, int *);
 void parse_time_range (char *, double *, double *, int *);
 					/* Parse range with times rather than
 					   iteration numbers */
+
+void parse_flags (char *, char *, int, int);
+int list_flags (char *, int, int, char *);

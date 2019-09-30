@@ -1,6 +1,6 @@
 /* NET-QUANTITIES.C - Module defining quantities for neural networks. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1997 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -36,6 +36,9 @@ static model_survival *surv;
 
 static net_sigmas sigmas;
 static net_params params;
+
+static net_params grad;
+static net_values deriv;
 
 static int M_targets;
 static double *target_guess;
@@ -105,6 +108,13 @@ void net_initialize
   net_setup_sigma_pointers (&sigmas, arch, model);
   net_setup_param_pointers (&params, arch);
 
+  grad.total_params = params.total_params;
+  grad.param_block = chk_alloc (grad.total_params, sizeof (net_param));
+  net_setup_param_pointers (&grad, arch);
+
+  net_setup_value_pointers (&deriv, 
+    chk_alloc (net_setup_value_count(arch), sizeof (net_value)), arch);
+
   /* Read training and test data, if present. */
 
   have_train_data = have_test_data = have_test_targets = 0;
@@ -155,11 +165,16 @@ void net_available
     {
       if (strchr("xoygzlbav",letter)!=0 && !have_train_data
        || strchr("XOYGZLBAV",letter)!=0 && !have_test_data
-       || strchr("ZBA",letter)!=0      && !have_test_targets)
+       || strchr("ZBA",letter)!=0       && !have_test_targets)
       { qd[v].available = -1;
         continue;
       }
 
+# if 0 /* Disable these */
+      if (strchr("uU",letter)!=0)
+      { qd[v].available = 1;
+      }
+# endif
       if (strchr("xX",letter)!=0)
       { qd[v].available = mod<arch->N_inputs ? 1 : -1; 
       }
@@ -223,6 +238,10 @@ void net_available
 
       else if (strchr("XOYGZLBA",letter)!=0)
       { if (strchr("XOYZG",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_test) 
+        { qd[v].available = -1;
+          continue;
+        }
+        if (strchr("ZLAB",letter)!=0 && !have_test_targets)
         { qd[v].available = -1;
           continue;
         }
@@ -329,7 +348,7 @@ void net_evaluate
       }
 
       if (!ev_train 
-      && (strchr("oyglbacv",letter)!=0 || letter=='n' && model_type=='C'))
+      && (strchr("uoyglbacv",letter)!=0 || letter=='n' && model_type=='C'))
       { if (!have_train_data) abort();
         for (i = 0; i<N_train; i++)
         { net_func (&train_values[i], 0, arch, &params);
@@ -591,6 +610,94 @@ void net_evaluate
 
           break;
         }
+
+# if 0  /* Disable the "U" and "u" quantities - probably not generally useful */
+
+        case 'u':
+        { 
+          double u;
+          int o, n, s;
+          int i, j;
+
+          if (mod<1) 
+          { o = 0; 
+            n = params.total_params;
+          }
+          else
+          { if (!net_setup_param_group (arch, mod, &o, &n, &s)) abort();
+          }
+          
+          for (j = o; j<o+n; j++) 
+          { grad.param_block[j] = 0;
+          }
+
+          for (i = 0; i<N_train; i++)
+          { 
+            net_model_prob (&train_values[i], 
+                            train_targets + data_spec->N_targets*i,
+                            0, &deriv, arch, model, surv, &sigmas, 2);
+  
+            net_back (&train_values[i], &deriv, arch->has_ti ? -1 : 0,
+                      arch, &params);
+
+            net_grad (&grad, &params, &train_values[i], &deriv, arch);
+          }
+
+          u = 0;
+          
+          for (j = o; j<o+n; j++) 
+          { u += grad.param_block[j] * grad.param_block[j];
+          }
+
+          *qh->value[v] = u;
+          qh->updated[v] = 1;
+ 
+          break;
+        }
+
+        case 'U':
+        { 
+          double u;
+          int o, n, s;
+          int i, j;
+
+          if (mod<1) 
+          { o = 0; 
+            n = params.total_params;
+          }
+          else
+          { if (!net_setup_param_group (arch, mod, &o, &n, &s)) abort();
+          }
+          
+          u = 0;
+          
+          for (i = 0; i<N_train; i++)
+          { 
+            for (j = o; j<o+n; j++) 
+            { grad.param_block[j] = 0;
+            }
+
+            net_model_prob (&train_values[i], 
+                            train_targets + data_spec->N_targets*i,
+                            0, &deriv, arch, model, surv, &sigmas, 2);
+  
+            net_back (&train_values[i], &deriv, arch->has_ti ? -1 : 0,
+                      arch, &params);
+
+            net_grad (&grad, &params, &train_values[i], &deriv, arch);
+
+            for (j = o; j<o+n; j++) 
+            { u += grad.param_block[j] * grad.param_block[j];
+            }
+          }
+
+          *qh->value[v] = u;
+          qh->updated[v] = 1;
+ 
+          break;
+        }
+
+# endif
 
         case 'h':
         { 

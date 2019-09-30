@@ -1,14 +1,14 @@
 
 
-                 SOFTWARE FOR FLEXIBLE BAYESIAN MODELS
+             SOFTWARE FOR FLEXIBLE BAYESIAN MODELS BASED ON
 
-            BASED ON NEURAL NETWORKS AND GAUSSIAN PROCESSES
+           NEURAL NETWORKS, GAUSSIAN PROCESSES, AND MIXTURES
 
                IMPLEMENTED USING MARKOV CHAIN MONTE CARLO
 
             Copyright (c) 1995, 1996, 1997 by Radford M. Neal 
 
-                        Version of 1997-01-18
+                        Version of 1997-07-22
 
 Permission is granted for anyone to copy, use, or modify these
 programs and accompanying documents for purposes of research or
@@ -36,23 +36,28 @@ or e-mail me at radford@stat.toronto.edu or radford@cs.toronto.edu.
 
 Information on any updates or other related work may from time to time
 be available via the World Wide Web, starting from my home page at URL
-http://www.cs.toronto.edu/~radford/.
+http://www.cs.utoronto.ca/~radford/.
 
 
 FACILITIES PROVIDED BY THIS SOFTWARE
 
-This software implements flexible Bayesian models for regression and
-classification applications that are based on multilayer perceptron
-neural networks or on Gaussian processes.  The implementation uses
-Markov chain Monte Carlo methods.  Software modules that support
-Markov chain sampling are included in the distribution, and may be
-useful in other applications.  Note that I am distributing this
+This software implements flexible Bayesian models for regression,
+classification, and probability or density estimation applications.
+The regression and classification models are based on multilayer
+perceptron neural networks or on Gaussian processes.  The probability
+and probability density models are based on finite or countably
+infinite mixture models; the infinite models are also know as
+Dirichlet process mixture models.  Bayesian inference for these model
+is done using Markov chain Monte Carlo methods.  Software modules that
+support Markov chain sampling are included in the distribution, and
+may be useful in other applications.  Note that I am distributing this
 software to facilitate research in this area.  Potential users should
 make note of the copyright notice at the beginning of this document
 (or accessible via the first hypertext link).  You must obtain
 permission from me before using this software for purposes other than
 research or education.  You should also note that the software may
-have bugs, particularly regarding recently added experimental features.
+have bugs, particularly regarding recently added or experimental
+features.
 
 The neural network models are described in my thesis, "Bayesian
 Learning for Neural Networks", which has now been published by
@@ -63,13 +68,14 @@ models.  The Gaussian process models implemented in this software, and
 computatonal methods that used, are described in my technical report
 entitled "Monte Carlo implementation of Gaussian process models for
 Bayesian regression and classification", available in compressed
-Postscript at URL http://www.cs.utoronto.ca/~radford/mc-gp.ps.Z.  The
-Gaussian process models for regression are similar to those evaluated
-by Carl Rasmussen in his thesis, "Evaluation of Gaussian Processes and
-other Methods for Non-Linear Regression", available from his home
-page, at the URL http://www.cs.utoronto.ca/~carl/; he also talks about
-neural network models.  To understand how to use this software, it is
-essential for you to have read at least one of these references.
+Postscript at URL ftp://ftp.cs.utoronto.ca/pub/radford/mc-gp.ps.Z.
+The Gaussian process models for regression are similar to those
+evaluated by Carl Rasmussen in his thesis, "Evaluation of Gaussian
+Processes and other Methods for Non-Linear Regression", available from
+his home page, at the URL http://www.cs.utoronto.ca/~carl/; he also
+talks about neural network models.  To understand how to use the
+software implementing these models, it is essential for you to have
+read at least one of these references.
 
 The neural network software supports Bayesian learning for regression
 problems, classification problems, and survival analysis (experimental), 
@@ -99,6 +105,25 @@ few minutes to train (again, to the point where one can be reasonably
 sure that convergence to the correct answer has occurred).  For 1000
 cases, however, training might well require a day of computation.
 
+The finite mixture models are similar to those which have been used by
+many people - for example, Lavine and West (Canadian Journal of
+Statistics, vol. 20, pp. 451-461, 1992) fit similar models using
+similar Markov chain Monte Carlo methods.  The countably infinite
+mixture models are equivalent to Dirichlet process mixtures.  Markov
+chain sampling for these models has been described by Escobar and 
+West (Journal of the American Statistical Association, vol. 90,
+pp. 577-588, 1995).  Both finite and infinite mixture models (for
+binary data) are described in my tech report, "Bayesian mixture
+modeling by Monte Carlo simulation", available by anonymous ftp at the
+URL ftp://ftp.cs.utoronto.ca/pub/radford/bmm.ps.Z.  The models and
+Markov chain methods used in the software are not identical to those
+described in any of these references, however.  The details can be
+found only in the software documentation.  For this reason, the
+mixture software may be a bit difficult to figure out until such time
+as I get around to writing up a paper describing this implemention.
+This part of the software is rather preliminary in other respects as
+well.
+
 The software consists of a number of programs and modules.  Four major
 components are included in this distribution, each with its own
 directory:
@@ -114,6 +139,10 @@ directory:
 
     gp      Modules and programs that implement Bayesian inference
             for models based on Gaussian processes, using the modules
+            from util and mc.
+
+    mix     Modules and programs that implement Bayesian inference
+            for finite and infinite mixture models, using modules
             from util and mc.
 
 In addition, the 'bvg' directory contains modules and programs for
@@ -137,16 +166,17 @@ researchers can modify the programs to try out their own ideas.
 The software is written in ANSI C, and is meant to be run in a UNIX
 environment.  Specifically, it was developed on an SGI machine running
 IRIX Release 5.3.  It also seems to run OK on a SPARC machine running
-SunOS 5, using the 'gcc' C compiler.  As far as I know, the software
-does not depend on any peculiarities of these environments (except
-perhaps for the use of the drand48 psuedo-random number generator),
-but you may nevertheless have problems getting it to work in
-substantially different environments, and I can offer little or no
-assistance in this regard.  There is no dependence on any particular
-graphics package or graphical user interface.  (The 'xxx-plt' programs
-are designed to allow their output to be piped directly into the
-'xgraph' plotting program, but other plotting programs can be used
-instead, or the numbers can be examined directly.)
+SunOS 5, using the 'gcc' C compiler, and on DEC Alpha machines.  As
+far as I know, the software does not depend on any peculiarities of
+these environments (except perhaps for the use of the drand48
+psuedo-random number generator), but you may nevertheless have
+problems getting it to work in substantially different environments,
+and I can offer little or no assistance in this regard.  There is no
+dependence on any particular graphics package or graphical user
+interface.  (The 'xxx-plt' programs are designed to allow their output
+to be piped directly into the 'xgraph' plotting program, but other
+plotting programs can be used instead, or the numbers can be examined
+directly.)
 
 
 INSTALLING THE SOFTWARE
@@ -166,10 +196,10 @@ the current version; you should read the old documentation if for some
 reason you are installing an older version.
 
 The tar command should create sub-directories 'util', 'mc', 'net',
-'gp', 'bvg', 'examples', 'doc', and 'bin', and place a large number of
-files in these sub-directories.  It should also place the files
-'README' and 'make.include' in the current directory.  If all this 
-seems to have worked, you can remove the file 'fbm.YYYY-MM-DD.tar'.
+'gp', 'mix', 'bvg', 'examples', 'doc', and 'bin', and place a large
+number of files in these sub-directories.  It should also place the
+files 'README' and 'make.include' in the current directory.  If all
+this seems to have worked, you can remove 'fbm.YYYY-MM-DD.tar'.
 
 The directory 'doc' contains links to all the documentation files.
 The file 'manual' contains all the introductory documentation
@@ -215,6 +245,10 @@ by issuing the following commands
     make
     cd ..
 
+    cd mix
+    make
+    cd ..
+
     cd bvg
     make
     cd ..
@@ -227,8 +261,8 @@ where they are used; this is intentional.
 It is possible that these compilation commands will fail for some
 reason, in which case you'll have to figure out what's wrong and fix
 it.  Note that for the makes to work correctly, the programs MUST be
-kept in separate 'util', 'mc', 'net', 'gp', and 'bvg' sub-directories,
-with these names.
+kept in separate 'util', 'mc', 'net', 'gp', 'mix', and 'bvg'
+sub-directories, with these names.
 
 Once the above make commands have been successful, you should put the
 'bin' directory (within the main directory for this software) in your
@@ -248,13 +282,15 @@ however.  In particular, the programs and modules in the 'util'
 directory are of general utility, and those in the 'mc' directory
 provide generic support for Markov chain Monte Carlo methods.  These
 facilities are specialized to neural network learning by the modules
-and programs in the 'net' directory, and to Gaussian process models by
-the modules and programs in the 'gp' directory.  The 'bvg' directory
-demonstrates in a simple context how the generic facilities in 'util'
-and 'mc' can be specialized for other tasks, but users interested only
-in neural networks or Gaussian processes need not concern themselves
-with this.  This section provides an overview of the facilities
-offered by these various components of the software.
+and programs in the 'net' directory, to Gaussian process models by the
+modules and programs in the 'gp' directory, and to finite and infinite
+mixture modesls by the modules and programs in the 'mix' directory.
+The 'bvg' directory demonstrates in a simple context how the generic
+facilities in 'util' and 'mc' can be specialized for other tasks, but
+users interested only in the neural network, Gaussian process, or
+mixture models need not concern themselves with this.  This section
+provides an overview of the facilities offered by these various
+components of the software.
 
 
 Log files
@@ -302,10 +338,10 @@ reading of numeric input from data files or other sources, and that
 specify sets of training and test cases for supervised learning
 procedures (such as those based on multilayer perceptron networks).
 
-The models supported include those for regression, classification, 
-and survival analysis.  The survial analysis models were recently
-implemented, and should be regarded as experimental.  See
-model-spec.doc for details
+The models supported include those for regression, classification,
+probability density estimation, and survival analysis.  The survial
+analysis models were recently implemented, and should be regarded as
+experimental.  See model-spec.doc for details
 
 The data files used must contain numbers in standard ASCII form, with
 one line per case, but there is considerable freedom regarding
@@ -329,7 +365,13 @@ arguments to the relevant commands, allowing the final results of
 learning to be applied to any data set for which predictions are
 desired.
 
-See data-spec.doc for details on how all this is specified.
+Note that mixture models can presently be used only for data in which
+the number of "input" items is zero.  The test data is currently
+ignored for mixture models, since no prediction program has yet been
+implemented.
+
+See data-spec.doc for futher details on how to specify the data
+format.
 
 
 Random number generation
@@ -368,14 +410,18 @@ neural networks or Gaussian processes should therefore ignore the
 tempering facilities (such as the 'mc-temp-sched' and 'mc-temp-filter'
 programs).
 
-For the user of neural network or Gaussian process models, the most
-important 'mc' program is 'mc-spec', which is used to specify how the
-Markov chain sampling is to be done.  There are a large number of
-reasonable ways of sampling for neural networks or Gaussian processes.
-The best way is still the subject of research.  Good results can be
-obtained using several standard approaches, however, as described in
-the examples in other sections of this documentation.  You can also
-read all about the various methods in mc-spec.doc.
+For the user of neural network, Gaussian process, and mixture models,
+the most important 'mc' program is 'mc-spec', which is used to specify
+how the Markov chain sampling is to be done.  There are a large number
+of reasonable ways of sampling for neural networks or Gaussian
+processes.  The best way is still the subject of research.  Good
+results can be obtained using several standard approaches, however, as
+described in the examples in other sections of this documentation.
+You can also read all about the various methods in mc-spec.doc. Note,
+however, that for each model there are also sampling methods specific
+to that model alone, which are documented in net-mc.doc, gp-mc.doc,
+and mix-mc.doc.  At present, sampling for mixture models is done only
+by the specific procedures described in mix-mc.doc.
 
 
 Neural network models
@@ -441,13 +487,38 @@ run.  Several other programs in the 'gp' directory may also be of
 interest.
 
 
+Mixture models.
+
+The 'mix' directory contains the modules and programs that implement
+Bayesian inference for finite and infinite mixture models, making use
+of the modules in the 'util' and 'mc' directories.  These models are
+used to model the probabilities for vectors of binary data, or the
+probability densities for real vectors.  The infinite mixture models
+are equivalant to what are called Dirichlet process mixtures.
+
+The 'mix-spec' program is used to specify a mixture model - that is,
+to say how many components there are in the mixture (perhaps countably
+infinite), and to specify the priors on the parameters and
+hyperparameters.  The 'model-spec' and 'data-spec' programs are then
+used to complete the specification of the data model and data source.
+For mixture models, the data items are all considered to be "targets",
+with the number of "inputs" being zero.  The Markov chain sampling
+procedures to used are then specified using 'mix-spec', and the
+sampling is done with 'mix-mc'.  At present, there is not all that
+much that can be done with the results - in particular, there is no
+prediction program.  One can look at the parameter values for states
+drawn from the posterior with 'mix-display', however, and generate 
+future datasets using 'mix-cases'.
+
+
 Quantities obtainable from log files
 
-The 'xxx-plt' programs (eg, 'net-plt' and 'gp-plt') are the principal
-means by which simulation runs are monitored.  These programs allow
-one to see the values of various "quantities", evaluated for each
-iteration stored in a log file within some range.  Some other programs
-(eg, 'xxx-hist') also use the same set of quantities.
+The 'xxx-plt' programs (eg, 'net-plt', 'gp-plt', and 'mix-plt') are
+the principal means by which simulation runs are monitored.  These
+programs allow one to see the values of various "quantities",
+evaluated for each iteration stored in a log file within some range.
+Some other programs (eg, 'xxx-hist') also use the same set of
+quantities.
 
 A quantity is specified by an identifying character, perhaps with a
 numeric modifier.  Some quantities are single numeric values
@@ -464,41 +535,49 @@ for Metropolis or Hybrid Monte Carlo updates.  A large number of
 quantities specific to neural networks or to Gaussian processes are
 also defined - for example, 'b', the average squared error on the
 training set, and 'n', the current value of the noise standard
-deviation (for a regression model).  For details, see quantities.doc,
-mc-quantities.doc, net-quantities.doc, and gp-quantities.doc.
+deviation (for a regression model).  Quantities specific to mixture
+models are also defined, such as 'Cn', the total probability for the n
+largest components in the mixture.  For details, see quantities.doc,
+mc-quantities.doc, net-quantities.doc, gp-quantities.doc, and
+mix-quantities.doc.
 
 
-EXAMPLES OF BAYESIAN MODELING WITH NEURAL NETWORKS AND GAUSSIAN PROCESSES
+EXAMPLES OF BAYESIAN MODELING 
 
-This section shows how Bayesian inference for models based on neural
-networks and Gaussian processes can be done for three simple synthetic
-problems.
+This section contains examples of Bayesian modeling using this
+software on some simple synthetic problems.
 
-The output shown below was obtained by running the software on our
-machine, with ">" at the start of a line indicating a command line
-that was input.  It is possible (even likely) that your results will
-differ, even if you have installed the software correctly, since small
-differences in floating point arithmetic can be magnified into large
-differences in the course of the simulation.  However, unless one of
-the simulations became stuck in an isolated local mode, the final
-predictions you obtain from 'net-pred' for 'gp-pred' should be close
-to those reported below.
+The output shown for these examples was obtained by running the
+software on our machine, with ">" at the start of a line indicating a
+command line that was input.  It is possible (even likely) that your
+results will differ, even if you have installed the software
+correctly, since small differences in floating point arithmetic can be
+magnified into large differences in the course of the simulation.
+However, unless one of the simulations became stuck in an isolated
+local mode, the final predictions you obtain (eg, from 'net-pred' for
+'gp-pred'), and the final distributions of model parameters, should be
+close to those reported below.
 
 All the data sets mentioned here are present in the 'examples'
 sub-directory, along with the C source of the programs that generated
 them.  It is assumed below that you have changed to this directory.
 The command sequences for running the simulations that are mentioned
 below are also stored in this directory, in shell files with the names
-'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', 'ccmds.net', and
-'ccmds.gp'.
+'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.
 
 Note that the particular network architectures, priors, and Markov
-chain sampling options used below are only examples of reasonable
-choices.  There are many other possibilities that are also reasonable.
-To gain a full understanding of the various possibilities, and their
-advantages and disadvantages, you will need to read both the general
-references given earlier for these models, and the detailed
-documentation in the ".doc" files.
+chain sampling options, and so forth that are used in these examples
+are only examples of reasonable choices.  There are many other
+possibilities that would also be reasonable for these examples.  For 
+a different problem, it might well be necessary to use different
+architectures and priors.  To gain a full understanding of the various
+possibilities, and their advantages and disadvantages, you will need
+to read both the general references given earlier for these models,
+and the detailed documentation in the ".doc" files.
+
+Computation times are given for many of the examples.  These are all
+for the current version of the software, run on our computer, which is
+currently an SGI machine with 194 MHz MIPS R10000 processors.
 
 
 A SIMPLE REGRESSION PROBLEM
@@ -618,7 +697,6 @@ this example, this should give the following result:
              Output Layer
     
       Hidden0-Output Weights: x0.050:0.50
-      Input-Output Weights:    0.050:0.50
       Output Biases:           100.000
 
 You can also view the model specification by invoking 'model-spec'
@@ -657,7 +735,9 @@ Though it is not done above, the 'data-spec' command also allows you
 to specify transformations to be applied to the inputs or targets
 before they are used.  This is useful, for example, if you wish to use
 inputs that have been "normalized" to have mean zero and variance one,
-based on the training data.  See data-spec.doc for the details.
+based on the training data. See data-spec.doc for the details.  In
+this example, the data already has approximately mean zero and
+variance one, so the priors used are sensible without normalization.
 
 In the training runs reported in the thesis, I used a short "initial
 phase" to get things started, followed by a long "sampling phase" to
@@ -723,12 +803,12 @@ keeping the rejection rate low.  The use of a "window" of around 10
 states costs little and is often beneficial.
 
 The 100 iterations of the sampling phase started with the command
-'net-mc rlog.net 100' will take a while to complete (about four
+'net-mc rlog.net 100' will take a little while to complete (about two
 minutes on our current SGI machine).  If you put the command in the
 background (or add a '&' to the end of the 'net-mc' command), you will
 be able to monitor progress while you wait.  For example, you can look
 at the last network saved in the log file (or any earlier one) using
-'net-display'.  After half a minute or so, you might see the following:
+'net-display'.  After a few seconds, you might see the following:
 
     > net-display rlog.net
   
@@ -789,6 +869,13 @@ where 'plot' is some suitable plot program.  (One can also just invoke
 net-plt and look at the numbers printed on standard output.)  Here
 'h3' refers to the top-level hyperparameter for group 3, which is seen
 in the output of 'net-display' above to be the hidden-to-output group.
+Here's a command that shows how the individual weights in this group
+change during the run:
+
+    > net-plt t w3@ rlog.net | plot
+
+In this case, the "plot" program must be one (such as xgraph-11) that
+is capable of displaying more than one superimposed graph.
 
 By looking at plots of the hyperparameters and quantities such as the
 squared error on the training set ('b'), one can get an idea of when
@@ -838,12 +925,13 @@ It is also possible to get predictions for cases that are not in the
 test set that was specified with 'data-spec'.  For example:
 
     > net-pred nb rlog.net 11: / "%echo 2.3"
-        1.37
+      +1.36611484e+00
 
 Here, the options "nb" ask for only the predictive mean, with "bare"
-output (no headings).  The argument at the end says that the inputs
-for test cases (here, just one case) should be taken from the output
-of the Unix command "echo 2.3", which just outputs the number 2.3.
+output (no headings, also higher precision, in exponential format).
+The argument at the end says that the inputs for test cases (here,
+just one case) should be taken from the output of the Unix command
+"echo 2.3", which just outputs the number 2.3.
 
 
 A Gaussian process model for the regression problem.
@@ -960,7 +1048,7 @@ time to compute (the 'E' and 'H' quantities, defined in the "mc"
 module, may also take a long time).  See gp-quantities.doc for
 details.
 
-Once the gp-mc run has completed (which takes about two minutes on
+Once the gp-mc run has completed (which takes less than a minute on
 our SGI machine), the iterations from the latter part of the run can
 be used to make predictions for test cases.  This is done using
 'gp-pred', which operates much like 'net-pred'.  The following command
@@ -973,15 +1061,15 @@ iterations, and reports the average squared error:
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.00972+-0.00131
+    Average squared error guessing mean:   0.00952+-0.00126
 
-This takes only a few seconds on our machine.  Predictions will take
-longer when the number of training cases is larger, or if the median
-or log probability are to be found (options "d" or "p" of 'gp-pred').
-As can be seen, the performance of the Gaussian process model is quite
-similar to that of the neural network model for this problem.  (The
-difference in average performance seen is probably not significant,
-considering the standard errors.)
+This takes only a couple seconds on our machine.  Predictions will
+take longer when the number of training cases is larger, or if the
+median or log probability are to be found (options "d" or "p" of
+'gp-pred').  As can be seen, the performance of the Gaussian process
+model is quite similar to that of the neural network model for this
+problem.  (The difference in average performance seen is probably not
+significant, considering the standard errors.)
 
 The predictions for test cases made above are found directly from the
 covariances between the targets in the training cases and the unknown
@@ -1005,7 +1093,7 @@ all the training cases, which will be stored in the log file.  These
 values can later be used to compute the squared error for training
 cases, which can be plotted with a command such as
 
-    > gp-plt t b rlog.gp2
+    > gp-plt t b rlog.gp2 | plot
 
 The "discard-values" operation throws away the function values (if
 present) before the operations for updating hyperparameters.  Throwing
@@ -1042,7 +1130,7 @@ the function value, which noise is not.  The jitter makes all the
 function values less predictable, reducing the problem of poor
 conditioning.  Jitter plays a more crucial role for binary and class
 models.
-1
+
 
 A PROBLEM WITH A BINARY RESPONSE
 
@@ -1109,8 +1197,8 @@ rejection rate must be quite small.  This alternative method has the
 advantage that it allows for more frequent hyperparameter updates
 (with 'sample-sigmas').
 
-On our SGI machine, the 200 iterations requested above take about 45
-minutes.  During this time, one can monitor the simulation, for
+On our SGI machine, the 200 iterations requested above take about
+twenty minutes.  During this time, one can monitor the simulation, for
 instance with the command:
 
     > net-plt t h1h2h3 blog.net | plot
@@ -1205,7 +1293,7 @@ relationship of function values to targets is not Gaussian.
 Unfortunately, for the very same reason, the direct "sample-values"
 operation is not available, so Gibbs sampling must be done.
 
-The 50 sampling iterations take about 50 minutes on our SGI machine.
+The 50 sampling iterations take about 17 minutes on our SGI machine.
 While you wait, you can check the progress of the hyperparameters
 using gp-display:
 
@@ -1225,8 +1313,8 @@ using gp-display:
 
     Exponential parts:
 
-          6.657
-          0.179 :      0.179      0.179
+          5.767
+          0.683 :      0.683      0.683
 
 Note that there are only two variable hyperparameters, since the
 constant and jitter parts are fixed, and the relevance hyperparameters
@@ -1247,13 +1335,13 @@ classification performance:
 
     Fraction of guesses that were wrong:  0.0900+-0.0203
 
-This takes about one minute on our SGI machine.  This is considerably
-slower than prediction using a network model, since a covariance
-matrix must be inverted for each iteration used (saving the inverses
-for each iteration would take up lots of disk space).  The accuracy
-achieved is about the same as the network model, which is not too 
-surprising, given that they both use a logistic function to relate
-function values to target probabilities.
+This takes about about ten seconds on our machine.  This is slower
+than prediction using a network model, since a covariance matrix must
+be inverted for each iteration used (saving the inverses for each
+iteration would take up lots of disk space).  The accuracy achieved is
+about the same as the network model, which is not too surprising,
+given that they both use a logistic function to relate function values
+to target probabilities.
 
 It is possible to define a Gaussian process model that will behave as
 what is known is statistics as a "probit" model rather than a
@@ -1342,7 +1430,7 @@ the same approach as was used above for the binary data set (but the
                                  hybrid 100:10 0.3 negate
     > net-mc clog.net 200
 
-This takes about 65 minutes on our SGI machine.
+This takes about 25 minutes on our SGI machine.
 
 We can see the effect of the ARD model by looking at the values of
 the low-level input-hidden hyperparameters over the course of the
@@ -1382,19 +1470,25 @@ classification problem, using "persistent" hybrid Monte Carlo:
 
     > gp-gen clog.gpp fix 0.5 1
     > mc-spec clog.gpp repeat 5 scan-values 100 heatbath 0.9 \
-                                hybrid 1 0.4 negate
+                                hybrid 1 0.3 negate
     > gp-mc clog.gpp 5
     > mc-spec clog.gpp repeat 5 scan-values 100 heatbath 0.99 \
-                                hybrid 1 0.4 negate
+                                hybrid 1 0.3 negate
     > gp-mc clog.gpp 100
 
 For the first five iterations, the persistence is fairly small (0.9),
 so that the high initial energy will be dissipated rapidly.  The
-remaining iterations use a largers persistence (0.99) to suppress
-random walks.  The run takes about 220 minutes on our SGI machine.
-The n-cubed scaling of the computations for the Gaussian process
-models leads to their becoming slower relative to neural network
-models as the number of training cases increases.
+remaining iterations use a larger persistence (0.99) to suppress
+random walks.  The run takes about 90 minutes on our machine.  The
+n-cubed scaling of the computations for the Gaussian process models
+leads to their becoming slower relative to neural network models as
+the number of training cases increases.
+
+One can observe how the relevance hyperparameters change during the
+run as follows, assuming that the "plot" program can display four
+superimposed graphs:
+
+    > gp-plt t R1@ clog.gpp | plot
 
 Once the run is finished, predictions for test cases can be made
 as illustrated below:
@@ -1417,9 +1511,9 @@ as illustrated below:
      599    0.66   0.79   0.03   0.09    0.00       2       1
      600    0.76   0.90   0.73  -0.03    2.00       2       0
     
-    Fraction of guesses that were wrong:  0.1333+-0.0139
+    Fraction of guesses that were wrong:  0.1317+-0.0138
     
-This takes about 11 minutes on our SGI machine.
+This takes about three minutes on our machine.
 
 A "logistic" style model can be obtained by decreasing the jitter,
 using a 'gp-spec' command such as the following:
@@ -1427,7 +1521,7 @@ using a 'gp-spec' command such as the following:
     > gp-spec clog.gpl 4 3 1 - 0.1 / 0.05:0.5 x0.2:0.5:1
 
 This model appears to convergence less rapidly than the probit model,
-but gives similar results.
+and requires a smaller stepsize, but gives similar results.
 
 
 A REGRESSION PROBLEM WITH OUTLIERS
@@ -1484,7 +1578,8 @@ of the way the noise was actually generated, but its fairly heavy
 tails are enough to prevent the model from paying undue attention to
 the outliers.
 
-The resulting model can be tested on data from the same source using
+The above commands take about two minutes on our machine.  The
+resulting model can be tested on data from the same source using
 net-pred:
 
     > net-pred na olog.net 31:
@@ -1533,8 +1628,8 @@ be sampled.  The following commands illustrate how this is done:
     > mc-spec olog.gpt sample-variances heatbath hybrid 20:4 0.5
     > gp-mc olog.gpt 200
 
-This takes about six minutes on our SGI machine.  The progress of the
-run can be monitored by examining the case-by-case noise standard
+This takes less than two minutes on our SGI machine.  The progress of
+the run can be monitored by examining the case-by-case noise standard
 deviations in (say) the first 8 training cases, as follows:
 
     > gp-plt t v@0:7 olog.gpt | plot
@@ -1552,7 +1647,7 @@ Predictions can be made using 'gp-pred':
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.01995+-0.01186
+    Average squared error guessing mean:   0.02074+-0.01235
 
 This performance is very similar to that of the network model.
 
@@ -1576,8 +1671,8 @@ HINTS AND WARNINGS
    the precisions, their scale is specified in the net-spec and
    model-spec commands in terms of the corresponding standard deviations.
 
-3) When there is a single output unit, a specification of the form
-   "w:a:b" for the hidden-to-output weights is mathematically
+3) When there is a single output unit in a network, a specification of 
+   the form "w:a:b" for the hidden-to-output weights is mathematically
    equivalent to one of the form "w:a::b".  The two specifications
    differ computationally, however.  In the "w:a:b" form, lower-level
    hyperparameters that each control a single weight are explicitly
@@ -1618,8 +1713,8 @@ HINTS AND WARNINGS
          inverted in sample-values.  However, scan-values does not produce
          independent draws, so convergence may be slower.
 
-5) If the system crashes in the middle of a run of 'net-mc', one can
-   usually continue from the last iteration written to the log file 
+5) If the system crashes in the middle of a run of 'net-mc' (say), one
+   can usually continue from the last iteration written to the log file 
    by just invoking 'net-mc' again with the same arguments (just as 
    one can continue for more iterations after 'net-mc' terminates 
    normally).  Problems could arise if the system crashed in the middle 
@@ -1655,7 +1750,7 @@ that words in quotes are to be entered literally (without the quotes).
 The ".doc" files present in the various directories are listed below,
 with the more important files marked by "*".  Programs listed as
 "xxx-something" are generic, with "xxx" being replaced by the name of
-an application (eg, "net", "gp", or "bvg").  In some cases, further
+an application (eg, "net", "gp", or "mix").  In some cases, further
 documentation is available under the specific name.
 
 The file index.html is a hypertext index to this documenation.  It can
@@ -1677,7 +1772,7 @@ All the introductory documentation (including this) is collected into
 the 'manual' file.  You can print all the documentation by going to
 the main directory for this software and issuing a command such as
 
-  lpr doc/manual util/*.doc mc/*.doc net/*.doc gp/*.doc bvg/*.doc doc/rel*
+  lpr doc/manual util/*.doc mc/*.doc net/*.doc gp/*.doc mix/*.doc doc/rel*
  
 (or using whatever command other than 'lpr' you use to print text files).
 
@@ -1688,6 +1783,7 @@ Generic utility programs [util]:
     log-types       Types of log file records used by various programs
 
     log-copy        Copy part of a log file to a new log file
+    log-append      Append records from one log file to the end of another
     log-last        Display the index of the last record in a log file
     log-records     List all records in a log file  
 
@@ -1697,6 +1793,8 @@ Generic utility programs [util]:
 
   * model-spec      Specify model for targets
   * prior           Meaning and syntax of prior specifications
+
+    find-min        Find entry with minimum value (for cross validation)
 
     grid            Output a grid of points  
     extract         Extract items at random from a data file 
@@ -1734,6 +1832,7 @@ Bayesian neural networks [net]:
 
   * net-mc          Do Markov chain simulation to sample networks
   * net-gen         Generate networks from the prior, or with fixed values  
+    net-gd          Train a network by gradient descent in the error
 
   * net-display     Print network parameters and/or hyperparameters
 
@@ -1763,6 +1862,25 @@ Gaussian process models [gp]:
   * gp-pred         Make predictions for test cases using Gaussian process
     gp-eval         Evaluate function drawn from a Gaussian process over a grid
 
+    gp-cov          Print covariance matrix for a Gaussian process 
+    gp-eigen        Find eigenvalues/vectors of covariance matrix
+
+
+Bayesian inference for mixture models [mix]:
+
+  * mix             Bayesian inference for mixture models
+  * mix-spec        Specify a mixture model, or display existing spec
+
+  * mix-mc          Use Markov chain to do sampling for a mixture model
+  * mix-gen         Generate hyperparameters randomly, or fix them
+
+  * mix-display     Print mixture model parameters, hyperparameters, etc.
+  * mix-quantities  Quantities from log files relating to mixture models
+
+    mix-cases       Generate cases from a mixture model
+
+    mix-extensions  Possible extensions to the mixture modeling software
+
 
 Markov chain sampling for a bivariate Gaussian [bvg]:
 
@@ -1783,5 +1901,5 @@ rejection sampling, and the features allowing cpu time to be stored,
 displayed, and used to control the number of iterations, are also
 based on work by Carl Edward Rasmussen.
 
-Thanks also to David MacKay and Chris Williams for testing the
-programs on their machines, and for comments on the documentation.
+Thanks also to David MacKay, Chris Williams, and Tim Howells for
+testing the programs and for comments on the documentation.

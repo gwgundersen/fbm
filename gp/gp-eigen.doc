@@ -1,0 +1,44 @@
+
+
+GP-EIGEN:  Find eigenvalues/vectors of a Gaussian process's covariance.
+
+GP-eigen prints the eigenvalues and/or eigenvectors of the covariance
+matrix for a Gaussian process, as constructed at a specified set of
+input points.  The ratio of the largest to the smallest eigenvalue is
+a measure of the "conditioning" of the matrix; a large ratio indicates
+that computational problems may arise.  The eigenvalues and
+eigenvectors are also of theoretical interest.
+
+Usage: 
+ 
+    gp-eigen [ -values ] [ -vectors ] log-file index [ extra ] 
+             [ / test-inputs ]
+
+Computes the eigenvalues and/or eigenvectors for the Gaussian process
+stored at the specified iteration in the log file.  If no extra
+argument is given, the covariance matrix for latent values is used,
+without the noise variance being added to the diagonal.  If the extra
+argument is the string "+noise", the noise is added.  This is valid
+only for a regression model, and only if the noise variances do not
+vary on a case-by-case basis.  If there is more than one target
+variable, the noise added is that for the first target.  If the extra
+argument is a positive number, that number is added to the diagonal.
+
+By default, the covariance matrix is for the set of training inputs,
+but this can be overrriden by specifying a file of inputs at the end
+of the command line.
+
+By default, or if only the "-values" option is specified, the
+eigenvalues are printed on per line, in descending order of magnitude.
+If both "-values" and "-vectors" are specified, the eigenvalues are
+followed, on the same line, by their eigenvectors.  If only "-vectors"
+is specified, only the eigenvectors are printed, but they are still
+ordered according to decreasing eigenvalue.
+
+The eigenvalues and eigenvectors are computed by Jacobi iteration,
+stopping when all off-diagonal elements are less than 1e-10.  If the
+matrix is poorly conditioned, it is possible for some of the
+eigenvalues found to be negative, even though these cannot be correct,
+since the covariance matrix is supposed to be positive semi-definite.
+
+            Copyright (c) 1997 by Radford M. Neal

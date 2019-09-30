@@ -1,0 +1,29 @@
+
+
+GP-COV:  Print covariance matrix for a Gaussian process at given points.
+
+GP-cov prints the covariance matrix for a Gaussian process at a given
+set of input points.
+
+Usage: 
+ 
+    gp-cov log-file index [ extra ] [ / train-inputs ]
+
+If no extra argument is given, the covariance matrix for latent values
+is used, without the noise variance being added to the diagonal.  If
+the extra argument is the string "+noise", the noise is added.  This
+is valid only for a regression model, and only if the noise variances
+do not vary on a case-by-case basis.  If there is more than one target
+variable, the noise added is that for the first target.  If the extra
+argument is a positive number, that number is added to the diagonal.
+
+By default, the covariance matrix is for the set of training inputs,
+as specified with data-spec, but this can be overrriden by specifying
+a file of training inputs at the end of the command line.  This file
+must contain target values, even though they aren't used.
+
+The covariance matrix is written to standard output, to 18 digit
+precision, one row per line.  The full matrix is written even though
+it is symmetrical.
+
+            Copyright (c) 1997 by Radford M. Neal

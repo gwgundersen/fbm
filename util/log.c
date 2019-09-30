@@ -40,7 +40,7 @@ void log_file_create
 ( log_file *logf	/* Log file state structure */
 )
 { 
-  logf->file_struct = fopen(logf->file_name,"wb+");
+  logf->file_struct = fopen(logf->file_name,"w+b");
 
   if (logf->file_struct==NULL)
   { fprintf(stderr,"Can't create log file: %s\n",logf->file_name);
@@ -62,7 +62,7 @@ void log_file_open
   int allow_append	/* Allow data to be appended? */
 )
 {
-  logf->file_struct = fopen (logf->file_name, allow_append ? "rb+" : "rb");
+  logf->file_struct = fopen (logf->file_name, allow_append ? "r+b" : "rb");
 
   if (logf->file_struct==NULL)
   { fprintf(stderr,"Can't open log file: %s\n",logf->file_name);
@@ -374,8 +374,7 @@ void log_file_append
   logf->header.magic = Log_header_magic;
   logf->header.reserved = 0;	/* So future programs see this in old files */
 
-  if (fwrite (&logf->header, 1, sizeof logf->header, logf->file_struct) 
-       != sizeof logf->header)
+  if (fwrite (&logf->header, sizeof logf->header, 1, logf->file_struct) != 1)
   { fprintf(stderr,"Error writing header to log file\n");
     exit(1);
   }
@@ -388,7 +387,7 @@ void log_file_append
   trailer = logf->header;
   trailer.magic = Log_trailer_magic;
 
-  if (fwrite (&trailer, 1, sizeof trailer, logf->file_struct) != sizeof trailer)
+  if (fwrite (&trailer, sizeof trailer, 1, logf->file_struct) != 1)
   { fprintf(stderr,"Error writing trailer to log file\n");
     exit(1);
   }

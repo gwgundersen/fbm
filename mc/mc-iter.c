@@ -150,7 +150,8 @@ void mc_iter_init
     }
 
     if (type=='B' || type=='N' || type=='D' || type=='P' 
-     || type=='H' || type=='T' || type=='i' || type=='o')
+     || type=='H' || type=='T' || type=='i' || type=='o'
+     || type=='r')
     { need_p = 1;
     }
 

@@ -1,0 +1,5 @@
+mix-spec xrlog.inf 0 2 / x5 0.05:0.5:0.2 10
+model-spec xrlog.inf real 0.05:0.5:0.5:1
+data-spec xrlog.inf 0 2 / xrdata@1:500 . 
+mc-spec xrlog.inf repeat 20 met-indicators 10 gibbs-params gibbs-hypers
+mix-mc xrlog.inf 100

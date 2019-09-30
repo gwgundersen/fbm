@@ -1,0 +1,72 @@
+<html>
+<body>
+<pre>
+
+
+MIX-MC:  Use Markov chain to do sampling for a mixture model.
+
+The mix-mc program is the specialization of xxx-mc to the task of
+sampling from the posterior distribution of the hyperparameters,
+parameters, and component indicators that are associated with a
+mixture model.  If no training data is specified, the prior for
+hyperparameters is sampled from, in which case only the gibbs-hyper
+operation below is valid.
+
+The generic features of this program are described in <A HREF="xxx-mc.html">xxx-mc.doc</A>.
+However, at present, none of the pre-defined Markov chain operations
+can be used with mixture models, only the special operations described
+below.
+
+The state of the simulation has three parts: the hyperparameter values
+common to all mixture components, the indicators of which component is
+associated with each training case, and the parameter values for those
+components that are associated with some training case.  Any parts
+that are not present when sampling begins are set as follows:
+hyperparameters to their means, parameters of components to their
+means given the hyperparameters, and indicators to a single component.
+
+The three parts of the state can be updated with the following
+application specific sampling operations:
+
+   gibbs-hypers
+
+       Does a Gibbs sampling scan over the hyperparameter values.
+
+   gibbs-params
+
+       Does a Gibbs sampling scan over the parameters for the mixture
+       components that are currently associated with at least one
+       training case.
+
+   gibbs-indicators
+
+       Does a Gibbs sampling scan over the indicators for which 
+       component is currently associated with each training case.
+       This operation is not allowed for models with an infinite
+       number of components.  
+
+   met-indicators [ N ]
+
+       For each training case in turn, does N Metropolis-Hastings
+       updates for the indicator that specifies which component is 
+       associated with that case.  For each update, a new component 
+       is proposed, selected according to the mixing probabilities.  
+       This component is then accepted or rejected based on the
+       relative probability of the case with respect to the new and
+       the old components.  This operation is possible with both
+       finite and infinite models.
+
+Note that the gibbs-indicators and met-indicators operations may
+change the set of components that are associated with some training
+case.  New components that were not previously associated with any
+training case have parameters drawn from the prior, given the current
+hyperparameters.  Components are removed from the current list when
+they are no longer associated with any training case.
+
+Statistics regarding the met-indicators operation can be accessed via
+the 'r', 'm', and 'D' quantities, as documented in <A HREF="mc-quantities.html">mc-quantities.doc</A>.
+
+            Copyright (c) 1997 by Radford M. Neal
+</pre>
+</body>
+</html>

@@ -1,0 +1,32 @@
+
+
+LOG-APPEND:  Append records from one log file to the end of another.
+
+Log-append takes certain records from one log file and appends them to
+the end of another log file (which must already exist).  This is
+useful for initializing iterative programs using the state from a
+previous run.  It is also dangerous, however, as no check is made for
+whether the records appended make sense in the new context.
+
+Usage:
+
+   log-append input-log-file [ range ] output-log-file 
+
+The records with indexes in the indicated range are read from
+input-log-file and appended to the end of output-log-file.  The range
+has the usual form of [low][:[high]][%modulus], as described in
+parse_range in misc.c.  If high and the colon are omitted, high
+defaults to low.  If high is omitted but the colon is present, the
+range extends to the end of the file.  If no range is specified, it
+defaults to the last index for which any records are stored.  Records
+with negative indexes are never copied.
+
+The records copied are appended to output-log-file, with consecutive
+indexes starting after the index of the last existing record, at index
+0 if only records with negative indexes are present.  In typical
+usage, output-log-file will contain only specifications, with indexes
+of -1, and the range to copy will consist of a single index.  In this
+case, the records appended will have index 0, which is suitable for
+initialization of an iterative program.
+
+            Copyright (c) 1997 by Radford M. Neal

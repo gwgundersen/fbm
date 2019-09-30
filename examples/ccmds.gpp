@@ -8,7 +8,7 @@ model-spec clog.gpp class
 data-spec clog.gpp 4 1 3 / cdata@1:400 . cdata@401:1000 .
 
 gp-gen clog.gpp fix 0.5 1
-mc-spec clog.gpp repeat 5 scan-values 100 heatbath 0.9 hybrid 1 0.4 negate
+mc-spec clog.gpp repeat 5 scan-values 100 heatbath 0.9 hybrid 1 0.3 negate
 gp-mc clog.gpp 5
-mc-spec clog.gpp repeat 5 scan-values 100 heatbath 0.99 hybrid 1 0.4 negate
+mc-spec clog.gpp repeat 5 scan-values 100 heatbath 0.99 hybrid 1 0.3 negate
 gp-mc clog.gpp 100

@@ -602,7 +602,7 @@ void main
     { printf(" ");
       for (j = m!=0 && m->type=='V' && sv->hazard_type!='C' ? 1 : 0; 
                j<a->N_inputs; j++)
-      { printf(" %6.2lf",test_values[i].i[j]);
+      { printf(op_b ? " %+.8e" : " %6.2f",test_values[i].i[j]);
       }
     }
 
@@ -612,7 +612,7 @@ void main
       { double val;
         val = test_targets[data_spec->N_targets*i+j];
         if (op_r) val = data_inv_trans(val,data_spec->target_trans[j]);
-        printf(" %6.2lf",val);
+        printf(op_b ? " %+.8e" : " %6.2f",val);
       }
       if (data_spec->N_targets==1) printf(" ");
     }
@@ -621,7 +621,7 @@ void main
     { log_prob[i] -= log((double)N_nets);
       ave_log_prob += log_prob[i];
       ave_log_prob_sq += log_prob[i]*log_prob[i];
-      if (!op_a) printf(" %9.3lf",log_prob[i]);
+      if (!op_a) printf(op_b ? " %.8e" : " %9.3f",log_prob[i]);
     }
 
     if (op_m)
@@ -661,14 +661,14 @@ void main
       { printf(" ");
         if (data_spec->N_targets<2) printf("   ");
         for (j = 0; j<data_spec->N_targets; j++) 
-        { printf(" %2.0lf",guess[j]);
+        { printf(" %2.0f",guess[j]);
         }
         if (data_spec->N_targets<3) printf("  ");
         if (have_targets)
         { printf(" ");
           if (data_spec->N_targets<2) printf("   ");
           for (j = 0; j<data_spec->N_targets; j++) 
-          { printf(" %1.0lf",error[j]);
+          { printf(" %1.0f",error[j]);
           }
         }
       }
@@ -702,16 +702,16 @@ void main
       if (!op_a) 
       { printf(" ");
         for (j = 0; j<M_targets; j++) 
-        { printf(" %6.2lf",guess[j]);
+        { printf(op_b ? " %+.8e" : " %6.2f",guess[j]);
         }
         if (have_targets)
         { printf(" ");
           if (m!=0 && m->type=='C') 
-          { printf(" %6.4lf",tot_error);
+          { printf(op_b ? " %.8e" : " %6.4f",tot_error);
           }
           else
           { for (j = 0; j<data_spec->N_targets; j++) 
-            { printf(" %6.4lf",error[j]);
+            { printf(op_b ? " %.8e" : " %6.4f",error[j]);
             }
           }
         }
@@ -746,12 +746,12 @@ void main
       { printf(" ");
         if (data_spec->N_targets==1) printf(" ");
         for (j = 0; j<data_spec->N_targets; j++) 
-        { printf(" %6.2lf",guess[j]);
+        { printf(op_b ? " %+.8e" : " %6.2f",guess[j]);
         }
         if (have_targets)
         { printf(" ");
           for (j = 0; j<data_spec->N_targets; j++) 
-          { printf(" %6.4lf",error[j]);
+          { printf(op_b ? " %.8e" : " %6.4f",error[j]);
           }
         }
       }
@@ -773,9 +773,9 @@ void main
     if (op_p) 
     { double a;
       a = ave_log_prob/N_test;
-      printf("Average log probability of targets: %9.3lf", a);
+      printf("Average log probability of targets: %9.3f", a);
       if (N_test>1) 
-      { printf("+-%.3lf", sqrt((ave_log_prob_sq/N_test-a*a) / (N_test-1)));
+      { printf("+-%.3f", sqrt((ave_log_prob_sq/N_test-a*a) / (N_test-1)));
       }
       printf("\n\n");
     }
@@ -785,9 +785,9 @@ void main
       printf("Fraction of guesses that were wrong: ");
       for (j = 0; j<data_spec->N_targets; j++)
       { a = wrong[j] / N_test;
-        printf(" %6.4lf",a);
+        printf(" %6.4f",a);
         if (N_test>1) 
-        { printf("+-%6.4lf", sqrt((wrong_sq[j]/N_test-a*a) / (N_test-1)));
+        { printf("+-%6.4f", sqrt((wrong_sq[j]/N_test-a*a) / (N_test-1)));
         }
       }
       printf("\n");
@@ -800,18 +800,18 @@ void main
       printf("Average squared error guessing mean: ");
       if (m!=0 && m->type=='C')
       { a = tsq_error / N_test;
-        printf (" %8.5lf", a);
+        printf (" %8.5f", a);
         if (N_test>1) 
-        { printf("+-%.5lf",sqrt((tsq_error_sq/N_test - a*a) / (N_test-1)));
+        { printf("+-%.5f",sqrt((tsq_error_sq/N_test - a*a) / (N_test-1)));
         }
         printf("\n");
       } 
       else
       { for (j = 0; j<data_spec->N_targets; j++)
         { a = sq_error[j]/N_test;
-          printf (" %8.5lf", a);
+          printf (" %8.5f", a);
           if (N_test>1)
-          { printf("+-%.5lf", sqrt((sq_error_sq[j]/N_test - a*a) / (N_test-1)));
+          { printf("+-%.5f", sqrt((sq_error_sq[j]/N_test - a*a) / (N_test-1)));
           }
         }
         printf("\n");
@@ -819,9 +819,9 @@ void main
 
       if (data_spec->N_targets>1) 
       { a = tsq_error / N_test;
-        printf("                                            (total %.5lf",a);
+        printf("                                            (total %.5f",a);
         if (N_test>1) 
-        { printf("+-%.5lf",sqrt((tsq_error_sq/N_test - a*a) / (N_test-1)));
+        { printf("+-%.5f",sqrt((tsq_error_sq/N_test - a*a) / (N_test-1)));
         }
         printf(")\n");
       }
@@ -835,18 +835,18 @@ void main
 
       for (j = 0; j<data_spec->N_targets; j++)
       { a = abs_error[j] / N_test;
-        printf(" %8.5lf", a);
+        printf(" %8.5f", a);
         if (N_test>1)
-        { printf("+-%.5lf", sqrt((abs_error_sq[j]/N_test - a*a) / (N_test-1)));
+        { printf("+-%.5f", sqrt((abs_error_sq[j]/N_test - a*a) / (N_test-1)));
         }
       }
       printf("\n");
 
       if (data_spec->N_targets>1)
       { a = tabs_error / N_test;
-        printf("                                            (total %.5lf",a);
+        printf("                                            (total %.5f",a);
         if (N_test>1) 
-        { printf("+-%.5lf",sqrt((tabs_error_sq/N_test - a*a) / (N_test-1)));
+        { printf("+-%.5f",sqrt((tabs_error_sq/N_test - a*a) / (N_test-1)));
         }
         printf(")\n");
       }

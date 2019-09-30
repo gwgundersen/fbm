@@ -309,31 +309,13 @@ void main
 
     if (N_train>0)
     { 
-      /* First compute covariance for true function values at training points.*/
+      /* Find covariance for latent or target values at training points,
+         storing in train_cov. */
 
-      gp_cov(gp, h, train_inputs, N_train, train_inputs, N_train, train_cov, 0);
-
-      if (gp->has_jitter)
-      { for (i = 0; i<N_train; i++)
-        { train_cov[i*N_train+i] += exp(2 * *h->jitter);
-        }
-      }
-
-      /* Now add on noise variances, if we don't have the true values. */
-
-      if (!latent_values && m!=0)
-      { if (m->type!='R') abort();
-        if (m->noise.alpha[2]!=0)
-        { for (i = 0; i<N_train; i++) 
-          { train_cov[i*N_train+i] += noise_variances[i];
-          }
-        }
-        else
-        { for (i = 0; i<N_train; i++) 
-          { train_cov[i*N_train+i] += exp(2 * *h->noise[0]);
-          }
-        }
-      }
+      gp_train_cov (gp, m, h, 0, noise_variances, 
+                    latent_values ? train_cov : 0,
+                    latent_values ? 0 : train_cov,
+                    0);
 
       /* Invert covariance matrix computed above. */
 

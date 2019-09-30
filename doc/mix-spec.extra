@@ -1,0 +1,20 @@
+Documentation for future extension in which concentration may be variable:
+
+The con-prior argument specifies the concentration hyperparameter for
+the Dirichlet distribution for the component probabilities.  This may
+be fixed, or may be variable, with 1/concentration^2 having a gamma
+prior.  In detail, the following forms are allowed for this argument:
+
+      <value>           Fixed at <value>
+      x<value>          Fixed at <value>/N-components
+
+      <value>:<alpha>   Variable, with 1/concentration^2 having a gamma
+                        prior with shape <alpha> and mean 1/<value>^2.
+
+      x<value>:<alpha>  Same as above, except that <value> is multiplied
+                        by the factor 1/N-components.
+
+The forms that start with "x" scale the value in such a manner that
+the model reaches a well-defined limiting form as the number of
+components goes to infinity.  If the number of components is infinite
+(which is the default), this argument must start with "x".

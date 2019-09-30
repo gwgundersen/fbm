@@ -117,7 +117,6 @@ this example, this should give the following result:
              Output Layer
     
       Hidden0-Output Weights: x0.050:0.50
-      Input-Output Weights:    0.050:0.50
       Output Biases:           100.000
 
 You can also view the model specification by invoking 'model-spec'
@@ -156,7 +155,9 @@ Though it is not done above, the 'data-spec' command also allows you
 to specify transformations to be applied to the inputs or targets
 before they are used.  This is useful, for example, if you wish to use
 inputs that have been "normalized" to have mean zero and variance one,
-based on the training data.  See data-spec.doc for the details.
+based on the training data. See data-spec.doc for the details.  In
+this example, the data already has approximately mean zero and
+variance one, so the priors used are sensible without normalization.
 
 In the training runs reported in the thesis, I used a short "initial
 phase" to get things started, followed by a long "sampling phase" to
@@ -222,12 +223,12 @@ keeping the rejection rate low.  The use of a "window" of around 10
 states costs little and is often beneficial.
 
 The 100 iterations of the sampling phase started with the command
-'net-mc rlog.net 100' will take a while to complete (about four
+'net-mc rlog.net 100' will take a little while to complete (about two
 minutes on our current SGI machine).  If you put the command in the
 background (or add a '&' to the end of the 'net-mc' command), you will
 be able to monitor progress while you wait.  For example, you can look
 at the last network saved in the log file (or any earlier one) using
-'net-display'.  After half a minute or so, you might see the following:
+'net-display'.  After a few seconds, you might see the following:
 
     > net-display rlog.net
   
@@ -288,6 +289,13 @@ where 'plot' is some suitable plot program.  (One can also just invoke
 net-plt and look at the numbers printed on standard output.)  Here
 'h3' refers to the top-level hyperparameter for group 3, which is seen
 in the output of 'net-display' above to be the hidden-to-output group.
+Here's a command that shows how the individual weights in this group
+change during the run:
+
+    > net-plt t w3@ rlog.net | plot
+
+In this case, the "plot" program must be one (such as xgraph-11) that
+is capable of displaying more than one superimposed graph.
 
 By looking at plots of the hyperparameters and quantities such as the
 squared error on the training set ('b'), one can get an idea of when
@@ -337,12 +345,13 @@ It is also possible to get predictions for cases that are not in the
 test set that was specified with 'data-spec'.  For example:
 
     > net-pred nb rlog.net 11: / "%echo 2.3"
-        1.37
+      +1.36611484e+00
 
 Here, the options "nb" ask for only the predictive mean, with "bare"
-output (no headings).  The argument at the end says that the inputs
-for test cases (here, just one case) should be taken from the output
-of the Unix command "echo 2.3", which just outputs the number 2.3.
+output (no headings, also higher precision, in exponential format).
+The argument at the end says that the inputs for test cases (here,
+just one case) should be taken from the output of the Unix command
+"echo 2.3", which just outputs the number 2.3.
 
 
 A Gaussian process model for the regression problem.
@@ -459,7 +468,7 @@ time to compute (the 'E' and 'H' quantities, defined in the "mc"
 module, may also take a long time).  See gp-quantities.doc for
 details.
 
-Once the gp-mc run has completed (which takes about two minutes on
+Once the gp-mc run has completed (which takes less than a minute on
 our SGI machine), the iterations from the latter part of the run can
 be used to make predictions for test cases.  This is done using
 'gp-pred', which operates much like 'net-pred'.  The following command
@@ -472,15 +481,15 @@ iterations, and reports the average squared error:
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.00972+-0.00131
+    Average squared error guessing mean:   0.00952+-0.00126
 
-This takes only a few seconds on our machine.  Predictions will take
-longer when the number of training cases is larger, or if the median
-or log probability are to be found (options "d" or "p" of 'gp-pred').
-As can be seen, the performance of the Gaussian process model is quite
-similar to that of the neural network model for this problem.  (The
-difference in average performance seen is probably not significant,
-considering the standard errors.)
+This takes only a couple seconds on our machine.  Predictions will
+take longer when the number of training cases is larger, or if the
+median or log probability are to be found (options "d" or "p" of
+'gp-pred').  As can be seen, the performance of the Gaussian process
+model is quite similar to that of the neural network model for this
+problem.  (The difference in average performance seen is probably not
+significant, considering the standard errors.)
 
 The predictions for test cases made above are found directly from the
 covariances between the targets in the training cases and the unknown
@@ -504,7 +513,7 @@ all the training cases, which will be stored in the log file.  These
 values can later be used to compute the squared error for training
 cases, which can be plotted with a command such as
 
-    > gp-plt t b rlog.gp2
+    > gp-plt t b rlog.gp2 | plot
 
 The "discard-values" operation throws away the function values (if
 present) before the operations for updating hyperparameters.  Throwing

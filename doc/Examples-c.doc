@@ -73,7 +73,7 @@ the same approach as was used above for the binary data set (but the
                                  hybrid 100:10 0.3 negate
     > net-mc clog.net 200
 
-This takes about 65 minutes on our SGI machine.
+This takes about 25 minutes on our SGI machine.
 
 We can see the effect of the ARD model by looking at the values of
 the low-level input-hidden hyperparameters over the course of the
@@ -113,19 +113,25 @@ classification problem, using "persistent" hybrid Monte Carlo:
 
     > gp-gen clog.gpp fix 0.5 1
     > mc-spec clog.gpp repeat 5 scan-values 100 heatbath 0.9 \
-                                hybrid 1 0.4 negate
+                                hybrid 1 0.3 negate
     > gp-mc clog.gpp 5
     > mc-spec clog.gpp repeat 5 scan-values 100 heatbath 0.99 \
-                                hybrid 1 0.4 negate
+                                hybrid 1 0.3 negate
     > gp-mc clog.gpp 100
 
 For the first five iterations, the persistence is fairly small (0.9),
 so that the high initial energy will be dissipated rapidly.  The
-remaining iterations use a largers persistence (0.99) to suppress
-random walks.  The run takes about 220 minutes on our SGI machine.
-The n-cubed scaling of the computations for the Gaussian process
-models leads to their becoming slower relative to neural network
-models as the number of training cases increases.
+remaining iterations use a larger persistence (0.99) to suppress
+random walks.  The run takes about 90 minutes on our machine.  The
+n-cubed scaling of the computations for the Gaussian process models
+leads to their becoming slower relative to neural network models as
+the number of training cases increases.
+
+One can observe how the relevance hyperparameters change during the
+run as follows, assuming that the "plot" program can display four
+superimposed graphs:
+
+    > gp-plt t R1@ clog.gpp | plot
 
 Once the run is finished, predictions for test cases can be made
 as illustrated below:
@@ -148,9 +154,9 @@ as illustrated below:
      599    0.66   0.79   0.03   0.09    0.00       2       1
      600    0.76   0.90   0.73  -0.03    2.00       2       0
     
-    Fraction of guesses that were wrong:  0.1333+-0.0139
+    Fraction of guesses that were wrong:  0.1317+-0.0138
     
-This takes about 11 minutes on our SGI machine.
+This takes about three minutes on our machine.
 
 A "logistic" style model can be obtained by decreasing the jitter,
 using a 'gp-spec' command such as the following:
@@ -158,4 +164,4 @@ using a 'gp-spec' command such as the following:
     > gp-spec clog.gpl 4 3 1 - 0.1 / 0.05:0.5 x0.2:0.5:1
 
 This model appears to convergence less rapidly than the probit model,
-but gives similar results.
+and requires a smaller stepsize, but gives similar results.

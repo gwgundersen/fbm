@@ -49,6 +49,10 @@
 #define Prediction_sample 100	/* Size of sample for finding probabilities
 				   for binary and class models */
 
+/* GAUSSIAN CUMULATIVE DISTRIBUTION FUNCTION. */
+
+#define Phi(z) (0.5*erf((z)/sqrt(2.0))+0.5)
+
 
 /* LOCAL PROCEDURES. */
 
@@ -430,13 +434,13 @@ void main
           latent_values   = logg.data['F'];
           noise_variances = logg.data['N'];
 
-          if (latent_values!=0 
+          if (have_values
            && logg.actual_size['F']!=N_train*gp->N_outputs*sizeof(double))
           { fprintf(stderr,"Record with latent values is wrong length\n");
             exit(1);
           }
 
-          if (noise_variances!=0 
+          if (have_variances
            && logg.actual_size['N']!=N_train*gp->N_outputs*sizeof(double))
           { fprintf(stderr,"Record with noise variances is wrong length\n");
             exit(1);
@@ -460,35 +464,11 @@ void main
             if (j==0 || m!=0 && m->type=='R' && !have_values
               && (m->noise.alpha[2]!=0 || *hypers.noise[j]!=*hypers.noise[j-1]))
             {
-              { gp_cov (gp, h, train_inputs, N_train, train_inputs, N_train,
-                        train_cov, 0);
-              }
-
-              if (gp->has_jitter)
-              { for (i = 0; i<N_train; i++)
-                { train_cov[i*N_train+i] += exp(*h->jitter);
-                }
-              }
-
-              if (!have_values && m!=0)
-              { if (m->type!='R') 
-                { fprintf(stderr,
-                   "Latent values are not present when requried\n");
-                  exit(1);
-                }
-                if (m->noise.alpha[2]!=0)
-                { for (i = 0; i<N_train; i++) 
-                  { train_cov[i*N_train+i] += 
-                       noise_variances[i*gp->N_outputs+j];
-                  }
-                }
-                else
-                { for (i = 0; i<N_train; i++) 
-                  { train_cov[i*N_train+i] += exp(2 * *h->noise[j]);
-                  }
-                }
-              }
-
+              gp_train_cov (gp, m, h, j, noise_variances, 
+                            have_values ? train_cov : 0,
+                            have_values ? 0 : train_cov,
+                            0);
+        
               if (!cholesky (train_cov, N_train, 0)
                || !inverse_from_cholesky (train_cov, scr1, scr2, N_train))
               { fprintf (stderr,
@@ -640,16 +620,30 @@ void main
  
               for (j = 0; j<gp->N_outputs; j++)
               {
-                prb = 0;
+                double mean, sd, av0, av1, pr0;
+                int n0, n1;
+
+                mean = meanp[i*gp->N_outputs+j];
+                sd   = sqrt(varp[i*gp->N_outputs+j]);
+
+                av0 = 0;
+                av1 = 0.1;
+
+                n0 = n1 = 0;
 
                 for (k = 0; k<Prediction_sample; k++)
                 { double v;
-                  v = meanp[i*gp->N_outputs+j] 
-                       + rand_gaussian() * sqrt(varp[i*gp->N_outputs+j]);
-                  prb += 1 / (1+exp(-v));
+                  v = mean + rand_gaussian() * sd;
+                  if (v<0) { n0 += 1; av0 += 1/(1+exp(-v)); }
+                  else     { n1 += 1; av1 += 1/(1+exp(-v)); }
                 }
 
-                prb /= Prediction_sample;
+                av0 /= n0+0.1;
+                av1 /= n1+0.1;
+
+                pr0 = Phi(-mean/sd);
+
+                prb = pr0*av0 + (1-pr0)*av1;
 
                 sum_targets[M_targets*i+j] += prb;
 
@@ -822,7 +816,7 @@ void main
     { printf(" ");
       for (j = m!=0 && m->type=='V' && sv->hazard_type!='C' ? 1 : 0; 
                j<gp->N_inputs; j++)
-      { printf(" %6.2lf",test_inputs[gp->N_inputs*i+j]);
+      { printf(op_b ? " %+.8e" : " %6.2f",test_inputs[gp->N_inputs*i+j]);
       }
     }
 
@@ -832,7 +826,7 @@ void main
       { double val;
         val = test_targets[data_spec->N_targets*i+j];
         if (op_r) val = data_inv_trans(val,data_spec->target_trans[j]);
-        printf(" %6.2lf",val);
+        printf(op_b ? " %+.8e" : " %6.2f",val);
       }
       if (data_spec->N_targets==1) printf(" ");
     }
@@ -841,7 +835,7 @@ void main
     { log_prob[i] -= log((double)N_gps);
       ave_log_prob += log_prob[i];
       ave_log_prob_sq += log_prob[i]*log_prob[i];
-      if (!op_a) printf(" %9.3lf",log_prob[i]);
+      if (!op_a) printf(op_b ? " %.8e" : " %9.3f",log_prob[i]);
     }
 
     if (op_m)
@@ -877,14 +871,14 @@ void main
       { printf(" ");
         if (data_spec->N_targets<2) printf("   ");
         for (j = 0; j<data_spec->N_targets; j++) 
-        { printf(" %2.0lf",guess[j]);
+        { printf(" %2.0f",guess[j]);
         }
         if (data_spec->N_targets<3) printf("  ");
         if (have_targets)
         { printf(" ");
           if (data_spec->N_targets<2) printf("   ");
           for (j = 0; j<data_spec->N_targets; j++) 
-          { printf(" %1.0lf",error[j]);
+          { printf(" %1.0f",error[j]);
           }
         }
       }
@@ -918,16 +912,16 @@ void main
       if (!op_a) 
       { printf(" ");
         for (j = 0; j<M_targets; j++) 
-        { printf(" %6.2lf",guess[j]);
+        { printf(op_b ? " %+.8e" : " %6.2f",guess[j]);
         }
         if (have_targets)
         { printf(" ");
           if (m!=0 && m->type=='C') 
-          { printf(" %6.4lf",tot_error);
+          { printf(op_b ? " %.8e" : " %6.4f",tot_error);
           }
           else
           { for (j = 0; j<data_spec->N_targets; j++) 
-            { printf(" %6.4lf",error[j]);
+            { printf(op_b ? " %.8e" : " %6.4f",error[j]);
             }
           }
         }
@@ -962,12 +956,12 @@ void main
       { printf(" ");
         if (data_spec->N_targets==1) printf(" ");
         for (j = 0; j<data_spec->N_targets; j++) 
-        { printf(" %6.2lf",guess[j]);
+        { printf(op_b ? " %+.8e" : " %6.2f",guess[j]);
         }
         if (have_targets)
         { printf(" ");
           for (j = 0; j<data_spec->N_targets; j++) 
-          { printf(" %6.4lf",error[j]);
+          { printf(op_b ? " %.8e" : " %6.4f",error[j]);
           }
         }
       }
@@ -989,9 +983,9 @@ void main
     if (op_p) 
     { double a;
       a = ave_log_prob/N_test;
-      printf("Average log probability of targets: %9.3lf", a);
+      printf("Average log probability of targets: %9.3f", a);
       if (N_test>1) 
-      { printf("+-%.3lf", sqrt((ave_log_prob_sq/N_test-a*a) / (N_test-1)));
+      { printf("+-%.3f", sqrt((ave_log_prob_sq/N_test-a*a) / (N_test-1)));
       }
       printf("\n\n");
     }
@@ -1001,9 +995,9 @@ void main
       printf("Fraction of guesses that were wrong: ");
       for (j = 0; j<data_spec->N_targets; j++)
       { a = wrong[j] / N_test;
-        printf(" %6.4lf",a);
+        printf(" %6.4f",a);
         if (N_test>1) 
-        { printf("+-%6.4lf", sqrt((wrong_sq[j]/N_test-a*a) / (N_test-1)));
+        { printf("+-%6.4f", sqrt((wrong_sq[j]/N_test-a*a) / (N_test-1)));
         }
       }
       printf("\n");
@@ -1017,18 +1011,18 @@ void main
 
       if (m!=0 && m->type=='C')
       { a = tsq_error / N_test;
-        printf (" %8.5lf", a);
+        printf (" %8.5f", a);
         if (N_test>1) 
-        { printf("+-%.5lf",sqrt((tsq_error_sq/N_test - a*a) / (N_test-1)));
+        { printf("+-%.5f",sqrt((tsq_error_sq/N_test - a*a) / (N_test-1)));
         }
         printf("\n");
       } 
       else
       { for (j = 0; j<data_spec->N_targets; j++)
         { a = sq_error[j]/N_test;
-          printf (" %8.5lf", a);
+          printf (" %8.5f", a);
           if (N_test>1)
-          { printf("+-%.5lf", sqrt((sq_error_sq[j]/N_test - a*a) / (N_test-1)));
+          { printf("+-%.5f", sqrt((sq_error_sq[j]/N_test - a*a) / (N_test-1)));
           }
         }
         printf("\n");
@@ -1036,9 +1030,9 @@ void main
 
       if (data_spec->N_targets>1) 
       { a = tsq_error / N_test;
-        printf("                                            (total %.5lf",a);
+        printf("                                            (total %.5f",a);
         if (N_test>1) 
-        { printf("+-%.5lf",sqrt((tsq_error_sq/N_test - a*a) / (N_test-1)));
+        { printf("+-%.5f",sqrt((tsq_error_sq/N_test - a*a) / (N_test-1)));
         }
         printf(")\n");
       }
@@ -1052,18 +1046,18 @@ void main
 
       for (j = 0; j<data_spec->N_targets; j++)
       { a = abs_error[j] / N_test;
-        printf(" %8.5lf", a);
+        printf(" %8.5f", a);
         if (N_test>1)
-        { printf("+-%.5lf", sqrt((abs_error_sq[j]/N_test - a*a) / (N_test-1)));
+        { printf("+-%.5f", sqrt((abs_error_sq[j]/N_test - a*a) / (N_test-1)));
         }
       }
       printf("\n");
 
       if (data_spec->N_targets>1)
       { a = tabs_error / N_test;
-        printf("                                            (total %.5lf",a);
+        printf("                                            (total %.5f",a);
         if (N_test>1) 
-        { printf("+-%.5lf",sqrt((tabs_error_sq/N_test - a*a) / (N_test-1)));
+        { printf("+-%.5f",sqrt((tabs_error_sq/N_test - a*a) / (N_test-1)));
         }
         printf(")\n");
       }

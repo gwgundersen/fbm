@@ -1,6 +1,6 @@
 /* MODEL.H - Interface to model specification. */
 
-/* Copyright (c) 1996 by Radford M. Neal 
+/* Copyright (c) 1996, 1997 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -20,6 +20,8 @@
 
    Stored in log files under type 'M'.  Changes may invalidate old log files. */
 
+#define Max_autocorr 28	/* Maximum lag of non-zero autocorrelations */
+
 typedef struct
 { 
   int type;		/* Model used for observed data, zero if no model */
@@ -28,7 +30,11 @@ typedef struct
 
   prior_spec noise;	/* Prior for noise level in model of real targets */
 
-  int reserved[40];	/* Reserved for future use */
+  int autocorr;		/* 0 = no autocorrelations, 1 = autocorr as specified */
+  int n_autocorr;	/* Number of specified autocorrelations */
+  float acf[Max_autocorr]; /* Autocorrelations at lags up to n_autocorr */
+
+  int reserved[10];	/* Reserved for future use */
 
 } model_specification;
 

@@ -92,11 +92,18 @@ void main
 
     if (gp->N_exp_parts>0)
     { printf("\nExponential parts of covariance:\n\n");
-      printf("   Scale           Relevance            Power\n");
+      printf("   Scale           Relevance            Power   Flags\n");
       for (l = 0; l<gp->N_exp_parts; l++)
-      { printf("\n  %-15s", prior_show(ps,gp->exp[l].scale));
+      { char s[10000];
+        printf("\n  %-15s", prior_show(ps,gp->exp[l].scale));
         printf(" %-20s", prior_show(ps,gp->exp[l].relevance));
-        printf("  %.3lf",gp->exp[l].power);
+        printf(" %6.3f ",gp->exp[l].power);
+        if (list_flags(gp->exp[l].flags,gp->N_inputs,Flag_delta,s))
+        { printf("  delta%s",s);
+        }
+        if (list_flags(gp->exp[l].flags,gp->N_inputs,Flag_omit,s))
+        { printf("  omit%s",s);
+        }
         printf("\n");
       }
     }
@@ -161,11 +168,25 @@ void main
 
     gp->exp[l].power = 2;
 
-    if (*ap!=0 && strcmp(*ap,"/")!=0)
+    if (*ap!=0 && strcmp(*ap,"/")!=0 && strchr("0123456789.+-",**ap))
     { if ((gp->exp[l].power = atof(*ap++)) <= 0 || gp->exp[l].power>2) usage();
     }
 
-    if (*ap!=0 && strcmp(*ap,"/")!=0) usage();
+    while (*ap!=0 && strcmp(*ap,"/")!=0)
+    {
+      if (*ap!=0 && strncmp(*ap,"delta",5)==0)
+      { parse_flags (*ap+5, gp->exp[l].flags, gp->N_inputs, Flag_delta);
+      }
+      else if (*ap!=0 && strncmp(*ap,"omit",4)==0)
+      { parse_flags (*ap+4, gp->exp[l].flags, gp->N_inputs, Flag_omit);
+      }
+      else
+      { fprintf(stderr,"Unknown flag argument: %s\n",*ap);
+        exit(1);
+      }
+
+      ap += 1;
+    }
 
     l += 1;
   }

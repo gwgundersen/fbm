@@ -57,6 +57,26 @@ will also be available.
          if scalar; associated lower-level hyperparameters if array.  With
          n of zero, gives the hyperparameters for the linear part.
 
+    M[n] For n&gt;0, Mn is an array in which the i'th element is equal to:
+
+              Mn@i = (Sn@i)^2 * (1 - exp(-(Rn@i)^P))
+
+         Where P is the power specification for the n'th exponential part.
+         M0 is an array in which the i'th element is (1/2)*(R0@i)^2, or it
+         is an array of zeros if there is no linear part.
+
+         With these definitions, Mn@i is half the prior expected squared 
+         difference in the value of the n'th component of the function, 
+         for any two input points that differ by one in the i'th input, 
+         with other inputs being equal.  It summarizes the "magnitude" 
+         information from the S and R quantities.
+
+         When n is not specified, the value of M@i is the sum of Mn@i 
+         for all n from 0 (linear) to the number of exponential parts.
+         This is a measure of the total relevance of input i.
+
+         NOTE: This is not analogous to the M quantity for networks.
+
     G    Jitter (regularization) hyperparameter.  NOTE: This is not 
          analogous to the G quantity for networks.
 
@@ -76,17 +96,17 @@ When a value for 'n' is needed but not specified, it defaults to zero.
 
 The 'o' values are the latent values defined by the Gaussian process,
 before interpretation by the model.  The 'y' values are the same as
-the 'o' values for regression models.  For binary and multi-class
+the 'o' values for regression models, but for binary and multi-class
 models, the 'y' values are the bit/class probabilities obtained from
 the 'o' values (note that these probabilities are based only on the
 present latent values, not on an integration over the "jitter").  For
 multi-class models, the 'z' quantity with a modifier ('n') refers to
 the representation of the class as a binary vector with the true class
 indicated by a one; with no modifier, it refers to the numeric value
-of the class.  For multi-class models, the 'a', 'A', 'b', and 'B'
-quantities are based on the difference between the vector of
-probabilities for the classes and the vector of 0s and 1s with a
-single 1 indicating the correct class.
+of the class.  For multi-class models, the 'a' and 'b' quantities are
+based on the difference between the vector of probabilities for the
+classes and the vector of 0s and 1s with a single 1 indicating the
+correct class.
 
 
             Copyright (c) 1996 by Radford M. Neal

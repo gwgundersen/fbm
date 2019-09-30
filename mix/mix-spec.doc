@@ -1,0 +1,60 @@
+
+
+MIX-SPEC:  Specify a mixture model, or display existing specification.
+
+Mix-spec creates a log file containing the specifications for a
+mixture model, along with the associated priors over hyperparameters.
+When invoked with just a log file as an argument, it displays the
+specifications for the mixture model stored in that log file.
+
+Usage:
+
+    mix-spec log-file N-inputs N-targets [ N-components ]
+             / concentration SD-prior mean-prior 
+
+or:
+
+    mix-spec log-file
+
+N-inputs and N-targets are the numbers of input variables and target
+variables in the model.  The model tries to represent the joint
+distribution of the targets, using a mixture.  At present, the number
+of inputs (N-inputs) must be 0, but in future, input variables may be
+allowed, in which case the model will define the joint conditional
+distributions for the target values given observed values for the
+inputs.
+
+N-components is the number of components in the mixture.  If it is
+omitted, the number of components is countably infinite, giving the
+effect of a Dirichlet process mixture.
+
+The concentration argument specifies the concentration parameter for
+the Dirichlet distribution for the component probabilities.  At
+present, this must be fixed.  If the value starts with "x", the value
+given is automatically scaled downward by the number of components.
+The "x" must be present if the number of components is infinite (the
+default), as this is the scaling needed for the finite model to reach
+a sensible limit.
+
+Each component of the mixture has associated with it a set of "offset"
+parameters, one for each target value.  The prior distribution of
+these offsets is defined by top-level means and standard deviations
+for each target value.  The top-level means are variable hyperparameters, 
+which are given independent Gaussian priors with mean zero and standard
+deviation as specified by the mean-prior argument of mix-spec.  The
+top-level standard deviations may be fixed or variable, as specified
+by the SD-prior argument of mix-spec, using the general form of
+specification described in prior.doc.  If the SD-prior argument starts 
+with "x", it is automatically scaled according to the number of target
+values, as described in prior.doc.
+
+The specification of the model is completed using the model-spec
+command (see model-spec.doc), which specifies whether the model is for
+binary or real data.  For real data, it also specifies the prior for
+the "noise" standard deviations, in a three-level hierarchical form,
+which allows for a top-level standard deviation common to all target 
+values and components, a standard deviation for each target value,
+common to all components, and standard deviations for each target value 
+for each component.
+
+            Copyright (c) 1997 by Radford M. Neal

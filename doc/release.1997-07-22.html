@@ -1,0 +1,98 @@
+<html>
+<body>
+<pre>
+
+
+NOTES ON THE VERSION OF 1997-07-22:
+
+Changes in this version:
+
+1) Programs for finite and infinite mixture models have been added.
+   The facilities provided are currently somewhat minimal, but are
+   adequate for doing some interesting things.  Two new examples
+   demonstrating the mixture models have been added.
+
+2) A program for training networks by old-fashioned gradient descent
+   has been added, to allow experimental comparisons.  See <A HREF="net-gd.html">net-gd.doc</A>
+   for details.  A program useful for doing early stopping using
+   cross-validation has also been added (see <A HREF="find-min.html">find-min.doc</A>).
+
+3) The exponential parts of a Gaussian process specification can now
+   include "delta" and "omit" options.  The delta option is useful
+   for categorical inputs.  The omit option allows one to explicitly
+   set up additive models.  See <A HREF="gp-spec.html">gp-spec.doc</A> for details.
+
+4) One can now specify that the noise in a Gaussian process regression 
+   model is autocorrelated (for training cases).  See <A HREF="model-spec.html">model-spec.doc</A>
+   for details.
+
+5) A new "M" quantity has been provided for Gaussian process models,
+   which summarizes the magnitude of an input's relevance.  See 
+   <A HREF="gp-quantities.html">gp-quantities.doc</A> for details.
+
+6) A log-append program has been added, which allows a run to be 
+   initialized with a state from another run, provided the other
+   run is compatible with the new in all required respects.
+
+7) A gp-cov program has been added that prints the covariance matrix 
+   for a Gaussian process.  A gp-eigen program has also been added, 
+   which computes the eigenvalues and/or eigenvectors of this 
+   covariance matrix.
+
+8) Routines have been added to util/matrix.c for initializing an 
+   identity matrix and finding eigenvalues and eigenvectors by Jacobi
+   iteration.
+
+9) The output of net-pred and gp-pred when the 'b' or 'B' option
+   is used has been changed so that the numbers are printed to high
+   precision, in exponential format.
+
+10)The accuracy of the Monte Carlo procedure for making predictions
+   for binary targets with Gaussian process models has been improved
+   somewhat, using post-stratification.
+
+11)The stepsize heuristics for Gaussian processes have been changed
+   slightly.  The stepsizes for the noise hyperparameters are now 
+   half what they were, which seems to be a closer fit to the
+   typical situation.  It may now be possible to increase the stepsize
+   adjustment factor used, and thereby obtain more efficient exploration 
+   of the hyperparameter space.
+
+12)The stepsize heuristics for neural networks with more than one 
+   hidden layer have also been changed, by fixing a bug.  The hope
+   is that this change will also be an improvement, without the need
+   for a change in the stepsize adjustment factor used, but this 
+   might not always be true.
+
+Bug fixes: Fixed a bug that made the "radial heatbath" Markov chain
+method sometimes not work.  Fixed a bug in net-eval that affected it
+when the "targets" option was used.  Fixed the bug in network stepsizes
+mentioned in (10) above.  Some bugs in error checking fixed.
+
+Portability: The modes for "fopen" have been changed, since the old
+ones didn't work on some systems.  Some other changes that seem
+advisable but which probably weren't actually causing problems have
+been made as well.
+
+As far as I know, log files created with the previous versions back
+to that of 1996-08-26 should still be readable with the new version, 
+on the same machine as they were created on.
+
+
+Known bugs and other problems.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The "sample-values" and "scan-values" operations for Gaussian processes
+   always recompute the inverse covariance matrix, even when an up-to-date
+   version was computed for the previous Monte Carlo operation.
+</pre>
+</body>
+</html>

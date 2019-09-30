@@ -1,0 +1,85 @@
+<html>
+<body>
+<pre>
+
+
+NET-GD:  Train a network by gradient descent in the error.
+
+Net-gd trains the parameters of a network by old-fashioned gradient
+descent in the error (which is minus the log likelihood, plus minus
+the log prior).  The hyperparameters are not updated by this program.
+A scheme using differential stepsizes for weights out of different
+units can be used (in combination with "early stopping") to try to get
+some of the advantages of a hierarchical Bayesian model.
+
+Usage:
+
+    net-gd log-file ["@"]iteration [ save-mod ] / stepsize { stepsize } 
+           [ method [ group { group } ] ]
+
+Gradient descent in the error is done starting with the last iteration
+saved in the log file and continuing up to the indicated iteration (or
+if the iteration is immediately preceded by "@", until a total of
+iteration minutes of cpu-time have been used, for all iterations).
+Results of the simulation are appended to the log file for iterations
+that are divisible by save-mod, which defaults to one (every iteration
+saved).  
+
+If the log file does not contain a network to start with, a network is
+randomly created in which the parameters are drawn from the interval
+(-0.01,+0.01).  The hyperparameters are set to the centres of their
+priors.
+
+Stepsizes for the gradient descent procedure must be specified. If
+just one stepsize is given, it applies to all parameters.  If more
+than one is given, there must be one stepsize for each group of
+parameters, where a group corresponds to one "prior" argument of
+net-spec, and to one section of the output of net-display.  The
+stepsizes are all scaled down by the number of training cases plus one
+before being used.
+
+The gradient descent method can be either "online" (the default) or
+"batch".  For simple online gradient descent, each iteration consists
+of as many updates as there are training cases, with each update being
+based on the gradient due to one training case (taken in sequence),
+plus the prior gradient divided by the number of training cases.  For
+simple batch gradient descent, each iteration consists of one update
+of the parameters, using the total gradient based on all training
+cases (and the prior gradient).  For very small stepsizes, the batch
+and online methods should produce the same results.  For larger
+stepsizes, however, the online method is usually faster, and the
+online method can also often use a larger stepsize without causing
+instability.
+
+Differential stepsizes can be used for weights in specified groups
+that originate in different units - for example, in order to try to
+mimic the effect of the Bayesian "Automatic Relevance Determination"
+model.  The groups for which this should be done are listed after the
+method (which must therefore not be left to default).  Stepsizes for
+weights in these groups are found by computing or estimating the
+magnitude of the gradient for weights in this group that originate in
+each of the source units.  The stepsize for the weights out of a unit
+is the stepsize specified for the group, times the magnitude of the
+gradient for weights out of that unit raised to the fourth power,
+divided by the maximum of this fourth-power magnitude over all units
+in the group.  For batch gradient descent, the gradient magnitude for
+weights out of a unit is based on the total gradient for all training
+cases, plus the prior.  For online gradient descent, the same is used
+for the first iteration, but thereafter, the total gradient for the
+previous pass (plus the prior) is used, even though this sum is based
+on different parameter values for different cases.
+
+Note that gradient descent learning with essentially no prior may be
+done by specifying the "priors" using just "+" and "-" (as described
+in <A HREF="net-spec.html">net-spec.doc</A>).  However, if no prior is used, it may be necessary
+to use one of the networks found before convergence of the gradient
+descent procedure has been reached ("early stopping"), selected on the
+basis of the error on a validation set.  The differential stepsizes
+are intended to improve the performance of early stopping, by stopping
+the weights out of some units from overfitting before the weights out
+of other units have had time to adjust to their proper values.
+
+            Copyright (c) 1997 by Radford M. Neal
+</pre>
+</body>
+</html>

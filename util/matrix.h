@@ -12,6 +12,8 @@
  * All use of this program is entirely at the user's own risk.
  */
 
+void identity_matrix (double *, int);
+
 double squared_norm  (double *, int, int);
 double inner_product (double *, int, double *, int, int);
 
@@ -23,3 +25,5 @@ int inverse_from_cholesky (double *, double *, double *, int);
 
 void fill_lower_triangle (double *, int);
 void fill_upper_triangle (double *, int);
+
+int jacobi (double *, double *, double, int);

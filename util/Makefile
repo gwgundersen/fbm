@@ -1,6 +1,6 @@
 # MAKEFILE FOR UTILITY PROGRAMS AND MODULES.
 
-# Copyright (c) 1995, 1996 by Radford M. Neal 
+# Copyright (c) 1995, 1996, 1997 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 
@@ -15,8 +15,8 @@ include ../make.include
 
 all:		programs test-progs modules
 
-programs:	data-spec model-spec log-records log-copy log-last \
-		rand-seed grid series extract
+programs:	data-spec model-spec log-records log-copy log-append log-last \
+		rand-seed grid series extract find-min
 
 test-progs:	demo-plt demo-hist rand-test numin-test
 
@@ -24,9 +24,9 @@ modules:	misc.o matrix.o log.o quantities.o plt.o hist.o rand.o numin.o \
 		data-trans.o model.o prior.o ars.o
 
 clean:
-	rm -f *.o data-spec log-records log-copy log-last rand-seed \
-	          grid series extract demo-plt demo-hist rand-test numin-test \
-	          model-spec
+	rm -f *.o data-spec model-spec log-records log-copy log-append log-last\
+	          rand-seed grid series extract find-min \
+	          demo-plt demo-hist rand-test numin-test
 
 
 include util.make
@@ -51,11 +51,11 @@ data-spec:	data-spec.o	log.o numin.o data-trans.o
 data-spec.o:	data-spec.c	data.h log.h
 
 
-model-spec:	model-spec.o	log.o rand.o prior.o 
-		$(CC) $(LFLAGS) model-spec.o log.o rand.o prior.o \
+model-spec:	model-spec.o	log.o rand.o prior.o matrix.o
+		$(CC) $(LFLAGS) model-spec.o log.o rand.o prior.o matrix.o \
 		-lm -o model-spec
 
-model-spec.o:	model-spec.c	log.h prior.h model.h
+model-spec.o:	model-spec.c	log.h prior.h model.h matrix.h
 
 
 log-last:	log-last.o	log.o
@@ -76,6 +76,12 @@ log-copy:	log-copy.o	log.o misc.o
 log-copy.o:	log-copy.c	misc.h log.h
 
 
+log-append:	log-append.o	log.o misc.o
+		$(CC) $(LFLAGS) log-append.o log.o misc.o -lm -o log-append
+
+log-append.o:	log-append.c	misc.h log.h
+
+
 rand-seed:	rand-seed.o	log.o rand.o
 		$(CC) $(LFLAGS) rand-seed.o log.o rand.o -lm -o rand-seed
 
@@ -87,6 +93,10 @@ extract:	extract.o	rand.o
 
 extract.o:	extract.c	rand.h
 
+find-min:	find-min.o
+		$(CC) $(LFLAGS) find-min.o -lm -o find-min
+
+find-min.o:	find-min.c
 
 demo-plt:	demo-plt.o	demo-quantities.o plt.o quantities.o \
 				misc.o log.o

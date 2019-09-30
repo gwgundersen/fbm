@@ -1,6 +1,6 @@
-/* GP-COV.C - Procedures to compute covariances and their derivatives. */
+/* GP-COV.C - Program to print covariance matrix for Gaussian process. */
 
-/* Copyright (c) 1996 by Radford M. Neal 
+/* Copyright (c) 1997 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -22,399 +22,173 @@
 #include "data.h"
 #include "prior.h"
 #include "model.h"
+#include "matrix.h"
+#include "rand.h"
 #include "gp.h"
+#include "gp-data.h"
 
 
-/* COMPUTE COVARIANCES BETWEEN SETS OF INPUT POINTS.  Finds the covariances 
-   for function values between all the input points in one set (with n1
-   points), and all the inputs points in another set (with n2 points).  The
-   sets of input points are given by an array in which the inputs for the
-   different points follow one another (ie, it's an array in row major order
-   in which the rows are points, and the columns are the inputs for those
-   points).
+static void usage(void);
 
-   The covariances are stored in 'cov', as an array with n1 rows and n2
-   columns.  The exponential terms in the covariances may also be stored,
-   in arrays pointed to from exp_cov.  If exp_cov is zero, or if one of then
-   corresponding pointer in exp_cov is zero, the exponential term will not
-   be stored.  These terms can speed up the computation of the derivatives on
-   the covariance by diff_cov, as well as possibly being useful in themselves.
 
-   Note that the jitter part of the covariance and the noise for a regression 
-   model are not included here, since they are not determined by the inputs,
-   but rather by the identity of the cases. */
+/* MAIN PROGRAM. */
 
-void gp_cov
-( gp_spec *gp,		/* Specification for Gaussian process model */
-  gp_hypers *h,		/* Values of hyperparameters */
-  double *x1,		/* First set of inputs points */
-  int n1,		/* Number of points in first set */
-  double *x2,		/* Second set of input points */
-  int n2,		/* Number of points in second set */
-  double *cov,		/* Place to store covariances (n1 by n2 array) */
-  double **exp_cov	/* Places to store exponential terms of covariance,
-			   may be zero, or contain zeros, if not desired */
+void main
+( int argc,
+  char **argv
 )
-{ 
-  double r[Max_inputs], d, s, pw, c, v;
-  int l, i, k1, k2, ni;
-  double *p1, *p2, *pc, *ec;
+{
+  gp_spec *gp;
+  model_specification *m;
+  gp_hypers hypers, *h = &hypers;
 
-  ni = gp->N_inputs;
+  log_file logf;
+  log_gobbled logg;
 
-  /* Constant part of covariance. */
+  double extra;
+  char *input_file;
+  int index;
 
-  v = gp->has_constant ? exp(2 * *h->constant) : 0;
+  double *cov;
 
-  pc = cov; 
+  char **ap;
+  double v;
+  int i, j;
 
-  for (p1 = x1, k1 = 0; k1<n1; p1 += ni, k1++)
-  { for (p2 = x2, k2 = 0; k2<n2; p2 += ni, k2++)
-    { *pc++ = v;
+  /* Look at arguments. */
+  
+  if (argc<3) usage();
+
+  logf.file_name = argv[1];
+  
+  if ((index = atoi(argv[2]))<0) usage();
+
+  extra = -1;
+ 
+  ap = argv+3;
+
+  if (*ap!=0 && strcmp(*ap,"/")!=0)
+  { if (strcmp(*ap,"+noise")==0)
+    { extra = 0;
+    }
+    else 
+    { if ((extra = atof(*ap))<=0) usage();
+    }
+    ap += 1;
+  }
+
+  input_file = 0;
+  
+  if (*ap!=0)
+  { if (strcmp(*ap++,"/")!=0) usage();
+    input_file = *ap++;
+  }
+
+  if (*ap!=0) usage();
+
+  /* Open log file and read Gaussian process specifications. */
+
+  log_file_open (&logf, 0);
+
+  log_gobble_init(&logg,0);
+  gp_record_sizes(&logg);
+
+  if (!logf.at_end && logf.header.index==-1)
+  { log_gobble(&logf,&logg);
+  }
+
+  gp = logg.data['P'];
+  m = logg.data['M'];
+
+  if (gp==0)
+  { fprintf(stderr,"No specification for Gaussian process in log file\n");
+    exit(1);
+  }
+
+  if (extra==0 && (m==0 || m->type!='R'))
+  { fprintf(stderr,"Can't add noise if the model is not for real data\n");
+    exit(1);
+  }
+
+  if (extra==0 && (m!=0 && m->noise.alpha[2]!=0))
+  { fprintf(stderr,"Can't add noise when it varies from case to case\n");
+    exit(1);
+  }
+
+  /* Read data specification. */
+
+  data_spec = logg.data['D'];
+
+  if (data_spec==0)
+  { fprintf(stderr,"No data specification\n");
+    exit(1);
+  }
+
+  if (input_file) 
+  { strcpy(data_spec->train_inputs,input_file);
+  }
+
+  gp_data_read (1, 0, gp, m, 0);
+
+  /* Allocate space for covariance matix. */
+
+  cov = chk_alloc (N_train*N_train, sizeof (double));
+
+  /* Skip to desired index. */
+
+  while (!logf.at_end && logf.header.index<index)
+  { log_file_forward(&logf);
+  }
+
+  if (logf.at_end || logf.header.index>index)
+  { fprintf(stderr,"No records stored with specified index\n");
+    exit(1);
+  }
+  
+  /* Read the desired network from the log file. */
+
+  h->total_hypers = gp_hyper_count(gp,m);
+  logg.req_size['S'] = h->total_hypers * sizeof(double);
+
+  log_gobble(&logf,&logg);
+       
+  if (logg.data['S']==0 || logg.index['S']!=logg.last_index)
+  { fprintf(stderr, "Record missing at index %d\n",logg.last_index);
+    exit(1);
+  }
+  
+  h->hyper_block = logg.data['S'];
+  gp_hyper_pointers (h, gp, m);
+
+  /* Compute covariance for latent values or targets at training points.*/
+
+  gp_train_cov (gp, m, h, 0, 0, extra!=0 ? cov : 0, extra==0 ? cov : 0, 0);
+
+  /* Now add on extra, if requested. */
+
+  if (extra>0)
+  { for (i = 0; i<N_train; i++) 
+    { cov[i*N_train+i] += extra;
     }
   }
 
-  /* Linear part of covariance. */
+  /* And finally print covariances. */
 
-  if (gp->has_linear)
-  { 
-    for (i = 0; i<ni; i++)
-    { r[i] = exp(2 * *h->linear[i]);
+  for (i = 0; i<N_train; i++)
+  { for (j = 0; j<N_train; j++)
+    { printf(" %.18e",cov[i*N_train+j]);
     }
-
-    pc = cov;
-
-    for (p1 = x1, k1 = 0; k1<n1; p1 += ni, k1++)
-    { for (p2 = x2, k2 = 0; k2<n2; p2 += ni, k2++)
-      { s = 0;
-        for (i = 0; i<ni; i++)
-        { s += r[i] * p1[i] * p2[i];
-        }
-        *pc++ += s;
-      }
-    }
+    printf("\n");
   }
 
-  /* Exponential parts of covariance. */
-
-  for (l = 0; l<gp->N_exp_parts; l++)
-  { 
-    for (i = 0; i<ni; i++)
-    { r[i] = exp(*h->exp[l].rel[i]);
-    }
-
-    c = 2 * *h->exp[l].scale;
-    pw = gp->exp[l].power;
-
-    pc = cov;
-    ec = exp_cov==0 ? 0 : exp_cov[l];
-
-    for (p1 = x1, k1 = 0; k1<n1; p1 += ni, k1++)
-    { for (p2 = x2, k2 = 0; k2<n2; p2 += ni, k2++)
-      { 
-        if (pw==2)
-        { s = 0;
-          for (i = 0; i<ni; i++)
-          { d = r[i] * (p1[i] - p2[i]);
-            s += d * d;
-          }
-        }
-        else if (pw==1)
-        { s = 0;
-          for (i = 0; i<ni; i++)
-          { d = r[i] * (p1[i] - p2[i]);
-            if (d<0) d = -d;
-            s += d;
-          }
-        }
-        else
-        { s = 0;
-          for (i = 0; i<ni; i++)
-          { d = r[i] * (p1[i] - p2[i]);
-            if (d<0) d = -d;
-            s += pow(d,pw);
-          }
-        }
-
-        v = exp(c-s);
-
-        if (ec) *ec++ = v;
-        *pc++ += v;
-      }
-    }
-  }
+  exit(0);
 }
 
 
-/* COMPUTE DERIVATIVE OF COVARIANCE MATRIX.  Computes the derivatives of the
-   covariance matrix for a set of input points, with respect to a single 
-   hyperparameter that is pointed to by the wrt argument.  The wrt argument 
-   should point to someplace pointed to from h.  Note that when hyperparameters
-   are linked together, a single hyperparameter will appear at several places 
-   in h.
+/* DISPLAY USAGE MESSAGE AND EXIT. */
 
-   Only the upper triangular part of the covariance matrix is computed, though
-   the arrays include space for the lower part as well.  This procedure returns
-   1 if the wrt hyperparameter is one that affect the covariance directly, and 
-   0 if it does not affect the covariance directly (in which case the 
-   derivatives are also all set to zero). 
-
-   The exp_cov parameter is an array of pointers to covariance matrices
-   derived from each exponential term of the covariance.  These may be
-   computed by gp_cov.  Any of the pointers may be zero, in which case 
-   the terms are re-computed here.
-
-   Note that the jitter part of the covariance and the noise for a regression 
-   model are not included here, since they are not determined by the inputs,
-   but rather by the identity of the cases. */
-
-int gp_cov_deriv
-( gp_spec *gp,		/* Specification for Gaussian process model */
-  gp_hypers *h,		/* Values of hyperparameters */
-  double **exp_cov,	/* Exponential parts of covariance (zeros if absent) */
-  double *wrt,		/* Pointer to hyperparameter we want derivative w.r.t.*/
-  double *x,		/* The set of input points (concatenated as one array)*/
-  double *deriv,	/* Place to store derivatives of covariances */
-  int n			/* Number of input points */
-)
-{ 
-  double r[Max_inputs], s, d, t, c, pw, v;
-  int l, i, j, k1, k2, ni;
-  double *p1, *p2, *pd, *ec;
-  int found;
-
-  ni = gp->N_inputs;
-
-  /* See if it's the constant part. */
-
-  found = 0;
-  v = 0;
-
-  if (gp->has_constant)
-  { if (wrt==h->constant)
-    { v = 2 * exp(2 * *h->constant);
-      found = 1;
-    }
-  }
-
-  /* Set derivative according to constant part, or to zero. */
-  
-  pd = deriv;
-  
-  for (p1 = x, k1 = 0; k1<n; p1 += ni, k1++)
-  { pd += k1;
-    for (p2 = x+k1*ni, k2 = k1; k2<n; p2 += ni, k2++)
-    { *pd++ = v;
-    }
-  }
-
-  /* See if it's in the linear part. */
-
-  if (gp->has_linear)
-  {
-    if (wrt==h->linear_cm && gp->linear.alpha[1]==0)
-    { t = 2 * exp(2 * *h->linear_cm);
-      for (i = 0; i<ni; i++)
-      { pd = deriv;
-        for (p1 = x, k1 = 0; k1<n; p1 += ni, k1++)
-        { pd += k1;
-          for (p2 = x+k1*ni, k2 = k1; k2<n; p2 += ni, k2++)
-          { *pd++ += p1[i] * p2[i] * t;
-          }
-        }
-      }
-      found = 1;
-    }
-    else
-    { for (i = 0; i<ni; i++)
-      { if (wrt==h->linear[i])
-        { t = 2 * exp(2 * *h->linear[i]);
-          pd = deriv;
-          for (p1 = x, k1 = 0; k1<n; p1 += ni, k1++)
-          { pd += k1;
-            for (p2 = x+k1*ni, k2 = k1; k2<n; p2 += ni, k2++)
-            { *pd++ += p1[i] * p2[i] * t;
-            }
-          }
-          found = 1;
-        }
-      }
-    }
-  }
-
-  /* See if it's in one of the exponential parts. */
-
-  for (l = 0; l<gp->N_exp_parts; l++)
-  { 
-    /* Quickly see if it's not here. */
-
-    for (j = 0; j<ni && wrt!=h->exp[l].rel[j]; j++) ;
-
-    if (wrt!=h->exp[l].scale && j==ni) continue;
-
-    /* Compute a few things for later use. */
-
-    c = 2 * *h->exp[l].scale;
-    pw = gp->exp[l].power;
-
-    if (gp->exp[l].relevance.alpha[1]==0)
-    { r[0] = exp(*h->exp[l].rel_cm);
-      for (i = 1; i<ni; i++)
-      { r[i] = r[0];
-      }
-    }
-    else
-    { for (i = 0; i<ni; i++)
-      { r[i] = exp(*h->exp[l].rel[i]);
-      }
-    }
-
-    /* See if it's a relevance hyperparameter. */
-
-    if (j<ni)
-    { 
-      if (exp_cov[l]!=0) /* Previously computed covariances are available */
-      {
-        for (i = 0; i<ni; i++)
-        {
-          if (wrt==h->exp[l].rel[i])
-          {
-            v = exp(*wrt);
-
-            pd = deriv;
-            ec = exp_cov[l];
-
-            for (p1 = x, k1 = 0; k1<n; p1 += ni, k1++)
-            { 
-              pd += k1;
-              ec += k1;
-      
-              for (p2 = x+k1*ni, k2 = k1; k2<n; p2 += ni, k2++)
-              { 
-                d = r[i] * (p1[i] - p2[i]);
-
-                if (pw==2)
-                { t = d*d;
-                }
-                else if (pw==1)
-                { t = d>0 ? d : -d;
-                }
-                else
-                { t = pow (d>0 ? d : -d, pw);
-                }
-
-                *pd++ -= pw * t * *ec++;
-              } 
-            }
-          }
-        }
-      }
-      else /* Previously computed covariances are not available */
-      {
-        pd = deriv;
-        ec = exp_cov[l];
-
-        for (p1 = x, k1 = 0; k1<n; p1 += ni, k1++)
-        { 
-          pd += k1;
-  
-          for (p2 = x+k1*ni, k2 = k1; k2<n; p2 += ni, k2++)
-          { 
-            if (pw==2)
-            { s = 0;
-              t = 0;
-              for (i = 0; i<ni; i++)
-              { d = r[i] * (p1[i] - p2[i]);
-                d = d*d;
-                s += d;
-                if (wrt==h->exp[l].rel[i])
-                { t -= d;
-                }
-              }
-            }
-            else if (pw==1)
-            { s = 0;
-              t = 0;
-              for (i = 0; i<ni; i++)
-              { d = r[i] * (p1[i] - p2[i]);
-                if (d<0) d = -d;
-                s += d;
-                if (wrt==h->exp[l].rel[i])
-                { t -= d;
-                }
-              }
-            }
-            else
-            { s = 0;
-              t = 0;
-              for (i = 0; i<ni; i++)
-              { d = r[i] * (p1[i] - p2[i]);
-                if (d<0) d = -d;
-                d = pow(d,pw);
-                s += d;
-                if (wrt==h->exp[l].rel[i])
-                { t -= d;
-                }
-              }
-            }
-  
-            *pd++ += pw * t * exp(c-s);
-          }
-        }
-      }
-  
-      found = 1;
-    }
-
-    /* See if it's the scale hyperparameter. */
-
-    if (wrt==h->exp[l].scale)
-    { 
-      pd = deriv;
-      ec = exp_cov[l];
-
-      for (p1 = x, k1 = 0; k1<n; p1 += ni, k1++)
-      { 
-        pd += k1;
-        if (ec!=0) ec += k1;
-
-        for (p2 = x+k1*ni, k2 = k1; k2<n; p2 += ni, k2++)
-        { 
-          if (ec!=0) /* Previously computed covariances are available */
-          { *pd++ += 2 * *ec++;
-          }
-          else 
-          { if (pw==2)
-            { s = 0;
-              for (i = 0; i<ni; i++)
-              { d = r[i] * (p1[i] - p2[i]);
-                s += d * d;
-              }
-            }
-            else if (pw==1)
-            { s = 0;
-              for (i = 0; i<ni; i++)
-              { d = r[i] * (p1[i] - p2[i]);
-                if (d<0) d = -d;
-                s += d;
-              }
-            }
-            else
-            { s = 0;
-              for (i = 0; i<ni; i++)
-              { d = r[i] * (p1[i] - p2[i]);
-                if (d<0) d = -d;
-                s += pow(d,pw);
-              }
-            }
-            *pd++ += 2 * exp(c-s);
-          }
-        }
-      }
-
-      found = 1;
-    }
-  }
-
-  return found;
+static void usage(void)
+{
+  fprintf(stderr,"Usage: gp-cov log-file index [ extra ] [ / train-inputs ]\n");
+  exit(1);
 }

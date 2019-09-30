@@ -1,6 +1,6 @@
 # MAKEFILE FOR NEURAL NET PROGRAMS. 
 
-# Copyright (c) 1995, 1996 by Radford M. Neal 
+# Copyright (c) 1995, 1996, 1997 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 
@@ -14,11 +14,11 @@
 include ../make.include
 
 programs:	net-spec net-gen net-rej net-eval net-display net-pred net-mc \
-		net-plt net-hist net-dvar net-grad-test net-stepsizes 
+		net-gd net-plt net-hist net-dvar net-grad-test net-stepsizes 
 
 clean:
 	rm -f *.o net-spec net-gen net-rej net-eval net-display net-pred net-mc\
-	          net-plt net-hist net-dvar net-grad-test net-stepsizes 
+	          net-gd net-plt net-hist net-dvar net-grad-test net-stepsizes 
 
 
 include ../util/util.make
@@ -151,6 +151,18 @@ net-mc:		mc.o net-mc.o	ars.o misc.o log.o rand.o numin.o data-trans.o \
 
 net-mc.o:	net-mc.c	misc.h rand.h ars.h log.h mc.h data.h prior.h \
 				model.h net.h net-data.h
+
+net-gd:		net-gd.o	net-setup.o net-func.o net-model.o net-data.o \
+				net-back.o net-grad.o net-prior.o net-util.o \
+				model.o misc.o log.o rand.o numin.o \
+				data-trans.o prior.o 
+		$(CC) $(LFLAGS) net-gd.o net-setup.o net-func.o net-model.o \
+		  net-back.o net-grad.o net-data.o net-prior.o net-util.o \
+		  model.o misc.o log.o rand.o numin.o data-trans.o prior.o \
+		  -lm -o net-gd
+
+net-gd.o:	net-gd.c	misc.h rand.h log.h mc.h data.h prior.h model.h\
+				net.h net-data.h
 
 net-plt:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 				net-func.o net-data.o model.o net-quantities.o \

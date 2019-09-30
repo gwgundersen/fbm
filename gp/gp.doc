@@ -14,7 +14,7 @@ processes implemented here, the functions for different outputs are
 independent.)  In the Bayesian models based on these Gaussian
 processes, the functions in question are used to define a model for
 the target attributes in training and test cases given the values of
-the input attributes in these cases.  The Gaussian process gives the
+nthe input attributes in these cases.  The Gaussian process gives the
 prior distribution over these functions.
 
 A Gaussian process is specified by giving its covariance function,

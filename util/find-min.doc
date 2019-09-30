@@ -1,0 +1,24 @@
+
+
+FIND-MIN:  Find entry with minimum value (for cross validation)
+
+Find-min reads of file of number pairs from standard input, determines
+for which pair the second number is smallest, and writes the first
+number of that pair (rounded to an integer) to standard output.
+
+This is intended for use in cross-validation procedures.  For example,
+suppose net-gd has been used to train a network by gradient descent,
+with the results going to log-file.  We now wish to make predictions
+for test cases using the network from this training session that has
+the smallest error (minus log likelihood) on the validation data
+stored in val-data.  We can do this as follows (on a Unix system):
+
+  net-pred pa log-file `net-plt t L log-file / val-data . | find-min` 
+
+The command in back-quotes finds the validation error for each
+iteration, and find-min then selects the iteration with smallest
+validation error.  This iteration number is substituted for the
+command in back-quotes, thereby providing net-pred with the iteration
+from log-file to be used.
+
+            Copyright (c) 1997 by Radford M. Neal

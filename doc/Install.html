@@ -20,10 +20,10 @@ the current version; you should read the old documentation if for some
 reason you are installing an older version.
 
 The tar command should create sub-directories 'util', 'mc', 'net',
-'gp', 'bvg', 'examples', 'doc', and 'bin', and place a large number of
-files in these sub-directories.  It should also place the files
-'README' and 'make.include' in the current directory.  If all this 
-seems to have worked, you can remove the file 'fbm.YYYY-MM-DD.tar'.
+'gp', 'mix', 'bvg', 'examples', 'doc', and 'bin', and place a large
+number of files in these sub-directories.  It should also place the
+files 'README' and 'make.include' in the current directory.  If all
+this seems to have worked, you can remove 'fbm.YYYY-MM-DD.tar'.
 
 The directory 'doc' contains links to all the documentation files.
 The file 'manual' contains all the introductory documentation
@@ -69,6 +69,10 @@ by issuing the following commands
     make
     cd ..
 
+    cd mix
+    make
+    cd ..
+
     cd bvg
     make
     cd ..
@@ -81,8 +85,8 @@ where they are used; this is intentional.
 It is possible that these compilation commands will fail for some
 reason, in which case you'll have to figure out what's wrong and fix
 it.  Note that for the makes to work correctly, the programs MUST be
-kept in separate 'util', 'mc', 'net', 'gp', and 'bvg' sub-directories,
-with these names.
+kept in separate 'util', 'mc', 'net', 'gp', 'mix', and 'bvg'
+sub-directories, with these names.
 
 Once the above make commands have been successful, you should put the
 'bin' directory (within the main directory for this software) in your

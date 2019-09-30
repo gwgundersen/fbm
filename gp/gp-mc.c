@@ -1,6 +1,6 @@
 /* GP-MC.C - Interface between Gaussian process and Markov chain modules. */
 
-/* Copyright (c) 1996 by Radford M. Neal 
+/* Copyright (c) 1996, 1997 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -84,7 +84,8 @@ static double *scr1, *scr2;	/* Scratch vectors */
 
 /* PROCEDURES. */
 
-static void scan_values(int), sample_values(void), sample_variances(void);
+static void sample_values(void), sample_variances(void);
+static void scan_values (int), met_values (int, mc_iter *);
 
 
 /* SET UP REQUIRED RECORD SIZES PRIOR TO GOBBLING RECORDS. */
@@ -118,6 +119,11 @@ void mc_app_initialize
     surv   = logg->data['V'];
 
     gp_check_specs_present(gp,0,model,surv);
+
+    if (model!=0 && model->type=='V')
+    { fprintf(stderr,"Can't handle survival models in gp-mc\n");
+      exit(1);
+    }
   
     /* Locate existing state records, if they exist. */
   
@@ -324,6 +330,12 @@ int mc_app_sample
       exit(1);
     }
 
+    if (model->type=='R' && model->autocorr)
+    { fprintf(stderr,
+       "The scan-values operation isn't implemented for models with autocorrelated noise\n");
+      exit(1);
+    }
+
     if (!have_values)
     { for (i = 0; i<N_train; i++)
       { for (j = 0; j<gp->N_outputs; j++)
@@ -357,6 +369,31 @@ int mc_app_sample
 
     sample_values(); 
     have_values = 1;
+
+    ds->know_pot = 0;
+    ds->know_grad = 0;
+
+    return 1;
+  }
+
+  else if (0 && strcmp(op,"met-values")==0) /* NOT IMPLEMENTED YET */
+  { 
+    if (model==0)
+    { fprintf (stderr,
+       "The met-values operation is not allowed when there is no model\n");
+      exit(1);
+    }
+
+    if (!have_values)
+    { for (i = 0; i<N_train; i++)
+      { for (j = 0; j<gp->N_outputs; j++)
+        { latent_values [gp->N_outputs*i + j] = 0;
+        }
+      }
+      have_values = 1;
+    }
+
+    met_values (pm==0 ? 1 : pm, it);
 
     ds->know_pot = 0;
     ds->know_grad = 0;
@@ -473,6 +510,12 @@ void mc_app_energy
   if (N_train>0 && have_values && !have_variances 
        && model!=0 && model->type=='R' && model->noise.alpha[2]==0)
   {
+    if (model->autocorr)
+    { fprintf(stderr,"Latent values must be discarded before hyperparameter\n");
+      fprintf(stderr,"   updates are done when the noise is autocorrelated.\n");
+      exit(1);
+    }
+
     for (j = 0; j<gp->N_outputs; j++)
     { 
       n = exp(*hypers.noise[j]);
@@ -514,29 +557,10 @@ void mc_app_energy
       if (j==0 || model!=0 && model->type=='R' && !have_values
         && (model->noise.alpha[2]!=0 || *hypers.noise[j]!=*hypers.noise[j-1]))
       {
-        gp_cov (gp, &hypers, train_inputs, N_train, train_inputs, N_train,
-                train_cov, gr ? exp_cov : 0);
-
-        if (gp->has_jitter)
-        { for (i = 0; i<N_train; i++)
-          { train_cov[i*N_train+i] += exp(2 * *hypers.jitter);
-          }
-        }
-
-        if (!have_values && model!=0)
-        { if (model->type!='R') abort();
-          if (model->noise.alpha[2]!=0)
-          { if (!have_variances) abort();
-            for (i = 0; i<N_train; i++) 
-            { train_cov[i*N_train+i] += noise_variances[gp->N_outputs*i+j];
-            }
-          }
-          else
-          { for (i = 0; i<N_train; i++) 
-            { train_cov[i*N_train+i] += exp(2 * *hypers.noise[j]);
-            }
-          }
-        }
+        gp_train_cov (gp, model, &hypers, j, noise_variances, 
+                      have_values ? train_cov : 0,
+                      have_values ? 0 : train_cov,
+                      gr ? exp_cov : 0);
 
         if (!cholesky(train_cov,N_train,&ld)
          || !inverse_from_cholesky (train_cov, scr1, scr2, N_train))
@@ -587,8 +611,18 @@ void mc_app_energy
 
           if (model!=0 && model->type=='R' && !have_values)
           { if (ds->q+k==hypers.noise[j])
-            { for (i = 0; i<N_train; i++) 
-              { diff_cov[i*N_train+i] += 2 * exp(2 * *hypers.noise[j]);
+            { double n;
+              int lag;
+              n = 2 * exp(2 * *hypers.noise[j]);
+              for (i = 0; i<N_train; i++) 
+              { diff_cov[i*N_train+i] += n;
+              }
+              if (model->autocorr)
+              { for (i = 0; i<N_train; i++)
+                { for (lag = 1; lag<=model->n_autocorr && i+lag<N_train; lag++) 
+                  { diff_cov[i*N_train+(i+lag)] += n * model->acf[lag-1];
+                  }
+                }
               }
               found = 1;
             }
@@ -694,7 +728,7 @@ void mc_app_stepsizes
   if (gp->has_jitter)
   { 
     if (gp->jitter.alpha[0]!=0)
-    { *stepsizes.jitter = 1/sqrt(N_train*gp->N_outputs+1);
+    { *stepsizes.jitter = 0.5/sqrt(N_train*gp->N_outputs+1);
     }
   }
 
@@ -710,7 +744,9 @@ void mc_app_stepsizes
 
     if (gp->exp[l].relevance.alpha[1]!=0)
     { for (i = 0; i<gp->N_inputs; i++)
-      { *stepsizes.exp[l].rel[i] = 0.1;
+      { if (!(gp->exp[l].flags[i]&Flag_omit))
+        { *stepsizes.exp[l].rel[i] = 0.1;
+        }
       }
     }
   }
@@ -719,13 +755,13 @@ void mc_app_stepsizes
   {  
     if (model->noise.alpha[0]!=0)
     { *stepsizes.noise_cm = 
-         model->noise.alpha[1]==0 ? 1/sqrt(N_train*gp->N_outputs+1)
+         model->noise.alpha[1]==0 ? 0.5/sqrt(N_train*gp->N_outputs+1)
                                   : 0.1/sqrt(gp->N_outputs);
     }
     
     if (model->noise.alpha[1]!=0)
     { for (i = 0; i<gp->N_outputs; i++)
-      { *stepsizes.noise[i] = 1/sqrt(N_train+1);
+      { *stepsizes.noise[i] = 0.5/sqrt(N_train+1);
       }
     }
   }
@@ -779,14 +815,7 @@ static void scan_values
      This will be the same for all outputs, since it doesn't include any
      noise part. */
 
-  gp_cov (gp, &hypers, train_inputs, N_train, train_inputs, N_train,
-          latent_cov, 0);
-
-  if (gp->has_jitter)
-  { for (i = 0; i<N_train; i++)
-    { latent_cov[i*N_train+i] += exp(2 * *hypers.jitter);
-    }
-  }
+  gp_train_cov (gp, 0, &hypers, 0, 0, latent_cov, 0, 0);
 
   /* Invert this covariance matrix. */
 
@@ -857,6 +886,41 @@ static void scan_values
 }
 
 
+/* DO METROPOLIS UPDATE FOR LATENT VALUES.  The Metropolis proposal is
+   a change by an amount that is a scaled down sample from the prior. */
+
+static void met_values
+( int repeat,	/* Number of repetitions to do */
+  mc_iter *it
+)
+{
+  int i, j, k;
+  int N_outputs;
+
+  N_outputs = gp->N_outputs;
+
+  /* Compute the covariance matrix for latent values at training points. 
+     This will be the same for all outputs, since it doesn't include any
+     noise part. */
+
+  gp_train_cov (gp, 0, &hypers, 0, 0, latent_cov, 0, 0);
+
+  /* Find its Cholesky decomposition. */
+
+  if (!cholesky(latent_cov,N_train,0))
+  { fprintf(stderr,"Couldn't find Cholesky decomposition in met-values!\n");
+    exit(1);
+  }
+
+  /* Do Metropolis updates. */
+
+  for (k = 0; k<repeat; k++)
+  {
+    /* NOT IMPLEMENTED YET. */
+  }
+}
+
+
 /* SAMPLE LATENT VALUES FOR A REGRESSION MODEL. */
 
 static void sample_values(void)
@@ -875,37 +939,12 @@ static void sample_values(void)
     if (j==0 || model->noise.alpha[2]!=0 
              || *hypers.noise[j]!=*hypers.noise[j-1])
     {
-      /* Compute covariance matrix for this output, without added noise, and
-         store in latent_cov. */
+      /* Compute covariance matrix for both latent and target values. */
 
-      gp_cov (gp, &hypers, train_inputs, N_train, train_inputs, N_train,
-              latent_cov, 0);
-
-      if (gp->has_jitter)
-      { for (i = 0; i<N_train; i++)
-        { latent_cov[i*N_train+i] += exp(2 * *hypers.jitter);
-        }
-      }
-
-      /* Copy latent_cov to train_cov and add noise covariance. */
-
-      for (i = N_train*N_train - 1; i>=0; i--) 
-      { train_cov[i] = latent_cov[i];
-      }
-
-      if (model->noise.alpha[2]!=0)
-      { if (!have_variances) abort();
-        for (i = 0; i<N_train; i++) 
-        { train_cov[i*N_train+i] += noise_variances[N_outputs*i+j];
-        }
-      }
-      else
-      { for (i = 0; i<N_train; i++) 
-        { train_cov[i*N_train+i] += exp(2 * *hypers.noise[j]);
-        }
-      }
+      gp_train_cov (gp, model, &hypers, j, noise_variances, 
+                    latent_cov, train_cov, 0);
       
-      /* Find Cholesky decomposition and use it to compute inverse. */
+      /* Find Cholesky decomposition of train_cov and compute its inverse. */
     
       if (!cholesky (train_cov,N_train,0)
        || !inverse_from_cholesky (train_cov, scr1, scr2, N_train))

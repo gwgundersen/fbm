@@ -1,0 +1,35 @@
+
+
+MIX-CASES:  Generate cases from a mixture model.
+
+Mix-cases produces a data file containing the target values for cases
+generated from a mixture model.  The components associated with these
+cases, the parameters associated with these components, and the
+top-level hyperparameters, may optionally be displayed as well.
+
+Usage:
+
+    mix-cases [ -h ] [ -p ] [ -i ] log-file index 
+              output-file n-cases [ random-seed ]
+
+Values for the targets in n-cases cases are generated and stored in
+the specified output file, one per line, overwriting any data it
+previously contained.  If no training data has been specified, the
+generated cases will come from the prior distribution conditional on
+the hyperparameters stored in the log file under the specified index.
+If training data has been supplied, the cases will be generated from
+the posterior distribution given the training data, as represented by
+the hyperparameters, parameters and component indicators that are
+stored under that index.
+
+The random number seed used for generating the cases may be specified
+at the end of the command line.  If it is omitted, index is used as
+the seed.
+
+If one or more of the -h, -p, or -i flags are specified, the
+hyperparameters, parameters, or component indicators will be displayed
+on standard output, in the format documented in mix-display.doc, with
+the newly generated cases following the training cases (if any).  By
+default, none of this information is displayed.
+
+            Copyright (c) 1997 by Radford M. Neal

@@ -1,8 +1,9 @@
 
   This directory and its subdirectories contain software for flexible
-  Bayesian leaning of regression, classification, and other models 
-  based on multilayer perceptron neural networks and Gaussian processes, 
-  implemented using Markov chain Monte Carlo methods.  
+  Bayesian learning of regression, classification, density, and other
+  model, based on multilayer perceptron neural networks, Gaussian 
+  processes, and finite and countably infinite mixtures, implemented 
+  using Markov chain Monte Carlo methods.  
 
   For more information, see the files in the 'doc' directory, in particular 
   'manual', or, if you have a Web browser, view 'index.html' in 'doc'.

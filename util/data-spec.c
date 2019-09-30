@@ -161,7 +161,8 @@ void main
 
   if (*ap==0 || (ds->N_inputs = atoi(*ap++))<0 
    || ds->N_inputs==0 && strcmp(*(ap-1),"0")!=0) usage();
-  if (*ap==0 || (ds->N_targets = atoi(*ap++))<=0) usage();
+  if (*ap==0 || (ds->N_targets = atoi(*ap++))<0
+   || ds->N_targets==0 && strcmp(*(ap-1),"0")!=0) usage();
 
   if (*ap!=0 && strcmp(*ap,"/")!=0)
   { if ((ds->int_target = atoi(*ap++))<=0) usage();

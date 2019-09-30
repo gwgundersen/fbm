@@ -23,7 +23,7 @@ that words in quotes are to be entered literally (without the quotes).
 The ".doc" files present in the various directories are listed below,
 with the more important files marked by "*".  Programs listed as
 "xxx-something" are generic, with "xxx" being replaced by the name of
-an application (eg, "net", "gp", or "bvg").  In some cases, further
+an application (eg, "net", "gp", or "mix").  In some cases, further
 documentation is available under the specific name.
 
 The file index.html is a hypertext index to this documenation.  It can
@@ -45,7 +45,7 @@ All the introductory documentation (including this) is collected into
 the 'manual' file.  You can print all the documentation by going to
 the main directory for this software and issuing a command such as
 
-  lpr doc/manual util/*.doc mc/*.doc net/*.doc gp/*.doc bvg/*.doc doc/rel*
+  lpr doc/manual util/*.doc mc/*.doc net/*.doc gp/*.doc mix/*.doc doc/rel*
  
 (or using whatever command other than 'lpr' you use to print text files).
 
@@ -56,6 +56,7 @@ Generic utility programs [util]:
     log-types       Types of log file records used by various programs
 
     log-copy        Copy part of a log file to a new log file
+    log-append      Append records from one log file to the end of another
     log-last        Display the index of the last record in a log file
     log-records     List all records in a log file  
 
@@ -65,6 +66,8 @@ Generic utility programs [util]:
 
   * model-spec      Specify model for targets
   * prior           Meaning and syntax of prior specifications
+
+    find-min        Find entry with minimum value (for cross validation)
 
     grid            Output a grid of points  
     extract         Extract items at random from a data file 
@@ -102,6 +105,7 @@ Bayesian neural networks [net]:
 
   * net-mc          Do Markov chain simulation to sample networks
   * net-gen         Generate networks from the prior, or with fixed values  
+    net-gd          Train a network by gradient descent in the error
 
   * net-display     Print network parameters and/or hyperparameters
 
@@ -130,6 +134,25 @@ Gaussian process models [gp]:
 
   * gp-pred         Make predictions for test cases using Gaussian process
     gp-eval         Evaluate function drawn from a Gaussian process over a grid
+
+    gp-cov          Print covariance matrix for a Gaussian process 
+    gp-eigen        Find eigenvalues/vectors of covariance matrix
+
+
+Bayesian inference for mixture models [mix]:
+
+  * mix             Bayesian inference for mixture models
+  * mix-spec        Specify a mixture model, or display existing spec
+
+  * mix-mc          Use Markov chain to do sampling for a mixture model
+  * mix-gen         Generate hyperparameters randomly, or fix them
+
+  * mix-display     Print mixture model parameters, hyperparameters, etc.
+  * mix-quantities  Quantities from log files relating to mixture models
+
+    mix-cases       Generate cases from a mixture model
+
+    mix-extensions  Possible extensions to the mixture modeling software
 
 
 Markov chain sampling for a bivariate Gaussian [bvg]:

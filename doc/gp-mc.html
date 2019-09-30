@@ -30,7 +30,9 @@ used when updating the hyperparameters (treated as noise-free data).
 This will probably slow convergence considerably, but might be desired
 in order that these values can be plotted.  The best way to proceed in
 this situation is to generate the values at the end of each iteration
-but discard them before sampling resumes.
+but discard them before sampling resumes.  One MUST discard the latent
+values before updating hyperparameters when using a regression model
+with autocorrelated noise.
 
 The following application-specific sampling procedures are implemented:
 
@@ -44,13 +46,22 @@ The following application-specific sampling procedures are implemented:
        independent of the previous set.
 
        If latent values do not exist beforehand, this procedure operates 
-       as if the previous values were all zero.
+       as if the previous values were all zero.  
+
+       This operation is not allowed for regression models with
+       autocorrelated noise.
 
    sample-values
 
        Samples latent values associated with training cases given the 
        current values of the hyperparameters, ignoring the current latent
-       values (if any).  This is possible only for a regression model.
+       values (if any).  
+
+       This operation is possible only for regression models.  It is 
+       allowed for regression models with autocorrelated noise, but as
+       noted above, in this context, they will probably have to be 
+       discarded before doing anything else (and hence are useful only 
+       in allowing quantities such as "b" to be evaluated).
 
    discard-values
 

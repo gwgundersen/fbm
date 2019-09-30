@@ -30,7 +30,7 @@ Class of Programs          Type   Description
                              S    State of spins in system
                              D    Direction to push 
 
-* Supervised learning        D    Data specifications for training and test sets
+* Statistical modeling       D    Data specifications for training and test sets
                              M    Model specification
                              V    Characteristics of model for survival data
 
@@ -44,4 +44,10 @@ Class of Programs          Type   Description
                              F    Case-by-case latent values
                              N    Case-by-case noise variances
 
-            Copyright (c) 1995, 1996 by Radford M. Neal
+  Mixture model              P    Specification and priors
+                             S    Hyperparameters
+                             I    Component indicators for training cases
+                             O    Offset parameters for components
+                             N    Noise variance parameters
+
+            Copyright (c) 1995, 1996, 1997 by Radford M. Neal

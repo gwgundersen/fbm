@@ -28,13 +28,14 @@ argument.  The permitted range of these integer targets is from zero
 to 'int-target' minus one.
 
 The training and (optionally) test sets are given in the form of
-'numin' specifications.  The default specification for training and
-test inputs is "data@1,1".  The training input specification provides
-the default for the training target specification - i.e. the file and
-line range are used for the inputs is used for targets if not
-overridden, and the item indexes for the targets start by default
-after the last index for the inputs.  Similarly, the test input
-specification is used as the default for the test targets.
+specifications described in <A HREF="numin.html">numin.doc</A>.  The default specification for
+training and test inputs is "data@1,1".  The training input
+specification provides the default for the training target
+specification - i.e. the file and line range are used for the inputs
+is used for targets if not overridden, and the item indexes for the
+targets start by default after the last index for the inputs.
+Similarly, the test input specification is used as the default for the
+test targets.
 
 The data files are read and checked for errors.  The number of lines
 of training inputs must match the number of lines of training targets,

@@ -1,6 +1,6 @@
 /* GP.H - Interface to Gaussian Process modules. */
 
-/* Copyright (c) 1996 by Radford M. Neal 
+/* Copyright (c) 1996, 1997 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -20,6 +20,9 @@
    Stored in log files under type 'P'.  Changes may invalidate old log files. */
 
 #define Max_exp_parts 10	/* Max. number of exp parts in the covariance */
+
+#define Flag_omit 1		/* Flag bit indicating input ignored */
+#define Flag_delta 2		/* Flag bit indicating delta distance */
 
 typedef struct
 {
@@ -44,8 +47,7 @@ typedef struct
     prior_spec scale;		  /* Prior for scale of this contribution */
     prior_spec relevance;	  /* Prior for relevancies of inputs */
 
-    char flags[Max_inputs];	  /* Flags saying how inputs are treated (not
-				     currently used, but will be soon...) */
+    char flags[Max_inputs];	  /* Flags saying how inputs are treated */
 
     int resvd[10];		  /* Reserved for future use */
 
@@ -125,3 +127,6 @@ void gp_cov (gp_spec *, gp_hypers *, double *, int, double *, int,
 
 int gp_cov_deriv (gp_spec *, gp_hypers *, double **, double *, 
                   double *, double *, int);
+
+void gp_train_cov (gp_spec *, model_specification *, gp_hypers *, int,
+                   double *, double *, double *, double **);

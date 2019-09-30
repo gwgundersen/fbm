@@ -18,7 +18,7 @@ hazard function that may depend on various covariates, and on time.
 
 Usage:
 
-     model-spec log-file specifications...
+     model-spec log-file model-specifications...
 
 or:
 
@@ -36,6 +36,10 @@ one or more arguments after the log file argument.
 
 Regression for real-valued targets.
 
+Specification:
+
+   real noise-prior [ "acf" corr { corr } ]
+
 A regression model is specified by the argument "real", followed by a
 noise prior (see <A HREF="prior.html">prior.doc</A>).  With this model, the data for each case
 consists of the same number of input values as the network has input
@@ -45,6 +49,20 @@ distributions, with variances determined by the noise hyperparameters.
 (Note, however, that if there are implicit case-by-case
 hyperparameters, the noise effectively comes from a t-distribution,
 rather than a Gaussian.)
+
+The noise prior may be followed by a specification of autocorrelations
+for the noise in training cases, consisting of "acf" followed by one
+or more autocorrelations, for lags from one on up; autocorrelations at
+higher lags are assumed to be zero.  These autocorrelations must be
+valid - ie, they must result in a positive definite correlation
+matrix.  Note that this option causes the noise to be treated as
+autocorrelated only for training cases.  The noise in test cases is
+considered to be independent of the noise in the training cases, and
+of the noise in other test cases.
+
+If the "acf" option is used, the noise prior must not specify that the
+noise variance varies from case to case.  Autocorrelated noise is
+currently implemented only for Gaussian process models.
 
 
 Logistic regression for binary targets.
@@ -74,7 +92,7 @@ output.
 
 
 Survival data.
-
+ 
 The data-model arguments to net-spec can also specify that the net is
 to be used to model survival data, indicated by a first argument of
 "survival".  With a survival model, the inputs to the networks will be
@@ -110,6 +128,10 @@ covariates as the number of inputs, and must specify that there is a
 single target.  Negative values of the target are interpreted as
 censored values (with observation stopping at the time given by the
 target's absolute value).
+
+Survival models are not implemented for Gaussian proceses.
+
+            Copyright (c) 1995, 1996, 1997 by Radford M. Neal
 </pre>
 </body>
 </html>

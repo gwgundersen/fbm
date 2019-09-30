@@ -71,6 +71,13 @@ rather than being Gaussian.  This is primarily a debugging tool - it
 makes it easy to see whether each parameter was derived from the
 correct hyperparameter.
 
+The width part can be just a plus sign ("+"), rather than a number, in
+which case the value used is 1e10 (infinity for most purposes).  This
+may be useful when, for instance, a network is to be trained by
+traditional minimization of error, with no weight penalty, but "prior"
+specifications are still needed to say which groups of weights are
+present.
+
 A prior specification for the level of Gaussian noise in a regression
 model has the same syntax as that used to specify priors for model
 parameters.  The Width part gives the mean precision (inverse of the

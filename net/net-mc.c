@@ -1,6 +1,6 @@
 /* NET-MC.C - Interface between neural network and Markov chain modules. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1997 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -106,6 +106,11 @@ void mc_app_initialize
     surv   = logg->data['V'];
 
     net_check_specs_present(arch,priors,1,model,surv);
+
+    if (model!=0 && model->type=='R' && model->autocorr)
+    { fprintf(stderr,"Can't handle autocorrelated noise in net-mc\n");
+      exit(1);
+    }
   
     /* Locate existing network, if one exists. */
   
@@ -153,7 +158,7 @@ void mc_app_initialize
   
     net_setup_param_pointers (&stepsizes, arch);
 
-    /* Set up value structure. */
+    /* Set up second derivative structure. */
 
     value_count = net_setup_value_count(arch);
     value_block = chk_alloc (value_count, sizeof *value_block);
@@ -844,7 +849,7 @@ void mc_app_stepsizes
       }
 
       if (l<arch->N_layers-1 && arch->has_hh[l])
-      { for (j = 0; j<arch->N_hidden[l+l]; j++)
+      { for (j = 0; j<arch->N_hidden[l+1]; j++)
         { w = sigmas.hh[l][i];
           if (sigmas.ah[l+1]!=0) w *= sigmas.ah[l+1][j];
           seconds.h[l][i] += (w*w) * seconds.s[l+1][j];

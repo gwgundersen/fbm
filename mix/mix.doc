@@ -1,0 +1,37 @@
+
+
+MIX:  Bayesian inference for mixture models.
+
+The 'mix' programs implement Bayesian models for multivariate
+probability or probability density estimation that are based on finite
+or countably infinite mixtures.  The countably infinite mixture models
+are equivalent to Dirichlet process mixtures.
+
+Each component of the mixture defines a joint probability or
+probability density for a set of target variables.  At present, the
+targets must either all be binary or all be real-valued.  For binary
+data, the targets are independent in the component distributions, with
+a "1" having some specified probability.  For real-valued data, the
+targets are also independent in each of the component densities, each
+having a Gaussian distribution with some specified mean and standard
+deviation.  The full distribution defined by the model is a mixture of
+these component distributions, with the weight of each component in
+the mixture being given by a set of component probabilities.
+
+The parameters of the component distributions (eg, the means and
+standard deviations for Gaussians) are given prior distributions,
+which may depend on "hyperparameters" that are themselves given
+priors.  The mixing proportions are given a symmetric Dirichlet prior,
+with specified concentration parameter.  In this implementation, these
+mixing proportions are not explicitly represented; all inference is
+instead done with the proportions integrated out.  Sampling from the
+posterior distribution for the other parameters of the components and
+the hyperparameters is done using Markov chain methods.  The resulting
+sample from the posterior can then be used to make predictions for
+future cases.
+
+The facilities supported by these programs are presently a bit
+rudimentary; mix-extensions.doc gives a list of things that could be
+done, but aren't yet.
+
+            Copyright (c) 1997 by Radford M. Neal

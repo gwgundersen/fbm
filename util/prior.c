@@ -39,8 +39,13 @@ int prior_parse
     s += 1;
   }
 
-  pr->width = atof(s);
-  if (pr->width<=0) return 0;
+  if (s[0]=='+' && (s[1]==0 || s[1]==':'))
+  { pr->width = 1e10;
+  }
+  else
+  { pr->width = atof(s);
+    if (pr->width<=0) return 0;
+  }
 
   for (i = 0; i<Max_alphas; i++)
   {

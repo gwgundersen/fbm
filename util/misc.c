@@ -299,3 +299,127 @@ error:
   fprintf(stderr,"Bad time range specification: %s\n",str);
   exit(1);
 }
+
+
+/* PARSE A LIST OF FLAG ITEMS.  The list has the form:
+
+        [:[-]<item>{,<item>}]
+
+   A null list means that all items are included.  The "-" indicates that
+   all EXCEPT the listed items are included.
+
+   Parse_flags sets bits in a char array to indicate which items the 
+   flag applies to.  It exits with an error message if an item in
+   the string is out of range, or there are other problems. */
+
+void parse_flags
+( char *s,		/* String to parse */
+  char *a,		/* Char array in which to set bits */
+  int  n,		/* Length of a, maximum value of an item */
+  int  flag		/* Bit to set in a to indicate flag applies */
+)
+{ 
+  int i, r;
+
+  if (*s==0)
+  { for (i = 0; i<n; i++)
+    { a[i] |= flag;
+    }
+    return;
+  }
+
+  if (*s++!=':')
+  { fprintf(stderr,"Bad format for flag argument\n");
+    exit(1);
+  }
+
+  r = *s=='-';
+  if (r) 
+  { s += 1;
+  }
+
+  while (*s!=0)
+  {
+    i = atoi(s);
+    if (i<1 || i>n)
+    { fprintf(stderr,"Flag item out of range: %d\n",i);
+      exit(1);
+    }
+
+    while (*s>='0' && *s<='9') 
+    { s += 1;
+    }
+
+    a[i-1] |= flag;
+
+    if (*s!=0 && *s++!=',')
+    { fprintf(stderr,"Bad format for flag argument\n");
+      exit(1);
+    }
+  }
+
+  if (r)
+  { for (i = 0; i<n; i++)
+    { a[i] ^= flag;
+    }
+  }
+}
+
+
+/* CREATE A LIST OF FLAG ITEMS.  Creates a string listing all the items
+   to which a flag applies.  The string has the format parsed by parse_flags.
+   A null string is generated if the flag applies to all items, and the
+   "-" option is used if that is a shorter way of expressing the set.  
+
+   Returns the number of items that the flag applies to. */
+
+int list_flags
+( char *a,		/* Char array in holding flag bits */
+  int  n,		/* Length of a */
+  int  flag,		/* Bit set in a to indicate flag applies */
+  char *s		/* Place to store list - must be big enough! */
+)
+{ 
+  int i, c, r, f;
+
+  c = 0;
+  for (i = 0; i<n; i++)
+  { if (a[i]&flag) 
+    { c += 1;
+    }
+  }
+
+  if (c==n)
+  { *s = 0;
+    return c;
+  }
+
+  *s++ = ':';
+
+  r = c>n/2;
+  if (r)
+  { *s++ = '-';
+  }
+
+  f = 1;
+
+  for (i = 0; i<n; i++)
+  {
+    if (r ? (a[i]&flag)==0 : (a[i]&flag)!=0)
+    { if (f) 
+      { f = 0;
+      }
+      else
+      { *s++ = ','; 
+      }
+      sprintf(s,"%d",i+1);
+      while (*s!=0)
+      { s += 1;
+      }
+    }
+  }
+
+  *s = 0;
+
+  return c;
+}

@@ -11,7 +11,7 @@ Usage:
   
     gp-spec log-file N-inputs N-outputs 
             [ const-part [ linear-part [ jitter-part ] ] ]
-            { / scale-prior relevance-prior [ power ] }
+            { / scale-prior relevance-prior [ power ] { flag } }
 
 or:
 
@@ -75,6 +75,28 @@ w_i, which determine the relevance of the various inputs, can have up
 to two levels, allowing for a common hyparameter and hyperparameters
 for each input, i.  Here again, the "x" option may be used to
 automatically scale the prior.
+
+The optional flags at the end of the specification of an exponential
+part have the form:
+
+      <flag>[:[-]<input>{,<input>}]
+
+where <flag> is one of the flag names below, and <input> is the number
+of an input (starting with 1) that the flag applies to.  If the "-" is
+present, the flag applies to all inputs EXCEPT those mentioned.  If
+only the flag name is given, it applies to all inputs.  The possible
+flags are as follows:
+
+    delta     Use a "delta" distance for these inputs, in which the
+              distance is 0 if x_i=x'_i and 1 otherwise.  
+
+    omit      Ignore these inputs when computing the covariance
+              (ie, don't include them in the sum above).  
+
+The "delta" flag is useful when the inputs are categorical.  The
+"omit" flag is useful in setting up additive models, in which
+different covariance parts correspond to additive components, with
+each component looking at only a subset of the inputs.
 
 Note that the prior for the const-part corresponds closely to the
 prior for output biases in neural network models, and that the prior

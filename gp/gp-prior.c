@@ -93,10 +93,12 @@ void gp_prior_generate(
 
     if (gp->exp[l].relevance.alpha[1]!=0)
     { for (i = 0; i<gp->N_inputs; i++)
-      { *h->exp[l].rel[i] = log (
-         !fix ? prior_pick_sigma (exp(*h->exp[l].rel_cm),
-                                  gp->exp[l].relevance.alpha[1])
-              : scale_value==0 ? exp(*h->exp[l].rel_cm) : relevance_value);
+      { if (!(gp->exp[l].flags[i]&Flag_omit))
+        { *h->exp[l].rel[i] = log (
+           !fix ? prior_pick_sigma (exp(*h->exp[l].rel_cm),
+                                    gp->exp[l].relevance.alpha[1])
+                : scale_value==0 ? exp(*h->exp[l].rel_cm) : relevance_value);
+        }
       }
     }
   }
@@ -184,8 +186,10 @@ double gp_log_prior
 
     if (gp->exp[l].relevance.alpha[1]!=0)
     { for (i = 0; i<gp->N_inputs; i++)
-      { lp += gp_gdens (gp->exp[l].relevance.alpha[1], exp(*h->exp[l].rel_cm), 
-                        *h->exp[l].rel[i], ex);
+      { if (!(gp->exp[l].flags[i]&Flag_omit))
+        { lp += gp_gdens (gp->exp[l].relevance.alpha[1], exp(*h->exp[l].rel_cm),
+                          *h->exp[l].rel[i], ex);
+        }
       }
     }
   }
@@ -271,11 +275,13 @@ void gp_prior_grad
 
     if (gp->exp[l].relevance.alpha[1]!=0)
     { for (i = 0; i<gp->N_inputs; i++)
-      { gp_gdiff (gp->exp[l].relevance.alpha[1], 
-                  exp(*h->exp[l].rel_cm), 
-                  *h->exp[l].rel[i], 
-                  gp->exp[l].relevance.alpha[0]==0 ? 0 : d->exp[l].rel_cm,
-                  d->exp[l].rel[i]);
+      { if (!(gp->exp[l].flags[i]&Flag_omit))
+        { gp_gdiff (gp->exp[l].relevance.alpha[1], 
+                    exp(*h->exp[l].rel_cm), 
+                    *h->exp[l].rel[i], 
+                    gp->exp[l].relevance.alpha[0]==0 ? 0 : d->exp[l].rel_cm,
+                    d->exp[l].rel[i]);
+        }
       }
     }
   }

@@ -19,8 +19,8 @@ HINTS AND WARNINGS
    the precisions, their scale is specified in the net-spec and
    model-spec commands in terms of the corresponding standard deviations.
 
-3) When there is a single output unit, a specification of the form
-   "w:a:b" for the hidden-to-output weights is mathematically
+3) When there is a single output unit in a network, a specification of 
+   the form "w:a:b" for the hidden-to-output weights is mathematically
    equivalent to one of the form "w:a::b".  The two specifications
    differ computationally, however.  In the "w:a:b" form, lower-level
    hyperparameters that each control a single weight are explicitly
@@ -61,8 +61,8 @@ HINTS AND WARNINGS
          inverted in sample-values.  However, scan-values does not produce
          independent draws, so convergence may be slower.
 
-5) If the system crashes in the middle of a run of 'net-mc', one can
-   usually continue from the last iteration written to the log file 
+5) If the system crashes in the middle of a run of 'net-mc' (say), one
+   can usually continue from the last iteration written to the log file 
    by just invoking 'net-mc' again with the same arguments (just as 
    one can continue for more iterations after 'net-mc' terminates 
    normally).  Problems could arise if the system crashed in the middle 

@@ -62,7 +62,7 @@ void gp_initialize
 
   gp_check_specs_present(gp,0,model,surv);
 
-  /* Check that network is present, and set up pointers. */
+  /* Check that hyperparameters present; set up pointers. */
 
   hypers.total_hypers = gp_hyper_count(gp,model);
   hypers.hyper_block = logg->data['S'];
@@ -118,7 +118,7 @@ void gp_available
 
     if (letter && qd[v].available==0)
     {
-      if (strchr("xoygzlbavV",letter)!=0 && !have_train_data)
+      if (strchr("xoyzlbavV",letter)!=0 && !have_train_data)
       { qd[v].available = -1;
         continue;
       }
@@ -146,6 +146,9 @@ void gp_available
       { qd[v].available = 
           mod<=0 && gp->has_linear || mod>0 && mod<=gp->N_exp_parts ? 1 : -1;
       }
+      else if (letter=='M')
+      { qd[v].available = qd[v].low!=-1 && mod<=gp->N_exp_parts ? 1 : -1;
+      }
       else if (letter=='G')
       { qd[v].available = mod==-1 && gp->has_jitter ? 1 : -1;
       }
@@ -158,7 +161,7 @@ void gp_available
 
       if (qd[v].available<0) continue;
 
-      if (strchr("xoygzlLbavV",letter)!=0)
+      if (strchr("xoyzlLbavV",letter)!=0)
       { if (strchr("xoyzvV",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_train) 
         { qd[v].available = -1;
           continue;
@@ -174,6 +177,14 @@ void gp_available
       }
 
       else if (letter=='R')
+      { if (qd[v].low>=gp->N_inputs || qd[v].high>=gp->N_inputs)
+        { qd[v].available = -1;
+          continue;
+        }
+        if (qd[v].low!=-1 && qd[v].high==-1) qd[v].high = gp->N_inputs-1;
+      }
+
+      else if (letter=='M')
       { if (qd[v].low>=gp->N_inputs || qd[v].high>=gp->N_inputs)
         { qd[v].available = -1;
           continue;
@@ -215,6 +226,7 @@ void gp_evaluate
   double *targets;
   double *latent_values;
   double *noise_variances;
+  double pw;
   int N_cases;
   char letter;
   int v, i;
@@ -523,8 +535,38 @@ void gp_evaluate
           }
           else
           { for (i = low; i<=high; i++)
-            { qh->value[v][i-low] = 
-                exp(mod==0 ? *hypers.linear[i] : *hypers.exp[mod-1].rel[i]);
+            { if (mod>0 && gp->exp[mod-1].flags[i]&Flag_omit)
+              { qh->value[v][i-low] = 0;
+              }
+              else
+              { qh->value[v][i-low] = 
+                  exp(mod==0 ? *hypers.linear[i] : *hypers.exp[mod-1].rel[i]);
+              }
+            }
+          }
+
+          qh->updated[v] = 1;
+ 
+          break;
+        }
+
+        case 'M':
+        {
+          int m;
+
+          for (i = low; i<=high; i++)
+          {
+            qh->value[v][i-low] = qd[v].modifier>0 || !gp->has_linear ? 0
+                                : 0.5 * exp(2 * *hypers.linear[i]);
+
+            for (m = 1; m<=gp->N_exp_parts; m++)
+            {
+              if ((qd[v].modifier<0 || m==qd[v].modifier)
+               && !(gp->exp[m-1].flags[i]&Flag_omit))
+              { pw = gp->exp[m-1].power;
+                qh->value[v][i-low] += exp(2 * *hypers.exp[m-1].scale)
+                              * (1 - exp( - exp(pw * *hypers.exp[m-1].rel[i])));
+              }
             }
           }
 

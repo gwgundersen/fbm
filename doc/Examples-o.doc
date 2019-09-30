@@ -54,7 +54,8 @@ of the way the noise was actually generated, but its fairly heavy
 tails are enough to prevent the model from paying undue attention to
 the outliers.
 
-The resulting model can be tested on data from the same source using
+The above commands take about two minutes on our machine.  The
+resulting model can be tested on data from the same source using
 net-pred:
 
     > net-pred na olog.net 31:
@@ -103,8 +104,8 @@ be sampled.  The following commands illustrate how this is done:
     > mc-spec olog.gpt sample-variances heatbath hybrid 20:4 0.5
     > gp-mc olog.gpt 200
 
-This takes about six minutes on our SGI machine.  The progress of the
-run can be monitored by examining the case-by-case noise standard
+This takes less than two minutes on our SGI machine.  The progress of
+the run can be monitored by examining the case-by-case noise standard
 deviations in (say) the first 8 training cases, as follows:
 
     > gp-plt t v@0:7 olog.gpt | plot
@@ -122,6 +123,6 @@ Predictions can be made using 'gp-pred':
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.01995+-0.01186
+    Average squared error guessing mean:   0.02074+-0.01235
 
 This performance is very similar to that of the network model.

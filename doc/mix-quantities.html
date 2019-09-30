@@ -1,0 +1,66 @@
+<html>
+<body>
+<pre>
+
+
+MIX-QUANTITIES:  Quantities from log files relating to mixture models.
+
+The quantities below relating the mixture models can be obtained from
+log files (eg, for use in mix-plt).  The generic quantities documented
+in <A HREF="quantities.html">quantities.doc</A> are also available.  The Markov chain quantities
+documented in <A HREF="mc-quantities.html">mc-quantities.doc</A> are defined as well, but at present
+most of them are not meaningful for mixture models, since the standard
+Markov chain operations are not supported.
+
+The quantities specific to mixture models are as follows (if "n" is
+present after the letter, it represents a numeric modifier):
+
+    u    An array containing the mean offset for each target value.
+
+    un   An array containing the offset parameters for component n,
+         numbered (starting at 1) in order of decreasing frequency
+         in the training set.  If n is greater than the number of
+         components currently represented in the training set, the
+         value of un is the same as the mean offset (quantity u).
+
+    V    As an array, the variances of offsets for each target value.
+         As a scalar, the top-level variance hyperparameter that 
+         controls these variances.
+
+    v    Same as for V, but expressed in terms of standard deviations
+         rather than variances.
+
+    N    As an array, the hyperparameters controlling the variances 
+         for each of the (real) target values in the components of the
+         mixture. As a scalar, the top-level variance hyperparameter
+         that controls these variances.  Valid only when the targets 
+         are real-valued.  
+
+    n    Same as for N, but expressed in terms of standard deviations
+         rather than variances.
+
+    Nn   Array of noise variances for the n'th component, or array of
+         noise-variance hyperparameters if n is greater than the number
+         of components currently active in the training set.
+
+    nn   As for Nn, but in terms of standard deviations.
+
+    Cn   The fraction of training cases that are associated with the 
+         first n mixture components.  The components are ordered according    
+         to the number of training cases with which they are associated 
+         (most frequent first).
+
+    cn   The frequency of the n'th most common mixture component among the 
+         training cases.  The components are ordered according to the number 
+         of training cases with which they are associated (most frequent 
+         first).  The value is zero if there are fewer than n active 
+         components at present.
+
+    a[n] The number of components needed to account for all but n% of the
+         training cases.  The default is n=0 - ie, just "a" is the total
+         number of currently active components.
+
+            Copyright (c) 1997 by Radford M. Neal
+</pre>
+</body>
+</html>

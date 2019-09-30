@@ -1,6 +1,6 @@
 /* MODEL-SPEC.C - Program to specify a data model. */
 
-/* Copyright (c) 1996 by Radford M. Neal 
+/* Copyright (c) 1996, 1997 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -20,6 +20,7 @@
 #include "log.h"
 #include "prior.h"
 #include "model.h"
+#include "matrix.h"
 
 
 static void usage(void);
@@ -88,6 +89,11 @@ void main
 
       case 'R': 
       { printf("real %s", prior_show(ps,m->noise));
+        if (m->autocorr==1)
+        { int i;
+          printf(" acf");
+          for (i = 0; i<m->n_autocorr; i++) printf(" %f",m->acf[i]);
+        }
         break;
       }
 
@@ -161,6 +167,57 @@ void main
     { fprintf(stderr,"Illegal prior for noise level\n");
       exit(1);
     }
+    ap += 1;
+    if (*ap!=0)
+    { if (strcmp(*ap,"acf")==0)
+      { m->autocorr = 1;
+        if (m->noise.alpha[2]!=0)
+        { fprintf(stderr,
+     "Autocorrelated noise is not allowed with case-by-case noise variances\n");
+          exit(1);
+        }
+        ap += 1;
+        if (*ap==0) usage();
+        m->n_autocorr = 0;
+        while (*ap!=0)
+        { if (m->n_autocorr>=Max_autocorr) 
+          { fprintf(stderr,
+              "Autocorrelations are specified to too high a lag (max %d)\n",
+              Max_autocorr);
+            exit(1);
+          }
+          m->acf[m->n_autocorr] = atof(*ap);
+          if (m->acf[m->n_autocorr]<-1 || m->acf[m->n_autocorr]>1
+           || m->acf[m->n_autocorr]==0 && **ap!='0')
+          { fprintf(stderr, "Invalid autocorrelation specified\n");
+            exit(1);
+          }
+          m->n_autocorr += 1;
+          ap += 1;
+        }
+        /* Check that the autocorrelation function is positive definite. This
+           is done by trying it out on a series of length 100, though this
+           is not completely guaranteed to find the problem if there is one. */
+        { double cv[100][100];
+          int i, j;
+          for (i = 0; i<100; i++)
+          { for (j = 0; j<i; j++)
+            { cv[i][j] = i-j>m->n_autocorr ? 0 : m->acf[i-j-1];
+            }
+            cv[i][i] = 1;
+          }
+          if (!cholesky(&cv[0][0],100,0))
+          { fprintf (stderr,
+              "The specified autocorrelations are not positive definite\n");
+            exit(1);
+          }
+        }
+      }
+      else
+      { usage();
+      }
+    }
+    ap -= 1;
   }
   else if (strcmp(*ap,"survival")==0) 
   { 
@@ -246,10 +303,13 @@ void main
 static void usage(void)
 {
   fprintf(stderr,
-   "Usage: model-spec log-file ( real noise-prior | binary | class | survival ... )\n");
-
+   "Usage: model-spec log-file model-specification...\n");
   fprintf(stderr,
    "   or: model-spec log-file (to display stored specifications)\n");
+  fprintf(stderr,
+   "Model specification:\n");
+  fprintf(stderr,
+   "   real noise-prior [ \"acf\" corr { corr } ] | binary | class | survival ... \n");
 
   exit(1);
 }

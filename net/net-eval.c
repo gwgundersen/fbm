@@ -24,7 +24,8 @@
 #include "net.h"
 
 
-#define Max_inputs 100		/* Maximum number of input dimensions allowed */
+#define Max_inputs  100		/* Maximum number of input dimensions allowed */
+#define Max_targets 100		/* Maximum number of targets allowed */
 
 static void usage(void);
 
@@ -59,7 +60,7 @@ void main
   int lindex, hindex, index_mod;
   int ng;
 
-  double *targets;
+  double targets[Max_targets];
   int gen_targets;
   int N_targets;
 

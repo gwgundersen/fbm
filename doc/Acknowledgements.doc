@@ -11,5 +11,5 @@ rejection sampling, and the features allowing cpu time to be stored,
 displayed, and used to control the number of iterations, are also
 based on work by Carl Edward Rasmussen.
 
-Thanks also to David MacKay and Chris Williams for testing the
-programs on their machines, and for comments on the documentation.
+Thanks also to David MacKay, Chris Williams, and Tim Howells for
+testing the programs and for comments on the documentation.

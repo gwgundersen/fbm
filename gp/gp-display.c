@@ -124,7 +124,7 @@ void main
     log_gobble_last(&logf,&logg);
 
     if (logg.last_index<0)
-    { fprintf(stderr,"No network in log file\n");
+    { fprintf(stderr,"No Gaussian process record in log file\n");
       exit(1);
     }
 
@@ -145,7 +145,7 @@ void main
   }
 
   if (logg.index['S']!=index)
-  { fprintf(stderr,"No hyperparametes stored with that index\n");
+  { fprintf(stderr,"No hyperparameters stored with that index\n");
     exit(1);
   }
 
@@ -165,46 +165,51 @@ void main
     printf("\nHYPERPARAMETERS\n");
 
     if (gp->has_constant)
-    { printf("\nConstant part:\n\n %10.3lf\n",exp(*h->constant));
+    { printf("\nConstant part:\n\n %10.3f\n",exp(*h->constant));
     }
 
     if (gp->has_linear)
-    { printf("\nLinear part:\n\n %10.3lf :",exp(*h->linear_cm));
+    { printf("\nLinear part:\n\n %10.3f :",exp(*h->linear_cm));
       for (i = 0; i<gp->N_inputs; i++)   
       { if (i>0 && i%5==0)
         { printf("\n             ");
         }
-        printf(" %10.3lf",exp(*h->linear[i]));
+        printf(" %10.3f",exp(*h->linear[i]));
       }
       printf("\n");
     }
 
     if (gp->has_jitter)
-    { printf("\nJitter part:\n\n %10.3lg\n",exp(*h->jitter));
+    { printf("\nJitter part:\n\n %10.3g\n",exp(*h->jitter));
     }
 
     if (gp->N_exp_parts>0)
     { printf("\nExponential parts:\n");
       for (l = 0; l<gp->N_exp_parts; l++)
-      { printf ("\n %10.3lf\n %10.3lf :", exp(*h->exp[l].scale),
+      { printf ("\n %10.3f\n %10.3f :", exp(*h->exp[l].scale),
                                         exp(*h->exp[l].rel_cm));
         for (i = 0; i<gp->N_inputs; i++)
         { if (i>0 && i%5==0)
           { printf("\n             ");
           }
-          printf(" %10.3lf",exp(*h->exp[l].rel[i]));
+          if (gp->exp[l].flags[i]&Flag_omit)
+          { printf("       -   ");
+          }
+          else
+          { printf(" %10.3f",exp(*h->exp[l].rel[i]));
+          }
         }
         printf("\n");
       }
     }
 
     if (m!=0 && m->type=='R')
-    { printf("\nNoise levels:\n\n %10.3lf :",exp(*h->noise_cm));
+    { printf("\nNoise levels:\n\n %10.3f :",exp(*h->noise_cm));
       for (i = 0; i<gp->N_outputs; i++)
       { if (i>0 && i%5==0)
         { printf("\n             ");
         }
-        printf(" %10.3lf",exp(*h->noise[i]));
+        printf(" %10.3f",exp(*h->noise[i]));
       }
       printf("\n");
     }
@@ -228,7 +233,7 @@ void main
         { if (l>0 && l%10==0)
           { printf("\n      ");
           }
-          printf(" %+6.2lf",values[i*gp->N_outputs+l]);
+          printf(" %+6.2f",values[i*gp->N_outputs+l]);
         }
         printf("\n");
       }
@@ -252,7 +257,7 @@ void main
         { if (l>0 && l%10==0)
           { printf("\n      ");
           }
-          printf(" %6.3lf",sqrt(variances[i*gp->N_outputs+l]));
+          printf(" %6.3f",sqrt(variances[i*gp->N_outputs+l]));
         }
         printf("\n");
       }

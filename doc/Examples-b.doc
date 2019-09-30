@@ -1,4 +1,4 @@
-1
+
 
 A PROBLEM WITH A BINARY RESPONSE
 
@@ -65,8 +65,8 @@ rejection rate must be quite small.  This alternative method has the
 advantage that it allows for more frequent hyperparameter updates
 (with 'sample-sigmas').
 
-On our SGI machine, the 200 iterations requested above take about 45
-minutes.  During this time, one can monitor the simulation, for
+On our SGI machine, the 200 iterations requested above take about
+twenty minutes.  During this time, one can monitor the simulation, for
 instance with the command:
 
     > net-plt t h1h2h3 blog.net | plot
@@ -161,7 +161,7 @@ relationship of function values to targets is not Gaussian.
 Unfortunately, for the very same reason, the direct "sample-values"
 operation is not available, so Gibbs sampling must be done.
 
-The 50 sampling iterations take about 50 minutes on our SGI machine.
+The 50 sampling iterations take about 17 minutes on our SGI machine.
 While you wait, you can check the progress of the hyperparameters
 using gp-display:
 
@@ -181,8 +181,8 @@ using gp-display:
 
     Exponential parts:
 
-          6.657
-          0.179 :      0.179      0.179
+          5.767
+          0.683 :      0.683      0.683
 
 Note that there are only two variable hyperparameters, since the
 constant and jitter parts are fixed, and the relevance hyperparameters
@@ -203,13 +203,13 @@ classification performance:
 
     Fraction of guesses that were wrong:  0.0900+-0.0203
 
-This takes about one minute on our SGI machine.  This is considerably
-slower than prediction using a network model, since a covariance
-matrix must be inverted for each iteration used (saving the inverses
-for each iteration would take up lots of disk space).  The accuracy
-achieved is about the same as the network model, which is not too 
-surprising, given that they both use a logistic function to relate
-function values to target probabilities.
+This takes about about ten seconds on our machine.  This is slower
+than prediction using a network model, since a covariance matrix must
+be inverted for each iteration used (saving the inverses for each
+iteration would take up lots of disk space).  The accuracy achieved is
+about the same as the network model, which is not too surprising,
+given that they both use a logistic function to relate function values
+to target probabilities.
 
 It is possible to define a Gaussian process model that will behave as
 what is known is statistics as a "probit" model rather than a

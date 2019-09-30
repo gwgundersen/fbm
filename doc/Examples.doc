@@ -1,33 +1,38 @@
 
 
-EXAMPLES OF BAYESIAN MODELING WITH NEURAL NETWORKS AND GAUSSIAN PROCESSES
+EXAMPLES OF BAYESIAN MODELING 
 
-This section shows how Bayesian inference for models based on neural
-networks and Gaussian processes can be done for three simple synthetic
-problems.
+This section contains examples of Bayesian modeling using this
+software on some simple synthetic problems.
 
-The output shown below was obtained by running the software on our
-machine, with ">" at the start of a line indicating a command line
-that was input.  It is possible (even likely) that your results will
-differ, even if you have installed the software correctly, since small
-differences in floating point arithmetic can be magnified into large
-differences in the course of the simulation.  However, unless one of
-the simulations became stuck in an isolated local mode, the final
-predictions you obtain from 'net-pred' for 'gp-pred' should be close
-to those reported below.
+The output shown for these examples was obtained by running the
+software on our machine, with ">" at the start of a line indicating a
+command line that was input.  It is possible (even likely) that your
+results will differ, even if you have installed the software
+correctly, since small differences in floating point arithmetic can be
+magnified into large differences in the course of the simulation.
+However, unless one of the simulations became stuck in an isolated
+local mode, the final predictions you obtain (eg, from 'net-pred' for
+'gp-pred'), and the final distributions of model parameters, should be
+close to those reported below.
 
 All the data sets mentioned here are present in the 'examples'
 sub-directory, along with the C source of the programs that generated
 them.  It is assumed below that you have changed to this directory.
 The command sequences for running the simulations that are mentioned
 below are also stored in this directory, in shell files with the names
-'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', 'ccmds.net', and
-'ccmds.gp'.
+'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.
 
 Note that the particular network architectures, priors, and Markov
-chain sampling options used below are only examples of reasonable
-choices.  There are many other possibilities that are also reasonable.
-To gain a full understanding of the various possibilities, and their
-advantages and disadvantages, you will need to read both the general
-references given earlier for these models, and the detailed
-documentation in the ".doc" files.
+chain sampling options, and so forth that are used in these examples
+are only examples of reasonable choices.  There are many other
+possibilities that would also be reasonable for these examples.  For 
+a different problem, it might well be necessary to use different
+architectures and priors.  To gain a full understanding of the various
+possibilities, and their advantages and disadvantages, you will need
+to read both the general references given earlier for these models,
+and the detailed documentation in the ".doc" files.
+
+Computation times are given for many of the examples.  These are all
+for the current version of the software, run on our computer, which is
+currently an SGI machine with 194 MHz MIPS R10000 processors.

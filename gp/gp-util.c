@@ -75,7 +75,7 @@ int gp_hyper_count
 )
 { 
   int count;
-  int l;
+  int l, i;
 
   count = 0;
 
@@ -95,7 +95,13 @@ int gp_hyper_count
   for (l = 0; l<gp->N_exp_parts; l++)
   { if (gp->exp[l].scale.alpha[0]!=0) count += 1;
     if (gp->exp[l].relevance.alpha[0]!=0) count += 1;
-    if (gp->exp[l].relevance.alpha[1]!=0) count += gp->N_inputs;
+    if (gp->exp[l].relevance.alpha[1]!=0) 
+    { for (i = 0; i<gp->N_inputs; i++)
+      { if (!(gp->exp[l].flags[i]&Flag_omit))
+        { count += 1;
+        }
+      }
+    }
   }
 
   if (m!=0 && m->type=='R') 
@@ -197,11 +203,14 @@ void gp_hyper_pointers
         log (prior_width_scaled (&gp->exp[l].relevance, gp->N_inputs));
     }
     for (i = 0; i<gp->N_inputs; i++)
-    { if (gp->exp[l].relevance.alpha[1]!=0)
-      { h->exp[l].rel[i] = b++;
+    { if (gp->exp[l].flags[i]&Flag_omit) 
+      { h->exp[l].rel[i] = 0;
+      }
+      else if (gp->exp[l].relevance.alpha[1]==0)
+      { h->exp[l].rel[i] = h->exp[l].rel_cm;
       }
       else
-      { h->exp[l].rel[i] = h->exp[l].rel_cm;
+      { h->exp[l].rel[i] = b++;
       }
     }
   }
