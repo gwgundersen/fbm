@@ -1,0 +1,539 @@
+
+
+SAMPLING FROM A RING DISTRIBUTION IN THREE DIMENSIONS
+
+I will here demonstrate a variety of Markov chain sampling methods
+using as an example a distribution that forms a ring in a space of
+three dimensions, parameterized by variables called "x", "y", and "z".
+For details on the various methods described, see mc-spec.doc.  A
+table comparing the performance of the methods on these examples is
+included at the end of this section.
+
+
+Specifying the distribution.
+
+The "ring" distribution is specified by a 'dist-spec' command such as
+the following (the "\" says the command continues on the next line):
+
+    > dist-spec glog \
+        "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
+
+Recall that the formula given to 'dist-spec' is the "energy function",
+which is minus the log probability density, plus any constant.  If the
+energy function above consisted of only the first three terms, the
+distribution would be multivariate normal, with x, y, and z being
+independent, each having mean zero and variance one.  The fourth term,
+(x+y+z)^2, leaves the distribution still normal, but squashes it in
+the direction where x, y, and z increase equally.  The final term is
+large near the origin, and from there decreases to zero symmetrically
+in all directions.  It has the effect of making a hole in the centre
+of what would otherwise have been a normal distribution, leaving a
+ring shape.
+
+The examples below are assumed to start with a 'dist-spec' command of
+the above form, except that "glog" is replaced with the name of the
+log file used for the method being demonstrated.
+
+
+Simultaneous Metropolis updates.
+
+We will first see how to sample from this distribution using a
+variation of the Metropolis algorithm in which all three state
+variables are changed simultaneously.  In the proposal distribution
+used, new values for the state variable are chosen independently, each
+from a normal distribution with mean equal to the present value, and a
+specified standard deviation.
+
+The following command specifies that 50 Metropolis operations of this
+sort should be done for each full iteration:
+
+    > mc-spec glog.met,1 repeat 50 metropolis 1 end
+
+Here, "glob.met,1" is the name of the log file to use, which would
+have been created using a 'dist-spec' command like the one above.  The
+"repeat 50 ... end" construction causes the enclosed operations to be
+repeated the given number of times.  This saves space in the log file,
+compared to doing one metropolis operation for 50 times as many
+iterations.  This is appropriate when many such operations will be
+needed to get to a substantially different point.  A similar result
+can be obtained using an extra argument to 'dist-mc' (see xxx-mc.doc),
+but using "repeat" has the advantage that one can also easily look at
+the rejection rate over the 50 repetitions.
+
+We can now sample for 500 Markov chain iterations (a total of 25,000
+metropolis updates) with the following command:
+
+    > dist-mc glog.met,1 500
+
+This takes about two seconds on our machine.  
+
+We can look at what happened to the three state variables during these
+500 iterations with a command such as
+
+    > dist-plt t xyz glog.met,1 | plot
+
+Depending on your plot program's requirements, you might instead use
+a command such as
+
+    > dist-tbl txyz glog.met,1 | plot
+
+or you might have to plot the variables one at a time, with commands
+such as
+   
+    > dist-plt t x glog.met,1 | plot
+
+From these plots, you can see that the chain quite rapidly reached the
+equilibrium distribution - maybe even by the end of the first
+iteration (ie, within the first 50 metropolis updates).  Just to be
+sure, however, let's discard the first 10 iterations as "burn-in".
+
+We can now take a look at the "ring" distribution with commands like
+
+    > dist-plt x y glog.met,1 10: | plot-points
+
+If "plot-points" plots points rather than lines, this will produce a
+scatterplot of the distribution for "x" and "y" (with "z" ignored),
+which will look like a flattened ring.  The ring is actually circular,
+but it's tilted with respect to the axes, so you'll be able to see it
+as a circle only if you have a three-dimensional plotting program.
+
+However, the plot above will probably not show points distributed
+perfectly uniformly around the ring.  Instead, there will be clumps
+here or there, which result from inadequate sampling.  The 591 points
+plotted are not independent, as can also be seen from the plots of
+"x", "y", and "z" versus "t".  To get a sample of points that are a
+good representation of the distribution using this chain, it would
+need to be run for more iterations.
+
+We can get a quantitative idea of how poor the sampling is with the
+following command:
+
+    > dist-tbl x glog.met,1 10: | series mac 30
+    
+    Number of realizations: 1  Total points: 491
+    
+    Mean: -1.069628  S.E. from correlations: 1.343061
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.930028    2.860055
+        2   0.875426    4.610908
+        3   0.817085    6.245078
+        4   0.765703    7.776485
+        5   0.723927    9.224339
+        6   0.686476   10.597291
+        7   0.655353   11.907996
+        8   0.625940   13.159877
+        9   0.590206   14.340288
+       10   0.554448   15.449185
+       11   0.517685   16.484555
+       12   0.481981   17.448517
+       13   0.440608   18.329732
+       14   0.391103   19.111937
+       15   0.342534   19.797005
+       16   0.305640   20.408286
+       17   0.258187   20.924660
+       18   0.220043   21.364747
+       19   0.186663   21.738073
+       20   0.160253   22.058580
+       21   0.130252   22.319085
+       22   0.104981   22.529047
+       23   0.084475   22.697997
+       24   0.065285   22.828567
+       25   0.052381   22.933329
+       26   0.045782   23.024892
+       27   0.033173   23.091238
+       28   0.022730   23.136698
+       29   0.015462   23.167623
+       30   0.005316   23.178255
+
+The 'dist-tbl' command above outputs a list of values for "x" for
+iterations from 10 on.  The 'series' command with options "mac" finds
+the mean of these numbers, their autocorrelations (out to lag 30
+here), and the cumulative correlations.  The cumulative correlation at
+the earliest lag past which the autocorrelations are about zero
+indicates the factor by which sampling is made inefficient by the
+correlations (here, about 23); see Ex-dist-n.doc for more details.
+
+From symmetry, we know that the true mean for "x" is zero.  The
+estimate of -1.069628 above is consistent with this, in view of the
+estimated standard error of +-1.343061.  We can also get estimates
+using 'dist-est', but as discussed in Ex-dist-n.doc, the standard
+errors it produces do not account for autocorrelation.
+
+We might try to improve the efficiency of sampling by changing the
+standard deviation of the Metropolis proposal distribution - which is
+also known as the "stepsize" for the operation.  One indication of
+whether the stepsize is appropriate is the rejection rate for the
+Metropolis operations, which can be viewed with a command such as
+
+    > dist-plt t r glog.met,1 | plot
+
+Here, the rejection rate is about 0.7, which is acceptable.  Very low
+or very high rejection rates are usually an indication that sampling
+would work better with a different stepsize.
+
+Although the stepsize of 1 that was used above appears to be OK, we
+could try a smaller stepsize with the following commands (following a
+'dist-spec' command):
+
+    > mc-spec glog.met,0.2 repeat 50 metropolis 0.2 end
+    > dist-mc glob.met,0.2 500
+
+Or we might try a larger stepsize:
+
+    > mc-spec glog.met,5 repeat 50 metropolis 5 end
+    > dist-mc glob.met,5 500
+
+If enough iterations are done, the same estimates should be obtained
+all these chains, but some stepsizes will produce a more efficient
+chain than others.  By examining plots of how the state variables
+change, and looking at the autocorrelations with 'series', one can
+conclude that sampling is much less efficient with a stepsize of 0.2
+than with a stepsize of 1 (about five times less efficient, based on
+cumulative correlations).  With a stepsize of 5, the sampling is about
+as good as with a stepsize of 1, even though the rejection rate is
+quite high.  This is a phenomenon that occurs only in problems with an
+effective dimensionality of three or less - for higher-dimensional
+problems, a rejection rate close to one is generally an indication of
+poor sampling.
+
+
+Single-variable Metropolis updates.
+
+We can also try sampling using Metropolis updates that change only one
+variable at a time.  This is done using "met-1" operations, specified
+as follows:
+
+    > mc-spec glog.met1,1 repeat 18 met-1 1 end
+
+As with "metropolis" operations, we specify a "stepsize", which is the
+standard deviation for proposed change to a variable.  Each "met-1"
+operation tries to change each variable in turn, accepting or
+rejecting the change based on the change in energy as a result of
+making the proposed change to just that variable.  Since there are
+three state variables for this distribution, a single "met-1"
+operation must therefore calculate the energy three times, and hence
+takes about three times as long as a "metropolis" operation.  To
+facilitate comparisons, the repeat count is corresponding less in this
+specification.
+
+As before, can now sample for 500 iterations using a 'dist-mc' command:
+
+    > dist-mc glog.met1,1 500
+
+On our machine, this also takes about two seconds (as will all such
+commands in this section).
+
+You can see how well this method samples in the same ways as discussed
+above.  You could also try sampling using "met-1" with a stepsize of
+0.2 and 5.  You should see that the rejection rate with "met-1" is
+lower than with "metropolis" operations using the same stepsize.
+Nevertheless, sampling from this distribution seems to be less
+efficient with "met-1" than with "metropolis", drastically so when the
+stepsize is 0.2 or 5.  This is not always so, however.  For
+distributions where at least some of the variables are close to being
+independent, updating one variable at a time can be more efficient.
+It is also sometimes possible to save computation time when
+recomputing the energy after a change to just one variable, though
+that possibility is not presently exploited by this software.
+
+
+Single-variable slice sampling.
+
+Variables can also be updated one at a time is using single-variable
+slice sampling, which is described in my tech report on "Markov chain
+Monte Carlo methods based on `slicing' the distribution" (available
+from my web page).  Several variations on this procedure are
+implemented in this software.  The method in which the slice is found
+by "stepping out" can be done as follows:
+
+    > mc-spec glog.slc1,1 repeat 4 slice-1 1 end
+    > dist-mc glog.slc1,1 500
+
+This does single-variable slice sampling using an initial interval of
+size 1, which is extended in steps of the same size until both ends
+are outside the slice.  The "doubling" procedure is also implemented,
+but is not illustrated here.
+
+The "e" quantity records the average number of energy function
+evaluations done in the slice sampling updates for one iteration.
+We can find the average of this quantity over all iterations with
+a command such as
+
+    > dist-tbl e glog.slc1,1 | series m
+
+    Number of realizations: 1  Total points: 500
+
+    Mean: 5.406000  
+
+Note that 5.406 is the average number of evaluations for updating one
+variable, not for updating all three of them.
+
+As with the Metropolis methods, performance varies with the stepsize
+chosen.  However, one advantage of single-variable slice sampling is
+that it is a bit less sensitive to the choice of stepsize than the
+single-variable Metropolis algorithm.
+
+
+Sampling with Hamiltonian dynamics.
+
+It is possible to sample much more efficiently by suppressing the
+random walk behaviour that the methods above all exhibit.  One way of
+doing this is by adding "momentum" variables, which will keep the
+state moving in the same direction for an extended period of time.
+The original "position" variables along with these "momentum"
+variables can be updated by applying Hamiltonian dynamics for some
+period of fictitious time, implemented by performing some number of
+"leapfrog" steps with a specified stepsize.  To produce an ergodic
+Markov chain, the momentum should also be changed using "heatbath"
+updates, but it should not be changed too quickly, as this will
+re-introduce random walk behaviour.  For a detailed discussion of this
+"stochastic dynamics" method, see my book, Bayesian Learning for
+Neural Networks, or my review paper, Probabilistic Inference Using
+Markov Chain Monte Carlo Methods.
+
+We can try out this dynamical method as follows:
+
+    > mc-spec glog.dyn,0.3 repeat 40 heatbath 0.98 dynamic 1 0.3 end
+    > dist-mc glog.dyn,0.3 500
+
+The argument of "heatbath" is the factor by which to multiply the old
+momentum variables (after which noise is added).  A value of 1-d
+results in random walks being suppressed for around 1/d iterations.
+
+If you now look at the state variables with a command such as
+
+    > dist-plt t xyz glog.dyn,0.3 | plot
+
+you will see that they are initially far from their stationary
+distribution, but after about 50 iterations they settle down, and from
+there on the chain samples very well.  The initial behaviour of the
+chain can be understood by looking at what is happening to the the
+"kinetic energy", which is half the sum of squares of the momentum
+variables:
+
+    > dist-plt t K glog.dyn,0.3 | plot
+
+Initially, the kinetic energy (as well as the "potential" energy,
+which is what is specified in 'dist-spec') is very large.  It is only
+slowly dissipated, as a result of the "heatbath" updates of the
+momentum variables.  Eventually, however, the kinetic energy reaches
+its equilibrium distribution (around a value of 3/2), and the chain
+samples from approximately the desired distribution. 
+
+This method is not exact, however, because the Hamiltonian dynamics is
+simulated inexactly, biasing the results.  The hybrid Monte Carlo
+method eliminates this bias by a using an acceptance test.
+
+
+Hybrid Monte Carlo.
+
+Several variations of the hybrid Monte Carlo method are supported by
+this software.  In the "standard" method, each iteration starts by
+picking completely new values for the momentum variables with the
+"heatbath" operation.  Hamiltonian dynamics is then simulated for some
+number of leapfrog steps, using some specified stepsize, and the
+end-point of the simulated trajectory is accepted or rejected based on
+the change in the total energy.  
+
+The following commands apply the standard hybrid Monte Carlo method,
+using trajectories of 45 leapfrog steps, done with a stepsize of 0.3.
+To avoid problems with large initial energies, a few Metropolis
+updates are done at the beginning.
+
+    > mc-spec glog.hmc,0.3 repeat 50 metropolis 1
+    > dist-mc glog.hmc,0.3 1
+    > mc-spec glog.hmc,0.3 heatbath hybrid 45 0.3
+    > dist-mc glog.hmc,0.3 500
+
+The length of the trajectory should be chosen based on the number of
+steps for which we want to suppress random walks - longer for more
+difficult problems where it takes many steps to get from one end of
+the distribution to the other.
+
+As with the Metropolis methods, you can check the rejection rate with
+a command such as the following (the 2: causes the first iteration,
+which consisted of Metropolis updates, to be excluded):
+
+    > dist-tbl r glog.hmc,0.3 2: | series m
+
+    Number of realizations: 1  Total points: 500
+
+    Mean: 0.042084
+
+It is also useful to look at the changes in energy on which the
+decisions to accept or reject were made:
+
+    > dist-plt t D glog.hmc,0.3 2: | plot-points
+
+If most of these points are much greater than one, the rejection rate
+will be high.  With a stepsize of 0.3, the change in energy is seldom
+greater than 0.5, but if the stepsize is increased to 0.8 much larger
+changes are often seen, and with a stepsize of 1, almost no
+trajectories are accepted.  
+
+We can see how well the chain is sampling by plotting the state
+variables, as described above, and by looking at the autocorrelations,
+with a command such as:
+
+    > dist-tbl x glog.hmc,0.3 10: | series mac 10
+
+    Number of realizations: 1  Total points: 491
+    
+    Mean: 0.588512  S.E. from correlations: 0.437857
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.406767    1.813534
+        2   0.141586    2.096707
+        3   0.036505    2.169716
+        4   0.002760    2.175236
+        5  -0.001138    2.172961
+        6   0.031450    2.235860
+        7  -0.005979    2.223903
+        8  -0.006971    2.209960
+        9  -0.022040    2.165880
+       10  -0.064142    2.037595
+
+From the cumulative correlations, we can estimate that estimating the
+expectation of "x" using points from this chain is a factor of only
+about 2.2 less efficient than using independent points.  This is about
+ten times better than the best of the chains described above.
+
+On the other hand, we have seen that some care is needed to pick an
+appropriate stepsize for hybrid Monte Carlo, and it is also often
+necessary to start at a reasonably good point, as was done here by
+doing a few Metropolis updates at the beginning.
+
+The "persistent" form of hybrid Monte Carlo (described in Bayesian
+Learning for Neural Networks) is also implemented.  Here are the
+appropriate commands:
+
+    > mc-spec glog.phmc,0.3 repeat 50 metropolis 1
+    > dist-mc glog.phmc,0.3 1
+    > mc-spec glog.phmc,0.3 repeat 35 heatbath 0.99 hybrid 1 0.3 negate end
+    > dist-mc glog.phmc,0.3 500
+
+The use of a "heatbath" operation with a non-zero "decay" causes the
+momentum to change only slowly.  Because of this, even though only a
+single leapfrog update is done, random walk behaviour will still be
+suppressed.  The "negate" operation negates the momentum, which
+normally undoes a negation at the end of the "hybrid" operation.  If
+the "hybrid" update was rejected, however, the first negation will not
+have been done, and movement will be reversed, undermining the random
+walk suppression.  To avoid this, a smaller stepsize is used, to keep
+the rejection rate very small.
+
+
+Reflective slice sampling.
+
+Another way of avoiding random walks is to apply slice sampling to all
+variables at once, and to sample from within the multivariate slice by
+a sort of dynamical method that proceeds at a constant speed while
+reflecting off the boundaries of the slice.  We would rather not
+compute these boundaries exactly, however.  Instead, we can proceed in
+steps of some size and when we cross the boundary reflect at either
+the last inside point or the first outside point.  These reflection
+operations are based on the gradient of the energy at that point.
+
+Slice sampling with reflection from the last inside point is done as
+follows:
+
+    > mc-spec glog.slci,0.3 heatbath slice-inside 35 0.3
+    > dist-mc glog.slci,0.3 500
+
+The "heatbath" operation picks a random momentum vector, which sets
+the speed of motion and the initial direction.  We then find the slice
+and take 35 steps within the slice with that velocity, using a
+stepsize of 0.3 (ie, the change in the state at each step is 0.3 times
+the momentum vector).  If a step takes us from inside the slice to
+outside the slice, we backtrack, and change the momentum vector by
+reflection based on the gradient.  It is necessary to check that this
+reflection would also occur in the reversed trajectory; if not, we
+must reject by negating the momentum, causing further steps to retrace
+the trajectory.  Rejections will be less frequent if the stepsize is
+small.
+
+Slice sampling with outside reflection is done as follows:
+
+    > mc-spec glog.slco,0.3 heatbath slice-outside 45 0.3 
+    > dist-mc glog.slco,0.3 500
+
+This method operates as described for inside reflection, except that
+when a step ends at a point outside the slice, we stay there, but
+reflect based on the gradient at that point.  If the final point is
+inside the slice, we accept it.  Otherwise we reject, and return to
+the point from which the trajectory started.  
+
+Both inside and outside reflection work reasonably well for this
+distribution - not quite as good as hybrid Monte Carlo, but better
+than the other methods.
+
+
+Overrelaxed slice sampling.
+
+Random walks can also be suppressed for some distributions using
+single-variable slice sampling with "overrelaxation", in which
+variables are changed from their current point to the corresponding
+point on the "other side" of their conditional distribution.  This can
+be done with the following commands:
+
+    > mc-spec glog.slcv,0.3 slice-over 8 0.1 0.3 
+    > dist-mc glog.slcv,0.3 500
+
+The first argument of "slice-over" is the number of "refinements" used
+to more accurately pin down the end-points of the slice (using
+bisection).  More refinements result in an update that is closer to an
+ideal overrelaxed update, and also reduces the probability of
+rejection (caused by the overrelaxed point being outside the slice).
+The second argument specifies the probability of doing an ordinary
+single-variable slice sampling update rather than an overrelaxed one.
+Occasional ordinary updates are necessary in order to ensure
+ergodicity, but they should not be done too often if random walks are
+to be suppressed.  The final argument is the stepsize to use when
+finding the endpoints of the slice initially.
+
+For this distribution, overrelaxation does not work as well as the
+dynamical methods or reflective slice sampling, but it is effective
+for some other distributions.
+
+
+Performance summary.
+
+The following table summarizes the inefficiency factor for estimating
+the expectation of the "x" variable using the various methods,
+determined from estimates of the cumulative correlations.  The
+repetition counts for the methods were set so that they all required
+about 2 seconds of computation time for 500 iterations.
+
+  METHOD      STEPSIZE   CUM.CORR.  NOTES
+
+  metropolis     0.2        122
+                  1          23
+                  5          20
+
+  met-1          0.2        460     Cum. corr. estimated using 2000 iterations
+                  1          55
+                  5         118
+
+  slice-1        0.2         77     Computation times had to be a bit greater 
+                  1          32      than 2s for the slice sampling methods, as
+                  5          62      the repetition count has to be an integer
+
+  dynamic        0.3        3.3     This method is not exact
+
+  hybrid (HMC)   0.3        2.2
+
+  persistent HMC 0.18         9
+
+  slice-inside   0.3         11
+  
+  slice-outside  0.3          4
+
+  slice-over      2          28
+
+The relative performance of the different methods will of course be
+somewhat different for different distributions, but large gains from
+using hybrid Monte Carlo (HMC) or other methods that suppress random
+walks are common.

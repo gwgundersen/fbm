@@ -1,0 +1,13 @@
+
+# These commands sample from the posterior distribution for the linear
+# regression problem using the Metropolis algorithm.
+
+dist-spec rlog.met \
+  "u ~ Normal(0,10^2) + w0 ~ Normal(0,10^2) + w1 ~ Normal(0,10^2) \
+      + v ~ ExpGamma(1,0.2)" \
+  "t ~ Normal (u + w0i0 + w1i1, Exp(-v))"
+
+data-spec rlog.met 2 1 / rdata .
+
+mc-spec rlog.met repeat 45 metropolis 0.02
+dist-mc rlog.met 500

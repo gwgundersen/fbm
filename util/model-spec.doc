@@ -25,10 +25,10 @@ or:
 The second form displays the existing specification stored in the log
 file, if any.
 
-The first form appends a specification to the log file, which must
-not contain any iteratons yet.  If model-spec is invoked more than
-once, the last specification is used.  The model is described by
-one or more arguments after the log file argument.
+The first form appends a specification to the log file, which must not
+contain any iterations yet.  If model-spec is invoked more than once,
+the last specification is used.  The model is described by one or more
+arguments after the log file argument.
 
 
 Regression for real-valued targets.
@@ -126,6 +126,6 @@ single target.  Negative values of the target are interpreted as
 censored values (with observation stopping at the time given by the
 target's absolute value).
 
-Survival models are not implemented for Gaussian proceses.
+Survival models are not implemented for Gaussian processes.
 
             Copyright (c) 1995, 1996, 1997 by Radford M. Neal

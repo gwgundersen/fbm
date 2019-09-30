@@ -55,28 +55,41 @@ void mc_available
 )
 { 
   int mod, low;
+  char letter;
   int i;
 
   for (i = 0; i<Max_quantities; i++)
   {
-    if (qd[i].letter && qd[i].available==0)
-    {
-      low = qd[i].low;
-      mod = qd[i].modifier;
+    letter = qd[i].letter;
+    low = qd[i].low;
+    mod = qd[i].modifier;
 
-      if (strchr("TEKHDdfFmrekiIjJ",qd[i].letter)!=0)
-      { qd[i].available = low==-1 && (mod==-1 || qd[i].letter=='D') ? 1 : -1;
+    if (letter && qd[i].available==0 && (strchr("iIT",letter)==0 || mod==-1))
+    {
+      if (strchr("QEKHDdfmrekjJ",letter)!=0)
+      { qd[i].available = 
+          low==-1 && (mod==-1 || letter=='E' && (mod==0 || mod==1)
+                              || letter=='D' || letter=='Q')
+          ? 1 : -1;
       }
 
-      if (qd[i].letter=='q')
+      if (strchr("iIT",letter)!=0 && mod==-1)
+      { qd[i].available = low==-1 ? 1 : -1;
+      }
+
+      if (letter=='F')
+      { qd[i].available = low==-1 && (mod==1 || mod==2) ? 1 : -1;
+      }
+
+      if (letter=='q')
       { qd[i].available = low==-1 && mod>=0 && mod<ds.dim ? 1 : -1;
       }
 
-      if (qd[i].letter=='s')
+      if (letter=='s')
       { qd[i].available = low==-1 && mod>=0 && mod<ds.dim ? 1 : -1;
       }
   
-      if (qd[i].letter=='p')
+      if (letter=='p')
       { qd[i].available = low==-1 && mod>=0 && mod<ds.dim ? 1 : -1;
       }
     }
@@ -93,6 +106,7 @@ void mc_evaluate
 )
 { 
   mc_iter *it;
+  char letter;
   int mod;
   int i;
   
@@ -105,11 +119,12 @@ void mc_evaluate
   
   for (i = 0; i<Max_quantities; i++)
   {
-    if (qd[i].letter && !qh->updated[i])
-    {
-      mod = qd[i].modifier;
+    letter = qd[i].letter;
+    mod = qd[i].modifier;
 
-      switch (qd[i].letter)
+    if (letter && !qh->updated[i] && (strchr("iIT",letter)==0 || mod==-1))
+    {
+      switch (letter)
       {
         case 'T':
         { if (it==0 || logg->index['i']!=logg->last_index) break;
@@ -119,11 +134,24 @@ void mc_evaluate
         }
 
         case 'E':
-        { if (!ds.know_pot)
+        { if (!ds.know_pot && mod!=0)
           { mc_app_energy (&ds, 1, 1, &ds.pot_energy, (mc_value *) 0);
             ds.know_pot = 1;
           }
-          *qh->value[i] = ds.pot_energy;
+          if (mod==0 || mod==1)
+          { mc_temp_state ts0, *ts1;
+            ts0.inv_temp = 0;
+            ts1 = ds.temp_state;
+            ds.temp_state = &ts0;
+            mc_app_energy (&ds, 1, 1, qh->value[i], 0);
+            ds.temp_state = ts1;
+          }
+          if (mod==1)
+          { *qh->value[i] = ds.pot_energy - *qh->value[i];
+          }
+          if (mod==-1)
+          { *qh->value[i] = ds.pot_energy;
+          }
           qh->updated[i] = 1;
           break;
         }
@@ -148,6 +176,19 @@ void mc_evaluate
             ds.know_kinetic = 1;
           }
           *qh->value[i] = ds.pot_energy + ds.kinetic_energy;
+          qh->updated[i] = 1;
+          break;
+        }
+
+        case 'Q':
+        { if (it==0 || logg->index['i']!=logg->last_index) break;
+          if (mod<0)
+          { *qh->value[i] = exp(it->log_weight);
+          }
+          else
+          { *qh->value[i] = 
+              mod==0 || it->log_weight>=-mod ? it->log_weight : -mod;
+          }
           qh->updated[i] = 1;
           break;
         }
@@ -243,7 +284,8 @@ void mc_evaluate
   
         case 'F':
         { if (it==0 || logg->index['i']!=logg->last_index) break;
-          *qh->value[i] = it->stepsize_factor/2;
+          *qh->value[i] = mod==1 ? exp(it->log_tt_weight)
+                                 : exp(it->log_tt_weight2);
           qh->updated[i] = 1;
           break;
         }

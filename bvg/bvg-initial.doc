@@ -1,0 +1,13 @@
+
+
+BVG-INITIAL:  Set initial state for sampling from a bivariate Gaussian.
+
+Usage:
+
+    bvg-initial log-file value-1 value-2 { value-1 value-2 }
+
+Writes a record with index 0 to the log file, containing the specified
+values for the state variables (values after the first two are needed
+only if replication was specified).
+
+            Copyright (c) 1997 by Radford M. Neal

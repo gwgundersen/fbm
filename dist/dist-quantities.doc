@@ -1,0 +1,46 @@
+
+
+DIST-QUANTITIES:  Quantities defined for a specified distribution.
+
+The plot and histogram programs used with the 'dist' programs,
+dist-plt and dist-hist, have the generic facilities documented in
+xxx-plt.doc and xxx-hist.doc.  In addition to the generic quantities
+(see quantities.doc) and the Markov chain quantities (see
+mc-quantities.doc), these programs can also reference the state
+variables for the specified distribution, under the names used in
+dist-spec.  Furthermore, if the distribution is a Bayesian posterior,
+the following quantities are defined:
+
+    P    Log of the prior probability of the parameters.
+
+    l    Array of minus log probabilities for training cases, 
+         obtained from the likelihood formula.  If not specified 
+         to be an array, the average minus log probability over 
+         training cases.
+
+    in   Array of containing the n'th input for the training cases.
+
+    tn   Array of containing the n'th target for the training cases.
+
+Note that n is required for in and tn above - without it, they mean
+entirely different things (see quantities.doc and mc-quantities.doc).
+Note that, for historical reasons, 'P' is the log probability, but 
+'l' is minus the log probability.
+
+For example, if the distribution was specified by
+
+    > dist-spec log "x1^2 + x2^2 + w^2"
+
+then after dist-mc was run, the quantities x1, x2 and w could be
+plotted using a command such as
+
+    > dist-plt t x1x2w log | plot
+
+If the distribution is a Bayesian posterior, the command
+
+    > dist-plt t t2@0:9 log | plot
+
+will plot target number 2 (numbered starting at 0) for the first ten
+observations. 
+
+            Copyright (c) 1998 by Radford M. Neal

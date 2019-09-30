@@ -85,7 +85,13 @@ int gp_hyper_count
 
   if (gp->has_linear) 
   { if (gp->linear.alpha[0]!=0) count += 1;
-    if (gp->linear.alpha[1]!=0) count += gp->N_inputs;
+    if (gp->linear.alpha[1]!=0) 
+    { for (i = 0; i<gp->N_inputs; i++)
+      { if (!(gp->linear_flags[i]&Flag_omit))
+        { count += 1;
+        }
+      }
+    }
   }
 
   if (gp->has_jitter)
@@ -162,7 +168,10 @@ void gp_hyper_pointers
       h->const_linear = log(prior_width_scaled(&gp->linear,gp->N_inputs));
     }
     for (i = 0; i<gp->N_inputs; i++)
-    { if (gp->linear.alpha[1]!=0)
+    { if (gp->linear_flags[i]&Flag_omit)
+      { h->linear[i] = 0;
+      }
+      else if (gp->linear.alpha[1]!=0)
       { h->linear[i] = b++;
       }
       else

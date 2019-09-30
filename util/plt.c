@@ -1,6 +1,6 @@
 /* PLT.C - Skeleton of program to plot quantities obtained from a log file. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -27,6 +27,8 @@
    quantities obtained from a log file to standard output, in a form 
    suitable for plotting.  (This program does not actually invoke a plot 
    program, however.) */
+
+enum { PLT, TBL, HIST } program_type = PLT;
 
 
 /* DISPLAY USAGE MESSAGE AND EXIT.  The plt_usage procedure must be defined 
@@ -218,7 +220,7 @@ void main
         p_x = qh->value[0]      + (V_on_x==1 ? 0 : v);
         p_y = qh->value[N_on_x] + (V_on_y==1 ? 0 : v);
  
-        printf("%20.8le %20.8le\n",*p_x,*p_y);
+        printf("%20.8e %20.8e\n",*p_x,*p_y);
       }
     }
 

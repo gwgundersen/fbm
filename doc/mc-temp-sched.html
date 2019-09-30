@@ -5,37 +5,60 @@
 
 MC-TEMP-SCHED:  Specify temperature schedule for tempering methods.
 
+The mc-temp-sched command is used to specify a "tempering" or
+"annealing" schedule, which defines a sequence of distributions in
+which a "temperature" parameter changes.  The schedule is used when
+sampling using simulated tempering, tempered transitions, and annealed
+importance sampling.  The usual distribution is obtained when the
+"temperature" is one.  The effect of a temperature other than one
+depends on the particular application.  Some applications may ignore
+the temperature.
+
 Usage:
 
-    mc-temp-sched log-file { inv-temp[@bias][:n] }
+    mc-temp-sched log-file { inv-temp[@bias][:[+]n] }
+
+or:
+
+    mc-temp-sched log-file -
   
 or:
 
     mc-temp-sched log-file 
 
-The first form appends a tempering schedule to a log file, which must
-already exist, but not have iterations stored yet.  For the second
-form, the schedule stored in the log file is displayed.
+The first two forms append a tempering schedule to a log file, which
+must already exist, but not have iterations stored yet.  For the
+second form, the schedule stored in the log file is displayed.
 
 A schedule consists of one or more inverse "temperatures", in the
 interval [0,1), which are normally monotonically increasing.  An
 inverse temperature can be specified directly, or in the form "/temp",
 with "temp" being the non-inverse temperature.  A final temperature of
-1 is automatically added at the end of the list.  With each
-temperature may optionally be associated a "bias", which is added to
-the energy of states at that temperature when simulated tempering is
-done.  The default bias is zero, as is that for the final temperature
-of one.
+1 is automatically added at the end of the list.  The second form of
+the command above, with a single argument of "-" after the log file,
+specifies a schedule consisting only of this final temperature.
+
+With each temperature may optionally be associated a "bias", which is
+added to the energy of states at that temperature when simulated
+tempering is done.  The default bias is zero, as is that for the final
+temperature of one.
 
 An argument with a colon represents a set of n temperatures/biases
 starting with that given and continuing up to but not including the
 next temperature specified (or up to a temperature of one if the
-argument is the last).  The temperatures are interpolated geometrically, 
-the biases linearly.  For example, the two arguments "/16@20:2" and
-"/4@10" give the same results as the three arguments "/16@20",
-"/8@15", and "/4@10".
+argument is the last).  The biases are interpolated arithmetically.
+If the number of temperatures immediately follows the colon, the
+temperatures are interpolated geometrically; If a "+" follows the
+colon, they are interpolated arithmetically.  For example, the two
+arguments "/16@20:2" and "/4@10" give the same results as the three
+arguments "/16@20 /8@15 /4@10", and the single argument "0:+4" is the
+same as the four arguments "0 0.25 0.5 0.75".
 
-            Copyright (c) 1995 by Radford M. Neal
+When the tempering schedule is displayed, the schedule is listed in
+detail (expanding any specified series), with both the inverse and
+the non-inverse forms of the temperature.
+
+            Copyright (c) 1995, 1998 by Radford M. Neal
 </pre>
 </body>
 </html>

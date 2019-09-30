@@ -143,14 +143,14 @@ void main
       { printf("\n  Hidden adjustments: ");
         for (l = 0; l<a->N_layers; l++)
         { if (p->ah[l]==0) printf(" -");
-          else             printf(" %.2lf",p->ah[l]);
+          else             printf(" %.2f",p->ah[l]);
         }
       }
 
       if (a->has_ao)
       { printf("\n  Output adjustments: ");
         if (p->ao==0) printf(" -");
-        else          printf(" %.2lf",p->ao);
+        else          printf(" %.2f",p->ao);
       }
       printf("\n");
     }

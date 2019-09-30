@@ -14,11 +14,11 @@
 include ../make.include
 
 programs:	mix-spec mix-gen mix-display mix-cases mix-mc \
-		mix-plt mix-hist 
+		mix-plt mix-tbl mix-hist 
 
 clean:
 	rm -f *.o mix-spec mix-gen mix-display mix-cases mix-mc \
-	          mix-plt mix-hist 
+	          mix-plt mix-tbl mix-hist 
 
 
 include ../util/util.make
@@ -53,6 +53,17 @@ mix-cases:	mix-cases.o	mix-util.o mix-data.o mix-print.o prior.o \
 
 mix-cases.o:	mix-cases.c	misc.h prior.h model.h log.h data.h rand.h \
 				mix.h mix-data.h
+
+mix-tbl:	mix-plt.o	mix-mc.o mix-util.o prior.o mix-data.o model.o \
+				mix-quantities.o \
+				mc-quantities.o mc-util.o tbl.o quantities.o \
+				misc.o log.o rand.o numin.o data-trans.o \
+				ars.o
+		$(CC) $(LFLAGS) mix-plt.o mix-util.o mix-mc.o prior.o \
+		  mix-data.o model.o mix-quantities.o \
+		  mc-quantities.o mc-util.o tbl.o quantities.o \
+		  misc.o log.o rand.o numin.o data-trans.o ars.o \
+		  -lm -o mix-tbl
 
 mix-plt:	mix-plt.o	mix-mc.o mix-util.o prior.o mix-data.o model.o \
 				mix-quantities.o \

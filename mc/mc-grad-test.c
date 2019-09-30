@@ -23,6 +23,11 @@
 #include "mc.h"
 
 
+/* THE FOLLOWING IS NEEED BY THE PLOTTING ROUTINES. */
+
+enum { PLT, TBL, HIST } program_type;
+
+
 /* MAIN PROGRAM. */
 
 void main
@@ -116,7 +121,7 @@ void main
 
   printf("\nComparison of computed gradient with finite differences\n\n");
 
-  printf("Log file: %s  Index: %d  Delta: %.6lf  Energy: %.2lf\n\n",
+  printf("Log file: %s  Index: %d  Delta: %.6f  Energy: %.2f\n\n",
           logf.file_name, index, delta, E);
 
   printf(
@@ -129,7 +134,7 @@ void main
   { 
     double r, lr;
 
-    printf ("%6d %+7.2lf   %+11.4le  %+11.4le   %+11.4le  %+11.4le", 
+    printf ("%6d %+7.2f   %+11.4e  %+11.4e   %+11.4e  %+11.4e", 
             i, ds.q[i], EF[i]-E, E-EB[i], (EF[i]-EB[i])/delta, grad[i]);
 
     r = ((EF[i]-EB[i])/delta) / grad[i];
@@ -139,14 +144,14 @@ void main
     }
     else
     { lr = log(r);
-      printf("   %+8.4lf\n", lr);
+      printf("   %+8.4f\n", lr);
       if (lr<0) lr = -lr;
       if (lr>maxlr) maxlr = lr;
     }
   }
 
   if (negr) printf("\nLargest absolute log ratio: ********\n\n");
-  else      printf("\nLargest absolute log ratio: %.4lf\n\n",maxlr);
+  else      printf("\nLargest absolute log ratio: %.4f\n\n",maxlr);
 
   exit(0);
 }

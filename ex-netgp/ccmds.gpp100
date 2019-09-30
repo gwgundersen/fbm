@@ -1,0 +1,14 @@
+
+# Commands to apply a Gaussian process model to a 3-way classification problem,
+# with only 100 training cases, using a probit-like model (with lots of jitter).
+
+gp-spec clog.gpp100 4 3 10 - 10 / 0.05:0.5 x0.2:0.5:1
+model-spec clog.gpp100 class
+
+data-spec clog.gpp100 4 1 3 / cdata@1:100 . cdata@401:1000 .
+
+gp-gen clog.gpp100 fix 0.5 1
+mc-spec clog.gpp100 repeat 5 scan-values 100 heatbath 0.9 hybrid 1 0.5 negate
+gp-mc clog.gpp100 5
+mc-spec clog.gpp100 repeat 5 scan-values 100 heatbath 0.98 hybrid 1 0.5 negate
+gp-mc clog.gpp100 100

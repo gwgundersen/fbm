@@ -13,8 +13,8 @@
  */
 
 
-#define Max_inputs 200		/* Maximum number of "input" values allowed */
-#define Max_targets 20		/* Maximum number of "target" values allowed */
+#define Max_inputs 200	/* Maximum number of "input" values allowed */
+#define Max_targets 20	/* Maximum number of "target" values allowed */
 
 
 /* DESCRIPTION OF A DATA TRANSFORMATION.  This record describes how to 

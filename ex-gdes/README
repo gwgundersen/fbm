@@ -1,0 +1,5 @@
+This directory contains data and command files examples of neural
+network learning using gradient descent, with or without early
+stopping and ensembles.  The bdata.train and bdata.test files are
+derived from ex-netgp/bdata, by splitting it into 300 training and 200
+test cases.

@@ -1,6 +1,6 @@
 /* BVG-PLT.C - Procedures used to plot data on bivariate Gaussian simulation. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -23,6 +23,11 @@
 #include "quantities.h"
 #include "mc.h"
 #include "bvg.h"
+
+
+/* WHAT PROGRAM WE'RE PART OF. */
+
+extern enum { PLT, TBL, HIST } program_type;
 
 
 /* CONSTANT PI.  Defined here if not in <math.h>. */
@@ -81,13 +86,14 @@ void (*quant_app_cleanup[]) (void) =
 };
 
 
-/* LOOK AT APPLICATON-SPECIFIC ARGUMENTS.  Only valid argument is "ellipse". */
+/* LOOK AT APPLICATON-SPECIFIC ARGUMENTS.  Only valid argument is "ellipse",
+   and it's valid only for the plot program. */
 
 static void bvg_arguments
 ( char ***argvp
 )
 {
-  if (**argvp!=0 && strcmp(**argvp,"ellipse")==0)
+  if (program_type==PLT && **argvp!=0 && strcmp(**argvp,"ellipse")==0)
   { 
     ellipse = 1;
     *argvp += 1;
@@ -128,8 +134,8 @@ static void bvg_initialize
       x = a * cos(2.0*M_PI*i/N_segments);
       y = b * sin(2.0*M_PI*i/N_segments);
 
-      printf ("%.6le %.6le\n", bs->std1*(x-y)/sqrt(2.0), 
-                               bs->std2*(x+y)/sqrt(2.0));
+      printf ("%.6e %.6e\n", bs->std1*(x-y)/sqrt(2.0), 
+                             bs->std2*(x+y)/sqrt(2.0));
     }
 
     printf("\n");
@@ -144,5 +150,10 @@ void plt_usage
 ( char *str
 )
 { 
-  fprintf(stderr,"Usage: bvg-%s [ / \"ellipse\" ]\n",str);
+  if (program_type==PLT)
+  { fprintf(stderr,"Usage: bvg-%s [ / \"ellipse\" ]\n",str);
+  }
+  else
+  { fprintf(stderr,"Usage: bvg-%s\n",str);
+  }
 }

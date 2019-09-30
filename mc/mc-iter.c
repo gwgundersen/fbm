@@ -1,6 +1,6 @@
 /* MC-ITER.C - Procedures for performing Markov chain Monte Carlo iterations. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -241,6 +241,8 @@ void mc_iteration
   it->stepsize_factor = 1.0;
   it->move_point = 0;
   it->delta = 0.0;
+  it->log_tt_weight = 1e30;
+  it->log_tt_weight2 = 1e30;
 
   /* Set approximation order, usually superseded by a permute call. */
 
@@ -352,8 +354,9 @@ static void do_group
       }
 
       case 'B':
-      { mc_heatbath (ds, it->temperature, 
-                     it->decay>=0 ? it->decay : ops->op[i].heatbath_decay);
+      { double d;
+        d = it->decay>=0 ? it->decay : ops->op[i].heatbath_decay;
+        mc_heatbath (ds, it->temperature, d);
         break;
       }
 
@@ -452,6 +455,43 @@ static void do_group
         break;
       }
 
+      case 'a':
+      {
+        double old_energy;
+
+        mc_temp_present(ds,sch);
+
+        if (ds->temp_index<0 || ds->temp_index>Max_temps) abort();
+
+        if (ds->temp_state->inv_temp==1)
+        { if (!mc_app_zero_gen(ds))
+          { fprintf(stderr,"Application doesn't support use of AIS\n");
+            exit(1);
+          }
+          ds->temp_state->inv_temp = 0;
+          mc_app_energy (ds, 1, 1, &old_energy, 0);
+          ds->temp_index = 0;
+          it->log_weight = 0;
+        }
+        else
+        { if (!ds->know_pot) mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
+          old_energy = ds->pot_energy;
+          ds->temp_index += 1;
+        }
+
+        ds->temp_state->inv_temp = sch->sched[ds->temp_index].inv_temp;
+
+        mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
+        ds->know_pot = 1;
+        ds->know_grad = 0;
+
+        it->log_weight += old_energy - ds->pot_energy;
+
+        have_ss = 0;
+
+        break;
+      }
+
       case 'p':
       { quantities_held *qh;
         int v;
@@ -466,7 +506,7 @@ static void do_group
         qh = quantities_storage(qd);
         quantities_evaluate(qd,qh,logg);
         for (v = 0; v<N_quantities; v++) 
-        { printf(" %20.8le",*qh->value[v]);
+        { printf(" %20.8e",*qh->value[v]);
         }
         printf("\n");
         print_index += 1;
@@ -476,7 +516,8 @@ static void do_group
       }
 
       case 'A':
-      { if (!mc_app_sample (ds, ops->op[i].appl, ops->op[i].app_param, it))
+      { if (!mc_app_sample (ds, ops->op[i].appl, ops->op[i].app_param, 
+                            ops->op[i].app_param2, it, sch))
         { fprintf(stderr,"Unknown application-specific operation: %s\n",
             ops->op[i].appl);
           exit(1);
@@ -513,11 +554,6 @@ void mc_simulated_tempering
 )
 {
   double old_energy, olde, newe;
-
-  if (sch==0)
-  { fprintf(stderr,"No tempering schedule has been specified\n");
-    exit(1);
-  }
 
   mc_temp_present(ds,sch);
 
@@ -635,6 +671,7 @@ void mc_tempered_transition
     {
       if (ds->temp_index==0)
       { ds->temp_state->temp_dir = +1;
+        it->log_tt_weight = -delta;
       }
       else
       { ed = mc_energy_diff(ds,sch,ds->temp_state->temp_dir);
@@ -663,8 +700,8 @@ void mc_tempered_transition
       { printf("\n");
       }
       else 
-      { printf(" %12.10lf %20.10le\n", b1, ed/(b2-b1));
-        printf(" %12.10lf %20.10le\n", b2, ed/(b2-b1));
+      { printf(" %12.10f %20.10e\n", b1, ed/(b2-b1));
+        printf(" %12.10f %20.10e\n", b2, ed/(b2-b1));
       }
     }
 
@@ -673,8 +710,8 @@ void mc_tempered_transition
       { down[i1] = ed/(b2-b1);
       }
       else
-      { printf(" %12.10lf %20.10le\n", b1, ed/(b2-b1) - down[i2]);
-        printf(" %12.10lf %20.10le\n", b2, ed/(b2-b1) - down[i2]);
+      { printf(" %12.10f %20.10e\n", b1, ed/(b2-b1) - down[i2]);
+        printf(" %12.10f %20.10e\n", b2, ed/(b2-b1) - down[i2]);
       }
     }
     
@@ -700,6 +737,9 @@ void mc_tempered_transition
   if (delta<=0 || rand_uniform() < exp(-delta/it->temperature))
   { 
     it->move_point = 1;
+
+    it->log_tt_weight2 = 
+      addlogs (it->log_tt_weight, delta+it->log_tt_weight) - log(2.0);
   }
   else
   { 
@@ -709,10 +749,12 @@ void mc_tempered_transition
     mc_value_copy (ds->q, q_savet, ds->dim);
     if (ds->p) mc_value_copy(ds->p, p_savet, ds->dim);
     if (ds->aux) mc_value_copy(ds->aux, aux_savet, ds->aux_dim);
+
+    it->log_tt_weight2 = it->log_tt_weight;
   }
 
   if (Print_proposals)
-  { printf("%d %d %d %.1lf\n",quad0,quad1,it->move_point,it->delta);
+  { printf("%d %d %d %.1f\n",quad0,quad1,it->move_point,it->delta);
     fflush(stdout);
   }
 

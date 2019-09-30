@@ -18,6 +18,7 @@ quantities relating to Markov chain methods documented in <A HREF="mc-quantities
 will also be available.
 
     xn   Array of n'th input values for training cases.
+    in   Same as xn, except n must not be omitted
 
     on   Array of n'th output values for training cases.  This quantity 
          can be found only if latent values are explicitly represented.
@@ -27,6 +28,7 @@ will also be available.
          can be found only if latent values are explicitly represented.
 
     z[n] Array of n'th target values for training cases
+    tn   Same as zn, except n must not be omitted
 
     P    Log prior probability density of the current hyperparameter values.
          This is the density for the logarithmic form of the hyperparameters,
@@ -93,6 +95,8 @@ will also be available.
          is not analogous to the v quantity for neural networks.
 
 When a value for 'n' is needed but not specified, it defaults to zero.
+This isn't allowed with 'i', and 't', however, since they have other
+meanings when 'n' is omitted.
 
 The 'o' values are the latent values defined by the Gaussian process,
 before interpretation by the model.  The 'y' values are the same as
@@ -103,13 +107,14 @@ present latent values, not on an integration over the "jitter").  For
 multi-class models, the 'z' quantity with a modifier ('n') refers to
 the representation of the class as a binary vector with the true class
 indicated by a one; with no modifier, it refers to the numeric value
-of the class.  For multi-class models, the 'a' and 'b' quantities are
-based on the difference between the vector of probabilities for the
-classes and the vector of 0s and 1s with a single 1 indicating the
-correct class.
+of the class.  (Since 'n' can't be omitted when using 't', this
+synonym can't be used for 'z' with no modifier.)  For multi-class
+models, the 'a' and 'b' quantities are based on the difference between
+the vector of probabilities for the classes and the vector of 0s and
+1s with a single 1 indicating the correct class.
 
 
-            Copyright (c) 1996 by Radford M. Neal
+            Copyright (c) 1996, 1998 by Radford M. Neal
 </pre>
 </body>
 </html>

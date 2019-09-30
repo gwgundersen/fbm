@@ -3,7 +3,7 @@
 <pre>
 
 
-XXX-PLT:  Write quantities from a log file, in a form suitable for plotting.
+XXX-PLT:  Write quantities from log files in a form suitable for plotting.
 
 There is a version of this program for each application (eg, net-plt).
 Each version allows the quantities defined for that application to be
@@ -11,10 +11,6 @@ plotted.  The data for plotting is written to standard output, in a
 form appropriate for plotting.  It may be convenient to pipe this
 output into an suitable plot program (but xxx-plot does not actually
 invoke such a plot program itself).  
-
-The output of xxx-plt may also be piped into the 'series' program
-(which will look only at the 'x-axis' quantity, ignoring the 'y-axis'
-quantity).
 
 Usage:
   
@@ -25,7 +21,7 @@ program.  The 'x-axis' and 'y-axis' specifications give the quantities
 to plot on the two axes.  These are followed by specifications of
 where the data comes from.  Depending on the application, further
 arguments may follow after a slash (for which, see the documentation
-specific to that application - eg, net-plt).
+specific to that application - eg, <A HREF="net-plt.html">net-plt.doc</A>).
 
 For the format of the quantity specifications, see the documentation
 on quantities that are generic (<A HREF="quantities.html">quantities.doc</A>), for Monte Carlo runs
@@ -48,7 +44,7 @@ is given, the default is "1:".
 Everything is reset between log files, so it is possible that the number 
 of values for a particular quantity will change from log file to log file.
 
-            Copyright (c) 1995 by Radford M. Neal
+            Copyright (c) 1995, 1998 by Radford M. Neal
 </pre>
 </body>
 </html>

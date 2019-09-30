@@ -1,14 +1,18 @@
 
 
-             SOFTWARE FOR FLEXIBLE BAYESIAN MODELS BASED ON
+                      Software that implements
 
-           NEURAL NETWORKS, GAUSSIAN PROCESSES, AND MIXTURES
+           FLEXIBLE BAYESIAN MODELS BASED ON NEURAL NETWORKS, 
 
-               IMPLEMENTED USING MARKOV CHAIN MONTE CARLO
+                   GAUSSIAN PROCESSES, AND MIXTURES
 
-            Copyright (c) 1995, 1996, 1997 by Radford M. Neal 
+                         and that demonstrates
 
-                        Version of 1997-07-22
+                   MARKOV CHAIN MONTE CARLO METHODS
+
+        Copyright (c) 1995, 1996, 1997, 1998 by Radford M. Neal 
+
+                         Version of 1998-08-02
 
 Permission is granted for anyone to copy, use, or modify these
 programs and accompanying documents for purposes of research or
@@ -35,29 +39,120 @@ address:
 or e-mail me at radford@stat.toronto.edu or radford@cs.toronto.edu.
 
 Information on any updates or other related work may from time to time
-be available via the World Wide Web, starting from my home page at URL
-http://www.cs.utoronto.ca/~radford/.
+be available via the World Wide Web, starting from my home page at the
+following URL:
+
+              http://www.cs.utoronto.ca/~radford/
+
+
+
+                                 CONTENTS
+
+
+Facilities.doc      Facilities provided by this software
+
+Install.doc         Installing the software
+
+Overview.doc        Overview of the software
+
+Ex-intro.doc        Introduction to the examples
+
+Ex-dist.doc         Examples of Markov chain sampling for simple distributions
+
+  Ex-dist-n.doc        Sampling from a univariate normal distribution
+  Ex-dist-g.doc        Sampling from a ring distribution in three dimensions
+
+Ex-bayes.doc        Examples of Markov chain sampling for simple Bayesian models
+  
+  Ex-bayes-r.doc       A linear regression model
+  Ex-bayes-t.doc       Modeling real-valued data with a t-distribution
+  Ex-bayes-p.doc       Modeling probabilities for categorical data
+
+Ex-netgp.doc        Examples of flexible Bayesian regression and classification 
+                    models based on neural networks and Gaussian processes
+
+  Ex-netgp-r.doc       A simple regression problem 
+  Ex-netgp-b.doc       A problem with a binary response 
+  Ex-netgp-c.doc       A three-way classification problem 
+  Ex-netgp-o.doc       A regression problem with outliers   
+
+Ex-mix.doc          Examples of Bayesian mixture models
+
+  Ex-mix-b.doc         A probability estimation problem with binary data 
+  Ex-mix-r.doc         A bivariate density estimation problem 
+
+Ex-gdes.doc         Examples of gradient descent learning with early stopping
+
+Hints.doc           Hints and warnings
+
+Guide.doc           Guide to further documentation
+
+Acknowledgements.doc 
+
 
 
 FACILITIES PROVIDED BY THIS SOFTWARE
 
-This software implements flexible Bayesian models for regression,
-classification, and probability or density estimation applications.
-The regression and classification models are based on multilayer
-perceptron neural networks or on Gaussian processes.  The probability
-and probability density models are based on finite or countably
-infinite mixture models; the infinite models are also know as
-Dirichlet process mixture models.  Bayesian inference for these model
-is done using Markov chain Monte Carlo methods.  Software modules that
-support Markov chain sampling are included in the distribution, and
-may be useful in other applications.  Note that I am distributing this
-software to facilitate research in this area.  Potential users should
-make note of the copyright notice at the beginning of this document
-(or accessible via the first hypertext link).  You must obtain
-permission from me before using this software for purposes other than
-research or education.  You should also note that the software may
-have bugs, particularly regarding recently added or experimental
-features.
+This software is meant to support research and education regarding:
+
+   * Flexible Bayesian models for regression and classification 
+     based on neural networks and Gaussian processes, and for
+     probability density estimation using mixtures.  Neural net
+     training using early stopping is also supported.
+
+   * Markov chain Monte Carlo methods, and their applications to
+     Bayesian modeling, including implementations of Metropolis,
+     hybrid Monte Carlo, slice sampling, and tempering methods.
+
+These facilities might be useful for actual problems, but you should
+note that many features that might be needed for real problems have
+not been implemented, that the programs have not been tested to the
+extent that would be desirable for important applications, and that
+permission to use the software for free is granted only for purposes
+of research and education.
+
+The complete source code (in C) is provided, allowing researchers to
+modify the program to test new ideas.  It is not necessary to known C
+to use the programs (assuming you manage to install them correctly).
+
+This software is designed for use on a Unix system, using commands
+issued to the Unix command interpreter (shell).  No particular window
+system or other GUI is required, but a plotting program will be very
+useful.  I use the xgraph plot program, written by David Harrison,
+which allows plots to be produced by just piping data from one of the
+commands; it can be obtained from my web page.
+
+
+Markov chain Monte Carlo facilities.
+
+All the Bayesian models are implemented using Markov chains to sample
+from the posterior distribution.  For the elaborate models based on
+neural networks, Gaussian processes, and mixtures, this is done by
+combining general-purpose Markov chain sampling procedures with
+special modules written in C.  Other models could be implemented in
+the same way, but this is a fairly major project.
+
+To allow people to play around with the various Markov chain methods
+more easily, a facility is provided for defining distributions (on
+R^n) by giving a simple formula for the probability density.  Many
+Markov chain sampling methods, such as the Metropolis algorithm,
+hybrid Monte Carlo, slice sampling, and simulated tempering, may then
+be used to sample from this distribution.  Bayesian posterior
+distributions can be defined by giving a formula for the prior density
+and for the likelihood based on each of the cases (which are assumed
+to be independent).
+
+A long review paper of mine on "Probabilistic Inference Using Markov
+Chain Monte Carlo Methods" can be obtained from my web page.  This
+review discusses methods based on Hamiltonian dynamics, including the
+"hybrid Monte Carlo" method.  These methods are also discussed in my
+book on "Bayesian Learning for Neural Networks".  My web page also has
+papers on slice sampling ("Markov chain Monte Carlo methods based on
+`slicing' the density function") and on Annealed Importance Sampling,
+both of which are implemented in this software.
+
+
+Neural network and Gaussian process models.
 
 The neural network models are described in my thesis, "Bayesian
 Learning for Neural Networks", which has now been published by
@@ -65,14 +160,14 @@ Springer-Verlag (ISBN 0-387-94724-8).  The neural network models
 implemented are essentially as described in the Appendix of this book.
 The Gaussian process models are in many ways analogous to the network
 models.  The Gaussian process models implemented in this software, and
-computatonal methods that used, are described in my technical report
+computational methods that used, are described in my technical report
 entitled "Monte Carlo implementation of Gaussian process models for
 Bayesian regression and classification", available in compressed
 Postscript at URL ftp://ftp.cs.utoronto.ca/pub/radford/mc-gp.ps.Z.
 The Gaussian process models for regression are similar to those
 evaluated by Carl Rasmussen in his thesis, "Evaluation of Gaussian
 Processes and other Methods for Non-Linear Regression", available from
-his home page, at the URL http://www.cs.utoronto.ca/~carl/; he also
+his web page, at the URL http://www.cs.utoronto.ca/~carl/; he also
 talks about neural network models.  To understand how to use the
 software implementing these models, it is essential for you to have
 read at least one of these references.
@@ -98,44 +193,62 @@ inputs, 20 hidden units), fully training a neural network model (to
 the point where one can be reasonably sure that the correct Bayesian
 answer has been found) typically takes several hours to a day on our
 SGI machine.  However, quite good results, competitive with other
-methods, are often obtained after training for under an hour. The time
-required to train the Gaussian process models depends a lot on the
-number of training cases.  For 100 cases, these models may take only a
-few minutes to train (again, to the point where one can be reasonably
-sure that convergence to the correct answer has occurred).  For 1000
-cases, however, training might well require a day of computation.
+methods, are often obtained after training for under an hour.  The
+time required to train the Gaussian process models depends a lot on
+the number of training cases.  For 100 cases, these models may take
+only a few minutes to train (again, to the point where one can be
+reasonably sure that convergence to the correct answer has occurred).
+For 1000 cases, however, training might well take a day.
 
-The finite mixture models are similar to those which have been used by
-many people - for example, Lavine and West (Canadian Journal of
-Statistics, vol. 20, pp. 451-461, 1992) fit similar models using
-similar Markov chain Monte Carlo methods.  The countably infinite
-mixture models are equivalent to Dirichlet process mixtures.  Markov
-chain sampling for these models has been described by Escobar and 
-West (Journal of the American Statistical Association, vol. 90,
-pp. 577-588, 1995).  Both finite and infinite mixture models (for
-binary data) are described in my tech report, "Bayesian mixture
-modeling by Monte Carlo simulation", available by anonymous ftp at the
-URL ftp://ftp.cs.utoronto.ca/pub/radford/bmm.ps.Z.  The models and
-Markov chain methods used in the software are not identical to those
+The software also implements neural network training using early
+stopping, as described in my paper on "Assessing relevance
+determination methods using DELVE" (to appear in Generalization in
+Neural Networks and Machine Learning, C. M. Bishop (editor),
+Springer-Verlag).  A similar early stopping method is also described
+in Carl Rasmussen's thesis (see above).
+
+
+Bayesian mixture models.
+
+The software includes a preliminary implementation of Bayesian mixture
+models for multivariate real or binary data.  The finite mixture
+models are similar to those which have been used by many people.  For
+example, Lavine and West (Canadian Journal of Statistics, vol. 20,
+pp. 451-461, 1992) fit similar models using similar Markov chain Monte
+Carlo methods.  The countably infinite mixture models are equivalent
+to Dirichlet process mixtures.  Markov chain sampling for these models
+is described by Escobar and West (Journal of the American Statistical
+Association, vol. 90, pp. 577-588, 1995).  Both finite and infinite
+mixture models (for binary data) are described in my technical report,
+"Bayesian mixture modeling by Monte Carlo simulation", available at
+ftp://ftp.cs.utoronto.ca/pub/radford/bmm.ps.Z.  The models and Markov
+chain methods used in the software are not identical to those
 described in any of these references, however.  The details can be
 found only in the software documentation.  For this reason, the
-mixture software may be a bit difficult to figure out until such time
-as I get around to writing up a paper describing this implemention.
-This part of the software is rather preliminary in other respects as
-well.
+mixture model software may be a bit difficult to figure out until such
+time as I get around to writing up a paper describing this
+implementation.  This part of the software is rather preliminary in
+other respects as well.
 
-The software consists of a number of programs and modules.  Four major
-components are included in this distribution, each with its own
-directory:
+
+Software components.
+
+The software consists of a number of programs and modules.  Each major
+component has its own directory, as follows:
   
     util    Modules and programs of general utility.
 
     mc      Modules and programs that support sampling using Markov 
             chain Monte Carlo methods, using modules from util.
 
+    dist    Programs for doing Markov chain sampling on a distribution
+            given by a simple formula, or by giving a Bayesian prior
+            and likelihood, using the modules from util and mc.
+
     net     Modules and programs that implement Bayesian inference
-            for models based on multilayer perceptrons, using the
-            modules from util and mc.
+            for models based on multilayer perceptron neural networks, 
+            using the modules from util and mc.  Also implements simple
+            gradient descent training, possibly with early stopping.
 
     gp      Modules and programs that implement Bayesian inference
             for models based on Gaussian processes, using the modules
@@ -147,21 +260,34 @@ directory:
 
 In addition, the 'bvg' directory contains modules and programs for
 sampling from a bivariate Gaussian distribution, as a simple
-demonstration of the capabilities of the Markov chain Monte Carlo
-facilities.  Other than by providing this example, and the detailed
-documentation on various commands, I have not attempted to document
-how you might go about using the Markov chain Monte Carlo modules for
-another application.
+demonstration of how the Markov chain Monte Carlo facilities can be
+used from a special module written in C.  Other than by providing this
+example, and the detailed documentation on various commands, I have
+not attempted to document how you might go about using the Markov
+chain Monte Carlo modules for another application written in C.
 
-The 'examples' directory contains the data sets that are used in the
-tutorial examples, along with shell scripts containing the commands
-used.
+The following directories contain examples of how these programs can
+be used, many of which are discussed in the documentation:
 
-It is possible to use this software to do learning and prediction
-without any knowledge of how the programs are written (assuming that
-the software can be installed as described below without any
-problems).  However, the complete source code is included so that
-researchers can modify the programs to try out their own ideas.
+    ex-netgp  Examples of Bayesian regression and classification 
+              models based on neural networks and Gaussian processes.
+
+    ex-mix    Examples of Bayesian mixture models.
+
+    ex-dist   Examples of Markov chain sampling on distributions
+              specified by simple formulas.
+
+    ex-bayes  Examples of Markov chain sampling for Bayesian models
+              specified using formulas for the prior and likelihood.
+
+    ex-gdes   Examples of neural network learning using gradient 
+              descent and early stopping.
+
+The 'bin' directory contains links to all the programs.  The 'doc'
+directory contains all the documentation.
+
+
+Portability of the software.
 
 The software is written in ANSI C, and is meant to be run in a UNIX
 environment.  Specifically, it was developed on an SGI machine running
@@ -169,17 +295,25 @@ IRIX Release 5.3.  It also seems to run OK on a SPARC machine running
 SunOS 5, using the 'gcc' C compiler, and on DEC Alpha machines.  As
 far as I know, the software does not depend on any peculiarities of
 these environments (except perhaps for the use of the drand48
-psuedo-random number generator), but you may nevertheless have
-problems getting it to work in substantially different environments,
-and I can offer little or no assistance in this regard.  There is no
-dependence on any particular graphics package or graphical user
-interface.  (The 'xxx-plt' programs are designed to allow their output
-to be piped directly into the 'xgraph' plotting program, but other
-plotting programs can be used instead, or the numbers can be examined
-directly.)
+pseudo-random number generator, and the lgamma function), but you may
+nevertheless have problems getting it to work in substantially
+different environments, and I can offer little or no assistance in
+this regard.  There is no dependence on any particular graphics
+package or graphical user interface.  (The 'xxx-plt' programs are
+designed to allow their output to be piped directly into the 'xgraph'
+plotting program, but other plotting programs can be used instead, or
+the numbers can be examined directly.)
+
 
 
 INSTALLING THE SOFTWARE
+
+This section describes how to unpack and compile the software for a
+Unix machine.  Note that getting the software to work in a non-Unix
+environment may be difficult or impossible.
+
+
+Unpacking the files.
 
 The software is distributed as a Unix tar archive.  To obtain the
 files, create an empty directory and change to it, download the tar
@@ -195,105 +329,122 @@ doing the above.  The following instructions cover what to do next for
 the current version; you should read the old documentation if for some
 reason you are installing an older version.
 
-The tar command should create sub-directories 'util', 'mc', 'net',
-'gp', 'mix', 'bvg', 'examples', 'doc', and 'bin', and place a large
-number of files in these sub-directories.  It should also place the
-files 'README' and 'make.include' in the current directory.  If all
-this seems to have worked, you can remove 'fbm.YYYY-MM-DD.tar'.
+The tar command should create sub-directories 'util', 'mc', 'dist',
+'bvg', 'net', 'gp', 'mix', 'ex-dist', 'ex-bayes', 'ex-netgp',
+'ex-mix', 'ex-gdes', 'doc', and 'bin', and place a large number of
+files in these sub-directories.  It should also place the files
+'README', 'make.include', 'make-all', and 'make-clean' in the current
+directory.  If all this seems to have worked, you can remove the file
+'fbm.YYYY-MM-DD.tar'.
+
+
+Looking at the documentation.
 
 The directory 'doc' contains links to all the documentation files.
 The file 'manual' contains all the introductory documentation
 (including this) as a simple text file; the same information is also
 contained in several .doc files.  Other .doc files contain more
-detailed information.  Files of the form release.YYYY-MM-DD.doc
+detailed information.  Files of the form 'Release.YYYY-MM-DD.doc'
 contain information on current and past releases.  These may be of
 interest if you are upgrading from an older version of the software.
-You can read these text files directly, or if you have a Web browser,
-you can access them via 'index.html', as described in Guide.doc.
+
+If you have a Web browser, you can access all these documentation
+files via 'index.html', as described in Guide.doc.
+
+
+Compiling the programs.
 
 You will probably be able to compile the programs as described below
 without making having to change anything.  However, it is possible
 that you will want to use a different C compiler, or set certain
-compilation options.  This can probably be done by modifying the
-'make.include' file in the main directory, which is included at the
-beginning of all Makefiles, though for some problems you might have to
-modify the 'Makefile' and 'xxx.make' files in the various directories.
+compilation options.  You can probably set the required options by
+modifying the 'make.include' file in the main directory, which is
+included at the beginning of all Makefiles, though for some problems
+you might have to modify the 'Makefile' and 'xxx.make' files in the
+various sub-directories, or modify the source files.
 
-The 'util' directory contains a file of 100,000 natural random bytes,
-which are used in combination with pseudo-random numbers.  This file
-is accessed by many of the programs, using a path name that by default
-points into this 'util' directory.  If you plan on moving this file
-elsewhere, you will need to change the compilation command for rand.c
-at the end of 'util/util.make'.
+Here are some reasons that you might need to customize things:
+
+  1) The programs were written with IEEE floating-point in mind, and
+     therefore may occasionally perform operations that result in
+     overflow or underflow.  If this causes program termination on
+     your machine (eg, with a "floating point exception"), you will
+     need to figure out how to disable these errors.  On DEC Alpha
+     machines, for example, the problem can be fixed using a "-ieee"
+     compiler option, which can be put in CFLAGS in 'make.include'.
+
+  2) The 'util' directory contains a file of 100,000 natural random
+     bytes, which are used in combination with pseudo-random numbers
+     This file is accessed by many of the programs, using a path 
+     name that by default points into this 'util' directory.  If you 
+     plan on moving this file elsewhere, you will need to change the 
+     compilation command for rand.c at the end of 'util/util.make'.
+
+  3) If you are rather short of memory, you might want to reduce the
+     size of the Max_optional_memory constant defined in gp/gp-mc.c.
+     This will save memory at the cost of some time.
 
 Once you have made any required changes, you can compile the programs
-by issuing the following commands
+by going to the main directory where you installed the software and
+issuing the command
 
-    cd util
-    make
-    cd ..
+    make-all
 
-    cd mc
-    make
-    cd ..
-
-    cd net
-    make
-    cd ..
-
-    cd gp
-    make
-    cd ..
-
-    cd mix
-    make
-    cd ..
-
-    cd bvg
-    make
-    cd ..
-
-The last three commands can be omitted if you have no interest in the
-demonstration of sampling from a bivariate Gaussian distribution. Note
-that common modules will be compiled over again for each directory
-where they are used; this is intentional.
+This will compile programs in the various sub-directories.  Note that
+some modules will be compiled over again in each directory where they
+are used; this is intentional.
 
 It is possible that these compilation commands will fail for some
 reason, in which case you'll have to figure out what's wrong and fix
-it.  Note that for the makes to work correctly, the programs MUST be
-kept in separate 'util', 'mc', 'net', 'gp', 'mix', and 'bvg'
-sub-directories, with these names.
+it.  Note that the 'make-all' command just moves into each of the
+directories and does a 'make' there.  You can do this manually for
+each directory to see where the problem is.  For these makes to work
+correctly, the programs MUST be kept in separate 'util', 'mc', 'dist',
+'bvg', 'net', 'gp', and 'mix' sub-directories, with these names.
 
-Once the above make commands have been successful, you should put the
+
+Using the programs.
+
+Once you have successfully compiled the programs, you should put the
 'bin' directory (within the main directory for this software) in your
 search path.  How this is done depends on the shell program you are
 using; consult a local expert if you don't know how.  This directory
-contains symbolic links to all the programs making up this software
-(except some that are used only for testing).  Subsequent instructions
-assume that you have this 'bin' directory in your search path.
+contains symbolic links to all the programs making up this software.
+Subsequent instructions assume that you have this 'bin' directory in
+your search path.
+
+
+Cleaning things up.
+
+Once the compilations have finished, you can save some disk space by
+issuing the command
+
+    rm */*.o
+
+when you are in the main directory.  You can get rid of the compiled
+programs by using the command
+
+    make-clean
+
+when in the main directory.  Of course, you then won't be able to use
+the programs again until you do another make-all to recompile them.
+
 
 
 OVERVIEW OF THE SOFTWARE
 
-This software is being distributed primarily to further research in
-Bayesian learning for models based on neural networks and Gaussian
-processes.  The software is designed for potentially wider use,
-however.  In particular, the programs and modules in the 'util'
-directory are of general utility, and those in the 'mc' directory
-provide generic support for Markov chain Monte Carlo methods.  These
-facilities are specialized to neural network learning by the modules
-and programs in the 'net' directory, to Gaussian process models by the
-modules and programs in the 'gp' directory, and to finite and infinite
-mixture modesls by the modules and programs in the 'mix' directory.
-The 'bvg' directory demonstrates in a simple context how the generic
-facilities in 'util' and 'mc' can be specialized for other tasks, but
-users interested only in the neural network, Gaussian process, or
-mixture models need not concern themselves with this.  This section
-provides an overview of the facilities offered by these various
-components of the software.
+The software is organized in a modular fashion.  The 'util' directory
+provides a number of general facilities, some of which may be of use
+for other purposes.  The 'mc' module provides support for Markov chain
+Monte Carlo methods, which the 'dist' module allows you to use for a
+distribution specified by a formula.  The 'net', 'gp', and 'mix' are
+more specialized modules that use the Markov chain methods to support
+Bayesian inference for neural networks, Gaussian process models, and
+finite and infinite mixture models.  This section provides an overview
+of the various components of the software.
 
 
-Log files
+Log files.
 
 All the programs make use of a "log file" facility supported by
 modules and programs in 'util'.  A log file records all the
@@ -305,11 +456,11 @@ programs (eg, 'net-spec' and 'data-spec') that the user invokes at the
 beginning of the run.  Once the run has been specified, the program
 that performs iterations is invoked (eg, 'net-mc').  This program will
 append further records to the log file, one for each iteration for
-which the user has asked the state to be saved, which will usually be
-every iteration, unless minimizing disk usage is a concern.  Each
-record written has the iteration number as its index, and contains the
-complete state of the program at that time (eg, all the parameters and
-hyperparameters of the network being trained).
+which the user has asked the state to be saved (this might be every
+iteration, or might be every n'th if minimizing disk usage is a
+concern).  Each record written has the iteration number as its index,
+and contains the complete state of the program at that time (eg, all
+the parameters and hyperparameters of the network being trained).
 
 Note that log files contain binary data; they are not human-readable.
 
@@ -325,23 +476,22 @@ particular, the user can plot the progress of various quantities
 during the course of the run, without having to decide beforehand
 which quantities will be of interest.  The states saved at various
 iterations are also the basis for making Monte Carlo estimates, and in
-particular, for making Bayesian predictions based on a sample of
-networks or Gaussian processes from the posterior distribution.
+particular for making Bayesian predictions based on a sample from the
+posterior distribution.
 
 
-Models and data
+Models and data.
 
 The 'util' directory also contains modules and programs that specify
 the final portion of a probabilistic model (which is independent of
 the details of networks or other functional schemes), that support
 reading of numeric input from data files or other sources, and that
-specify sets of training and test cases for supervised learning
-procedures (such as those based on multilayer perceptron networks).
+specify sets of training and test cases.
 
 The models supported include those for regression, classification,
-probability density estimation, and survival analysis.  The survial
-analysis models were recently implemented, and should be regarded as
-experimental.  See model-spec.doc for details
+probability density estimation, and survival analysis.  The survival
+analysis models should be regarded as especially experimental.  See
+model-spec.doc for details.
 
 The data files used must contain numbers in standard ASCII form, with
 one line per case, but there is considerable freedom regarding
@@ -370,11 +520,11 @@ the number of "input" items is zero.  The test data is currently
 ignored for mixture models, since no prediction program has yet been
 implemented.
 
-See data-spec.doc for futher details on how to specify the data
-format.
+See data-spec.doc for further details on how to specify the source and
+format of the data.
 
 
-Random number generation
+Random number generation.
 
 A scheme for combining real and pseudo random numbers is implemented
 by modules in the 'util' directory, along with procedures for sampling
@@ -388,27 +538,20 @@ produces the same results as if the run had continued without
 stopping.
 
 
-Markov chain Monte Carlo
+Markov chain Monte Carlo.
 
 The 'mc' directory contains modules and programs that support the use
-of Markov chain Monte Carlo methods.  A Markov chain Monte Carlo
-application is created by adding modules that compute certain
-application-specific quantities, of which the most central is the
-probability distribution to sample from.  For example, the neural
-network application provides a procedure for computing the posterior
+of Markov chain Monte Carlo methods.  These methods can be applied to
+a distribution specified by a formula using the 'dist' programs (see
+below).  More elaborate Markov chain Monte Carlo applications can be
+created by adding modules in C that compute certain application
+specific quantities, of which the most central is the probability
+distribution to sample from.  For example, the neural network
+application provides a procedure for computing the posterior
 probability density of the network parameters.  An application may
 also provide implementations of specialized sampling procedures, such
 as the procedures for doing Gibbs sampling for hyperparameters in the
 neural network application.
-
-A variety of Markov chain methods are supported by the 'mc' system,
-including some that are not of much use in the neural network and
-Gaussian process applications.  In particular, the "tempering" methods
-are not currently implemented for the neural networks or Gaussian
-processes, though they may be in future.  Users interested only in
-neural networks or Gaussian processes should therefore ignore the
-tempering facilities (such as the 'mc-temp-sched' and 'mc-temp-filter'
-programs).
 
 For the user of neural network, Gaussian process, and mixture models,
 the most important 'mc' program is 'mc-spec', which is used to specify
@@ -417,14 +560,37 @@ of reasonable ways of sampling for neural networks or Gaussian
 processes.  The best way is still the subject of research.  Good
 results can be obtained using several standard approaches, however, as
 described in the examples in other sections of this documentation.
-You can also read all about the various methods in mc-spec.doc. Note,
+You can also read all about the various methods in mc-spec.doc.  Note,
 however, that for each model there are also sampling methods specific
 to that model alone, which are documented in net-mc.doc, gp-mc.doc,
 and mix-mc.doc.  At present, sampling for mixture models is done only
 by the specific procedures described in mix-mc.doc.
 
+Tempering methods and Annealed Importance Sampling are currently
+supported for neural network models, but not for Gaussian processes
+and mixture models.
 
-Neural network models
+
+Sampling from a specified distribution.
+
+The 'dist' directory contains programs for sampling from a
+distribution specified by a formula for its "energy" (minus the log
+probability density, plus an arbitrary constant), or by formulas for
+the prior and likelihood for a Bayesian model.  The full range of
+Markov chain sampling methods implemented by the 'mc' module can be
+used for these distributions, including the tempering and Annealed
+Importance Sampling facilities.
+
+The 'dist-spec' program is used to specify the distribution, along
+with 'data-spec' to say where the data comes from, if the distribution
+is the posterior for a Bayesian model.  The 'mc-spec' program is then
+used to specify the Markov chain updates, after which 'dist-mc' does
+the actual sampling.  The 'dist-display' and 'dist-plt' programs can
+be used to monitor the runs, and 'dist-est' can be used to estimate
+the expectation of some function with respect to the distribution.
+
+
+Neural network models.
 
 The 'net' directory contains the modules and programs that implement
 Bayesian learning for models based on multilayer perceptron networks,
@@ -460,7 +626,7 @@ they were written for debugging purposes, or to do specialized tasks
 relating to my thesis.
 
 
-Gaussian process models
+Gaussian process models.
 
 The 'gp' directory contains the modules and programs that implement
 Bayesian inference for Gaussian process models, making use of the
@@ -473,18 +639,18 @@ variance).
 To start, the 'gp-spec' program is used to specify a Gaussian process
 model - that is, to specify the form of the covariance function, and
 the priors on the hyperparameters that control this covariance
-function.  The 'model-spec' and 'data-spec' programs are then be used
-to specify how the Gaussian process is used to model data, and the
-source of the training data (and possibly test data).  The Markov
-chain sampling method is then specified using 'mc-spec', and sampling
-is done using 'gp-mc'.  Finally, 'gp-pred' is used to make predictions
+function.  The 'model-spec' and 'data-spec' programs are then used to
+specify how the Gaussian process is used to model data, and the source
+of the training data (and possibly test data).  The Markov chain
+sampling method is then specified using 'mc-spec', and sampling is
+done using 'gp-mc'.  Finally, 'gp-pred' is used to make predictions
 for test cases using the Gaussian processes that were saved in the log
 file by 'gp-mc'.
 
 The 'gp-display' and 'gp-plt' programs can be used to view the
-Gaussian processes generated by 'gp-mc', both during and after the
-run.  Several other programs in the 'gp' directory may also be of
-interest.
+parameters of the Gaussian processes generated by 'gp-mc', both during
+and after the run.  Several other programs in the 'gp' directory may
+also be of interest.
 
 
 Mixture models.
@@ -494,7 +660,7 @@ Bayesian inference for finite and infinite mixture models, making use
 of the modules in the 'util' and 'mc' directories.  These models are
 used to model the probabilities for vectors of binary data, or the
 probability densities for real vectors.  The infinite mixture models
-are equivalant to what are called Dirichlet process mixtures.
+are equivalent to what are called Dirichlet process mixtures.
 
 The 'mix-spec' program is used to specify a mixture model - that is,
 to say how many components there are in the mixture (perhaps countably
@@ -503,22 +669,22 @@ hyperparameters.  The 'model-spec' and 'data-spec' programs are then
 used to complete the specification of the data model and data source.
 For mixture models, the data items are all considered to be "targets",
 with the number of "inputs" being zero.  The Markov chain sampling
-procedures to used are then specified using 'mix-spec', and the
+procedures to use are then specified using 'mix-spec', and the
 sampling is done with 'mix-mc'.  At present, there is not all that
 much that can be done with the results - in particular, there is no
 prediction program.  One can look at the parameter values for states
-drawn from the posterior with 'mix-display', however, and generate 
+drawn from the posterior with 'mix-display', however, and generate
 future datasets using 'mix-cases'.
 
 
-Quantities obtainable from log files
+Quantities obtainable from log files.
 
-The 'xxx-plt' programs (eg, 'net-plt', 'gp-plt', and 'mix-plt') are
-the principal means by which simulation runs are monitored.  These
-programs allow one to see the values of various "quantities",
-evaluated for each iteration stored in a log file within some range.
-Some other programs (eg, 'xxx-hist') also use the same set of
-quantities.
+The 'xxx-plt' programs (eg, 'dist-plt', 'net-plt', 'gp-plt', and
+'mix-plt') are the principal means by which simulation runs are
+monitored.  These programs allow one to see the values of various
+"quantities", evaluated for each iteration stored in a log file within
+some range.  Some other programs (eg, 'xxx-hist') also use the same
+set of quantities.
 
 A quantity is specified by an identifying character, perhaps with a
 numeric modifier.  Some quantities are single numeric values
@@ -531,21 +697,28 @@ There is a hierarchy of quantities, as defined by modules at different
 levels.  A few quantities are universally defined - principally 't',
 the index of the current iteration.  Many more are defined for any
 Markov chain Monte Carlo application - such as 'r', the rejection rate
-for Metropolis or Hybrid Monte Carlo updates.  A large number of
-quantities specific to neural networks or to Gaussian processes are
-also defined - for example, 'b', the average squared error on the
-training set, and 'n', the current value of the noise standard
-deviation (for a regression model).  Quantities specific to mixture
-models are also defined, such as 'Cn', the total probability for the n
+for Metropolis or Hybrid Monte Carlo updates.  The 'dist' module also
+defines some quantities, and a large number of quantities are defined
+for neural networks and Gaussian processes - for example, 'b', the
+average squared error on the training set, and 'n', the current value
+of the noise standard deviation (for a regression model) - and for
+mixture models - for example, 'Cn', the total probability for the n
 largest components in the mixture.  For details, see quantities.doc,
-mc-quantities.doc, net-quantities.doc, gp-quantities.doc, and
-mix-quantities.doc.
+mc-quantities.doc, dist-quantities.doc, net-quantities.doc,
+gp-quantities.doc, and mix-quantities.doc.
+
 
 
-EXAMPLES OF BAYESIAN MODELING 
+INTRODUCTION TO THE EXAMPLES
 
-This section contains examples of Bayesian modeling using this
-software on some simple synthetic problems.
+The following sections how the software can be used on several toy
+problems.  These examples are meant to illustrate the features of the
+software.  You should note that the models and Markov chain methods
+used are not necessarily appropriate for other problems.  To gain a
+full understanding of the various possibilities, and their advantages
+and disadvantages, you will need to read both the general references
+given earlier for these models, and the detailed documentation on the
+various commands.
 
 The output shown for these examples was obtained by running the
 software on our machine, with ">" at the start of a line indicating a
@@ -554,30 +727,1731 @@ results will differ, even if you have installed the software
 correctly, since small differences in floating point arithmetic can be
 magnified into large differences in the course of the simulation.
 However, unless one of the simulations became stuck in an isolated
-local mode, the final predictions you obtain (eg, from 'net-pred' for
+local mode, the final predictions you obtain (eg, from 'net-pred' or
 'gp-pred'), and the final distributions of model parameters, should be
 close to those reported below.
 
-All the data sets mentioned here are present in the 'examples'
-sub-directory, along with the C source of the programs that generated
-them.  It is assumed below that you have changed to this directory.
-The command sequences for running the simulations that are mentioned
-below are also stored in this directory, in shell files with the names
-'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.
+Some of the examples show the example of "xxx-plt" commands being
+piped into a program called "plot".  Any plot program could be used
+that reads pairs of numbers from standard input and plots them (in
+some cases, a blank line is present to indicate the start of a new
+sub-plot).  I use the "xgraph" program written by David Harrison,
+which can be obtained from my web page.  If you don't have a plot
+program that can be used in this convenient fashion, you can redirect
+the output to a file (eg, "net-plt t l log >file") and then read this
+file into whatever plotting program you have.  As a last resort, you
+can also just look at the numbers in the file yourself.
 
-Note that the particular network architectures, priors, and Markov
-chain sampling options, and so forth that are used in these examples
-are only examples of reasonable choices.  There are many other
-possibilities that would also be reasonable for these examples.  For 
-a different problem, it might well be necessary to use different
-architectures and priors.  To gain a full understanding of the various
-possibilities, and their advantages and disadvantages, you will need
-to read both the general references given earlier for these models,
-and the detailed documentation in the ".doc" files.
+All the data sets mentioned here are present in directories with names
+beginning with "ex", along with the C source of the programs that
+generated the data.  The commands given assume that you are in the
+directory containing the data.  The command sequences used for each
+example are also stored in these directories, in shell files with the
+names like 'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.
 
 Computation times are given for many of the examples.  These are all
 for the current version of the software, run on our computer, which is
-currently an SGI machine with 194 MHz MIPS R10000 processors.
+an SGI machine with 194 MHz MIPS R10000 processors.
+
+
+
+EXAMPLES OF MARKOV CHAIN SAMPLING FOR SIMPLE DISTRIBUTIONS
+
+Almost all uses of the software in this package involve sampling from
+a distribution using Markov chain methods, and then making Monte Carlo
+estimates for the expectations of functions of state based on this
+sample.  This is done, for example, when make predictions for test
+cases based on the posterior distribution of a neural network model.
+
+Some ways of doing Markov chain sampling are illustrated in the
+examples of modeling with neural networks, Gaussian processes, etc.
+If your main interest is in those models, you could start with those
+examples, but the simpler examples in this section may be more helpful
+in understanding the Markov chain methods.  These examples also
+introduce the facilities of the 'dist' module, which are used when
+sampling from Bayesian models defined using formulas for the prior and
+likelihood, as illustrated by the examples in Ex-bayes.doc.  The
+examples there also illustrate some additional aspects of Markov chain
+sampling.
+
+The commands used in these examples can also be found in command files
+in the "ex-dist" directory.
+
+
+SAMPLING FROM A UNIVARIATE NORMAL DISTRIBUTION
+
+I will start with a trivial example showing how the "Metropolis"
+Markov chain method can be used to sample from a univariate normal
+distribution.  This will illustrate the basic facilities for
+specifying distributions, for specifying the Markov chain operations
+to use, for looking at log files, and for estimating the expectations
+of functions.
+
+
+Specifying the distribution.
+
+We begin by specifying the distribution we want to sample from.  This
+is done by giving a formula for the "energy function", which is minus
+the log of the probability density, plus any arbitrary constant.  To
+sample from a univariate normal distribution for a variable called
+"x", with mean 10 and variance 1, we can type the following command to
+the Unix command interpreter (the shell):
+
+    > dist-spec nlog "(x-10)^2/2"
+
+Here, "nlog" is the name of a "log file", in which this specification
+is saved, and in which the results of sampling will later be stored.
+The energy formula "(x-10)^2/2" is minus the log of the probability
+density for the desired distribution over "x", with the constant term
+Log(2*Pi)/2 omitted, as it is not necessary for most purposes.  Such
+formulas must usually be put in quotes, since some characters such as
+parentheses will otherwise have special meaning to the shell.  See
+formula.doc for the syntax of formulas, which is fairly conventional,
+except perhaps that function names must be capitalized (eg, "Sin").
+
+Since only a single variable, "x", is mentioned in the specification,
+this is a univariate distribution.  We could have mentioned other
+"state variables" in the specification, as in the example in the next
+section (see Ex-dist-g.doc).  Valid state variable names start with
+one of "u", "v", "w", "x", "y", or "z", which may optionally be
+followed by a single digit.  See dist-spec.doc for further details.
+
+The density functions for some distributions, including the normal,
+are pre-defined.  We could have used the following command instead of
+the one above:
+
+    > dist-spec nlog "Normal(x,10,1)"
+
+The same result can also be obtained as follows:
+
+    > dist-spec nlog "x ~ Normal(10,1)"
+
+This last form is particularly useful for specifying Bayesian models
+(see Ex-bayes.doc).
+
+
+Sampling using Metropolis updates.
+
+After specifying the distribution, we specify what Markov chain
+operations should be used to sample from this distribution, using a
+command such as:
+
+    > mc-spec nlog metropolis 1
+
+This specifies that each Markov chain iteration should consist of a
+single Metropolis operation, with a "stepsize" of 1.  In a Metropolis
+operation, a new state is proposed by randomly drawing from the normal
+distribution centred at the current state, with standard deviation
+given by the stepsize.  This proposed state is then accepted or
+rejected based on the change in the energy (ie, on the change in
+probability density).  If the proposed state is rejected, the new
+state is the same as the old state.
+
+This Markov chain specification is saved in the log file, after the
+distribution specification.  We could also specify an initial state
+for the Markov chain (see dist-initial.doc), but here we will let the
+initial state default to x=0.  To actually do some Markov chain
+iterations, we use a command such as:
+
+    > dist-mc nlog 1000
+
+This performs 1000 Markov chain updates, as specified by the last
+mc-spec command, and saves the state after each update in the log
+file.  This takes only a fraction of a second on our machine, but
+Markov chain sampling runs for more difficult problems can take much
+longer, so one would often wish to run the 'dist-mc' command in the
+background, by putting an "&" at the end of the command line.
+
+If we later decided that we wanted to continue Markov chain sampling
+for more iterations, we could just use another 'dist-mc' command with
+a larger iteration limit.  For example, the command
+
+    > dist-mc nlog 10000
+
+would produce another 9000 iterations, for a total of 10000.  We could
+issue another mc-spec command before this, if we wished to use
+different Markov chain operations for these further iterations.
+
+
+Checking how well the sampling worked.
+
+After or during the Markov chain sampling, we can look at how the
+state has changing during the run, and at certain properties of the
+Markov chain methods.
+
+The 'dist-display' command lets us see the state at any given
+iteration.  For example, the state at iteration 10 of the Markov chain
+run above might look like this:
+
+    > dist-display nlog 10
+
+    STATE VARIABLES IN FILE "nlog" WITH INDEX 10
+
+        x = 1.45784   
+
+However, what you see might not be exactly the same as this, due to
+differences in random number generators or in floating-point roundoff
+errors.  If the iteration number is omitted, 'dist-display' shows the
+last iteration.
+
+The 'dist-plt' command is usually more useful in getting a picture of
+how well the chain is sampling.  The following command will show how
+the state changes over the course of the run:
+
+    > dist-plt t x nlog | plot
+
+If 'plot' is an appropriate plotting program, this will display a
+graph of the state variable "x" vs. the iteration number (the "t"
+quantity).  From this plot, you will likely see that up to about
+iteration 50, the values of "x" are not typical of those seen later in
+the run.  These early iterations should be discarded when estimating
+functions of state (see below).
+
+After iteration 50, the chain seems to move around the region that has
+high probability fairly rapidly.  It should therefore be possible to
+estimate expectations of functions of the state with reasonable
+accuracy.  If instead, the chain moved very slowly, it would be
+necessary to run it for many more iterations, or to use better Markov
+chain operations.
+
+Other interesting quantities can also be plotted using 'dist-plt'.
+For instance, the energy can be monitored with the following command:
+
+    > dist-plt t E nlog | plot
+
+The change in energy on the basis of which the Metropolis proposals
+were accepted or rejected can be examined as follows:
+
+    > dist-plt t D nlog | plot-points
+
+Here, it is best if the plot program used is set up to plot individual
+points, rather than lines.  For this chain, the energy difference is
+often less than one, so many proposals will be accepted.  If instead
+the energy change was almost always large, it would be necessary to
+reduce the "stepsize" argument following the "metropolis" operation in
+'mc-spec'.  On the other hand, if the energy change is usually very
+close to zero, a larger stepsize would produce better sampling.
+
+Other quantities that can be plotted are documented in quantities.doc,
+mc-quantities.doc, and dist-quantities.doc.
+
+
+Estimating expectations of functions.
+
+Finally, we can use the states from the Markov chain to estimate the
+expectations of functions of this state.  Since we decided above that
+the first 50 iterations were not typical of the chain's equilibrium
+distribution, we will use only states after these when estimating
+expectations.
+
+The 'dist-est' command is one way of estimating expectations.  The
+following command estimates the expectation of the "x" itself:
+
+    > dist-est x nlog 51:
+
+    Number of sample points: 950
+
+    Estimates for x:
+
+      Mean:    10.1496  (standard error 0.0336591)
+      Std.dev: 1.03744
+
+    NOTE: The standard errors assume points are independent
+
+The arguments to 'dist-est' are a formula for what we want to
+estimate, the log file for the run, and the range of iterations to use
+from that log file (here, from 51 on).  The output (which might be a
+bit different when you run the programs) gives the estimated
+expectation (mean) for the requested function of state, along with its
+estimated standard deviation.  
+
+A standard error is also given for the estimated mean, but it is valid
+only if the points are independent, which is generally not true if
+they were obtained using Markov chain sampling.  In the output above,
+the estimate differs from the true mean of 10 by over four times the
+standard error, which illustrates that the standard error cannot be
+trusted when the points are not independent.
+
+Ideally, the 'dist-est' program would automatically compensate for
+this lack of independence, and give correct standard errors, but it
+doesn't yet.  If you are interested in the expectation of a state
+variable, however, you can get correct standard errors using the
+'series' program, which adjusts the standard errors based on estimated
+autocorrelations, if told how far out to look.  The following command
+illustrates the procedure:
+
+    > dist-tbl x nlog 51: | series msac 15
+
+    Number of realizations: 1  Total points: 950
+    
+    Mean: 10.149550  S.E. from correlations: 0.096872
+    
+    Standard deviation: 1.037442  
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.793346    2.586691
+        2   0.620884    3.828460
+        3   0.492481    4.813421
+        4   0.406282    5.625986
+        5   0.332223    6.290432
+        6   0.261235    6.812903
+        7   0.195664    7.204231
+        8   0.162258    7.528748
+        9   0.129544    7.787835
+       10   0.104300    7.996435
+       11   0.079715    8.155866
+       12   0.055909    8.267684
+       13   0.032055    8.331795
+       14   0.011870    8.355534
+       15  -0.020351    8.314831
+
+The 'dist-tbl' command produces a list of values for "x" at iterations
+from 51 on.  This list is piped into the 'series' program, which looks
+only at the first value (for "x").  With the options "msac 15", the
+'series' program calculates estimates for the mean and standard
+deviation, which match those calculated above by 'dist-est'.  It also
+estimates the autocorrelations for "x" at lags up to 15.  From these
+autocorrelation estimates, 'series' finds the "cumulative
+correlations" at the various lags, which are defined as one plus twice
+the sum of the autocorrelations up to that lag.  In calculating the
+standard error for the mean, 'series' divides the sample size by the
+cumulative correlation for the last lag requested.
+
+In the example above, the standard error calculated by 'series'
+appears to be realistic.  This will be true only if the maximum lag
+given as an argument to series is appropriate, however.  This maximum
+lag should be large enough that the autocorrelations at larger lags
+are close to zero, but not too much larger than this, since including
+autocorrelations at many lags introduces extra noise into the
+cumulative correlation.
+
+An alternative approach is to use 'series' to find out the lag at
+which the autocorrelations have fallen almost to zero, and then use
+'dist-est' to find the expectation, telling it to look at iterations
+separated by that lag.  This is somewhat wasteful of data, but is at
+present the only easy way to get correct standard errors when
+estimating some function of state rather than a state variable itself.
+For example, from the output of 'series' above, it seems that
+autocorrelations for "x" are almost zero at about lag 10.  This is
+consistent with states at that lag being almost independent (although
+lack of correlation does not guarantee independence).  On that basis,
+we might estimate the expectation of Sin(x) with the following
+command:
+
+    > dist-est "Sin(x)" nlog 51:%10
+
+    Number of sample points: 95
+
+    Estimates for Sin(x):
+
+      Mean:    -0.358403  (standard error 0.0654498)
+      Std.dev: 0.637926
+
+    NOTE: The standard errors assume points are independent
+
+These results are consistent with the true expectation of Sin(x) with
+respect to the Normal(10,1) distribution, which is -0.330.
+
+
+SAMPLING FROM A RING DISTRIBUTION IN THREE DIMENSIONS
+
+I will here demonstrate a variety of Markov chain sampling methods
+using as an example a distribution that forms a ring in a space of
+three dimensions, parameterized by variables called "x", "y", and "z".
+For details on the various methods described, see mc-spec.doc.  A
+table comparing the performance of the methods on these examples is
+included at the end of this section.
+
+
+Specifying the distribution.
+
+The "ring" distribution is specified by a 'dist-spec' command such as
+the following (the "\" says the command continues on the next line):
+
+    > dist-spec glog \
+        "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
+
+Recall that the formula given to 'dist-spec' is the "energy function",
+which is minus the log probability density, plus any constant.  If the
+energy function above consisted of only the first three terms, the
+distribution would be multivariate normal, with x, y, and z being
+independent, each having mean zero and variance one.  The fourth term,
+(x+y+z)^2, leaves the distribution still normal, but squashes it in
+the direction where x, y, and z increase equally.  The final term is
+large near the origin, and from there decreases to zero symmetrically
+in all directions.  It has the effect of making a hole in the centre
+of what would otherwise have been a normal distribution, leaving a
+ring shape.
+
+The examples below are assumed to start with a 'dist-spec' command of
+the above form, except that "glog" is replaced with the name of the
+log file used for the method being demonstrated.
+
+
+Simultaneous Metropolis updates.
+
+We will first see how to sample from this distribution using a
+variation of the Metropolis algorithm in which all three state
+variables are changed simultaneously.  In the proposal distribution
+used, new values for the state variable are chosen independently, each
+from a normal distribution with mean equal to the present value, and a
+specified standard deviation.
+
+The following command specifies that 50 Metropolis operations of this
+sort should be done for each full iteration:
+
+    > mc-spec glog.met,1 repeat 50 metropolis 1 end
+
+Here, "glob.met,1" is the name of the log file to use, which would
+have been created using a 'dist-spec' command like the one above.  The
+"repeat 50 ... end" construction causes the enclosed operations to be
+repeated the given number of times.  This saves space in the log file,
+compared to doing one metropolis operation for 50 times as many
+iterations.  This is appropriate when many such operations will be
+needed to get to a substantially different point.  A similar result
+can be obtained using an extra argument to 'dist-mc' (see xxx-mc.doc),
+but using "repeat" has the advantage that one can also easily look at
+the rejection rate over the 50 repetitions.
+
+We can now sample for 500 Markov chain iterations (a total of 25,000
+metropolis updates) with the following command:
+
+    > dist-mc glog.met,1 500
+
+This takes about two seconds on our machine.  
+
+We can look at what happened to the three state variables during these
+500 iterations with a command such as
+
+    > dist-plt t xyz glog.met,1 | plot
+
+Depending on your plot program's requirements, you might instead use
+a command such as
+
+    > dist-tbl txyz glog.met,1 | plot
+
+or you might have to plot the variables one at a time, with commands
+such as
+   
+    > dist-plt t x glog.met,1 | plot
+
+From these plots, you can see that the chain quite rapidly reached the
+equilibrium distribution - maybe even by the end of the first
+iteration (ie, within the first 50 metropolis updates).  Just to be
+sure, however, let's discard the first 10 iterations as "burn-in".
+
+We can now take a look at the "ring" distribution with commands like
+
+    > dist-plt x y glog.met,1 10: | plot-points
+
+If "plot-points" plots points rather than lines, this will produce a
+scatterplot of the distribution for "x" and "y" (with "z" ignored),
+which will look like a flattened ring.  The ring is actually circular,
+but it's tilted with respect to the axes, so you'll be able to see it
+as a circle only if you have a three-dimensional plotting program.
+
+However, the plot above will probably not show points distributed
+perfectly uniformly around the ring.  Instead, there will be clumps
+here or there, which result from inadequate sampling.  The 591 points
+plotted are not independent, as can also be seen from the plots of
+"x", "y", and "z" versus "t".  To get a sample of points that are a
+good representation of the distribution using this chain, it would
+need to be run for more iterations.
+
+We can get a quantitative idea of how poor the sampling is with the
+following command:
+
+    > dist-tbl x glog.met,1 10: | series mac 30
+    
+    Number of realizations: 1  Total points: 491
+    
+    Mean: -1.069628  S.E. from correlations: 1.343061
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.930028    2.860055
+        2   0.875426    4.610908
+        3   0.817085    6.245078
+        4   0.765703    7.776485
+        5   0.723927    9.224339
+        6   0.686476   10.597291
+        7   0.655353   11.907996
+        8   0.625940   13.159877
+        9   0.590206   14.340288
+       10   0.554448   15.449185
+       11   0.517685   16.484555
+       12   0.481981   17.448517
+       13   0.440608   18.329732
+       14   0.391103   19.111937
+       15   0.342534   19.797005
+       16   0.305640   20.408286
+       17   0.258187   20.924660
+       18   0.220043   21.364747
+       19   0.186663   21.738073
+       20   0.160253   22.058580
+       21   0.130252   22.319085
+       22   0.104981   22.529047
+       23   0.084475   22.697997
+       24   0.065285   22.828567
+       25   0.052381   22.933329
+       26   0.045782   23.024892
+       27   0.033173   23.091238
+       28   0.022730   23.136698
+       29   0.015462   23.167623
+       30   0.005316   23.178255
+
+The 'dist-tbl' command above outputs a list of values for "x" for
+iterations from 10 on.  The 'series' command with options "mac" finds
+the mean of these numbers, their autocorrelations (out to lag 30
+here), and the cumulative correlations.  The cumulative correlation at
+the earliest lag past which the autocorrelations are about zero
+indicates the factor by which sampling is made inefficient by the
+correlations (here, about 23); see Ex-dist-n.doc for more details.
+
+From symmetry, we know that the true mean for "x" is zero.  The
+estimate of -1.069628 above is consistent with this, in view of the
+estimated standard error of +-1.343061.  We can also get estimates
+using 'dist-est', but as discussed in Ex-dist-n.doc, the standard
+errors it produces do not account for autocorrelation.
+
+We might try to improve the efficiency of sampling by changing the
+standard deviation of the Metropolis proposal distribution - which is
+also known as the "stepsize" for the operation.  One indication of
+whether the stepsize is appropriate is the rejection rate for the
+Metropolis operations, which can be viewed with a command such as
+
+    > dist-plt t r glog.met,1 | plot
+
+Here, the rejection rate is about 0.7, which is acceptable.  Very low
+or very high rejection rates are usually an indication that sampling
+would work better with a different stepsize.
+
+Although the stepsize of 1 that was used above appears to be OK, we
+could try a smaller stepsize with the following commands (following a
+'dist-spec' command):
+
+    > mc-spec glog.met,0.2 repeat 50 metropolis 0.2 end
+    > dist-mc glob.met,0.2 500
+
+Or we might try a larger stepsize:
+
+    > mc-spec glog.met,5 repeat 50 metropolis 5 end
+    > dist-mc glob.met,5 500
+
+If enough iterations are done, the same estimates should be obtained
+all these chains, but some stepsizes will produce a more efficient
+chain than others.  By examining plots of how the state variables
+change, and looking at the autocorrelations with 'series', one can
+conclude that sampling is much less efficient with a stepsize of 0.2
+than with a stepsize of 1 (about five times less efficient, based on
+cumulative correlations).  With a stepsize of 5, the sampling is about
+as good as with a stepsize of 1, even though the rejection rate is
+quite high.  This is a phenomenon that occurs only in problems with an
+effective dimensionality of three or less - for higher-dimensional
+problems, a rejection rate close to one is generally an indication of
+poor sampling.
+
+
+Single-variable Metropolis updates.
+
+We can also try sampling using Metropolis updates that change only one
+variable at a time.  This is done using "met-1" operations, specified
+as follows:
+
+    > mc-spec glog.met1,1 repeat 18 met-1 1 end
+
+As with "metropolis" operations, we specify a "stepsize", which is the
+standard deviation for proposed change to a variable.  Each "met-1"
+operation tries to change each variable in turn, accepting or
+rejecting the change based on the change in energy as a result of
+making the proposed change to just that variable.  Since there are
+three state variables for this distribution, a single "met-1"
+operation must therefore calculate the energy three times, and hence
+takes about three times as long as a "metropolis" operation.  To
+facilitate comparisons, the repeat count is corresponding less in this
+specification.
+
+As before, can now sample for 500 iterations using a 'dist-mc' command:
+
+    > dist-mc glog.met1,1 500
+
+On our machine, this also takes about two seconds (as will all such
+commands in this section).
+
+You can see how well this method samples in the same ways as discussed
+above.  You could also try sampling using "met-1" with a stepsize of
+0.2 and 5.  You should see that the rejection rate with "met-1" is
+lower than with "metropolis" operations using the same stepsize.
+Nevertheless, sampling from this distribution seems to be less
+efficient with "met-1" than with "metropolis", drastically so when the
+stepsize is 0.2 or 5.  This is not always so, however.  For
+distributions where at least some of the variables are close to being
+independent, updating one variable at a time can be more efficient.
+It is also sometimes possible to save computation time when
+recomputing the energy after a change to just one variable, though
+that possibility is not presently exploited by this software.
+
+
+Single-variable slice sampling.
+
+Variables can also be updated one at a time is using single-variable
+slice sampling, which is described in my tech report on "Markov chain
+Monte Carlo methods based on `slicing' the distribution" (available
+from my web page).  Several variations on this procedure are
+implemented in this software.  The method in which the slice is found
+by "stepping out" can be done as follows:
+
+    > mc-spec glog.slc1,1 repeat 4 slice-1 1 end
+    > dist-mc glog.slc1,1 500
+
+This does single-variable slice sampling using an initial interval of
+size 1, which is extended in steps of the same size until both ends
+are outside the slice.  The "doubling" procedure is also implemented,
+but is not illustrated here.
+
+The "e" quantity records the average number of energy function
+evaluations done in the slice sampling updates for one iteration.
+We can find the average of this quantity over all iterations with
+a command such as
+
+    > dist-tbl e glog.slc1,1 | series m
+
+    Number of realizations: 1  Total points: 500
+
+    Mean: 5.406000  
+
+Note that 5.406 is the average number of evaluations for updating one
+variable, not for updating all three of them.
+
+As with the Metropolis methods, performance varies with the stepsize
+chosen.  However, one advantage of single-variable slice sampling is
+that it is a bit less sensitive to the choice of stepsize than the
+single-variable Metropolis algorithm.
+
+
+Sampling with Hamiltonian dynamics.
+
+It is possible to sample much more efficiently by suppressing the
+random walk behaviour that the methods above all exhibit.  One way of
+doing this is by adding "momentum" variables, which will keep the
+state moving in the same direction for an extended period of time.
+The original "position" variables along with these "momentum"
+variables can be updated by applying Hamiltonian dynamics for some
+period of fictitious time, implemented by performing some number of
+"leapfrog" steps with a specified stepsize.  To produce an ergodic
+Markov chain, the momentum should also be changed using "heatbath"
+updates, but it should not be changed too quickly, as this will
+re-introduce random walk behaviour.  For a detailed discussion of this
+"stochastic dynamics" method, see my book, Bayesian Learning for
+Neural Networks, or my review paper, Probabilistic Inference Using
+Markov Chain Monte Carlo Methods.
+
+We can try out this dynamical method as follows:
+
+    > mc-spec glog.dyn,0.3 repeat 40 heatbath 0.98 dynamic 1 0.3 end
+    > dist-mc glog.dyn,0.3 500
+
+The argument of "heatbath" is the factor by which to multiply the old
+momentum variables (after which noise is added).  A value of 1-d
+results in random walks being suppressed for around 1/d iterations.
+
+If you now look at the state variables with a command such as
+
+    > dist-plt t xyz glog.dyn,0.3 | plot
+
+you will see that they are initially far from their stationary
+distribution, but after about 50 iterations they settle down, and from
+there on the chain samples very well.  The initial behaviour of the
+chain can be understood by looking at what is happening to the the
+"kinetic energy", which is half the sum of squares of the momentum
+variables:
+
+    > dist-plt t K glog.dyn,0.3 | plot
+
+Initially, the kinetic energy (as well as the "potential" energy,
+which is what is specified in 'dist-spec') is very large.  It is only
+slowly dissipated, as a result of the "heatbath" updates of the
+momentum variables.  Eventually, however, the kinetic energy reaches
+its equilibrium distribution (around a value of 3/2), and the chain
+samples from approximately the desired distribution. 
+
+This method is not exact, however, because the Hamiltonian dynamics is
+simulated inexactly, biasing the results.  The hybrid Monte Carlo
+method eliminates this bias by a using an acceptance test.
+
+
+Hybrid Monte Carlo.
+
+Several variations of the hybrid Monte Carlo method are supported by
+this software.  In the "standard" method, each iteration starts by
+picking completely new values for the momentum variables with the
+"heatbath" operation.  Hamiltonian dynamics is then simulated for some
+number of leapfrog steps, using some specified stepsize, and the
+end-point of the simulated trajectory is accepted or rejected based on
+the change in the total energy.  
+
+The following commands apply the standard hybrid Monte Carlo method,
+using trajectories of 45 leapfrog steps, done with a stepsize of 0.3.
+To avoid problems with large initial energies, a few Metropolis
+updates are done at the beginning.
+
+    > mc-spec glog.hmc,0.3 repeat 50 metropolis 1
+    > dist-mc glog.hmc,0.3 1
+    > mc-spec glog.hmc,0.3 heatbath hybrid 45 0.3
+    > dist-mc glog.hmc,0.3 500
+
+The length of the trajectory should be chosen based on the number of
+steps for which we want to suppress random walks - longer for more
+difficult problems where it takes many steps to get from one end of
+the distribution to the other.
+
+As with the Metropolis methods, you can check the rejection rate with
+a command such as the following (the 2: causes the first iteration,
+which consisted of Metropolis updates, to be excluded):
+
+    > dist-tbl r glog.hmc,0.3 2: | series m
+
+    Number of realizations: 1  Total points: 500
+
+    Mean: 0.042084
+
+It is also useful to look at the changes in energy on which the
+decisions to accept or reject were made:
+
+    > dist-plt t D glog.hmc,0.3 2: | plot-points
+
+If most of these points are much greater than one, the rejection rate
+will be high.  With a stepsize of 0.3, the change in energy is seldom
+greater than 0.5, but if the stepsize is increased to 0.8 much larger
+changes are often seen, and with a stepsize of 1, almost no
+trajectories are accepted.  
+
+We can see how well the chain is sampling by plotting the state
+variables, as described above, and by looking at the autocorrelations,
+with a command such as:
+
+    > dist-tbl x glog.hmc,0.3 10: | series mac 10
+
+    Number of realizations: 1  Total points: 491
+    
+    Mean: 0.588512  S.E. from correlations: 0.437857
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.406767    1.813534
+        2   0.141586    2.096707
+        3   0.036505    2.169716
+        4   0.002760    2.175236
+        5  -0.001138    2.172961
+        6   0.031450    2.235860
+        7  -0.005979    2.223903
+        8  -0.006971    2.209960
+        9  -0.022040    2.165880
+       10  -0.064142    2.037595
+
+From the cumulative correlations, we can estimate that estimating the
+expectation of "x" using points from this chain is a factor of only
+about 2.2 less efficient than using independent points.  This is about
+ten times better than the best of the chains described above.
+
+On the other hand, we have seen that some care is needed to pick an
+appropriate stepsize for hybrid Monte Carlo, and it is also often
+necessary to start at a reasonably good point, as was done here by
+doing a few Metropolis updates at the beginning.
+
+The "persistent" form of hybrid Monte Carlo (described in Bayesian
+Learning for Neural Networks) is also implemented.  Here are the
+appropriate commands:
+
+    > mc-spec glog.phmc,0.3 repeat 50 metropolis 1
+    > dist-mc glog.phmc,0.3 1
+    > mc-spec glog.phmc,0.3 repeat 35 heatbath 0.99 hybrid 1 0.3 negate end
+    > dist-mc glog.phmc,0.3 500
+
+The use of a "heatbath" operation with a non-zero "decay" causes the
+momentum to change only slowly.  Because of this, even though only a
+single leapfrog update is done, random walk behaviour will still be
+suppressed.  The "negate" operation negates the momentum, which
+normally undoes a negation at the end of the "hybrid" operation.  If
+the "hybrid" update was rejected, however, the first negation will not
+have been done, and movement will be reversed, undermining the random
+walk suppression.  To avoid this, a smaller stepsize is used, to keep
+the rejection rate very small.
+
+
+Reflective slice sampling.
+
+Another way of avoiding random walks is to apply slice sampling to all
+variables at once, and to sample from within the multivariate slice by
+a sort of dynamical method that proceeds at a constant speed while
+reflecting off the boundaries of the slice.  We would rather not
+compute these boundaries exactly, however.  Instead, we can proceed in
+steps of some size and when we cross the boundary reflect at either
+the last inside point or the first outside point.  These reflection
+operations are based on the gradient of the energy at that point.
+
+Slice sampling with reflection from the last inside point is done as
+follows:
+
+    > mc-spec glog.slci,0.3 heatbath slice-inside 35 0.3
+    > dist-mc glog.slci,0.3 500
+
+The "heatbath" operation picks a random momentum vector, which sets
+the speed of motion and the initial direction.  We then find the slice
+and take 35 steps within the slice with that velocity, using a
+stepsize of 0.3 (ie, the change in the state at each step is 0.3 times
+the momentum vector).  If a step takes us from inside the slice to
+outside the slice, we backtrack, and change the momentum vector by
+reflection based on the gradient.  It is necessary to check that this
+reflection would also occur in the reversed trajectory; if not, we
+must reject by negating the momentum, causing further steps to retrace
+the trajectory.  Rejections will be less frequent if the stepsize is
+small.
+
+Slice sampling with outside reflection is done as follows:
+
+    > mc-spec glog.slco,0.3 heatbath slice-outside 45 0.3 
+    > dist-mc glog.slco,0.3 500
+
+This method operates as described for inside reflection, except that
+when a step ends at a point outside the slice, we stay there, but
+reflect based on the gradient at that point.  If the final point is
+inside the slice, we accept it.  Otherwise we reject, and return to
+the point from which the trajectory started.  
+
+Both inside and outside reflection work reasonably well for this
+distribution - not quite as good as hybrid Monte Carlo, but better
+than the other methods.
+
+
+Overrelaxed slice sampling.
+
+Random walks can also be suppressed for some distributions using
+single-variable slice sampling with "overrelaxation", in which
+variables are changed from their current point to the corresponding
+point on the "other side" of their conditional distribution.  This can
+be done with the following commands:
+
+    > mc-spec glog.slcv,0.3 slice-over 8 0.1 0.3 
+    > dist-mc glog.slcv,0.3 500
+
+The first argument of "slice-over" is the number of "refinements" used
+to more accurately pin down the end-points of the slice (using
+bisection).  More refinements result in an update that is closer to an
+ideal overrelaxed update, and also reduces the probability of
+rejection (caused by the overrelaxed point being outside the slice).
+The second argument specifies the probability of doing an ordinary
+single-variable slice sampling update rather than an overrelaxed one.
+Occasional ordinary updates are necessary in order to ensure
+ergodicity, but they should not be done too often if random walks are
+to be suppressed.  The final argument is the stepsize to use when
+finding the endpoints of the slice initially.
+
+For this distribution, overrelaxation does not work as well as the
+dynamical methods or reflective slice sampling, but it is effective
+for some other distributions.
+
+
+Performance summary.
+
+The following table summarizes the inefficiency factor for estimating
+the expectation of the "x" variable using the various methods,
+determined from estimates of the cumulative correlations.  The
+repetition counts for the methods were set so that they all required
+about 2 seconds of computation time for 500 iterations.
+
+  METHOD      STEPSIZE   CUM.CORR.  NOTES
+
+  metropolis     0.2        122
+                  1          23
+                  5          20
+
+  met-1          0.2        460     Cum. corr. estimated using 2000 iterations
+                  1          55
+                  5         118
+
+  slice-1        0.2         77     Computation times had to be a bit greater 
+                  1          32      than 2s for the slice sampling methods, as
+                  5          62      the repetition count has to be an integer
+
+  dynamic        0.3        3.3     This method is not exact
+
+  hybrid (HMC)   0.3        2.2
+
+  persistent HMC 0.18         9
+
+  slice-inside   0.3         11
+  
+  slice-outside  0.3          4
+
+  slice-over      2          28
+
+The relative performance of the different methods will of course be
+somewhat different for different distributions, but large gains from
+using hybrid Monte Carlo (HMC) or other methods that suppress random
+walks are common.
+
+
+
+EXAMPLES OF MARKOV CHAIN SAMPLING FOR SIMPLE BAYESIAN MODELS
+
+The 'dist' programs can be used to sample from the posterior
+distribution of the parameters of a Bayesian model, specified by
+giving formulas for minus the log of the prior distribution, and for
+minus the log likelihood for one case.  The model defines the
+conditional distribution of one or more "target" values in a case,
+given the values of the "inputs" for that case.  The cases are
+independent of each other.
+
+Models of this sort can handle regression and classification problems,
+in which the "targets" are the response variables and the "inputs" the
+predictor variables.  When the number of inputs is zero, the models
+will estimate the joint probability or probability density of the
+target values.  However, the set of allowed models is restricted by
+the range of formulas supported, as well as by the present restriction
+to no more than 10 inputs and 10 targets per case.  Also, latent
+variables cannot be explicitly represented at present, though some
+latent variable models can be defined by summing over the possible
+latent values in the likelihood.  The facilities of this module are
+meant primarily as a way of demonstrating the Markov chain sampling
+methods on statistical problems, not as a comprehensive statistical
+modeling package.
+
+These examples also illustrate some of the Markov chain sampling
+facilities not demonstrated earlier.  The linear regression example
+(Ex-bayes-r.doc) illustrates the use of "windows" with hybrid Monte
+Carlo.  The t-distribution example (Ex-bayes-t.doc) shows how one can
+set stepsizes differently for different variables.  The example of
+probability estimation for categorical data (Ex-bayes-p.doc) shows how
+the marginal likelihood for a model (more generally, the normalizing
+constant for the distribution) can be found using Annealed Importance
+Sampling.
+
+The data and command files for these examples are in the "ex-bayes"
+directory.
+
+
+A LINEAR REGRESSION MODEL
+
+I generated 100 cases of synthetic data for this example, each case
+consisting of two input (predictor) values and one target (response)
+value.  The first input (i0) was randomly generated from the normal
+distribution with mean zero and standard deviation one.  The second
+input (i1) was set to the first input plus an offset that was normally
+distributed with mean zero and standard deviation 0.1.  The two inputs
+were therefore highly correlated.  The target value (t) was set to 
+0.5 + 2.5*i0 - 0.5*i1 + e, where e was normally distributed noise with
+mean zero and standard deviation 0.1.  This data was stored in the
+file "rdata".
+
+
+Specifying the model.
+
+We can specify a Bayesian linear model for this data with a command
+such as the following:
+
+    > dist-spec rlog.met \
+    >   "u ~ Normal(0,10^2) + w0 ~ Normal(0,10^2) + w1 ~ Normal(0,10^2) \
+    >      + v ~ ExpGamma(1,0.2)" \
+    >   "t ~ Normal (u + w0i0 + w1i1, Exp(-v))"
+
+Here, the "\" characters at the ends of the lines tell the Unix shell
+that the command is continued on the next line.  The "rlog.met"
+argument of 'dist-spec' is the name of the log file to use.  The next
+argument (which takes up two lines) is the prior specification.  It
+must be put in quotes to keep the shell from interpreting the special
+characters used.  The last argument is the likelihood specification,
+which will also usually have to be quoted.
+
+Let's first examine the likelihood above:
+
+    t ~ Normal (u + w0i0 + w1i1, Exp(-v))
+
+This says that the target value for a case, t, is modeled by a normal
+distribution with mean given by u + w0i0 + w1i1 and variance given by
+Exp(-v).  Here, u, w0, w1, and v are parameters of the model.  Model
+parameters must have names starting with "u", "v", "w", "x", "y", or
+"z", possibly followed by a single digit.  The two inputs for the case
+are called i0 and i1.  If there were more than one target, they would
+be called t0, t1, etc., but here the name "t" is used, which is a
+synonym for "t0" (similarly "i" is a synonym for "i0").
+
+The notation in the likelihood specification using "~" is actually an
+abbreviation for the following:
+
+    Log(2*Pi)/2 + [t - (u+w0i0+w1i1)]^2 / [2Exp(-v)]
+
+which is minus the log of the normal probability density for t with
+the given mean and variance.  In general, the likelihood is specified
+by a formula giving minus the log of the probability or probability
+density for the target or targets in one case, given the values of the
+inputs.  Since the cases are assumed to be independent, minus the
+total log likelihood is found by just adding these terms for all
+cases.
+
+The prior specification above is constructed with similar notation:
+
+    u ~ Normal(0,10^2) + w0 ~ Normal(0,10^2) + w1 ~ Normal(0,10^2) 
+      + v ~ ExpGamma(1,0.2)
+
+This gives each of u, w0, and w1 an independent normal prior with mean
+of 0 and standard deviation of 10 (ie, variance of 10^2).  The prior
+specification is a formula for minus the log of the prior density, so
+terms pertaining to different parameters are simply added together.
+The terms involving "~" are abbreviations for minus the log prior
+density for a known distribution.  Here, all the parameters are
+independent under the prior, but it would be possible to make one
+parameter depend on another, for instance by changing the term above
+involving w1 to w1 ~ Normal(w0,10^2).
+
+The "v" parameter is the log of the "precision" (inverse variance) for
+the error term in the model.  The Markov chain sampling procedures
+assume that the range of all variables being sampled is the entire
+real line.  Since the precision is constrained to be positive, we must
+represent it with some unconstrained variable that is transformed to
+produce the actual precision.  An exponential transformation is often
+convenient, and in this case is probably desirable in any case, in
+order to make the Markov chain sampling more efficient.
+
+Here, the prior for the precision is specified to be Gamma with shape
+parameter of 1 and scale of 0.2 (which gives a mean value of 5).
+Since we will generally want to represent Gamma variables by their
+logs, the built-in ExpGamma distribution used here is for a variable
+whose exponential has a Gamma distribution with the indicated shape
+and scale parameters.
+
+
+Specifying the data source.
+
+After specifying the model with 'dist-spec', we need to say where the
+data is found using 'data-spec', as follows:
+
+    > data-spec rlog.met 2 1 / rdata .
+
+The arguments after the name of the log file say that there are two
+input values and one target value.  After the slash, the files where
+the inputs and targets are found are given.  The "." says that the
+targets are found in the same file as the inputs, following them on
+the same line.  See data-spec.doc for more details and other options.
+
+
+Sampling with Metropolis updates.
+
+We can now sample from the posterior distribution of the model
+parameters, after specifying how we want this to be done.  Here we'll
+try sampling by Metropolis updates to all variables simultaneously:
+
+    > mc-spec rlog.met repeat 45 metropolis 0.02 
+    > dist-mc rlog.met 500
+
+Each iteration will consist of 45 Metropolis updates, done using a
+proposal distribution that adds a normally-distributed offset to each
+variable with standard deviation 0.02.  The 'dist-mc' command does 500
+such iterations (for a total of 22500 Metropolis updates).  This takes
+about 30 seconds on our machine.
+
+We can see what the average rejection rate was for these updates as
+follows:
+
+    > dist-tbl r rlog.met | series m
+
+    Number of realizations: 1  Total points: 500
+
+    Mean: 0.708978  
+
+A rejection rate of 0.7 is about right, so the stepsize of 0.02 looks
+to be about optimal.  If you had started by trying a much larger or
+smaller stepsize, you would need to adjust it by trial and error to
+get a rejection rate in the range of about 0.3 to 0.8.
+
+We can look at how well the chain is sampling by plotting the four
+state variables over time:
+
+    > dist-plt t uw0w1v rlog.met | plot
+
+From this plot, it appears that the equilibrium distribution is
+reached by about iteration 100, and that the chain is sampling
+somewhat adequately from then on, though with a substantial degree of
+autocorrelation.  We can quantify the inefficiency in estimation of
+the precision, v, that results from these autocorrelations as follows:
+
+    > dist-tbl v rlog.met 100: | series mac 30
+
+    Number of realizations: 1  Total points: 401
+ 
+    Mean: 4.461414  S.E. from correlations: 0.026037
+   
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.893653    2.787307
+        2   0.807894    4.403095
+        3   0.709395    5.821885
+        4   0.621722    7.065329
+        5   0.539335    8.143999
+        6   0.462553    9.069106
+        7   0.379245    9.827595
+        8   0.311431   10.450456
+        9   0.244173   10.938802
+       10   0.198226   11.335254
+       11   0.164614   11.664482
+       12   0.126405   11.917293
+       13   0.092779   12.102850
+       14   0.074293   12.251436
+       15   0.049729   12.350895
+       16   0.037565   12.426024
+       17   0.028010   12.482045
+       18   0.026148   12.534341
+       19   0.043167   12.620674
+       20   0.062433   12.745541
+       21   0.083616   12.912773
+       22   0.108346   13.129465
+       23   0.112400   13.354265
+       24   0.111866   13.577997
+       25   0.092298   13.762593
+       26   0.076360   13.915313
+       27   0.051526   14.018364
+       28   0.038505   14.095374
+       29   0.018084   14.131542
+       30   0.006680   14.144903
+
+The cumulative correlation up to lag 30, where the autocorrelation is
+approximately zero, indicates that about 14 times as many points will
+be needed to get an estimate of a given accuracy as would be needed if
+the points were independent.  This inefficiency results from the high
+dependency between w0 and w1, which can be seen in the following plot:
+
+    > dist-plt w0 w1 rlog.met 100: | plot-points
+
+This dependency is why the stepsize must be so small - proposed
+changes must be small, as otherwise the new point is likely to be
+incompatible with this dependency between w0 and w1.
+
+Estimates for various functions of state can be found using
+'dist-est'.  For example, we can predict the target value for input
+values of i0=1.9 and i1=2.1 as follows:
+
+    > dist-est "u + w0*1.9 + w1*2.1" rlog.met 100:
+    
+    Number of sample points: 401
+    
+    Estimates for u + w0*1.9 + w1*2.1:
+
+      Mean:    4.18959  (standard error 0.00150075)
+      Std.dev: 0.0300526
+
+    NOTE: The standard errors assume points are independent
+
+Note that since the points aren't close to being independent, the
+standard error shown is not correct.  Note also that the standard
+deviation shown is the posterior standard deviation of the linear fit
+at this point.  The prediction for a target value in a case with these
+inputs would have additional uncertainty due to the noise.
+
+
+Sampling with hybrid Monte Carlo.
+
+The posterior dependency between w0 and w1 makes Markov chain sampling
+somewhat difficult for this problem.  One could try to eliminate this
+dependency by a reparameterization, which would certainly be possible
+for this fairly simple problem, but in general this may be tedious or
+infeasible.  However, the inefficiencies caused by dependencies may be
+reduced by suppressing the random walk aspect of the sampling, which
+can be done by using hybrid Monte Carlo rather than the simple
+Metropolis updates used above.
+
+After 'dist-spec' and 'data-spec' commands that are the same as those
+described above (apart from the name of the log file), we can sample
+using hybrid Monte Carlo with commands such as the following:
+
+    > mc-spec rlog.hmc heatbath hybrid 25 0.01
+    > dist-mc rlog.hmc 500
+
+One hybrid Monte Carlo update is done each iteration, consisting of a
+"heatbath" operation that picks new values for the momentum variables,
+followed by a dynamical trajectory of 25 leapfrog steps, with a
+stepsize of 0.01.  This stepsize was picked by trial and error, and
+results in a rejection rate of about 0.13.  In general, the stepsize
+for this standard form of hybrid Monte Carlo should chosen so that the
+rejection rate is somewhere between about 0.05 and 0.25.  The 500
+iterations take about 30 seconds, the same as the Metropolis run.
+
+From examining plots of the state variables over time, it seems that
+the hybrid Monte Carlo chain reaches equilibrium much more quickly
+than the Metropolis chain, and samples more efficiently once
+equilibrium is reached.  For example, here are the autocorrelations
+for the precision parameter, which we also looked at for the
+Metropolis chain:
+
+    > dist-tbl v rlog.hmc 20: | series mac 5
+
+    Number of realizations: 1  Total points: 481
+    
+    Mean: 4.451747  S.E. from correlations: 0.005397
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1  -0.077573    0.844854
+        2   0.048169    0.941192
+        3  -0.059657    0.821878
+        4   0.021492    0.864861
+        5  -0.071308    0.722244
+
+The estimated autocorrelations above do not differ significantly from
+zero.  It therefore appears that hybrid Monte Carlo is about 14 times
+more efficient than the simple Metropolis algorithm for this problem.
+
+
+Hybrid Monte Carlo with windows.
+
+Many other Markov chain methods could be applied to this problem, but
+I will mention just one more - the variation of hybrid Monte Carlo in
+which acceptance is based on "windows" of states at the start and at
+the end of a trajectory.  This variation is described in my paper on
+"An improved acceptance procedure for the hybrid Monte Carlo
+algorithm" (Journal of Computational Physics, vol. 111, pp. 194-203,
+1994), and more briefly in my book on Bayesian Learning for Neural
+Networks.
+
+This method can be applied to this problem as follows (after suitable
+'dist-spec' and 'data-spec' commands):
+
+    > mc-spec rlog.whmc heatbath hybrid 25:2 0.01
+    > dist-mc rlog.whmc 500
+
+The only difference compared to the specification for standard hybrid
+Monte Carlo is the ":2" after the number of leapfrog steps (25).  This
+specifies that windows of two states at the start and end of the
+trajectory should be used.  Acceptance is based on the difference in
+the total probability of all states in the window at the start and in
+the window at the end.  The next state is picked from the end window,
+if the trajectory was accepted, or from the start window, if the
+trajectory was rejected, with state selected from the appropriate
+window according to their relative probabilities.
+
+Note that when windows are used the state may change even when there
+was a "rejection", as long as one of the states in the start window is
+of comparable probability to the starting state.  This provides some
+insurance against getting stuck at a point where the rejection rate is
+very high.  The use of windows also tends to reduce the rejection
+rate.  In this problem, the rejection rate with windows is only 0.05,
+less than the rate of 0.13 seen above for the standard hybrid Monte
+Carlo algorithm, while the time is only slightly greater (due to a
+slight overhead from using windows).  The benefit is small here, since
+the standard hybrid Monte Carlo method was doing very well in any
+case, but use of windows can make a bigger difference for some other
+problems, and is almost cost-free if the window size is a small
+fraction of the trajectory length.
+
+
+MODELING REAL-VALUED DATA WITH A T-DISTRIBUTION
+
+One can also define models for the unconditional distribution of one
+or more target values, without reference to any input values.  Here, 
+I will show how one can sample from the posterior distribution for the
+parameters of a univariate t-distribution.  This example also shows
+how to specify different stepsizes for different state variables.
+
+
+Specifying the model.
+
+Here is a specification for a model in which the degrees of freedom of
+the t-distribution are fixed (at two), but the location and scale
+parameters are unknown:
+
+    > dist-spec tlog1 d=2 "u ~ Normal(0,10^2) + w ~ Normal(0,1)" \
+                          "w + [(d+1)/2] Log { 1 + [(t-u)/Exp(w)]^2/d }"
+
+The "d=2" argument defines a constant (the degrees of freedom), which
+may be used in the formulas for the prior and the likelihood.  The
+location parameter, u, is given a normal prior with mean zero and
+standard deviation 10.  The log of the scale parameter, w, is given a
+normal prior with mean zero and standard deviation 1.  The software
+does not have a built-in t-distribution, so the likelihood has to be
+specified by explicitly writing a formula for minus the log of the
+probability of the target value (t) for given values of the model
+parameters.  This formula must include all terms that depend on the
+model parameters, but for sampling from the posterior it is not
+necessary to include constant terms.  (However, it is necessary to
+include all terms in the likelihood if the marginal likelihood for the
+model is to be found using Annealed Importance Sampling.)
+
+
+Specifying the data source.
+
+We can specify that the data comes from the file "tdata" as follows:
+
+    > data-spec tlog1 0 1 / tdata .
+
+This says that there are no input values and one target value, and
+that the data comes from the file "tdata" (note that one must say
+where the input values come from even though there are zero of them,
+but that one can then say that the targets come from the same place
+using the "." specification).
+
+The contents of "tdata" are as follows:
+
+    0.9
+    1.0
+    1.1
+    6.9
+    7.0
+    7.1
+
+
+Sampling with the Metropolis algorithm.
+
+We can now try sampling using the Metropolis algorithm with a stepsize
+of 1, repeated 10 times each iteration:
+
+    > mc-spec tlog1 repeat 10 metropolis 1
+    > dist-mc tlog1 5000
+
+This takes about 12 seconds on our machine.  We can look at plots such
+as the following to assess convergence:
+
+    > dist-plt t uw tlog1 | plot
+
+Equilibrium appears to have been reached within 50 iterations.  We can
+now see a picture of the posterior distribution using a command such as
+
+    > dist-plt u w tlog1 50:%3 | plot-points
+
+This produces a scatterplot for the values of the two state variables
+at those iterations from 50 on that are divisible by three.  Looking
+at only every third state reduces the number of points that will be
+superimposed, due to rejections of the Metropolis proposals.  (If some
+points are superimposed, the scatterplot might be misleading.)
+
+If you produce such a plot, you should see a tooth-shaped distribution
+whose main mass is around u=3.9 and w=1, with two roots descending at
+u=1 and u=7.
+
+
+Varying the stepsizes.
+
+The rejection rate of the metropolis operations with stepsize of 1 can
+be estimated as follows:
+
+    > dist-tbl r tlog1 | series m
+
+    Number of realizations: 1  Total points: 5000
+
+    Mean: 0.620760  
+
+The efficiency of this chain at estimating the mean of u can be
+assessed as follows:
+
+    > dist-tbl u tlog1 50: | series mac 10
+
+    Number of realizations: 1  Total points: 4951
+    
+    Mean: 3.963551  S.E. from correlations: 0.055950
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.625358    2.250717
+        2   0.388528    3.027772
+        3   0.254716    3.537205
+        4   0.168077    3.873358
+        5   0.106168    4.085695
+        6   0.062758    4.211211
+        7   0.031260    4.273732
+        8   0.009645    4.293023
+        9   0.001954    4.296931
+       10  -0.006025    4.284882
+
+An inefficiency factor of 4.2 is not bad, but we still might try to
+improve sampling by using a different stepsize.  We can use a stepsize
+twice as big by changing the 'mc-spec' command as follows:
+
+    > mc-spec tlog2 repeat 10 metropolis 2
+
+This produces a higher rejection rate:
+
+    > dist-tbl r tlog2 | series m
+
+    Number of realizations: 1  Total points: 5000
+
+    Mean: 0.813800  
+
+Despite this, the efficiency of sampling is improved:
+
+    > dist-tbl u tlog2 50: | series mac 10
+    
+    Number of realizations: 1  Total points: 4951
+    
+    Mean: 3.916702  S.E. from correlations: 0.048513
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.502745    2.005491
+        2   0.246632    2.498755
+        3   0.133819    2.766394
+        4   0.081335    2.929063
+        5   0.053313    3.035689
+        6   0.028491    3.092671
+        7   0.013611    3.119892
+        8   0.024985    3.169861
+        9   0.013700    3.197261
+       10   0.018007    3.233274
+
+From the scatterplot of the posterior distribution, the larger
+stepsize seems appropriate for u, but it seems too big for w.  We can
+specify different stepsizes for u and w as follows:
+
+    > dist-stepsizes tlog12 w=1 u=2
+    > mc-spec tlog12 repeat 10 metropolis 1
+
+The 'dist-stepsizes' command lets you specify individual stepsizes for
+the state variables.  These values are multiplied by the stepsize
+specified for the "metropolis" operation before being used, so you can
+change the overall size of the steps by changing this argument, while
+keeping the relative stepsizes the same.  
+
+Using twice as big a stepsize for u as for w seems to work well, as 
+seen by looking at the autocorrelations for u:
+
+    > dist-tbl u tlog12 50: | series mac 10
+    
+    Number of realizations: 1  Total points: 4951
+    
+    Mean: 3.876082  S.E. from correlations: 0.036181
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.282051    1.564102
+        2   0.061686    1.687474
+        3   0.019975    1.727424
+        4   0.010014    1.747453
+        5  -0.004439    1.738575
+        6   0.000983    1.740540
+        7   0.000207    1.740954
+        8   0.025230    1.791413
+        9   0.004726    1.800866
+       10  -0.001624    1.797619
+
+The autocorrelations have been reduced to the point where the estimate
+based on the points from this chain are a factor of only about 1.7
+times less efficient than an estimate based on independent points.
+
+
+MODELING PROBABILITIES FOR CATEGORICAL DATA
+
+As an example of a model for categorical data, I will show here how to
+model probabilities for targets that come from the set {0,1,2}, with
+the prior distribution for these probabilities being uniform over the
+simplex of valid probabilities.  This example illustrates one way of
+representing probabilities using unbounded real parameters.  It can
+easily be generalized to arbitrary Dirichlet priors.  I also show how
+to compute the marginal likelihood for this model by using Annealed
+Importance Sampling, and also by using simple importance sample (which
+can be done as a degenerate case of AIS).
+
+
+Specifying the model.
+
+The probabilities for the three possible values of the target will be
+represented using the parameters w0, w1, and w2, with the probability
+of the value "0" being Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)] and similarly
+for the other values.  These probabilities will be positive and sum to
+one for any values of the parameters.  This is necessary if we are to
+use this software, since it doesn't allow state variables to be
+constrained.
+
+With this representation, the model can be specified by the following
+somewhat formidable command:
+
+    > dist-spec plog.met \
+       "w0~ExpGamma(1,1) + w1~ExpGamma(1,1) + w2~ExpGamma(1,1)" \
+       "-Delta(t-0)*(w0-LogSumExp(w0,w1,w2)) \
+        -Delta(t-1)*(w1-LogSumExp(w0,w1,w2)) \
+        -Delta(t-2)*(w2-LogSumExp(w0,w1,w2))"
+
+These priors for w0, w1, and w2 will produce a uniform prior for the
+resulting probabilities.  More generally, if the priors for w0, w1,
+etc. are ExpGamma(a1,1), ExpGamma(a2,1), etc., the prior distribution
+for the probabilities Exp(w0)/[Exp(w0)+...], Exp(w1)/[Exp(w0)+...],
+and so forth will be Dirichlet with parameters a1, a2, etc.
+
+The terms in the likelihood are constructed using the "Delta" function
+which has the value one when its argument is zero and has the value
+zero otherwise.  Since the target, t, is in the set {0,1,2}, exactly
+one of the terms in the likelihood will be non-zero for each case.
+When the target has the value "0", the likelihood should be minus the
+log of the probability of the target being "0", that is:
+
+    - Log { Exp(w0) / [ Exp(w0) + Exp(w1) + Exp(w2) ] }
+
+In the specification above, this is written as
+
+    - (w0 - LogSumExp(w0,w1,w2))
+
+using the "LogSumExp" function, which computes the log of the sum of
+the exponentials of its arguments.  This is shorter and faster.  More
+importantly, the LogSumExp function is guaranteed to produce a valid
+result even when computing Exp(w0), Exp(w1), or Exp(w2) would result
+in floating point overflow or underflow.  This is probably not crucial
+for this example, but it is important in some similar contexts.
+
+
+Specifying the data source.
+
+The data is stored one item per line in the file "pdata".  This source
+is specified with the following command:
+
+    > data-spec plog.met 0 1 3 / pdata .
+
+The arguments after the log file are the number of input variables
+(0), the number of target variables (1), and an argument (3) that
+indicates that the targets are categorical with three possible values,
+represented by the integers 0, 1, and 2.  This argument could have
+been left out, but including it causes the data to be checked to
+ensure that each item is in the set {0,1,2}.
+
+zThe remaining arguments give the files where the inputs (all zero of
+them) and targets come from, with the "." for the latter indicating
+that the targets come from the same place as the inputs.
+
+The file "pdata" contains 17 items, of which 6 are "0", 8 are "1", and
+3 are "2".
+
+
+Sampling with the Metropolis algorithm.
+
+We can sample from the posterior distribution using any of various
+Markov chain methods.  Here's one example using the Metropolis
+algorithm:
+
+    > mc-spec plog.met repeat 10 metropolis 1
+    > dist-mc plog.met 1000
+
+This takes about eight seconds on our machine.  Convergence is quite
+rapid, and the sampling efficiency is reasonably good.
+
+We can estimate the probabilities of the three possible values as
+follows:
+
+    > dist-est "Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.met 100:
+    
+    Number of sample points: 901
+    
+    Estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.349174  (standard error 0.00342273)
+      Std.dev: 0.102739
+    
+    NOTE: The standard errors assume points are independent
+    
+    > dist-est "Exp(w1)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.met 100:
+    
+    Number of sample points: 901
+    
+    Estimates for Exp(w1)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.450742  (standard error 0.00354029)
+      Std.dev: 0.106268
+    
+    NOTE: The standard errors assume points are independent
+    
+    > dist-est "Exp(w2)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.met 100:
+    
+    Number of sample points: 901
+    
+    Estimates for Exp(w2)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.200084  (standard error 0.00290151)
+      Std.dev: 0.0870937
+    
+    NOTE: The standard errors assume points are independent
+
+Note that since the points are not entirely independent, the standard
+errors are not quite right.  For comparison, the exactly correct
+posterior means of the three probabilities (found analytically) are
+0.35, 0.45, and 0.2.
+
+    
+Computing the marginal likelihood with Annealed Importance Sampling.
+
+We can use Annealed Importance Sampling (AIS) to find the prior
+probability of the observed data given this model - sometimes called
+the "marginal likelihood".  This is the normalizing constant for the
+posterior distribution, if it is specified as the product of the prior
+and the likelihood.  Annealed Importance Sampling (which is described
+in a technical report of this name available from my web page) can
+also help in handling isolated modes, though this should not be a
+problem for this model.
+
+To use AIS, we specify the model and the data source as above, and
+then use the following commands:
+
+    > mc-temp-sched plog.ais 0.1 0.3 0.6
+    > mc-spec plog.ais AIS repeat 10 metropolis 0.5
+    > dist-mc plog.ais 1000
+
+The 'mc-temp-sched' command specifies a "tempering schedule": a series
+of distributions that the annealing run will pass through.  For a
+Bayesian model, these distributions are created by multiplying the log
+likelihood part of the "energy" by various "inverse temperatures",
+listed as arguments to 'mc-temp-sched'.  A final distribution with
+inverse temperature of 1 is assumed at the end of the schedule.  This
+final distribution is the posterior, which we wish to sample from, and
+to find the normalizing constant for.
+
+The chain proceeds sequentially through these distributions.  The
+"AIS" operation moves to the next distribution in the schedule, and
+updates a "weight" according to the ratio of probabilities under the
+new and old distributions.  If the chain is at the last distribution
+(at inverse temperature 1), it moves to the first distribution (here,
+at inverse temperature 0.1), after first drawing a new state from the
+distribution at inverse temperature 0, which for a Bayesian model is
+the prior.  There are four temperatures in the tempering schedule
+here, and each iteration does one "AIS" operation.  The 1000
+iterations will therefore produce 250 annealing runs.
+
+Markov chain operations such as "metropolis" operate as usual, except
+that the "energy function" is modified by the inverse temperature.
+
+For AIS to operate, it must be possible to sample from the prior.  If
+the prior is specified entirely as a sum of "~" terms, with no
+circular references, the software knows how to sample from it.
+Otherwise, you must provide a separate program to do the sampling.
+For how this is done, see the documentation on the -read-prior option
+in dist-spec.doc and also the information in dist-mc.doc.
+
+The commands above take about nine seconds on our machine.  Once they
+have finished, we can estimate functions of state with 'dist-est',
+which will automatically look at only the iterations that pertain to
+the final distribution of interest.  It also computes weighted
+estimates using the weights found during the annealing runs.  Here is
+an example:
+
+    > dist-est "Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.ais
+    
+    Number of sample points: 250
+    
+      Variance of normalized weights: 1.21148
+      Adjusted sample size: 113.0  (reduction factor 0.452)
+    
+    Estimates for importance weights:
+    
+      Mean of weights: 2.85948e-09  (standard error 1.99056e-10)
+      Log of mean:    -19.6726  (standard error 0.0696127)
+    
+    Standard estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.342344  (standard error 0.00925806)
+      Std.dev: 0.100527
+    
+      Effective sample size: 117.9  (reduction factor 0.472)
+    
+    Jacknife estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.342353  (standard error 0.00934127)
+    
+      Effective sample size: 115.8  (reduction factor 0.463)
+    
+    NOTE: The standard errors assume points are independent
+    
+Note that there is no need to discard any of the early iterations,
+since each annealing run is independent.  Because of this
+independence, the standard errors computed are valid, subject to the
+usual caveats regarding the possibility that some important part of
+the distribution has been missed entirely.
+
+Along with an estimate for expectation of the specified function,
+'dist-est' outputs an estimate for the mean of the weights, which for
+a Bayesian model will be the marginal likelihood, provided the
+likelihood specification included all terms, even those that are
+constant.  The log of this estimate is also output, since the value
+will often be extremely small or large.
+
+For this model, the marginal likelihood can be computed exactly by
+multiplying successive predictive probabilities.  For this data, it is
+
+       6! 8! 3! 
+       --------  =  2.86378e-9    log is -19.67112
+       19! / 2!
+
+The estimates and estimated standard errors are consistent with this.
+
+This problem is actually easy enough that the marginal likelihood can
+be found by simple importance sampling.  This can be viewed as a
+degenerate form of Annealed Importance Sampling in which the tempering
+schedule has only one distribution - the assumed one, at temperature
+1, which is the posterior.  We can do simple importance sampling with
+the following commands:
+
+    > mc-temp-sched plog.is -
+    > mc-spec plog.is AIS 
+    > dist-mc plog.is 1000
+
+The 'mc-temp-sched' command with the argument "-" sets up the null
+tempering schedule.  The 'mc-spec' command just has an "AIS"
+operation, with no Markov chain operations.  This causes a new state
+to be drawn from the prior every iteration, and the appropriate weight
+to be computed based on the likelihood.
+
+Estimates for expectations and for the marginal likelihood can be
+found using 'dist-est'.  For example:
+
+    > dist-est "Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.is
+
+    Number of sample points: 1000
+    
+      Variance of normalized weights: 3.85409
+      Adjusted sample size: 206.0  (reduction factor 0.206)
+    
+    Estimates for importance weights:
+    
+      Mean of weights: 2.83221e-09  (standard error 1.75827e-10)
+      Log of mean:    -19.6822  (standard error 0.0620814)
+    
+    Standard estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.344737  (standard error 0.00530831)
+      Std.dev: 0.104735
+    
+      Effective sample size: 389.3  (reduction factor 0.389)
+    
+    Jacknife estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.344731  (standard error 0.00532859)
+    
+      Effective sample size: 386.3  (reduction factor 0.386)
+    
+    NOTE: The standard errors assume points are independent
+    
+Doing importance sampling takes only a second on our machine, which is
+faster than Annealed Importance Sampling.  However, importance
+sampling quickly becomes infeasible for problems with more parameters
+or with more data.  Annealed Importance Sampling is more feasible for
+realistic problems, though some work is needed to set up a good
+tempering schedule.  See mc-ais.doc for documentation on how to obtain
+information that is helpful in doing this.
+
+The software also supports the related methods of simulated tempering,
+tempered transitions, and tempered hybrid Monte Carlo.  There's no
+tutorial documentation on how to use these methods, though - just the
+documentation in mc-spec.doc.
+
+Annealed importance sampling and the tempering schemes are also
+supported for neural network models, but not for Gaussian process and
+mixture models.
+
+
+
+EXAMPLES OF FLEXIBLE BAYESIAN REGRESSION AND CLASSIFICATION MODELS BASED ON 
+NEURAL NETWORKS AND GAUSSIAN PROCESSES
+
+Neural networks and Gaussian processes can be used to to predict a
+target value (or values) from a set of input values.  When the target
+is real-valued, this is known as "regression".  When the target takes
+on values from a finite set, it is known as "classification".
+Examples of both sorts are discussed here.
+
+The data and command files for these examples are in the "ex-netgp"
+directory.
 
 
 A SIMPLE REGRESSION PROBLEM
@@ -874,8 +2748,16 @@ change during the run:
 
     > net-plt t w3@ rlog.net | plot
 
-In this case, the "plot" program must be one (such as xgraph-11) that
-is capable of displaying more than one superimposed graph.
+In this case, the "plot" program must be one (such as xgraph) that is
+capable of displaying more than one superimposed graph, with the data
+for each graph being separated by a blank line.  Some plot programs
+may prefer the data to come with multiple values per line, which is
+the format produced by the 'net-tbl' command:
+
+    > net-tbl tw3@ rlog.net | plot
+
+Note that there is no space between the "t" quantity and the others in
+this command.
 
 By looking at plots of the hyperparameters and quantities such as the
 squared error on the training set ('b'), one can get an idea of when
@@ -896,17 +2778,17 @@ report the average squared error:
 
     Number of networks used: 80
 
-    Case  Inputs  Targets  Means   Error^2
+    Case  Inputs Targets   Means Error^2
 
-       1    0.92    1.49     1.59  0.0093
-       2    0.71    1.83     1.79  0.0012
-       3    0.20    1.72     1.67  0.0021
+       1    0.92    1.49    1.59  0.0093
+       2    0.71    1.83    1.79  0.0012
+       3    0.20    1.72    1.67  0.0021
        
-            ( midde lines omitted )
-    
-      98   -0.69    0.35     0.35  0.0000
-      99   -1.33    0.19     0.36  0.0277
-     100   -0.09    1.31     1.24  0.0052
+            ( middle lines omitted )
+
+      98   -0.69    0.35    0.35  0.0000
+      99   -1.33    0.19    0.36  0.0277
+     100   -0.09    1.31    1.24  0.0052
 
     Average squared error guessing mean:   0.01035+-0.00147
 
@@ -933,6 +2815,40 @@ The argument at the end says that the inputs for test cases (here,
 just one case) should be taken from the output of the Unix command
 "echo 2.3", which just outputs the number 2.3.
 
+The 'net-pred' program can also find the median and the 10% and 90%
+quantiles of the predictive distribution, as illustrated below:
+
+    > net-pred itdq rlog.net 21:
+
+    Number of iterations used: 80
+    
+    Case  Inputs Targets Medians |Error| 10% Qnt 90% Qnt
+
+       1    0.92    1.49    1.59  0.0985    1.47    1.70
+       2    0.71    1.83    1.79  0.0337    1.67    1.91
+       3    0.20    1.72    1.67  0.0446    1.55    1.79
+       4    0.19    1.76    1.65  0.1145    1.53    1.76
+       5    1.18    1.18    1.20  0.0236    1.08    1.32
+       6   -2.10    0.05    0.05  0.0025   -0.08    0.21
+       7   -1.34    0.30    0.37  0.0621    0.24    0.48
+       8   -1.62    0.48    0.40  0.0790    0.27    0.53
+       9   -2.29   -0.41   -0.17  0.2371   -0.40    0.09
+      10   -0.23    0.89    0.98  0.0878    0.86    1.09
+
+                        (some lines omitted)
+
+      98   -0.69    0.35    0.35  0.0011    0.23    0.46
+      99   -1.33    0.19    0.36  0.1684    0.24    0.49
+     100   -0.09    1.31    1.24  0.0709    1.13    1.36
+
+    Average abs. error guessing median:    0.08004+-0.00631
+
+We see here that all but one of the actual targets for the first ten
+test cases lie between the 10% and 90% quantiles.  When the median is
+used as the "best guess", performance is judged by the average
+absolute error, not squared error, since this is the error measure
+that is minimized by the true median.
+
 
 A Gaussian process model for the regression problem.
 
@@ -946,14 +2862,14 @@ A Gaussian process model is specified using the gp-spec command, which
 is analogous to the net-spec command.  For the simple regression
 model, the following is one appropriate specification:
 
-    > gp-spec rlog.gp 1 1 100 0.05:0.5 / 0.05:0.5 0.05:0.5
+    > gp-spec rlog.gp 1 1 100 / 0.05:0.5 0.05:0.5
 
 Here, "rlog.gp" is the name of the new log file that will hold the
-results of the Gaussia process run.  The first two arguments following
-the log file are the numbers of inputs and outputs, respectively, both
-"1" for this problem.
+results of the Gaussian process run.  The first two arguments
+following the log file are the numbers of inputs and outputs,
+respectively, both "1" for this problem.
 
-The (optional) argument of "100" that follows is the priors for the
+The (optional) argument of "100" that follows is the prior for the
 constant part of the covariance function used.  This corresponds to
 the prior for the output unit bias in a network model.  A
 specification for a linear part of the covariance could follow (but
@@ -1011,7 +2927,7 @@ programs with just the name of a log file.
 
 We are now ready to sample from the posterior distribution of the
 hyperparameters for the Gaussian process model.  To start, we can fix
-the hyperparmeters at reasonable initial values, using 'gp-gen':
+the hyperparameters at reasonable initial values, using 'gp-gen':
 
     > gp-gen rlog.gp fix 0.5 0.1
 
@@ -1034,7 +2950,7 @@ is 0.5.  If the rejection rate turns out to be too high (as can be
 checked using the 'gp-plt t r rlog.gp' command), the stepsize should
 be adjusted downward.
 
-To peform these sampling operations 100 times, we use the following
+To perform these sampling operations 100 times, we use the following
 command:
 
     > gp-mc rlog.gp 100
@@ -1120,24 +3036,24 @@ Changing the 'gp-spec' command as follows is sufficient on our machine:
 
 There are two changes here from the 'gp-spec' command used before.
 First, the constant part of the covariance has been reduced from 100
-to 10, which in fact makes little difference for this problem.  Since
-arithmetic is done in floating point, this increases the effective
-precision of the covariances.  Second, the covariance now includes a
-"jitter" part of 0.01 (the "-" preceding this indicates that there is
-still no linear part).  Jitter is much like noise, in that it varies
-independently from one case to another, but it is considered part of
-the function value, which noise is not.  The jitter makes all the
-function values less predictable, reducing the problem of poor
-conditioning.  Jitter plays a more crucial role for binary and class
-models.
+to 10, which makes little difference when the data is centred at about
+zero, as it is for this problem.  Since arithmetic is done in floating
+point, this increases the effective precision of the covariances.
+Second, the covariance now includes a "jitter" part of 0.01 (the "-"
+preceding this indicates that there is still no linear part).  Jitter
+is much like noise, in that it varies independently from one case to
+another, but it is considered part of the function value, which noise
+is not.  The jitter makes all the function values less predictable,
+reducing the problem of poor conditioning.  Jitter plays a more
+crucial role for binary and class models.
 
 
 A PROBLEM WITH A BINARY RESPONSE
 
-As a second example, I generated a data set with two real-valued
-inputs, x1 and x2, and a binary target.  The inputs were drawn
-independently from standard Gaussian distributions.  The target was
-then set to "1" with the following probability:
+In this example, each case consists of two real-valued inputs, x1 and
+x2, and a binary target.  Data was generated by drawing the inputs for
+a case independently from standard Gaussian distributions.  The target
+was then set to "1" with the following probability:
 
     exp ( - ((x1-0.4)^2 + (x2+0.3)^2) ^ 2 )
 
@@ -1148,15 +3064,15 @@ ie, the negative exponential of the fourth power of the distance of
 
 A neural network model for the binary response problem.
 
-For this problem, we can again try using a network with one layer of
-hidden units (fifteen for this problem), and a single output unit.
-For a binary target, a Gaussian data model would be inappropriate;
-instead, we can use a logistic regression model, in which the
-probability of the target being "1" is obtained by passing the value
-of the output unit through the logistic function, f(x)=1/(1+exp(-x)).
+We will try modeling this data using a network with one layer of 15
+hidden units and a single output unit.  For a binary target, a
+Gaussian data model would be inappropriate; instead, we can use a
+logistic regression model, in which the probability of the target
+being "1" is obtained by passing the value of the output unit through
+the logistic function, f(x)=1/(1+exp(-x)).
 
 The network, model, and data specification commands needed are quite
-similar to those used in the regression problem above:
+similar to those used in the regression problem (see Ex-netgp-r.doc):
 
     > net-spec blog.net 2 15 1 / - 0.05:0.5 0.05:0.5 - x0.05:0.5 - 100 
     > model-spec blog.net binary
@@ -1164,9 +3080,9 @@ similar to those used in the regression problem above:
     Number of training cases: 300
     Number of test cases: 200
 
-The 'net-spec' command differs only in the number of input units (2),
-the number of hidden units (15).  The data model used is "binary",
-with no need for a noise level prior.
+The 'net-spec' command here differs only in the number of input units
+(2) and the number of hidden units (15).  The data model used is
+"binary", with no need for a noise level prior.
 
 The 'data-spec' command also says that there are two inputs, and one
 target.  It also has a third argument of "2" just before the "/",
@@ -1180,10 +3096,11 @@ problem turn out to be adequate for this problem as well:
     > mc-spec blog.net repeat 10 sample-noise heatbath hybrid 100:10 0.2
     > net-mc blog.net 1
 
-For the sampling phase, we could also try using commands similar to
-those presented above, but we might as well try something different
-(the mc-spec command needed here is long, so it is continued by
-putting a "\" at the end of the first line):
+(The sample-noise operation above is actually unnecessary, since there
+is no noise for this model.)  For the sampling phase, we could also
+try using commands similar to those presented above, but we might as
+well try something different (the mc-spec command needed here is long,
+so it is continued by putting a "\" at the end of the first line):
 
     > mc-spec blog.net repeat 10 sample-sigmas heatbath 0.95 \
                              hybrid 100:10 0.3 negate
@@ -1197,8 +3114,8 @@ rejection rate must be quite small.  This alternative method has the
 advantage that it allows for more frequent hyperparameter updates
 (with 'sample-sigmas').
 
-On our SGI machine, the 200 iterations requested above take about
-twenty minutes.  During this time, one can monitor the simulation, for
+On our machine, the 200 iterations requested above take about twenty
+minutes.  During this time, one can monitor the simulation, for
 instance with the command:
 
     > net-plt t h1h2h3 blog.net | plot
@@ -1214,33 +3131,46 @@ explored all high-probability regions of the posterior distribution.
 Once the run has finished, we can make predictions using 'net-pred',
 based, say, on the networks from the final 3/4 of the run (which is a
 generally reasonable portion).  For a problem such as this, where the
-response is binary, we are most likely interested in guessing whether
-the target is "0" or "1", with performance measured by how often we
-are right.  We can get such predictions as follows:
+response is binary, we might be interested in guessing whether the
+target is '0' or '1', with performance measured by how often we are
+right.  We can get such predictions as follows:
 
-    > net-pred itm blog.net 51: 
+    > net-pred itmp blog.net 51: 
 
-    Number of networks used: 150
+    Number of iterations used: 150
 
-    Case  Inputs         Targets  Guesses  Wrong?
+    Case  Inputs        Targets  Log Prob  Guesses  Wrong?
 
-       1   -1.56   0.90    0.00       0       0
-       2    0.09  -0.13    1.00       1       0
-       3   -0.79   0.85    0.00       0       0
-       
-               ( midde lines omitted )
-    
-     198    1.49   0.70    0.00       0       0
-     199   -2.23  -0.28    0.00       0       0
-     200   -0.91  -0.03    0.00       0       0
+       1   -1.56   0.90    0.00    -0.002      0       0
+       2    0.09  -0.13    1.00    -0.051      1       0
+       3   -0.79   0.85    0.00    -0.003      0       0
+
+                     (some lines omitted )
+
+      99    0.14   0.86    1.00    -2.737      0       1
+     100    0.21   0.18    1.00    -0.099      1       0
+     101   -1.32  -0.19    0.00    -0.008      0       0
+
+                     (some lines omitted )
+
+     198    1.49   0.70    0.00    -0.029      0       0
+     199   -2.23  -0.28    0.00    -0.002      0       0
+     200   -0.91  -0.03    0.00    -0.064      0       0
+
+    Average log probability of targets:    -0.246+-0.035
 
     Fraction of guesses that were wrong:  0.0900+-0.0203
 
-The "itm" options ask for output listing the inputs, the targets, and
-the guesses based on the mode of the predictive distribution.  A
-summary is also printed that reports the fraction of guesses that were
-wrong, along with the standard error for this estimate of the error
-rate.
+The "itmp" options ask for output listing the inputs, the targets, the
+the guesses based on the mode of the predictive distribution, and the
+log of the probability of the correct target in the predictive
+distribution.  A summary is also printed showing the average log
+probability of the correct target and the fraction of guesses that
+were wrong, along with the standard errors for these as estimates of
+performance on the population of cases.  The average log probability
+is an overall indication of how well the model has done.  The
+classification error rate might be more directly relevant for some
+applications.
 
 
 A Gaussian process model for the binary response problem.
@@ -1280,20 +3210,21 @@ model, at least for this problem.
 Sampling might now be done using the following commands:
 
     > gp-gen blog.gpl fix 0.5 1
-    > mc-spec blog.gpl repeat 4 scan-values 200 heatbath hybrid 6 0.5
+    > mc-spec blog.gpl repeat 4 scan-values 200 heatbath hybrid 8 0.3
     > gp-mc blog.gpl 50
 
 These commands (and variations on them) are similar to those that you
 might use for a regression problem, except that a "scan-values 200"
 operation has been included.  This operation performs 200 Gibbs
-sampling scans over the function values for each training case.  
-An explicit representation of function values is essential for a
-binary model, though not for a simple regression model, because the
+sampling scans over the function values for each training case.  An
+explicit representation of function values is essential for a binary
+model, though not for a simple regression model, because the
 relationship of function values to targets is not Gaussian.
 Unfortunately, for the very same reason, the direct "sample-values"
-operation is not available, so Gibbs sampling must be done.
+operation is not available, so one must use Gibbs sampling or
+Metropolis-Hastings updates (the met-values or mh-values operations).
 
-The 50 sampling iterations take about 17 minutes on our SGI machine.
+The 50 sampling iterations take about 20 minutes on our machine.
 While you wait, you can check the progress of the hyperparameters
 using gp-display:
 
@@ -1313,8 +3244,8 @@ using gp-display:
 
     Exponential parts:
 
-          5.767
-          0.683 :      0.683      0.683
+         10.418
+          0.486 :      0.486      0.486
 
 Note that there are only two variable hyperparameters, since the
 constant and jitter parts are fixed, and the relevance hyperparameters
@@ -1333,15 +3264,15 @@ classification performance:
 
     Number of test cases: 200
 
-    Fraction of guesses that were wrong:  0.0900+-0.0203
+    Fraction of guesses that were wrong:  0.0950+-0.0208
 
-This takes about about ten seconds on our machine.  This is slower
-than prediction using a network model, since a covariance matrix must
-be inverted for each iteration used (saving the inverses for each
-iteration would take up lots of disk space).  The accuracy achieved is
-about the same as the network model, which is not too surprising,
-given that they both use a logistic function to relate function values
-to target probabilities.
+This takes about about seven seconds on our machine.  This is slower
+than prediction using a network model, since the Cholesky
+decomposition of the covariance matrix must be found for each
+iteration used (saving these would take up lots of disk space).  The
+accuracy achieved is about the same as for the network model, which is
+not too surprising, given that they both use a logistic function to
+relate function values to target probabilities.
 
 It is possible to define a Gaussian process model that will behave as
 what is known is statistics as a "probit" model rather than a
@@ -1353,8 +3284,9 @@ varies from nearly 0 to nearly 1.  This can be done by changing the
 
     > gp-spec blog.gpp 2 1 10 - 10 / 0.05:0.5 0.05:0.5
 
-One can then proceed as above.  The final performance is similar, but
-the scale hyperparameter takes on much larger values.
+One can then proceed much as above (though it turns out that a larger
+stepsize can be used).  The final performance is similar, but the
+scale hyperparameter takes on much larger values.
 
 
 A THREE-WAY CLASSIFICATION PROBLEM
@@ -1430,7 +3362,7 @@ the same approach as was used above for the binary data set (but the
                                  hybrid 100:10 0.3 negate
     > net-mc clog.net 200
 
-This takes about 25 minutes on our SGI machine.
+This takes about 25 minutes on our machine.
 
 We can see the effect of the ARD model by looking at the values of
 the low-level input-hidden hyperparameters over the course of the
@@ -1472,15 +3404,15 @@ classification problem, using "persistent" hybrid Monte Carlo:
     > mc-spec clog.gpp repeat 5 scan-values 100 heatbath 0.9 \
                                 hybrid 1 0.3 negate
     > gp-mc clog.gpp 5
-    > mc-spec clog.gpp repeat 5 scan-values 100 heatbath 0.99 \
+    > mc-spec clog.gpp repeat 5 scan-values 100 heatbath 0.98 \
                                 hybrid 1 0.3 negate
     > gp-mc clog.gpp 100
 
 For the first five iterations, the persistence is fairly small (0.9),
 so that the high initial energy will be dissipated rapidly.  The
-remaining iterations use a larger persistence (0.99) to suppress
-random walks.  The run takes about 90 minutes on our machine.  The
-n-cubed scaling of the computations for the Gaussian process models
+remaining iterations use a larger persistence (0.98) to suppress
+random walks.  The run takes about 80 minutes on our machine.  The
+cubic scaling of the computations for the Gaussian process models
 leads to their becoming slower relative to neural network models as
 the number of training cases increases.
 
@@ -1493,9 +3425,9 @@ superimposed graphs:
 Once the run is finished, predictions for test cases can be made
 as illustrated below:
 
-    > gp-pred itm clog.gpp 51:%5
+    > gp-pred itm clog.gpp 21:%5
 
-    Number of iterations used: 10
+    Number of iterations used: 16
     
     Case  Inputs                       Targets  Guesses  Wrong?
     
@@ -1511,17 +3443,17 @@ as illustrated below:
      599    0.66   0.79   0.03   0.09    0.00       2       1
      600    0.76   0.90   0.73  -0.03    2.00       2       0
     
-    Fraction of guesses that were wrong:  0.1317+-0.0138
+    Fraction of guesses that were wrong:  0.1400+-0.0142
     
-This takes about three minutes on our machine.
+This takes about 90 seconds on our machine.
 
 A "logistic" style model can be obtained by decreasing the jitter,
 using a 'gp-spec' command such as the following:
 
     > gp-spec clog.gpl 4 3 1 - 0.1 / 0.05:0.5 x0.2:0.5:1
 
-This model appears to convergence less rapidly than the probit model,
-and requires a smaller stepsize, but gives similar results.
+A smaller stepsize is necessary with this model (0.15 rather than
+0.3).  Performance is similar.
 
 
 A REGRESSION PROBLEM WITH OUTLIERS
@@ -1605,9 +3537,9 @@ This is actually better than the results obtained earlier with the
 model trained on uncorrupted data, though the observed difference is
 probably not statistically significant.
 
-In constrast, the results are substantially worse when the data with
-outliers is used to train a standard model where the noise is Gaussian, 
-with the same variance for each case.
+In contrast, the results are substantially worse when the data with
+outliers is used to train a standard model where the noise is
+Gaussian, with the same variance for each case.
 
 
 A Gaussian process model for regression with outliers.
@@ -1647,9 +3579,849 @@ Predictions can be made using 'gp-pred':
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.02074+-0.01235
+    Average squared error guessing mean:   0.01926+-0.01111
 
 This performance is very similar to that of the network model.
+
+
+
+EXAMPLES OF BAYESIAN MIXTURE MODELS
+
+Mixture models can be used to model complex distributions of "target"
+values, without any dependence on input values.  The mixture
+components that are found by the model might also be interpretable as
+representing underlying "latent classes" in the data.  Examples are
+given here of how this can be done for binary and for real-valued
+data.
+
+The data and command files for these examples are in the "ex-mix"
+directory.
+
+
+A PROBABILITY ESTIMATION PROBLEM WITH BINARY DATA
+
+As a first illustration of the mixture model software, I generated a
+dataset in which each case was composed of ten binary attributes.  The
+distribution of these binary vectors was a mixture of four component
+distributions, in each of which the ten attributes were independent.
+The four components each had probability 0.25 of being chosen to
+generate a case.  The probabilities for each component for each binary
+attributes were as shown below:
+
+          1    2    3    4    5    6    7    8    9   10
+
+     1   0.1  0.2  0.2  0.2  0.2  0.8  0.8  0.8  0.8  0.7
+     2   0.1  0.8  0.8  0.8  0.8  0.2  0.2  0.2  0.2  0.7
+     3   0.9  0.2  0.2  0.8  0.8  0.2  0.2  0.8  0.8  0.7
+     4   0.9  0.8  0.8  0.2  0.2  0.8  0.8  0.2  0.2  0.7
+
+Each row gives the probabilities of each of the attributes being '1'
+for one component of the mixture.  The columns are for the ten binary
+attributes in each case.  The vectors generated in this way can be
+seen as coming from one of four "patterns": 0000011111, 0111100001,
+1001100111, and 1110011001, but with each bit of the chosen pattern
+having a small probability of being switched (ranging from 0.1 to 0.3)
+in any particular case.
+
+I generated 1000 cases from this distribution, which are stored in the
+file 'bdata'.  The first 500 are used for training (the others are not
+used at all at the moment).
+
+
+A finite mixture model for the binary data.
+
+We will first see what happens when we model this data as a mixture of
+four components, which is the true number of components for this
+problem.  Each component of the mixture will give each target
+attribute a certain probability of being '1' rather than '0'.  These
+probabilities are determined from the "offset" parameters for each
+target, by means of the "logistic" function:
+
+   Pr(target=1)  =  1 / (1 + exp(-offset))
+
+The offset parameters for each attribute for each component are given
+Gaussian prior distributions, with means and standard deviations that
+are hyperparameters.  These hyperparameters could be fixed, but here
+we will make them variable, separately for each target attribute, but
+with each of them linked to a top-level hyperparameter, common to all
+targets.
+
+We set up this mixture model with the 'mix-spec' command, as follows:
+
+    > mix-spec blog.4 0 10 4 / x1 0.05:0.5:0.2 10
+
+Here, "blog.4" is the name of the log file used for this run, which is
+created by the 'mix-spec' command.  The arguments of 'mix-spec' that
+follow the name of the log file are the number of input attributes
+(always 0 for mixture models at present), the number of target
+attributes (10 for this problem), and the number of mixture components
+(set to the true value of 4 in the command above).  The specifications
+for priors are given following these arguments, after a "/" separator.
+
+The first prior specification gives the concentration parameter of the
+Dirichlet distribution for the mixing proportions for the components.
+If this specification starts with "x", this value is automatically
+divided by the number of components, which is the scaling required for
+the model to reach a sensible limit as the number of components goes
+to infinity.  The specification of "x1" above mildly favours unequal
+mixing proportions (recall that the true proportions are equal).
+
+The second argument after the "/" specifies the prior for the standard
+deviations of the "offsets" for components (which determine the
+probabilities for the binary target attributes).  In the hierarchical
+scheme specified here (described in general in prior.doc), there is a
+top-level standard deviation hyperparameter, given a prior in which
+the corresponding "precision" (standard deviation to the power -2) has
+a gamma distribution with mean 0.05 and shape parameter 0.5.  There is
+a lower-level standard deviation hyperparameter for each target; for
+each of these, the corresponding precision has a gamma distribution
+with mean given by the higher-level precision, and shape parameter of
+0.2.  Both these priors are rather vague (but the shape parameter of
+0.2 is vaguer than 0.5), so these hyperparameters can adapt to the
+structure of the data.
+
+The last argument of 'mix-spec' is the standard deviation for the
+means of the offsets for each of the targets, here set to 10.
+Currently, this standard deviation for the mean offset is the same for
+all targets, and is fixed in the 'mix-spec' command (it cannot be a
+variable hyperparameter).
+
+We can look at these specifications by calling 'mix-spec' with just
+the log file as an argument:
+
+    > mix-spec blog.4
+
+    Number of inputs:      0
+    Number of targets:     10
+
+    Number of components:  4
+
+    Dirichlet concentration parameter: x1.000
+    Prior for SD hyperparameters:       0.050:0.50:0.20
+    Prior for mean component offsets:   10.000
+
+After the 'mix-spec' command, we need to specify that the targets are
+binary using the 'model-spec' command, as follows:
+
+    > model-spec blog.4 binary
+
+We can then specify where the data comes from using 'data-spec':
+
+    > data-spec blog.4 0 10 2 / bdata@1:500 . 
+
+The number of inputs is here specified to be 0 (as it must be at
+present for mixture models), and the number of targets is specified to
+be 10.  These must match the values given to 'mix-spec'.  We also
+specify that the targets must be the integers 0 or 1 putting in a
+following argument of 2 (meaning that there are 2 possible values,
+which start at 0).  After a slash, we say where the inputs and targets
+come from.  Note that we have to say where the inputs come from even
+though there are 0 of them, but fortunately, we can then say that the
+targets come from the same place by just using the "." argument.  In
+the specification above, the data comes from the first 500 lines of
+the file 'bdata', with one case per line.  See data-spec.doc for more
+details.
+
+Finally, we need to specify how Markov chain sampling is to be done
+for this model.  At present, none of the standard Markov chain methods
+are allowed for mixture models, only the specialized procedures
+documented in mix-mc.doc.  Each of these procedures updates one of the
+three parts of the state - the values of the hyperparameters, the
+values of the parameters for the various mixture components, and the
+values of the indicator variables saying which mixture component is
+currently associated with each training case.  The values in each of
+these parts of the state can be updated by Gibbs sampling, using the
+corresponding procedure.  The following call of 'mc-spec' sets this
+up:
+
+    > mc-spec blog.4 repeat 20 gibbs-indicators gibbs-params gibbs-hypers
+
+Here, the three Gibbs sampling operations are repeated 20 times each
+iteration, just to cut down on the number of states saved in the log
+file.
+
+We can now run the Markov chain simulation for 100 iterations with the
+following command:
+
+    > mix-mc blog.4 100
+
+The simulation starts with a state in which all the training cases are
+associated with the same component, whose parameters are set to their
+means, as specified by hyperparameter values that are also set to
+their prior means.  The 'mix-gen' program could be used to initialize
+things differently (see mix-gen.doc).
+
+The above run takes a bit over one minute on our machine.  It can be
+run in the background, in which case progress can be monitored with
+the 'mix-display' and 'mix-plt' programs.  For example, after a few
+seconds, we might see the following:
+
+    > mix-display blog.4
+
+    MIXTURE MODEL IN FILE "blog.4" WITH INDEX 17
+
+    HYPERPARAMETERS
+
+    Standard deviations for component offsets:
+
+        0.198:     4.056    0.718    1.579    1.702    1.830
+                   1.548    2.504    1.957    4.120    0.184
+
+    Means for component offsets:
+
+                  +1.816   +0.022   +0.182   +0.037   +0.500
+                  +1.322   -0.018   +1.375   +2.802   +0.990
+
+
+    PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
+
+       1: 0.310   -2.451   +0.738   +1.342   +1.093   +0.605
+                  -0.960   -1.146   -0.441   -0.798   +0.903
+
+       2: 0.250   -2.121   -1.530   -1.999   -0.917   -1.393
+                  +1.727   +1.862   +1.603   +3.118   +1.101
+
+       3: 0.238   +3.950   +0.915   +1.372   -1.960   -0.940
+                  +1.307   +1.793   -1.268   -2.102   +1.035
+
+       4: 0.202   +2.710   -0.978   -1.015   +1.900   +1.915
+                  -1.802   -2.903   +1.268   +1.452   +0.827
+
+This displays the state at the last iteration computed so far (here
+iteration 17).  The hyperparameter values are shown first, with
+top-level hyperparameters on the left, before the colon.  The
+lower-level hyperparameters follow, ordered by the target attribute
+that they pertain to.  Values for the component parameters follow,
+sorted by the fraction of training cases that they are currently
+associated with.  These fractions are the first numbers after 1:, 2:,
+etc.; note that the actual mixing probabilities are not explicitly
+represented, but are instead always integrated over.  Any components
+that are not associated with any training case are omitted from the
+output, and are not explicitly represented in the state.  The other
+numbers shown for each component are the "offset" parameters for each
+target attribute.
+
+In this example, the simulation appears to have learned the essence of
+the distribution by the iteration shown above.  Recall that a positive
+offset corresponds to the probability of a 1 being greater than 1/2, a
+negative offset to the probability of a 1 being less than 1/2.  The
+four components shown above can thus be seen to correspond to the four
+patterns used to generate the cases, as described earlier.  Note that
+the last of the offset standard deviation hyperparameters (for the
+last target attribute) is quite small.  This indicates that the model
+has "learned" that the probabilities for the last target are the same
+for all components, and hence can be modeled most efficiently at the
+hyperparameter level, by the mean for that offset, rather than
+separately for each component.
+
+The indicators of which components are associated with each training
+case can also be examined with 'mix-display', and of course iterations
+other than the last can be viewed.  See mix-display.doc for details.
+
+One can also look at the progress of the simulation using 'mix-plt'.
+For example, the following will produce a time-plot of the cumulative
+proportions of the training cases associated with the four components
+(as sorted by decreasing frequency):
+
+    > mix-plt t C1C2C3C4 blog.4 | plot
+
+Here, 'plot' is some suitable plotting program.  One can also just let
+the output of 'mix-plt' go to standard output, and then examine the
+numbers manually.  Other quantities can also be plotted, as described
+in mix-quantities.doc.
+
+As well as examining quantities with 'mix-display' and 'mix-plt', one
+can also produce a sample of cases from the predictive distribution
+using 'mix-cases'.  Unfortunately, these are about the only things one
+can do with the results at the moment.  There are no programs that
+find predictive probabilities, fill in missing values in partial
+cases, or do any of the other useful things that are quite possible
+with these models, but which haven't been implemented.  See
+mix-extensions.doc for a wish list of such facilities.
+
+
+A countably infinite mixture model for the binary data.
+
+Even though the true distribution for this example is a mixture of
+four components, good results can nevertheless be obtained using a
+mixture with a countably infinite number of components.  The prior for
+mixture proportions used with such a model is designed so that a few
+of the infinite number of components have substantial probability, so
+the model does not result in an "overfitted" solution, in which every
+training case is "explained" as coming from a different component.
+
+We specify a countably infinite mixture model by simply omitting the
+argument to 'mix-spec' that gives the number of components.  For this
+example, we change the 'mix-spec' command used above to the following:
+
+    > mix-spec blog.inf 0 10 / x1 0.05:0.5:0.2 10
+
+The Dirichlet prior specification for mixing proportions of "x1" is
+the same as for the mixture model with four components.  The "x"
+specifies scaling downward with the number of components, which
+produces a sensible limit as the number of components goes to
+infinity, as here.  The "x" is therefore required for infinite
+mixtures.
+
+The other arguments of 'mix-spec' are as described for the finite
+mixture model.  The 'model-spec' and 'data-spec' commands used are
+also the same:
+
+    > model-spec blog.inf binary
+    > data-spec blog.inf 0 10 2 / bdata@1:500 . 
+
+We must change the 'mc-spec' command, however, since it is impossible
+to do Gibbs sampling for the component indicators associated with
+training cases - since their number is infinite, we can't compute all
+the required conditional probabilities.  However, we can instead use a
+specialized Metropolis-Hastings update, in which a new component to go
+with a training case is proposed with probability determined by the
+frequencies with which components are associated with other training
+cases.  The proposal is accepted or rejected based on the resulting
+change in likelihood.  The process can then be repeated any desired
+number of times, to produce an approximation to Gibbs sampling.  With
+this change, we can use the following 'mc-spec' command for this model:
+
+    > mc-spec blog.inf repeat 20 met-indicators 10 gibbs-params gibbs-hypers
+
+This is the same as for the finite mixture model, except that 10
+repetitions of the Metropolis-Hastings update for the indicators are
+specified using 'met-indicators 10', in place of 'gibbs-indicators'.
+
+As before, we can now run the simulation with a command such as:
+
+    > mix-mc blog.inf 100
+
+We can examine the states with 'mix-display'.  For example, once the
+'mix-mc' command completes, the state should be something like the
+following:
+
+    > mix-display blog.inf
+
+    MIXTURE MODEL IN FILE "blog.inf" WITH INDEX 100
+    
+    HYPERPARAMETERS
+    
+    Standard deviations for component offsets:
+    
+        0.294:     2.090    1.637    2.191    2.686    2.195
+                   2.299    3.737    2.555    1.565    0.133
+    
+    Means for component offsets:
+    
+                  +1.456   -0.883   -0.760   -0.798   -0.455
+                  -0.482   -1.981   -0.859   +0.352   +0.943
+    
+    
+    PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
+    
+       1: 0.328   -1.592   +0.810   +0.710   +1.011   +0.551
+                  -0.881   -1.333   -0.470   -0.783   +1.147
+    
+       2: 0.262   +1.549   +1.284   +1.459   -2.410   -1.312
+                  +2.129   +2.131   -1.709   -1.162   +0.768
+    
+       3: 0.212   -1.539   -1.378   -2.675   -1.357   -1.244
+                  +1.930   +2.561   +1.802   +1.866   +0.942
+    
+       4: 0.170   +2.130   -1.917   -1.421   +1.789   +1.926
+                  -1.626   -2.642   +1.403   +1.302   +0.841
+    
+       5: 0.018   -3.048   -1.125   -3.540   -0.104   -2.428
+                  +0.796   -6.877   +3.549   +0.400   +1.079
+    
+       6: 0.006   +1.207   -4.213   -0.463   +1.713   +4.755
+                  -1.497   +0.838   +3.890   +0.436   +1.154
+    
+       7: 0.004   +2.252   -4.192   +0.727   +2.935   -5.049
+                  -4.338   -3.355   +1.462   -0.389   +0.886
+    
+The output is similar to that seen for the mixture model with four
+components, except that seven components are associated with at least
+one training case at iteration 100, as shown above.  (The infinite
+number of remaining components are not explicitly represented, and are
+not displayed by 'mix-display'.)  Several of these components are
+associated with very few training cases, however (as seen from the
+fractions of the training set after the component number).  This is to
+be expected when the true distribution can be expressed using only
+four components.  The number of such low-frequency components will
+vary from iteration to iteration, as will other aspects of the state,
+in accordance with the variability in the posterior distribution.
+
+
+A BIVARIATE DENSITY ESTIMATION PROBLEM
+
+As a second illustration of the mixture model software, I generated
+bivariate real data from a mixture of two component distributions,
+with probabilities 0.3 and 0.7.  These two distributions were not
+exactly Gaussian, and the two real variables were not exactly
+independent within one of these components.  Accordingly, modeling
+this data well with a mixture of Gaussian distributions will require
+more than two components in the mixture.  
+
+For the exact distribution used, see the source of the generation
+program, in rgen.c.  I generated 1000 cases with this program, stored
+in 'rdata', of which the first 500 are used for training (the others
+are not used for anything at the moment).
+
+
+A two-component mixture model for the density estimation problem.
+
+We can first see what happens when we model this data with a mixture
+of two Gaussians - even though we know the data cannot be perfectly
+modeled in this way.  We specify this two-component model using the
+'mix-spec' and 'model-spec' commands, as follows:
+
+    > mix-spec rlog.2 0 2 2 / 1 0.05:0.5:0.2 10
+    > model-spec rlog.2 real 0.05:0.5:0.5:1
+
+The 'mix-spec' command creates the log file "rlog.2".  The arguments
+following the log file name are the number of input attributes in a
+case (always 0 at present), the number of target attributes (2 for
+this bivariate problem), and the number of mixture components to use
+(2 for this model).  
+
+The Dirichlet concentration parameter follows the "/".  In this model,
+its value is 1 (unscaled, since there's no 'x'), which produces a
+uniform prior for the single number determining the probabilities of
+the two components.
+
+The "offset" parameters of the two components represent the Gaussian
+means when modeling real data.  Hyperparameters determine the prior
+means and standard deviations of these offsets (separately for the two
+target attributes); priors for these hyperparameters are specified in
+'mix-spec'.  In the above command, the prior for the mean of an offset
+is Gaussian with standard deviation 10 (the last argument).  The
+standard deviations for the offsets are given a hierarchical prior,
+with a higher-level hyperparameter common to both the lower-level
+standard deviations.  The top-level precision (standard deviation to
+the power -2) is given a Gamma prior with mean 0.05 and shape
+parameter 0.5; the precisions for the lower-level hyperparameters have
+Gamma priors with mean given by the higher-level precision, and shape
+parameter 0.2.  This is all specified by the second-to-last argument
+of 'mix-spec'.
+
+A similar hierarchical scheme is used for the "noise" standard
+deviations (the standard deviations of the Gaussian distributions in
+the mixture), except that this scheme has three levels - a top-level
+hyperparameter, a hyperparameter for each target attribute, and
+hyperparameters for each target for each component.  The 'model-spec'
+command gives the top-level mean, and the shape parameters for the
+Gamma priors going down the hierarchy.
+
+We next specify where the data comes from, with 'data-spec':
+
+    > data-spec rlog.2 0 2 / rdata@1:500 . 
+
+This says that there are 0 input attributes and 2 target attributes.
+
+For this finite model, we can specify that all the Markov chain
+updates should be done with Gibbs sampling, as follows:
+
+    > mc-spec rlog.2 repeat 20 gibbs-indicators gibbs-params gibbs-hypers
+
+The "repeat 20" just repeats these operations in a single iteration,
+to reduce the volume of data stored in the log file.
+
+Finally, we run the Markov chain simulation for 100 iterations:
+
+    > mix-mc rlog.2 100
+
+This takes less than 10 seconds on our machine.  Once it has finished,
+we can look at the hyperparameters and component parameters at various
+iterations.  The last iteration should look something like the
+following:
+
+    > mix-display rlog.2
+
+    MIXTURE MODEL IN FILE "rlog.2" WITH INDEX 100
+    
+    HYPERPARAMETERS
+    
+    Standard deviations for component offsets:
+    
+        0.585:     4.108   40.500
+    
+    Means for component offsets:
+    
+                  -0.549   -2.258
+    
+    Standard deviations for Gaussian target distributions:
+    
+        1.464:     0.959    3.693
+    
+    
+    PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
+    
+       1: 0.712   -2.046  +11.371
+    
+                   1.068    5.440
+    
+       2: 0.288   +1.757  +20.956
+    
+                   0.949    7.198
+
+We see above that the two components are associated with fractions of
+approximately 0.7 and 0.3 of the training cases, as expected from the
+way the data was generated.  For each component, the two offset
+parameters, giving the Gaussian means, are shown on the first line,
+and the standard deviation parameters on the following line.  These
+component parameters are approximately what we would expect from
+looking at a plot of the data, but of course the two Gaussian
+components cannot perfectly model the actual distribution.
+
+
+An infinite mixture model for the density estimation problem.
+
+To more closely approximate the true distribution, we can use a
+mixture model with a countably infinite number of Gaussian components.
+An infinite mixture is used if we simply omit the argument giving the
+number of components in the 'mix-spec' command.  We must also change
+the specification for the Dirichlet concentration parameter, preceding
+it with an 'x' to indicate that it should be scaled so as to produce a
+sensible infinite limit.  In the specification below, the moderate
+value of 5 is chosen for this specification in order to indicate that
+we believe that a fairly large number of components will have
+substantial probability (the other prior specifications are the same
+as before):
+
+    > mix-spec rlog.inf 0 2 / x5 0.05:0.5:0.2 10
+
+The 'model-spec' and 'data-spec' commands are the same as before:
+
+    > model-spec rlog.inf real 0.05:0.5:0.5:1
+    > data-spec rlog.inf 0 2 / rdata@1:500 . 
+
+The 'mc-spec' command must be altered, however, since it is not
+possible to do Gibbs sampling for component indicators when there are
+an infinite number of components.  The met-indicators operation is
+used instead, with 10 changes being proposed to every indicator:
+
+    > mc-spec rlog.inf repeat 20 met-indicators 10 gibbs-params gibbs-hypers
+
+We can now run the simulation for 100 iterations (which takes about a
+minute and a half on our machine):
+
+    > mix-mc rlog.inf 100
+
+If we now examine the state with 'mix-display', we will find that
+quite a few (eg, 20) mixture components are associated with training
+cases - though fewer components account for the bulk of the cases.
+
+We can see how well the model has captured the true distribution by
+generating a sample of cases from a distribution drawn from the
+posterior, as represented by the state at a particular iteration.  We
+do this as follows:
+
+    > mix-cases rlog.inf 100 new 1000
+
+This command generates 1000 new cases based on iteration 100, and
+stores them (one per line) in the file "new".  We can now use a plot
+program to view a scatterplot of the data in "new", and compare it
+with a scatterplot of data from the actual distribution.  Note that
+the data in "new" is taken jointly from one example of a distribution
+from the posterior distribution.  If 'mix-cases' is called for another
+iteration, it will produce data from a different distribution from the
+posterior, which in general could be quite different.  This variation
+represents the uncertainly regarding the true distribution that
+remains when only a finite amount of training data is available.  A
+representation of the predictive distribution for a single new data
+point, which is the average of distributions drawn from the posterior,
+could be obtained by combining the output of 'mix-cases' for a number
+of iterations.
+
+
+
+EXAMPLES OF LEARNING WITH GRADIENT DESCENT, EARLY STOPPING & ENSEMBLES
+
+Although this software is intended primarily to support research in
+Bayesian methods, I have also implemented traditional gradient-descent
+learning for neural networks.  This allows easy comparisons of
+traditional and Bayesian methods, and supports research into
+variations of traditional methods that may work better.
+
+In particular, the software supports the "early stopping" technique.
+When a network is trained to a minimum of the error on the training
+set (minus the log likelihood), performance on test data is often bad,
+since the training data has been "overfit".  To avoid this, many
+people use one of the networks from earlier in the training process,
+selected based on the error on a separate "validation set".
+
+To do early stopping, the available training data must be partitioned
+into an "estimation set" and a "validation set".  The network
+parameters (weights and biases) are randomly initialized to values
+close to zero, and then gradually changed (by gradient descent) so as
+to minimize error on the estimation set.  The error on the validation
+set is computed for the networks found during this process, and the
+single network with minimum validation error is used to make
+predictions for future test cases.
+
+The split into estimation and validation sets in this procedure seems
+a bit arbitrary and wasteful.  To alleviate this problem, one can
+train several networks using early stopping, based on different
+splits, and on different random initializations of the weights.
+Predictions for training cases are then be made by averaging the
+predictions from the networks selected from each of these runs, a
+process somewhat analogous to the averaging done when making
+predictions for a Bayesian model based on a sample from the posterior
+distribution.
+
+Neural network training using early stopping and ensembles is
+described by Carl Rasmussen in his thesis (available in Postscript
+from http://www.cs.utoronto.ca/~carl), and in a paper of mine on
+``Assessing relevance determination methods using DELVE'' (see my web
+page).
+
+To demonstrate how the software can be used to do gradient descent
+learning, early stopping, and prediction using ensembles, I will show
+here how these methods can be applied to the binary response problem
+used as an example earlier (see Ex-netgp-b.doc).
+
+The data and command files for these examples are in the "ex-gdes"
+directory.
+
+
+Gradient descent learning for the binary response problem.
+
+First, we will see how to use the software to set the network
+parameters so as to minimize error (minus the log likelihood) on the
+entire training set, or at least to get as close to the minimum error
+as we can using gradient descent optimization.  We can then see how
+well this network performs on test data.
+
+To start, we need to specify the network architecture.  This is done
+using the same sort of command as is used for Bayesian networks,
+except that the prior specifications are simply "+" or "-", indicating
+whether the corresponding sets of weights are present or absent.  The
+following command creates a network with two inputs, one layer of 15
+hidden units, and one output unit, with input-hidden weights, hidden
+biases, hidden-output weights, and an output bias:
+
+    > net-spec blog.gd 2 15 1 / - + + - + - +
+
+The "+" is actually translated to a very large number, with the result
+that the "prior" for these parameters has virtually no effect.
+Instead of a "+", one can put a positive number, s, which produces the
+effect of "weight decay" with penalty equal to the sum of the squares
+of these weights time 1/(2*s^2).  More elaborate hierarchical priors
+are meaningless if training is to be done by gradient descent.
+
+Next, we must specify the data model.  For this problem, the response
+is binary, and we use a model in which the probability of a response
+of 1 is found by passing the output of the network through the
+logistic function.  The following command specifies this:
+
+    > model-spec blog.gd binary
+
+When the response is real, a noise standard deviation of 1 would
+conventionally be used, which causes minus the log likelihood to be
+half the squared error.
+
+The location of the data is specified as for Bayesian networks:
+
+    > data-spec blog.gd 2 1 2 / bdata.train . 
+
+For these examples, the 300 training cases are stored in bdata.train
+(one per line, with the two inputs coming first).  The 200 test cases
+are in bdata.test, but this is not mentioned above.  The reason for
+doing things this way (rather than putting all the data in one file)
+will be apparent when we get to the examples using early stopping.
+
+Finally, we can train the network using gradient descent, with the
+command:
+
+    > net-gd blog.gd 100000 1000 / 0.4 batch
+
+This does 100000 iterations of "batch" gradient descent (ie, with each
+update based on all training cases), with networks being saved in the
+log file every 1000 iterations.  The software also supports "on-line"
+gradient descent, which is often faster to converge initially, but
+does not reach the exact optimum.  See net-gd.doc for details.
+
+The stepsize to use for gradient descent learning is specified as
+well; here it is 0.4.  If learning is unstable (ie, the error
+sometimes goes up rather than down), the stepsize will have to be
+reduced.  Net-gd does not try to determine relative stepsizes itself,
+but stepsizes for groups of parameters can be set individually.
+
+The above command takes about 10 minutes on our machine.  While
+waiting, you can monitor progress using net-plt.  For example, the
+progress of the training error can be viewed with the command:
+
+    > net-plt t l blog.gd | plot
+
+Individual networks can be displayed using net-display.  For example,
+
+    > net-display -w blog.gd 1000
+
+displays the network at iteration 1000.  The "-w" option suppresses
+the hyperparameter values, which are meaningless with this model.
+
+Once training has finished, we can make predictions based on the last
+network, which should have the lowest training error.  The following
+command prints a summary of performance at predicting the cases in
+bdata.test, both in terms of the log probability assigned to the
+correct target value and in terms of the error rate when guessing the
+target:
+
+    > net-pred mpa blog.gd 100000 / bdata.test .
+
+    Number of iterations used: 1
+
+    Number of test cases: 200
+
+    Average log probability of targets:    -0.364+-0.066
+
+    Fraction of guesses that were wrong:  0.1450+-0.0250
+
+Performance is substantially worse than that obtained using Bayesian
+training.  This is due to "overfitting".  The following command
+illustrates the problem by plotting the change during the run of the
+training error and the error on the test cases:
+
+    > net-plt t lL blog.gd / bdata.test . | plot
+
+From this plot, it is clear that we would have been better off to stop
+training earlier than 100000 iterations.  Of course, we can't stop
+training based on the test error plotted above, since we don't know
+the test targets when training.
+
+
+Gradient descent with early stopping for the binary response problem.
+
+We can try to prevent overfitting by choosing one of the networks
+found during training according to performance on a subset of the
+available training cases that we have excluded from the set used for
+the gradient descent training.  This training scheme can be
+implemented using the following commands:
+
+    > net-spec blog.gdes 2 15 1 / - + + - + - +
+    > model-spec blog.gdes binary
+
+    > data-spec blog.gdes 2 1 2 / bdata.train@1:225 . bdata.train@226:300 .
+
+    > net-gd blog.gdes 100 5 / 0.4 batch
+    > net-gd blog.gdes 1000 50 / 0.4 batch
+    > net-gd blog.gdes 20000 500 / 0.4 batch
+
+    > net-plt t L blog.gdes | find-min
+
+Of the 300 available training cases, the first three-quarters are used
+for the gradient descent training, while the last quarter are used to
+choose the a network from those found during training.  These 75
+validation cases are listed as "test" cases in the data-spec command
+above, though they are not true test cases.  This allows the best of
+the networks according to error on the validation set to be found
+using the net-plt command, in conjunction with find-min (documented in
+find-min.doc).  Note that to save computer time, one might wish to
+actually stop the training once it becomes apparent that further
+training is unlikely to find a better network, but that is not
+attempted here.
+
+Three net-gd commands are used above so that networks can be saved to
+the log file more frequently early in training.  It sometimes happens
+that the best network according to validation error is from very early
+in the training process.  We would not wish to miss it as a result of
+saving too few networks in the early stages of training.
+
+The final find-min command above outputs "3000" as the iteration that
+gives the best validation error.  We can use this network to make
+predictions for test cases, as below:
+
+    > net-pred mpa blog.gdes 3000 / bdata.test .                           
+
+    Number of iterations used: 1
+
+    Number of test cases: 200
+
+    Average log probability of targets:    -0.263+-0.043
+
+    Fraction of guesses that were wrong:  0.1150+-0.0226
+
+As can be seen, performance is considerably better than that obtained
+in the previous section by training for 100000 iterations.
+
+
+Using an ensemble of networks trained by early stopping.
+
+In the early stopping procedure just described, the use of the first
+three-quarters of the training data for estimation and the last
+one-quarter for validation is arbitrary.  Whenever a training
+procedure involves arbitrary or random choices, it is generally better
+(on average) to repeat the procedure several times with different
+choices, and then make predictions by averaging the predictions made
+by the networks in this "ensemble".  The following commands implement
+this idea for early stopping, by averaging over both the choice of
+which quarter of the data to use for validation, and over the random
+choice of initial weights:
+
+    > net-spec blog.gdese1 2 15 1 / - + + - + - +
+    > model-spec blog.gdese1 binary
+    > data-spec blog.gdese1 2 1 2 / bdata.train@-226:300 . bdata.train@226:300 .
+
+    > rand-seed blog.gdese1 1
+
+    > net-gd blog.gdese1 100 5 / 0.4 batch
+    > net-gd blog.gdese1 1000 50 / 0.4 batch
+    > net-gd blog.gdese1 20000 500 / 0.4 batch
+
+    > net-plt t L blog.gdese1 | find-min
+
+    > net-spec blog.gdese2 2 15 1 / - + + - + - +
+    > model-spec blog.gdese2 binary
+    > data-spec blog.gdese2 2 1 2 / bdata.train@-151:225 . bdata.train@151:225 .
+
+    > rand-seed blog.gdese2 2
+
+    > net-gd blog.gdese2 100 5 / 0.4 batch
+    > net-gd blog.gdese2 1000 50 / 0.4 batch
+    > net-gd blog.gdese2 20000 500 / 0.4 batch
+
+    > net-plt t L blog.gdese2 | find-min
+
+    > net-spec blog.gdese3 2 15 1 / - + + - + - +
+    > model-spec blog.gdese3 binary
+    > data-spec blog.gdese3 2 1 2 / bdata.train@-76:150 . bdata.train@75:150 .
+
+    > rand-seed blog.gdese3 3 
+
+    > net-gd blog.gdese3 100 5 / 0.4 batch
+    > net-gd blog.gdese3 1000 50 / 0.4 batch
+    > net-gd blog.gdese3 20000 500 / 0.4 batch
+
+    > net-plt t L blog.gdese3 | find-min
+
+    > net-spec blog.gdese4 2 15 1 / - + + - + - +
+    > model-spec blog.gdese4 binary
+    > data-spec blog.gdese4 2 1 2 / bdata.train@-1:75 . bdata.train@1:75 .
+
+    > rand-seed blog.gdese4 4
+
+    > net-gd blog.gdese4 100 5 / 0.4 batch
+    > net-gd blog.gdese4 1000 50 / 0.4 batch
+    > net-gd blog.gdese4 20000 500 / 0.4 batch
+
+    > net-plt t L blog.gdese4 | find-min
+
+The networks selected from the four training runs above as having
+lowest validation error are at iterations 3000, 950, 3500, and 11000.
+We can now make predictions for test cases using these four networks,
+as follows:
+
+    > net-pred mpa blog.gdese1 3000 blog.gdese2 950 \
+                   blog.gdese3 3500 blog.gdese4 11000 / bdata.test .
+
+    Number of iterations used: 4
+
+    Number of test cases: 200
+
+    Average log probability of targets:    -0.263+-0.040
+
+    Fraction of guesses that were wrong:  0.1050+-0.0217
+
+The resulting classification performance is slightly better than was
+found using just the first of the four networks.
+
 
 
 HINTS AND WARNINGS
@@ -1693,7 +4465,8 @@ HINTS AND WARNINGS
   
       a) Decrease the constant part of the covariance function.  There's
          almost never any reason for this to be greater than the range of
-         the targets in the training cases.
+         the targets in the training cases, assuming the targets are
+         centred at about zero.
 
       b) Increase the jitter part of the covariance.  For 'gp-eval' with
          the "targets" option, noise in the regression model acts the 
@@ -1713,7 +4486,18 @@ HINTS AND WARNINGS
          inverted in sample-values.  However, scan-values does not produce
          independent draws, so convergence may be slower.
 
-5) If the system crashes in the middle of a run of 'net-mc' (say), one
+5) When using Annealed Importance Sampling, be careful that the number
+   of temperatures in the annealing schedule (set by mc-temp-sched) is
+   what you intend.  Remember that there's one more at the end (at a 
+   temperature of one) that isn't explicitly specified.  Also be careful 
+   that the number of AIS operations in the mc-spec command is such as to
+   move through this schedule as desired.  You can check that things are 
+   working as desired with a command such as such as "xxx-plt t I".  If 
+   you get things wrong, looking at the iterations that were supposed to 
+   be at inverse temperature one but aren't will give completely misleading
+   results.
+
+6) If the system crashes in the middle of a run of 'net-mc' (say), one
    can usually continue from the last iteration written to the log file 
    by just invoking 'net-mc' again with the same arguments (just as 
    one can continue for more iterations after 'net-mc' terminates 
@@ -1724,21 +4508,23 @@ HINTS AND WARNINGS
    a less-than-complete set of full records.  It is best to assess the 
    situation using 'log-records' before proceeding.
 
-6) If you need to change the name of a program to avoid conflicts with 
+7) If you need to change the name of a program to avoid conflicts with 
    other programs you use, it is probably best to simply change the name 
    of the link in this software's 'bin' directory, leaving the name 
    unchanged in all the other directories.
+
 
 
 GUIDE TO FURTHER DOCUMENTATION
 
 The overview and examples above are intended just to get you started.
 To use the software to do real work, you will probably need to refer
-to the detailed documentation on the commands (and common aspects of
-commands) contained in the files ending with ".doc" which are found in
-the various sub-directories, and also all collected in the 'doc'
-directory.  For quick reference, all commands print a brief summary of
-the command syntax when they are invoked with no arguments.
+to the detailed documentation on the commands (and on the features
+common to more than one command) that is contained in the files ending
+with ".doc".  These files are found in the various sub-directories,
+and are also all linked to from the 'doc' directory.  For quick
+reference, all commands print a brief summary of the command syntax
+when they are invoked with no arguments.
 
 In the syntax descriptions used, the characters "[" and "]" enclose
 parts of the command that are optional, "{" and "}" enclose optional
@@ -1753,28 +4539,29 @@ with the more important files marked by "*".  Programs listed as
 an application (eg, "net", "gp", or "mix").  In some cases, further
 documentation is available under the specific name.
 
-The file index.html is a hypertext index to this documenation.  It can
-be accessed using a Web browser (eg, xmosaic or netscape), by a
-command such as
-
-    > xmosaic index.html
-
-or by opening index.html as a local file in a browser that you are
-already running. The index.html file must reside in the 'doc'
-directory for this software.  One needn't start the browser from this
-directory, however, provided one uses a full path name to identify
-index.html.  The files accessed this way are .html files derived from
+The file index.html is a hypertext index to this documentation.  It
+can be accessed using a Web browser (eg, netscape), by opening
+index.html as a local file (which will probably require giving its
+full path name).  The index.html file must reside in the 'doc'
+directory for this software, so that relative references will work
+correctly.  The files accessed this way are .html files derived from
 the .doc files.  The content is identical, except that references to
 other .doc files have been converted into hypertext links that you can
 follow with the browser.
 
-All the introductory documentation (including this) is collected into
-the 'manual' file.  You can print all the documentation by going to
-the main directory for this software and issuing a command such as
+The 'doc' directory also contains comments on the various software
+releases, in files of the form 'Release.YYYY-MM-DD.doc'.
 
-  lpr doc/manual util/*.doc mc/*.doc net/*.doc gp/*.doc mix/*.doc doc/rel*
+All the introductory documentation (including this) is collected into
+the 'manual' file, as plain text.  You can print all the documentation
+by going to the main directory for this software and issuing a command
+such as
+
+  lpr doc/manual util/*.doc mc/*.doc dist/*.doc bvg/*.doc \
+      net/*.doc gp/*.doc mix/*.doc doc/Rel*.doc
  
 (or using whatever command other than 'lpr' you use to print text files).
+This will produce about 150 pages of paper.
 
 
 Generic utility programs [util]:
@@ -1786,6 +4573,9 @@ Generic utility programs [util]:
     log-append      Append records from one log file to the end of another
     log-last        Display the index of the last record in a log file
     log-records     List all records in a log file  
+
+    formula         Syntax for arithmetic formulas
+    calc            Simple calculator program
 
   * data-spec       Specify data sets for training and testing
   * numin           Facilities for input of numeric data
@@ -1804,8 +4594,9 @@ Generic utility programs [util]:
 
   * quantities      Numeric quantities obtainable from log files
 
-  * xxx-plt         Write quantities from a log file, suitable for plotting
-    xxx-hist        Build a histogram for a quantity obtained from a log file
+  * xxx-plt         Write quantities from log files, suitable for plotting
+    xxx-tbl         Write quantities from log files in a tabular form
+    xxx-hist        Build a histogram for a quantity using data from log files
 
   * series          Analyse stationary time series data
 
@@ -1820,9 +4611,37 @@ Markov chain Monte Carlo facilities [mc]:
 
     mc-temp-sched   Specify temperature schedule for tempering methods
     mc-temp-filter  Copy only iterations at a given temperature
+    mc-ais          Monitor annealed importance sampling (AIS) runs
 
     xxx-grad-test   Test the correctness of the energy gradient computations
     xxx-stepsizes   Display and evaluate stepsizes used for dynamics
+
+
+Markov chain sampling for a specified distribution [dist]:
+
+  * dist            Markov chain sampling for a specified distribution
+  * dist-spec       Specify a distribution to sample from
+
+    dist-initial    Specify initial state for Markov chain
+    dist-stepsizes  Display, evaluate, or set stepsizes used for dynamics
+  * dist-mc         Do Markov chain sampling for the specified distribution
+    dist-gen        Generate values for state variables from the prior
+
+    dist-display    Print state variables at a specified iteration
+  * dist-quantities Quantities defined for a specified distribution
+
+  * dist-est        Estimate the expectation of some function of state
+
+
+Markov chain sampling for a bivariate Gaussian [bvg]:
+
+    bvg             Demo of Markov chain sampling from a bivariate Gaussian
+    bvg-spec        Specify a bivariate Gaussian distribution to sample from
+
+    bvg-initial     Set initial state for sampling from a bivariate Gaussian
+    bvg-mc          Do Markov chain simulation for a bivariate Gaussian
+
+    bvg-plt         Get quantities from a bvg log file, suitable to plot
 
 
 Bayesian neural networks [net]:
@@ -1837,8 +4656,9 @@ Bayesian neural networks [net]:
   * net-display     Print network parameters and/or hyperparameters
 
   * net-quantities  Quantities from log files relating to networks
-  * net-plt         Get quantities from a net log file, suitable for plotting
-    net-hist        Build histogram for quantity obtained from a net log file
+  * net-plt         Get quantities from net log files, suitable for plotting
+    net-tbl         Get quantities from net log files and output as table
+    net-hist        Build histogram for quantity obtained from net log files
 
   * net-pred        Make predictions for test cases
 
@@ -1880,26 +4700,20 @@ Bayesian inference for mixture models [mix]:
     mix-cases       Generate cases from a mixture model
 
     mix-extensions  Possible extensions to the mixture modeling software
-
-
-Markov chain sampling for a bivariate Gaussian [bvg]:
-
-    bvg             Demo of Markov chain sampling from a bivariate Gaussian
-    bvg-spec        Specify a bivariate Gaussian distribution to sample from
-    bvg-mc          Do Markov chain simulation for a bivariate Gaussian
-    bvg-plt         Get quantities from a bvg log file, suitable to plot
+
 
 
 ACKNOWLEDGEMENTS
 
 Inspiration for implementing the Gaussian process methods came from
-the work of Carl Rasmussen and Chris Williams.  I also benefitted
-from looking at Carl Rasmussen's implementation.
+the work of Carl Rasmussen and Chris Williams.  I also benefited from
+looking at Carl Rasmussen's implementation.
 
 The sampling method for top-level hyperparameters using adaptive
 rejection sampling, and the features allowing cpu time to be stored,
 displayed, and used to control the number of iterations, are also
 based on work by Carl Edward Rasmussen.
 
-Thanks also to David MacKay, Chris Williams, and Tim Howells for
-testing the programs and for comments on the documentation.
+Thanks also to David MacKay, Chris Williams, Tim Howells, Tony Plate,
+Dirk Husmeier, and Marcus Lee for comments on the documentation, for
+testing the programs, and for finding bugs.

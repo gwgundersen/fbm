@@ -1,6 +1,6 @@
 /* MC-TEMP-SCHED.C - Specify tempering schedule for Markov chain simulation.*/
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -41,7 +41,9 @@ void main
   log_file logf;
   log_gobbled logg;
 
+  int arithmetic;
   char **ap;
+  char *p;
   int t, n, i;
 
   /* Look for log file name. */
@@ -80,6 +82,12 @@ void main
     exit(0);
   }
 
+  /* Handle null schedule. */
+
+  if (argc==3 && strcmp(argv[2],"-")==0)
+  { argc -= 1;
+  }
+
   /* Otherwise, start by examining temperature/bias arguments in reverse
      order, storing them the wrong way around in the schedule. */
 
@@ -89,9 +97,17 @@ void main
 
   for (ap = argv+argc-1; ap>argv+1; ap--)
   { 
+    arithmetic = 0;
     n = 1;
+
     if (strchr(*ap,':')!=0)
-    { n = atoi(strchr(*ap,':')+1);
+    { p = strchr(*ap,':')+1;
+      if (*p=='+') 
+      { arithmetic = 1;
+        p += 1;
+      }
+      if (*p==0) usage();
+      n = atoi(p);
       if (n<=0) usage();
     }
 
@@ -126,12 +142,29 @@ void main
     { bias = 0;
     }
 
-    for (i = n-1; i>=0; i--)
-    { 
-      sch->sched[t+n-1-i].inv_temp = 
-        exp (log(inv_temp) + (log(sch->sched[t-1].inv_temp)-log(inv_temp))*i/n);
-      sch->sched[t+n-1-i].bias = 
-        bias + (sch->sched[t-1].bias-bias)*i/n;
+    if (inv_temp==0 && n>1 && !arithmetic)
+    { fprintf(stderr,
+        "Can't start geometric series with inverse temperature of 0\n");
+      exit(1);
+    }
+
+    if (n==1)
+    { sch->sched[t].inv_temp = inv_temp;
+      sch->sched[t].bias = bias;
+    }
+    else
+    { for (i = n-1; i>=0; i--)
+      { if (arithmetic)
+        { sch->sched[t+n-1-i].inv_temp = 
+            inv_temp + (sch->sched[t-1].inv_temp-inv_temp)*i/n;
+        }
+        else
+        { sch->sched[t+n-1-i].inv_temp = exp 
+            (log(inv_temp)+(log(sch->sched[t-1].inv_temp)-log(inv_temp))*i/n);
+        }
+        sch->sched[t+n-1-i].bias = 
+          bias + (sch->sched[t-1].bias-bias)*i/n;
+      }
     }
 
     t += n;
@@ -172,12 +205,17 @@ static void display_sched
 
   sch = logg->data['m'];
 
-  printf("\n");
+  printf("\nIndex  Inv-temp     Bias  Temp\n\n");
 
   for (t = 0; t<Max_temps; t++)
-  { printf ("  %2d: %.5f @ %+6.1f /%.1lf\n", t, 
-            sch->sched[t].inv_temp, sch->sched[t].bias, 
-            1.0/sch->sched[t].inv_temp);
+  { printf ("%4d   %.6f  @%+6.1f", 
+      t, sch->sched[t].inv_temp, sch->sched[t].bias);
+    if (sch->sched[t].inv_temp==0)
+    { printf("  /inf\n");
+    }
+    else
+    { printf("  /%.1f\n", 1.0/sch->sched[t].inv_temp);
+    }
     if (sch->sched[t].inv_temp==1) break;
   }
 
@@ -194,10 +232,13 @@ static void display_sched
 static void usage(void)
 {
   fprintf(stderr, 
-    "Usage: mc-temp_sched log-file { inv-temperature[@bias][:n] }\n");
+    "Usage: mc-temp_sched log-file { inv-temperature[@bias][:[+]n] }\n");
+
+  fprintf(stderr, 
+    "   or: mc-temp_sched log-file -  (to specify a null schedule)\n");
 
   fprintf(stderr,
-    "   or: mc-temp-sched log-file (to display stored schedule)\n");
+    "   or: mc-temp-sched log-file    (to display stored schedule)\n");
 
   exit(1);
 }

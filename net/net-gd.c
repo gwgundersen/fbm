@@ -1,4 +1,4 @@
-/* NET-GD.C - Program to train a network by gradient descent in the error.
+/* NET-GD.C - Program to train a network by gradient descent in the error. */
 
 /* Copyright (c) 1997 by Radford M. Neal 
  *

@@ -14,11 +14,11 @@
 include ../make.include
 
 programs:	bvg-spec bvg-mc bvg-plt bvg-hist bvg-grad-test bvg-stepsizes \
-		bvg-initial
+		bvg-initial bvg-tbl
 
 clean:
 	rm -f *.o bvg-spec bvg-mc bvg-plt bvg-hist bvg-grad-test bvg-stepsizes \
-	          bvg-initial
+	          bvg-initial bvg-tbl
 
 
 include ../util/util.make
@@ -67,6 +67,11 @@ bvg-plt:	bvg-plt.o	bvg-mc.o mc-quantities.o mc-util.o \
 				misc.o plt.o quantities.o log.o rand.o
 		$(CC) $(LFLAGS) bvg-plt.o bvg-mc.o mc-quantities.o mc-util.o \
 		  misc.o plt.o quantities.o log.o rand.o -lm -o bvg-plt
+
+bvg-tbl:	bvg-plt.o	bvg-mc.o mc-quantities.o mc-util.o \
+				misc.o tbl.o quantities.o log.o rand.o
+		$(CC) $(LFLAGS) bvg-plt.o bvg-mc.o mc-quantities.o mc-util.o \
+		  misc.o tbl.o quantities.o log.o rand.o -lm -o bvg-tbl
 
 bvg-hist:	bvg-plt.o	bvg-mc.o mc-quantities.o mc-util.o \
 				misc.o hist.o quantities.o log.o rand.o

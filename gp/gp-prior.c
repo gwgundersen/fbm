@@ -60,9 +60,11 @@ void gp_prior_generate(
 
     if (gp->linear.alpha[1]!=0)
     { for (i = 0; i<gp->N_inputs; i++)
-      { *h->linear[i] = 
-          log (!fix ? prior_pick_sigma(exp(*h->linear_cm),gp->linear.alpha[1])
+      { if (!(gp->linear_flags[i]&Flag_omit))
+        { *h->linear[i] = 
+           log (!fix ? prior_pick_sigma(exp(*h->linear_cm),gp->linear.alpha[1])
            : scale_value==0 ? exp(*h->linear_cm) : scale_value*relevance_value);
+        }
       }
     }
   }
@@ -88,7 +90,9 @@ void gp_prior_generate(
        !fix ? prior_pick_sigma(prior_width_scaled(&gp->exp[l].relevance,
                                                   gp->N_inputs),
                                gp->exp[l].relevance.alpha[0])
-            : scale_value==0 ? gp->exp[l].relevance.width : relevance_value);
+            : scale_value==0 ? prior_width_scaled(&gp->exp[l].relevance,
+                                                  gp->N_inputs)
+                             : relevance_value);
     }
 
     if (gp->exp[l].relevance.alpha[1]!=0)
@@ -159,8 +163,10 @@ double gp_log_prior
     }
     if (gp->linear.alpha[1]!=0)
     { for (i = 0; i<gp->N_inputs; i++)
-      { lp += gp_gdens (gp->linear.alpha[1], exp(*h->linear_cm), 
-                        *h->linear[i], ex);
+      { if (!(gp->linear_flags[i]&Flag_omit))
+        { lp += gp_gdens (gp->linear.alpha[1], exp(*h->linear_cm), 
+                          *h->linear[i], ex);
+        }
       }
     }
   }
@@ -246,8 +252,10 @@ void gp_prior_grad
     }
     if (gp->linear.alpha[1]!=0)
     { for (i = 0; i<gp->N_inputs; i++)
-      { gp_gdiff (gp->linear.alpha[1], exp(*h->linear_cm), *h->linear[i], 
-                  gp->linear.alpha[0]==0 ? 0 : d->linear_cm, d->linear[i]);
+      { if (!(gp->linear_flags[i]&Flag_omit))
+        { gp_gdiff (gp->linear.alpha[1], exp(*h->linear_cm), *h->linear[i], 
+                    gp->linear.alpha[0]==0 ? 0 : d->linear_cm, d->linear[i]);
+        }
       }
     }
   }

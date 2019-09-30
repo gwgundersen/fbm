@@ -1,0 +1,11 @@
+
+# Commands to sample from the "ring" distribution using Hamiltonian dynamics
+# (40 leapfrog steps each iteration), without an acceptance test, along with 
+# partial heatbath updates of the momentum with decay of 0.98.  The stepsize 
+# to use is given as an argument.  Note that this method doesn't give the 
+# exactly correct distribution.
+
+dist-spec glog.dyn,$1 \
+  "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
+mc-spec glog.dyn,$1 repeat 40 heatbath 0.98 dynamic 1 $1 end
+dist-mc glog.dyn,$1 500

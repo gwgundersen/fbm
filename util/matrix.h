@@ -1,6 +1,6 @@
 /* MATRIX.H - Interface to matrix routines. */
 
-/* Copyright (c) 1996 by Radford M. Neal 
+/* Copyright (c) 1996, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -25,5 +25,8 @@ int inverse_from_cholesky (double *, double *, double *, int);
 
 void fill_lower_triangle (double *, int);
 void fill_upper_triangle (double *, int);
+
+void forward_solve (double *, double *, int, double *, int, int);
+void backward_solve (double *, double *, int, double *, int, int);
 
 int jacobi (double *, double *, double, int);

@@ -5,6 +5,13 @@
 
 INSTALLING THE SOFTWARE
 
+This section describes how to unpack and compile the software for a
+Unix machine.  Note that getting the software to work in a non-Unix
+environment may be difficult or impossible.
+
+
+Unpacking the files.
+
 The software is distributed as a Unix tar archive.  To obtain the
 files, create an empty directory and change to it, download the tar
 archive for the desired version by anonymous ftp or via your Web
@@ -19,82 +26,105 @@ doing the above.  The following instructions cover what to do next for
 the current version; you should read the old documentation if for some
 reason you are installing an older version.
 
-The tar command should create sub-directories 'util', 'mc', 'net',
-'gp', 'mix', 'bvg', 'examples', 'doc', and 'bin', and place a large
-number of files in these sub-directories.  It should also place the
-files 'README' and 'make.include' in the current directory.  If all
-this seems to have worked, you can remove 'fbm.YYYY-MM-DD.tar'.
+The tar command should create sub-directories 'util', 'mc', 'dist',
+'bvg', 'net', 'gp', 'mix', 'ex-dist', 'ex-bayes', 'ex-netgp',
+'ex-mix', 'ex-gdes', 'doc', and 'bin', and place a large number of
+files in these sub-directories.  It should also place the files
+'README', 'make.include', 'make-all', and 'make-clean' in the current
+directory.  If all this seems to have worked, you can remove the file
+'fbm.YYYY-MM-DD.tar'.
+
+
+Looking at the documentation.
 
 The directory 'doc' contains links to all the documentation files.
 The file 'manual' contains all the introductory documentation
 (including this) as a simple text file; the same information is also
 contained in several .doc files.  Other .doc files contain more
-detailed information.  Files of the form release.YYYY-MM-DD.doc
+detailed information.  Files of the form 'Release.YYYY-MM-DD.doc'
 contain information on current and past releases.  These may be of
 interest if you are upgrading from an older version of the software.
-You can read these text files directly, or if you have a Web browser,
-you can access them via 'index.html', as described in <A HREF="Guide.html">Guide.doc</A>.
+
+If you have a Web browser, you can access all these documentation
+files via 'index.html', as described in <A HREF="Guide.html">Guide.doc</A>.
+
+
+Compiling the programs.
 
 You will probably be able to compile the programs as described below
 without making having to change anything.  However, it is possible
 that you will want to use a different C compiler, or set certain
-compilation options.  This can probably be done by modifying the
-'make.include' file in the main directory, which is included at the
-beginning of all Makefiles, though for some problems you might have to
-modify the 'Makefile' and 'xxx.make' files in the various directories.
+compilation options.  You can probably set the required options by
+modifying the 'make.include' file in the main directory, which is
+included at the beginning of all Makefiles, though for some problems
+you might have to modify the 'Makefile' and 'xxx.make' files in the
+various sub-directories, or modify the source files.
 
-The 'util' directory contains a file of 100,000 natural random bytes,
-which are used in combination with pseudo-random numbers.  This file
-is accessed by many of the programs, using a path name that by default
-points into this 'util' directory.  If you plan on moving this file
-elsewhere, you will need to change the compilation command for rand.c
-at the end of 'util/util.make'.
+Here are some reasons that you might need to customize things:
+
+  1) The programs were written with IEEE floating-point in mind, and
+     therefore may occasionally perform operations that result in
+     overflow or underflow.  If this causes program termination on
+     your machine (eg, with a "floating point exception"), you will
+     need to figure out how to disable these errors.  On DEC Alpha
+     machines, for example, the problem can be fixed using a "-ieee"
+     compiler option, which can be put in CFLAGS in 'make.include'.
+
+  2) The 'util' directory contains a file of 100,000 natural random
+     bytes, which are used in combination with pseudo-random numbers
+     This file is accessed by many of the programs, using a path 
+     name that by default points into this 'util' directory.  If you 
+     plan on moving this file elsewhere, you will need to change the 
+     compilation command for rand.c at the end of 'util/util.make'.
+
+  3) If you are rather short of memory, you might want to reduce the
+     size of the Max_optional_memory constant defined in gp/gp-mc.c.
+     This will save memory at the cost of some time.
 
 Once you have made any required changes, you can compile the programs
-by issuing the following commands
+by going to the main directory where you installed the software and
+issuing the command
 
-    cd util
-    make
-    cd ..
+    make-all
 
-    cd mc
-    make
-    cd ..
-
-    cd net
-    make
-    cd ..
-
-    cd gp
-    make
-    cd ..
-
-    cd mix
-    make
-    cd ..
-
-    cd bvg
-    make
-    cd ..
-
-The last three commands can be omitted if you have no interest in the
-demonstration of sampling from a bivariate Gaussian distribution. Note
-that common modules will be compiled over again for each directory
-where they are used; this is intentional.
+This will compile programs in the various sub-directories.  Note that
+some modules will be compiled over again in each directory where they
+are used; this is intentional.
 
 It is possible that these compilation commands will fail for some
 reason, in which case you'll have to figure out what's wrong and fix
-it.  Note that for the makes to work correctly, the programs MUST be
-kept in separate 'util', 'mc', 'net', 'gp', 'mix', and 'bvg'
-sub-directories, with these names.
+it.  Note that the 'make-all' command just moves into each of the
+directories and does a 'make' there.  You can do this manually for
+each directory to see where the problem is.  For these makes to work
+correctly, the programs MUST be kept in separate 'util', 'mc', 'dist',
+'bvg', 'net', 'gp', and 'mix' sub-directories, with these names.
 
-Once the above make commands have been successful, you should put the
+
+Using the programs.
+
+Once you have successfully compiled the programs, you should put the
 'bin' directory (within the main directory for this software) in your
 search path.  How this is done depends on the shell program you are
 using; consult a local expert if you don't know how.  This directory
-contains symbolic links to all the programs making up this software
-(except some that are used only for testing).  Subsequent instructions
-assume that you have this 'bin' directory in your search path.
+contains symbolic links to all the programs making up this software.
+Subsequent instructions assume that you have this 'bin' directory in
+your search path.
+
+
+Cleaning things up.
+
+Once the compilations have finished, you can save some disk space by
+issuing the command
+
+    rm */*.o
+
+when you are in the main directory.  You can get rid of the compiled
+programs by using the command
+
+    make-clean
+
+when in the main directory.  Of course, you then won't be able to use
+the programs again until you do another make-all to recompile them.
 </pre>
 </body>
 </html>

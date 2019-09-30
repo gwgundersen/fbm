@@ -1,0 +1,8 @@
+
+# Commands to sample from a univariate normal distributon with mean 10 and
+# variance 1, using the Metropolis algorithm with stepsize of 1.  The
+# distribution is specified by giving an "energy" function of (x-10)^2/2.
+
+dist-spec nlog "(x-10)^2/2"
+mc-spec nlog metropolis $1
+dist-mc nlog 1000

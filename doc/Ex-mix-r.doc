@@ -1,0 +1,182 @@
+
+
+A BIVARIATE DENSITY ESTIMATION PROBLEM
+
+As a second illustration of the mixture model software, I generated
+bivariate real data from a mixture of two component distributions,
+with probabilities 0.3 and 0.7.  These two distributions were not
+exactly Gaussian, and the two real variables were not exactly
+independent within one of these components.  Accordingly, modeling
+this data well with a mixture of Gaussian distributions will require
+more than two components in the mixture.  
+
+For the exact distribution used, see the source of the generation
+program, in rgen.c.  I generated 1000 cases with this program, stored
+in 'rdata', of which the first 500 are used for training (the others
+are not used for anything at the moment).
+
+
+A two-component mixture model for the density estimation problem.
+
+We can first see what happens when we model this data with a mixture
+of two Gaussians - even though we know the data cannot be perfectly
+modeled in this way.  We specify this two-component model using the
+'mix-spec' and 'model-spec' commands, as follows:
+
+    > mix-spec rlog.2 0 2 2 / 1 0.05:0.5:0.2 10
+    > model-spec rlog.2 real 0.05:0.5:0.5:1
+
+The 'mix-spec' command creates the log file "rlog.2".  The arguments
+following the log file name are the number of input attributes in a
+case (always 0 at present), the number of target attributes (2 for
+this bivariate problem), and the number of mixture components to use
+(2 for this model).  
+
+The Dirichlet concentration parameter follows the "/".  In this model,
+its value is 1 (unscaled, since there's no 'x'), which produces a
+uniform prior for the single number determining the probabilities of
+the two components.
+
+The "offset" parameters of the two components represent the Gaussian
+means when modeling real data.  Hyperparameters determine the prior
+means and standard deviations of these offsets (separately for the two
+target attributes); priors for these hyperparameters are specified in
+'mix-spec'.  In the above command, the prior for the mean of an offset
+is Gaussian with standard deviation 10 (the last argument).  The
+standard deviations for the offsets are given a hierarchical prior,
+with a higher-level hyperparameter common to both the lower-level
+standard deviations.  The top-level precision (standard deviation to
+the power -2) is given a Gamma prior with mean 0.05 and shape
+parameter 0.5; the precisions for the lower-level hyperparameters have
+Gamma priors with mean given by the higher-level precision, and shape
+parameter 0.2.  This is all specified by the second-to-last argument
+of 'mix-spec'.
+
+A similar hierarchical scheme is used for the "noise" standard
+deviations (the standard deviations of the Gaussian distributions in
+the mixture), except that this scheme has three levels - a top-level
+hyperparameter, a hyperparameter for each target attribute, and
+hyperparameters for each target for each component.  The 'model-spec'
+command gives the top-level mean, and the shape parameters for the
+Gamma priors going down the hierarchy.
+
+We next specify where the data comes from, with 'data-spec':
+
+    > data-spec rlog.2 0 2 / rdata@1:500 . 
+
+This says that there are 0 input attributes and 2 target attributes.
+
+For this finite model, we can specify that all the Markov chain
+updates should be done with Gibbs sampling, as follows:
+
+    > mc-spec rlog.2 repeat 20 gibbs-indicators gibbs-params gibbs-hypers
+
+The "repeat 20" just repeats these operations in a single iteration,
+to reduce the volume of data stored in the log file.
+
+Finally, we run the Markov chain simulation for 100 iterations:
+
+    > mix-mc rlog.2 100
+
+This takes less than 10 seconds on our machine.  Once it has finished,
+we can look at the hyperparameters and component parameters at various
+iterations.  The last iteration should look something like the
+following:
+
+    > mix-display rlog.2
+
+    MIXTURE MODEL IN FILE "rlog.2" WITH INDEX 100
+    
+    HYPERPARAMETERS
+    
+    Standard deviations for component offsets:
+    
+        0.585:     4.108   40.500
+    
+    Means for component offsets:
+    
+                  -0.549   -2.258
+    
+    Standard deviations for Gaussian target distributions:
+    
+        1.464:     0.959    3.693
+    
+    
+    PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
+    
+       1: 0.712   -2.046  +11.371
+    
+                   1.068    5.440
+    
+       2: 0.288   +1.757  +20.956
+    
+                   0.949    7.198
+
+We see above that the two components are associated with fractions of
+approximately 0.7 and 0.3 of the training cases, as expected from the
+way the data was generated.  For each component, the two offset
+parameters, giving the Gaussian means, are shown on the first line,
+and the standard deviation parameters on the following line.  These
+component parameters are approximately what we would expect from
+looking at a plot of the data, but of course the two Gaussian
+components cannot perfectly model the actual distribution.
+
+
+An infinite mixture model for the density estimation problem.
+
+To more closely approximate the true distribution, we can use a
+mixture model with a countably infinite number of Gaussian components.
+An infinite mixture is used if we simply omit the argument giving the
+number of components in the 'mix-spec' command.  We must also change
+the specification for the Dirichlet concentration parameter, preceding
+it with an 'x' to indicate that it should be scaled so as to produce a
+sensible infinite limit.  In the specification below, the moderate
+value of 5 is chosen for this specification in order to indicate that
+we believe that a fairly large number of components will have
+substantial probability (the other prior specifications are the same
+as before):
+
+    > mix-spec rlog.inf 0 2 / x5 0.05:0.5:0.2 10
+
+The 'model-spec' and 'data-spec' commands are the same as before:
+
+    > model-spec rlog.inf real 0.05:0.5:0.5:1
+    > data-spec rlog.inf 0 2 / rdata@1:500 . 
+
+The 'mc-spec' command must be altered, however, since it is not
+possible to do Gibbs sampling for component indicators when there are
+an infinite number of components.  The met-indicators operation is
+used instead, with 10 changes being proposed to every indicator:
+
+    > mc-spec rlog.inf repeat 20 met-indicators 10 gibbs-params gibbs-hypers
+
+We can now run the simulation for 100 iterations (which takes about a
+minute and a half on our machine):
+
+    > mix-mc rlog.inf 100
+
+If we now examine the state with 'mix-display', we will find that
+quite a few (eg, 20) mixture components are associated with training
+cases - though fewer components account for the bulk of the cases.
+
+We can see how well the model has captured the true distribution by
+generating a sample of cases from a distribution drawn from the
+posterior, as represented by the state at a particular iteration.  We
+do this as follows:
+
+    > mix-cases rlog.inf 100 new 1000
+
+This command generates 1000 new cases based on iteration 100, and
+stores them (one per line) in the file "new".  We can now use a plot
+program to view a scatterplot of the data in "new", and compare it
+with a scatterplot of data from the actual distribution.  Note that
+the data in "new" is taken jointly from one example of a distribution
+from the posterior distribution.  If 'mix-cases' is called for another
+iteration, it will produce data from a different distribution from the
+posterior, which in general could be quite different.  This variation
+represents the uncertainly regarding the true distribution that
+remains when only a finite amount of training data is available.  A
+representation of the predictive distribution for a single new data
+point, which is the average of distributions drawn from the posterior,
+could be obtained by combining the output of 'mix-cases' for a number
+of iterations.

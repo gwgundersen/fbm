@@ -67,8 +67,8 @@ void main
     }
 
     printf("\n");
-    printf("Standard deviations: %.6lf %.6lf\n",bs->std1,bs->std2);
-    printf("Correlation:         %.6lf\n",bs->corr);
+    printf("Standard deviations: %.6f %.6f\n",bs->std1,bs->std2);
+    printf("Correlation:         %.6f\n",bs->corr);
     if (bs->rep>1) printf("Replications:        %d\n",bs->rep);
     printf("\n");
 

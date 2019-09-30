@@ -1,6 +1,6 @@
 /* MATRIX.C - Routines for doing matrix operations. */
 
-/* Copyright (c) 1996 by Radford M. Neal 
+/* Copyright (c) 1996, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -111,8 +111,9 @@ void matrix_product
 }
 
 
-/* FIND THE TRACE OF THE PRODUCT OF TWO SQUARE MATRICES.  The matrix elements 
-   are stored in contiguous locations in row-major order. */
+/* FIND THE TRACE OF THE PRODUCT OF TWO SYMMETRIC MATRICES.  The matrix 
+   elements are stored in contiguous locations in row-major order.  Space is 
+   present for the full matrices, but only the lower triangles are looked at. */
 
 double trace_of_product
 ( double *m1,		/* Left operand */
@@ -126,9 +127,10 @@ double trace_of_product
   s = 0;
 
   for (i = 0; i<n; i++)
-  { s += inner_product(m1,1,m2,n,n);
+  { s += 2 * inner_product(m1,1,m2,1,i);
+    s += m1[i] * m2[i];
     m1 += n;
-    m2 += 1;
+    m2 += n;
   }
 
   return s;
@@ -303,6 +305,61 @@ void fill_upper_triangle
     }
   }
 }
+
+
+/* SOLVE TRIANGULAR SYSTEM USING FORWARD SUBSTITUTION.  Solves Lx=b where
+   L is lower-triangular using forward substitution.  The vectors x and b
+   may be stored with offsets other than one, as specified. */
+
+void forward_solve
+( double *m,		/* The matrix L, only the lower-triangle is looked at */
+  double *x,		/* Place to store solution */
+  int xo,		/* Offset from one element to the next in x */
+  double *b,		/* The vector b */
+  int bo,		/* Offset from one element to the next in b */
+  int n			/* Dimension of matrix and vectors */
+)
+{ 
+  double *xp;
+  int i;
+
+  xp = x;
+
+  for (i = 0; i<n; i++)
+  { *xp = (*b - inner_product (m, 1, x, xo, i)) / m[i];
+    xp += xo;
+    b += bo;
+    m += n;
+  }
+}  
+
+
+/* SOLVE TRIANGULAR SYSTEM USING BACKWARD SUBSTITUTION.  Solves L'x=b where
+   L is lower-triangular using backward substitution.  The vectors x and b
+   may be stored with offsets other than one, as specified. */
+
+void backward_solve
+( double *m,		/* The matrix L, only the lower-triangle is looked at */
+  double *x,		/* Place to store solution */
+  int xo,		/* Offset from one element to the next in x */
+  double *b,		/* The vector b */
+  int bo,		/* Offset from one element to the next in b */
+  int n			/* Dimension of matrix and vectors */
+)
+{ 
+  int i;
+
+  x += (n-1)*xo;
+  b += (n-1)*bo;
+  m += n*n-1;
+
+  for (i = n-1; i>=0; i--)
+  { *x = (*b - inner_product (m+n, n, x+xo, xo, (n-1)-i)) / *m;
+    x -= xo;
+    b -= bo;
+    m -= n+1;
+  }
+}  
 
 
 /* FIND EIGENVALUES AND EIGENVECTORS BY JACOBI ITERATION.  Finds the 

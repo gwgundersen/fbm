@@ -44,9 +44,10 @@ simple batch gradient descent, each iteration consists of one update
 of the parameters, using the total gradient based on all training
 cases (and the prior gradient).  For very small stepsizes, the batch
 and online methods should produce the same results.  For larger
-stepsizes, however, the online method is usually faster, and the
-online method can also often use a larger stepsize without causing
-instability.
+stepsizes, the online method is usually faster, and it can also often
+use a larger stepsize without causing instability.  On-line gradient
+descent does not find the exact minimum, however, except in the limit
+as the stepsize goes to zero.
 
 Differential stepsizes can be used for weights in specified groups
 that originate in different units - for example, in order to try to
@@ -76,4 +77,4 @@ are intended to improve the performance of early stopping, by stopping
 the weights out of some units from overfitting before the weights out
 of other units have had time to adjust to their proper values.
 
-            Copyright (c) 1997 by Radford M. Neal
+            Copyright (c) 1997, 1998 by Radford M. Neal

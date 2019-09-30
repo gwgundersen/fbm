@@ -1,0 +1,41 @@
+<html>
+<body>
+<pre>
+
+
+DIST-MC:  Do Markov chain sampling for the specified distribution.
+
+The dist-mc program samples from the distribution specified with
+dist-spec (see <A HREF="dist-spec.html">dist-spec.doc</A>) using a specified series of Markov chain
+operations (see <A HREF="mc-spec.html">mc-spec.doc</A>).  
+
+All the standard Markov chain operations are supported.  The default
+stepsizes are all one.  These stepsizes may be multiplied by a
+stepsize adjustment specified by the user, in the usual way.
+
+For distributions specified by a single energy function, the inverse
+temperature used in tempering methods may be interpreted in two ways,
+as approriate for traditional tempering method (-zero-temper) or for
+annealed importance sampling.  See <A HREF="dist-spec.html">dist-spec.doc</A> for details.  For
+Bayesian posterior distributions, the inverse temperature is used to
+multiply the log likelihood terms (see <A HREF="dist-spec.html">dist-spec.doc</A>).  An inverse
+temperature of zero therefore gives the prior distribution.
+
+Dist-mc knows how to sample from this prior distribution if it has a
+simple form (see <A HREF="dist-spec.html">dist-spec.doc</A>).  Otherwise, if annealed importance
+sampling is to be used, the -read-prior option must have been given to
+dist-spec, which tells dist-mc to obtain points drawn from the prior
+from an external source.  It does this by reading them from standard
+input, as a free-form list of numbers in standard text form, with the
+the state variables being read in the order: u0, ..., u9, u, v0, ...,
+v9, v, w0, ..., w0, w, x0, ..., x9, x, y0, ..., y9, y, z0, ..., z9, z.
+
+There are no "application specific" operations implemented by dist-mc.
+
+For details regarding program arguments, see the generic documentation
+in <A HREF="xxx-mc.html">xxx-mc.doc</A>.
+
+            Copyright (c) 1998 by Radford M. Neal
+</pre>
+</body>
+</html>

@@ -28,7 +28,10 @@ stored in the log file are displayed.  If an index is specified in the
 second form, the specifications in the record with the given index are
 displayed.
 
-An operation-spec may be one of the following:
+The allowed operations can be grouped in the categories general,
+metropolis, dynamical, tempering, and slicing:
+
+General operations:
 
     repeat times
 
@@ -40,9 +43,41 @@ An operation-spec may be one of the following:
 
         Terminates a group of operations.
 
+    plot
+
+        Prints the current values of those quantities specified in the
+        "xxx-mc" command on standard output, preceded by an index that
+        is reset to zero every iteration.
+
+    (any operation not otherwise defined here) [ number [ number ] ]
+
+        Invoke the application-specific update procedure, passing the
+        name of the operation, and the numerical parameters following 
+        it, which default to zero.
+
+Metropolis operations:
+
+    metropolis [ stepsize-adjust[:stepsize-alpha] ]  
+
+        Do a simple Metropolis update, to all components at once, using
+        a Gaussian proposal distribution.
+
+    met-1 [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ]
+
+        Do single-component Metropolis updates, for the range of components 
+        given.  The default if no components are given is all components. 
+        The default for last if first alone is given is last=first.
+
+Dynamical operations:
+
     heatbath [ decay ]
 
-        Do a heatbath update of the momentum variables.
+        Do a heatbath update of the momentum variables.  If decay is
+        zero (the default), the current momentum is forgotten, and
+        new values are picked randomly from their distribution.  If
+        decay is non-zero, the momentum variables are multiplied by 
+        decay, and Gaussian noise with variance 1-decay^2 is then
+        added.
 
     radial-heatbath
 
@@ -54,16 +89,6 @@ An operation-spec may be one of the following:
     negate
 
         Negate the momentum variables.
-
-    metropolis [ stepsize-adjust[:stepsize-alpha] ]  
-
-        Do a simple Metropolis update, to all components at once.
-
-    met-1 [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ]
-
-        Do single-component Metropolis updates, for the range of components 
-        given.  The default if no components are given is all components. 
-        The default for last if first alone is given is last=first.
 
     dynamic steps [ stepsize-adjust[:stepsize-alpha] ] 
 
@@ -110,14 +135,25 @@ An operation-spec may be one of the following:
         of the trajectory outside any windows, and by 1/temper-factor
         in the second half.
 
+Slicing operations:
+
     slice-1 [ stepsize-adjust[:stepsize-alpha] [ max-steps [ first[:last] ] ] ]
 
         Do single-component slice sampling, for the range of components 
-        given.  The max-steps argument gives the maximum number of 
-        intervals to create when stepping out, with zero indicating no
-        limit (this is the default).  The default for the range of components
-        (first:last) is all components.  The default for last if first alone 
-        is given is last=first.  Components are numbered starting with zero.
+        given.  The default for the range of components (first:last) is 
+        all components.  The default for last if first alone is given is 
+        last=first.  Components are numbered starting with zero.
+
+        If the max-steps argument is positive, it gives the maximum number 
+        of intervals to create when using the stepping out procedure to
+        find an interval around the current point.  A value of zero
+        indicates that stepping out should be done with no limit (this
+        is the default).  If max-steps is negative, the interval is found
+        by doubling, with minus max-steps again being the limit on the
+        number of intervals (so setting max-steps to -1 gives the same
+        results as setting it to 1).  (There is no way to double without
+        limit, but setting max-steps to -1000 is the same for all practical
+        purposes.)
 
     slice-over [ refinements [ refresh-prob [ stepsize-adjust[:stepsize-alpha] 
                  [ max-steps [ first[:last] ] ] ] ] ]
@@ -126,10 +162,9 @@ An operation-spec may be one of the following:
         The endpoints are computed using the given number of refinements
         (default zero).  The refresh probability is the probability of doing 
         an ordinary slice sampling update rather than an overrelaxed one; 
-        it defaults to zero.  The default maximum number of steps is zero
-        (indicating no limit).  The default range of components if no range is 
-        given is all components. The default for last if first alone is given 
-        is last=first.
+        it defaults to zero.  The default range of components if no range is 
+        given is all components. The default for last if first alone is given
+        is last=first.  The meaning of max-steps is the same as for slice-1.
 
     slice-inside steps [ stepsize-adjust[:stepsize-alpha] ] 
 
@@ -150,6 +185,8 @@ An operation-spec may be one of the following:
         the chances of the trajectory ending on an outside point, and being
         rejected.
 
+Tempering/annealing operations:
+
     sim-temp
 
         Do a metropolis update of the simulated tempering inverse
@@ -166,12 +203,6 @@ An operation-spec may be one of the following:
 
         Negate the tempering direction.
 
-    plot
-
-        Prints the current values of those quantities specified in the
-        "xxx-mc" command on standard output, preceded by an index that
-        is reset to zero every iteration.
-
     temp-trans
 
         Perform a tempered transition, with components given by the
@@ -180,10 +211,15 @@ An operation-spec may be one of the following:
         transition, in reverse order for the second.  For this to  
         work, the components must be reversible in themselves.  
 
-    (any other that starts with a letter)
+    AIS
 
-        Invoke the application-specific update procedure, passing the
-        name of the operation.
+        Proceed to the next step of an annealed importance sampling
+        run, with the tempering index increased by one, adjusting the
+        importance weight appropriately.  If the tempering index is 
+        already at the final value (inverse temperature of one), a new 
+        state is randomly generated from the distribution at inverse
+        temperature zero, and the tempering index is set to the beginning
+        of the tempering schedule.
 
 Certain of these operations are normally used in standard combinations, 
 in particular the following:
@@ -193,7 +229,8 @@ in particular the following:
  rand-dir sim-temp                       Standard simulated tempering
  sim-temp neg-dir                        Persistent Simulated tempering 
 
-All individual operations are reversible, except for 'dynamic',
+All operations are reversible (other than 'ais', 'repeat', and 'end'
+for which the concept is not applicable), except for 'dynamic',
 'permuted-dynamic', and perhaps the application-specific operations.
 However, note that in general sequential combinations of reversible
 operations are not reversible.
@@ -225,4 +262,4 @@ The default if no specification is given is "leapfrog halfp 1".
 The list of operations is stored in a record of type 'o'; the
 trajectory specification in a record of type 't'.
 
-            Copyright (c) 1995 by Radford M. Neal
+            Copyright (c) 1995, 1998 by Radford M. Neal

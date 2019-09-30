@@ -1,4 +1,4 @@
-/* MIX-QUANTITIES.C - Module defining quantities for mixture models.
+/* MIX-QUANTITIES.C - Module defining quantities for mixture models. */
 
 /* Copyright (c) 1997 by Radford M. Neal 
  *

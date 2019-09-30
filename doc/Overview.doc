@@ -2,25 +2,18 @@
 
 OVERVIEW OF THE SOFTWARE
 
-This software is being distributed primarily to further research in
-Bayesian learning for models based on neural networks and Gaussian
-processes.  The software is designed for potentially wider use,
-however.  In particular, the programs and modules in the 'util'
-directory are of general utility, and those in the 'mc' directory
-provide generic support for Markov chain Monte Carlo methods.  These
-facilities are specialized to neural network learning by the modules
-and programs in the 'net' directory, to Gaussian process models by the
-modules and programs in the 'gp' directory, and to finite and infinite
-mixture modesls by the modules and programs in the 'mix' directory.
-The 'bvg' directory demonstrates in a simple context how the generic
-facilities in 'util' and 'mc' can be specialized for other tasks, but
-users interested only in the neural network, Gaussian process, or
-mixture models need not concern themselves with this.  This section
-provides an overview of the facilities offered by these various
-components of the software.
+The software is organized in a modular fashion.  The 'util' directory
+provides a number of general facilities, some of which may be of use
+for other purposes.  The 'mc' module provides support for Markov chain
+Monte Carlo methods, which the 'dist' module allows you to use for a
+distribution specified by a formula.  The 'net', 'gp', and 'mix' are
+more specialized modules that use the Markov chain methods to support
+Bayesian inference for neural networks, Gaussian process models, and
+finite and infinite mixture models.  This section provides an overview
+of the various components of the software.
 
 
-Log files
+Log files.
 
 All the programs make use of a "log file" facility supported by
 modules and programs in 'util'.  A log file records all the
@@ -32,11 +25,11 @@ programs (eg, 'net-spec' and 'data-spec') that the user invokes at the
 beginning of the run.  Once the run has been specified, the program
 that performs iterations is invoked (eg, 'net-mc').  This program will
 append further records to the log file, one for each iteration for
-which the user has asked the state to be saved, which will usually be
-every iteration, unless minimizing disk usage is a concern.  Each
-record written has the iteration number as its index, and contains the
-complete state of the program at that time (eg, all the parameters and
-hyperparameters of the network being trained).
+which the user has asked the state to be saved (this might be every
+iteration, or might be every n'th if minimizing disk usage is a
+concern).  Each record written has the iteration number as its index,
+and contains the complete state of the program at that time (eg, all
+the parameters and hyperparameters of the network being trained).
 
 Note that log files contain binary data; they are not human-readable.
 
@@ -52,23 +45,22 @@ particular, the user can plot the progress of various quantities
 during the course of the run, without having to decide beforehand
 which quantities will be of interest.  The states saved at various
 iterations are also the basis for making Monte Carlo estimates, and in
-particular, for making Bayesian predictions based on a sample of
-networks or Gaussian processes from the posterior distribution.
+particular for making Bayesian predictions based on a sample from the
+posterior distribution.
 
 
-Models and data
+Models and data.
 
 The 'util' directory also contains modules and programs that specify
 the final portion of a probabilistic model (which is independent of
 the details of networks or other functional schemes), that support
 reading of numeric input from data files or other sources, and that
-specify sets of training and test cases for supervised learning
-procedures (such as those based on multilayer perceptron networks).
+specify sets of training and test cases.
 
 The models supported include those for regression, classification,
-probability density estimation, and survival analysis.  The survial
-analysis models were recently implemented, and should be regarded as
-experimental.  See model-spec.doc for details
+probability density estimation, and survival analysis.  The survival
+analysis models should be regarded as especially experimental.  See
+model-spec.doc for details.
 
 The data files used must contain numbers in standard ASCII form, with
 one line per case, but there is considerable freedom regarding
@@ -97,11 +89,11 @@ the number of "input" items is zero.  The test data is currently
 ignored for mixture models, since no prediction program has yet been
 implemented.
 
-See data-spec.doc for futher details on how to specify the data
-format.
+See data-spec.doc for further details on how to specify the source and
+format of the data.
 
 
-Random number generation
+Random number generation.
 
 A scheme for combining real and pseudo random numbers is implemented
 by modules in the 'util' directory, along with procedures for sampling
@@ -115,27 +107,20 @@ produces the same results as if the run had continued without
 stopping.
 
 
-Markov chain Monte Carlo
+Markov chain Monte Carlo.
 
 The 'mc' directory contains modules and programs that support the use
-of Markov chain Monte Carlo methods.  A Markov chain Monte Carlo
-application is created by adding modules that compute certain
-application-specific quantities, of which the most central is the
-probability distribution to sample from.  For example, the neural
-network application provides a procedure for computing the posterior
+of Markov chain Monte Carlo methods.  These methods can be applied to
+a distribution specified by a formula using the 'dist' programs (see
+below).  More elaborate Markov chain Monte Carlo applications can be
+created by adding modules in C that compute certain application
+specific quantities, of which the most central is the probability
+distribution to sample from.  For example, the neural network
+application provides a procedure for computing the posterior
 probability density of the network parameters.  An application may
 also provide implementations of specialized sampling procedures, such
 as the procedures for doing Gibbs sampling for hyperparameters in the
 neural network application.
-
-A variety of Markov chain methods are supported by the 'mc' system,
-including some that are not of much use in the neural network and
-Gaussian process applications.  In particular, the "tempering" methods
-are not currently implemented for the neural networks or Gaussian
-processes, though they may be in future.  Users interested only in
-neural networks or Gaussian processes should therefore ignore the
-tempering facilities (such as the 'mc-temp-sched' and 'mc-temp-filter'
-programs).
 
 For the user of neural network, Gaussian process, and mixture models,
 the most important 'mc' program is 'mc-spec', which is used to specify
@@ -144,14 +129,37 @@ of reasonable ways of sampling for neural networks or Gaussian
 processes.  The best way is still the subject of research.  Good
 results can be obtained using several standard approaches, however, as
 described in the examples in other sections of this documentation.
-You can also read all about the various methods in mc-spec.doc. Note,
+You can also read all about the various methods in mc-spec.doc.  Note,
 however, that for each model there are also sampling methods specific
 to that model alone, which are documented in net-mc.doc, gp-mc.doc,
 and mix-mc.doc.  At present, sampling for mixture models is done only
 by the specific procedures described in mix-mc.doc.
 
+Tempering methods and Annealed Importance Sampling are currently
+supported for neural network models, but not for Gaussian processes
+and mixture models.
 
-Neural network models
+
+Sampling from a specified distribution.
+
+The 'dist' directory contains programs for sampling from a
+distribution specified by a formula for its "energy" (minus the log
+probability density, plus an arbitrary constant), or by formulas for
+the prior and likelihood for a Bayesian model.  The full range of
+Markov chain sampling methods implemented by the 'mc' module can be
+used for these distributions, including the tempering and Annealed
+Importance Sampling facilities.
+
+The 'dist-spec' program is used to specify the distribution, along
+with 'data-spec' to say where the data comes from, if the distribution
+is the posterior for a Bayesian model.  The 'mc-spec' program is then
+used to specify the Markov chain updates, after which 'dist-mc' does
+the actual sampling.  The 'dist-display' and 'dist-plt' programs can
+be used to monitor the runs, and 'dist-est' can be used to estimate
+the expectation of some function with respect to the distribution.
+
+
+Neural network models.
 
 The 'net' directory contains the modules and programs that implement
 Bayesian learning for models based on multilayer perceptron networks,
@@ -187,7 +195,7 @@ they were written for debugging purposes, or to do specialized tasks
 relating to my thesis.
 
 
-Gaussian process models
+Gaussian process models.
 
 The 'gp' directory contains the modules and programs that implement
 Bayesian inference for Gaussian process models, making use of the
@@ -200,18 +208,18 @@ variance).
 To start, the 'gp-spec' program is used to specify a Gaussian process
 model - that is, to specify the form of the covariance function, and
 the priors on the hyperparameters that control this covariance
-function.  The 'model-spec' and 'data-spec' programs are then be used
-to specify how the Gaussian process is used to model data, and the
-source of the training data (and possibly test data).  The Markov
-chain sampling method is then specified using 'mc-spec', and sampling
-is done using 'gp-mc'.  Finally, 'gp-pred' is used to make predictions
+function.  The 'model-spec' and 'data-spec' programs are then used to
+specify how the Gaussian process is used to model data, and the source
+of the training data (and possibly test data).  The Markov chain
+sampling method is then specified using 'mc-spec', and sampling is
+done using 'gp-mc'.  Finally, 'gp-pred' is used to make predictions
 for test cases using the Gaussian processes that were saved in the log
 file by 'gp-mc'.
 
 The 'gp-display' and 'gp-plt' programs can be used to view the
-Gaussian processes generated by 'gp-mc', both during and after the
-run.  Several other programs in the 'gp' directory may also be of
-interest.
+parameters of the Gaussian processes generated by 'gp-mc', both during
+and after the run.  Several other programs in the 'gp' directory may
+also be of interest.
 
 
 Mixture models.
@@ -221,7 +229,7 @@ Bayesian inference for finite and infinite mixture models, making use
 of the modules in the 'util' and 'mc' directories.  These models are
 used to model the probabilities for vectors of binary data, or the
 probability densities for real vectors.  The infinite mixture models
-are equivalant to what are called Dirichlet process mixtures.
+are equivalent to what are called Dirichlet process mixtures.
 
 The 'mix-spec' program is used to specify a mixture model - that is,
 to say how many components there are in the mixture (perhaps countably
@@ -230,22 +238,22 @@ hyperparameters.  The 'model-spec' and 'data-spec' programs are then
 used to complete the specification of the data model and data source.
 For mixture models, the data items are all considered to be "targets",
 with the number of "inputs" being zero.  The Markov chain sampling
-procedures to used are then specified using 'mix-spec', and the
+procedures to use are then specified using 'mix-spec', and the
 sampling is done with 'mix-mc'.  At present, there is not all that
 much that can be done with the results - in particular, there is no
 prediction program.  One can look at the parameter values for states
-drawn from the posterior with 'mix-display', however, and generate 
+drawn from the posterior with 'mix-display', however, and generate
 future datasets using 'mix-cases'.
 
 
-Quantities obtainable from log files
+Quantities obtainable from log files.
 
-The 'xxx-plt' programs (eg, 'net-plt', 'gp-plt', and 'mix-plt') are
-the principal means by which simulation runs are monitored.  These
-programs allow one to see the values of various "quantities",
-evaluated for each iteration stored in a log file within some range.
-Some other programs (eg, 'xxx-hist') also use the same set of
-quantities.
+The 'xxx-plt' programs (eg, 'dist-plt', 'net-plt', 'gp-plt', and
+'mix-plt') are the principal means by which simulation runs are
+monitored.  These programs allow one to see the values of various
+"quantities", evaluated for each iteration stored in a log file within
+some range.  Some other programs (eg, 'xxx-hist') also use the same
+set of quantities.
 
 A quantity is specified by an identifying character, perhaps with a
 numeric modifier.  Some quantities are single numeric values
@@ -258,12 +266,12 @@ There is a hierarchy of quantities, as defined by modules at different
 levels.  A few quantities are universally defined - principally 't',
 the index of the current iteration.  Many more are defined for any
 Markov chain Monte Carlo application - such as 'r', the rejection rate
-for Metropolis or Hybrid Monte Carlo updates.  A large number of
-quantities specific to neural networks or to Gaussian processes are
-also defined - for example, 'b', the average squared error on the
-training set, and 'n', the current value of the noise standard
-deviation (for a regression model).  Quantities specific to mixture
-models are also defined, such as 'Cn', the total probability for the n
+for Metropolis or Hybrid Monte Carlo updates.  The 'dist' module also
+defines some quantities, and a large number of quantities are defined
+for neural networks and Gaussian processes - for example, 'b', the
+average squared error on the training set, and 'n', the current value
+of the noise standard deviation (for a regression model) - and for
+mixture models - for example, 'Cn', the total probability for the n
 largest components in the mixture.  For details, see quantities.doc,
-mc-quantities.doc, net-quantities.doc, gp-quantities.doc, and
-mix-quantities.doc.
+mc-quantities.doc, dist-quantities.doc, net-quantities.doc,
+gp-quantities.doc, and mix-quantities.doc.

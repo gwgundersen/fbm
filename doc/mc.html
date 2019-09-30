@@ -45,20 +45,18 @@ each of which corresponds to a specification documented with mc-spec:
 
     B  heatbath               b  rand-dir
     N  negate                 n  neg-dir
-    M  Metropolis             s  sim-temp
-    m  1-variable Metropolis  r  radial heatbath
+    M  metropolis             s  sim-temp
+    m  met-1                  r  radial-heatbath
 
     D  dynamic                A  (application-specific operation)
     P  permuted-dynamic       R  repeat
     H  hybrid                 E  end
     T  tempered-hybrid        p  plot
 
-    S  1-variable slice sampling
-    O  overrelaxed slice sampling
-    i  multivariate slice sampling with reflection from inside points
-    o  multivariate slice sampling with reflection from outside points
-
-    t  temp-trans
+    S  slice-1                t  temp-trans
+    O  slice-over             a  ais
+    i  slice-inside
+    o  slice-outside
 
 The sequence of operations to use is specified by the user, and is
 stored in the log file as a record of type 'o'.  Some of the
@@ -78,7 +76,7 @@ The state of the random number generator after each iteration is
 stored in records of type 'r', the first of which may be written at
 index -1 using the 'rand-seed' program.
 
-            Copyright (c) 1995, 1996 by Radford M. Neal
+            Copyright (c) 1995, 1996, 1998 by Radford M. Neal
 </pre>
 </body>
 </html>

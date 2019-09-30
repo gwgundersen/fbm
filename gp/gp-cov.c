@@ -52,7 +52,6 @@ void main
   double *cov;
 
   char **ap;
-  double v;
   int i, j;
 
   /* Look at arguments. */

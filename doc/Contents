@@ -1,0 +1,44 @@
+
+
+                                 CONTENTS
+
+
+Facilities.doc      Facilities provided by this software
+
+Install.doc         Installing the software
+
+Overview.doc        Overview of the software
+
+Ex-intro.doc        Introduction to the examples
+
+Ex-dist.doc         Examples of Markov chain sampling for simple distributions
+
+  Ex-dist-n.doc        Sampling from a univariate normal distribution
+  Ex-dist-g.doc        Sampling from a ring distribution in three dimensions
+
+Ex-bayes.doc        Examples of Markov chain sampling for simple Bayesian models
+  
+  Ex-bayes-r.doc       A linear regression model
+  Ex-bayes-t.doc       Modeling real-valued data with a t-distribution
+  Ex-bayes-p.doc       Modeling probabilities for categorical data
+
+Ex-netgp.doc        Examples of flexible Bayesian regression and classification 
+                    models based on neural networks and Gaussian processes
+
+  Ex-netgp-r.doc       A simple regression problem 
+  Ex-netgp-b.doc       A problem with a binary response 
+  Ex-netgp-c.doc       A three-way classification problem 
+  Ex-netgp-o.doc       A regression problem with outliers   
+
+Ex-mix.doc          Examples of Bayesian mixture models
+
+  Ex-mix-b.doc         A probability estimation problem with binary data 
+  Ex-mix-r.doc         A bivariate density estimation problem 
+
+Ex-gdes.doc         Examples of gradient descent learning with early stopping
+
+Hints.doc           Hints and warnings
+
+Guide.doc           Guide to further documentation
+
+Acknowledgements.doc 

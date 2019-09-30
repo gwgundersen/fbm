@@ -1,0 +1,19 @@
+
+# These commands sample from the posterior distribution of the probabilities 
+# for the three possible values of a categorical variable, given the data
+# in the file 'pdata'.  The prior for these probabilities is uniform over the
+# simplex of allowed probability vectors.  These probabilities are represented
+# by three variables with exponential distributions (actually, the logs of 
+# these) that are normalized to give the probabilities.  Sampling is done with 
+# the Metropolis algorithm.
+
+dist-spec plog.met \
+ "w0~ExpGamma(1,1) + w1~ExpGamma(1,1) + w2~ExpGamma(1,1)" \
+ "-Delta(t-0)*(w0-LogSumExp(w0,w1,w2)) \
+  -Delta(t-1)*(w1-LogSumExp(w0,w1,w2)) \
+  -Delta(t-2)*(w2-LogSumExp(w0,w1,w2))"
+
+data-spec plog.met 0 1 3 / pdata .
+
+mc-spec plog.met repeat 10 metropolis 1
+dist-mc plog.met 1000

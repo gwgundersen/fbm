@@ -1,0 +1,63 @@
+<html>
+<body>
+<pre>
+
+
+XXX-TBL:  Write quantities from log files in a tabular form.
+
+There is a version of this program for each application (eg, net-tbl).
+Each version allows a table to be created containing quantities
+defined for that application.  The table is written to standard
+output, and hence will be displayed for viewing if not redirected.
+
+This tabular output may also be useful as input to some plotting
+programs, or as input to a statistical package (such as S-Plus), in
+which case it should be redirected to a file, or piped into a plotting
+program.  It may also be useful to pipe the output of xxx-tbl with
+just one quantity into the 'series' program (see <A HREF="series.html">series.doc</A>).
+
+Usage:
+  
+   xxx-tbl [ -h ] quantities { log-file [ range ] } [ / { app-args } ]
+
+Here 'xxx' is a prefix identifying the particular incarnation of this
+program.  The 'quantities' listed are put in the table, all one one
+line in the order given.  Some quantities may be arrays, in which case
+all values in the indicated range are included.  The log files from
+which the data comes are listed after the quantities, perhaps with
+ranges of iterations to use.  Depending on the application, further
+arguments may follow after a slash (for which, see the documentation
+specific to that application - eg, <A HREF="net-tbl.html">net-tbl.doc</A>).
+
+If the -h flag is present, a single header line will be output first,
+containing the names of the quantities in the table.
+
+Data comes from records with indexes in the specified ranges within
+the log files mentioned.  The ranges have the form "[low][:[high]]][%mod]".  
+The low bound defaults to one.  If no high bound is given, the range
+extends to the highest index in the log file.  If the "%mod" option is
+present, only iterations within the range whose index is a multiple of
+"mod" are used (e.g. "5:12%3" is equivalent to 6 9 12).  If no range
+is given, the default is "1:".
+
+For the format of the quantity specifications, see the documentation
+on quantities that are generic (<A HREF="quantities.html">quantities.doc</A>), for Monte Carlo runs
+(<A HREF="mc-quantities.html">mc-quantities.doc</A>), for neural networks (<A HREF="net-quantities.html">net-quantities.doc</A>), for
+Gaussian processes (<A HREF="gp-quantities.html">gp-quantities.doc</A>), etc.  
+
+If a quantity mentioned is an array with indefinite range, this range
+must be the same for all log files from which data comes.
+
+NOTE FOR S-PLUS USERS:  If the output of xxx-tbl is saved in a file, 
+say "x", it can be read into S-Plus with a command such as
+
+    &gt; x &lt;- read.table("x")
+
+If the -h flag was used, the following S-Plus command should be used:
+
+    &gt; x &lt;- read.table("x",headers=T)
+
+            Copyright (c) 1998 by Radford M. Neal
+</pre>
+</body>
+</html>

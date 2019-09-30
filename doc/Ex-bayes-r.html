@@ -1,0 +1,318 @@
+<html>
+<body>
+<pre>
+
+
+A LINEAR REGRESSION MODEL
+
+I generated 100 cases of synthetic data for this example, each case
+consisting of two input (predictor) values and one target (response)
+value.  The first input (i0) was randomly generated from the normal
+distribution with mean zero and standard deviation one.  The second
+input (i1) was set to the first input plus an offset that was normally
+distributed with mean zero and standard deviation 0.1.  The two inputs
+were therefore highly correlated.  The target value (t) was set to 
+0.5 + 2.5*i0 - 0.5*i1 + e, where e was normally distributed noise with
+mean zero and standard deviation 0.1.  This data was stored in the
+file "rdata".
+
+
+Specifying the model.
+
+We can specify a Bayesian linear model for this data with a command
+such as the following:
+
+    &gt; dist-spec rlog.met \
+    &gt;   "u ~ Normal(0,10^2) + w0 ~ Normal(0,10^2) + w1 ~ Normal(0,10^2) \
+    &gt;      + v ~ ExpGamma(1,0.2)" \
+    &gt;   "t ~ Normal (u + w0i0 + w1i1, Exp(-v))"
+
+Here, the "\" characters at the ends of the lines tell the Unix shell
+that the command is continued on the next line.  The "rlog.met"
+argument of 'dist-spec' is the name of the log file to use.  The next
+argument (which takes up two lines) is the prior specification.  It
+must be put in quotes to keep the shell from interpreting the special
+characters used.  The last argument is the likelihood specification,
+which will also usually have to be quoted.
+
+Let's first examine the likelihood above:
+
+    t ~ Normal (u + w0i0 + w1i1, Exp(-v))
+
+This says that the target value for a case, t, is modeled by a normal
+distribution with mean given by u + w0i0 + w1i1 and variance given by
+Exp(-v).  Here, u, w0, w1, and v are parameters of the model.  Model
+parameters must have names starting with "u", "v", "w", "x", "y", or
+"z", possibly followed by a single digit.  The two inputs for the case
+are called i0 and i1.  If there were more than one target, they would
+be called t0, t1, etc., but here the name "t" is used, which is a
+synonym for "t0" (similarly "i" is a synonym for "i0").
+
+The notation in the likelihood specification using "~" is actually an
+abbreviation for the following:
+
+    Log(2*Pi)/2 + [t - (u+w0i0+w1i1)]^2 / [2Exp(-v)]
+
+which is minus the log of the normal probability density for t with
+the given mean and variance.  In general, the likelihood is specified
+by a formula giving minus the log of the probability or probability
+density for the target or targets in one case, given the values of the
+inputs.  Since the cases are assumed to be independent, minus the
+total log likelihood is found by just adding these terms for all
+cases.
+
+The prior specification above is constructed with similar notation:
+
+    u ~ Normal(0,10^2) + w0 ~ Normal(0,10^2) + w1 ~ Normal(0,10^2) 
+      + v ~ ExpGamma(1,0.2)
+
+This gives each of u, w0, and w1 an independent normal prior with mean
+of 0 and standard deviation of 10 (ie, variance of 10^2).  The prior
+specification is a formula for minus the log of the prior density, so
+terms pertaining to different parameters are simply added together.
+The terms involving "~" are abbreviations for minus the log prior
+density for a known distribution.  Here, all the parameters are
+independent under the prior, but it would be possible to make one
+parameter depend on another, for instance by changing the term above
+involving w1 to w1 ~ Normal(w0,10^2).
+
+The "v" parameter is the log of the "precision" (inverse variance) for
+the error term in the model.  The Markov chain sampling procedures
+assume that the range of all variables being sampled is the entire
+real line.  Since the precision is constrained to be positive, we must
+represent it with some unconstrained variable that is transformed to
+produce the actual precision.  An exponential transformation is often
+convenient, and in this case is probably desirable in any case, in
+order to make the Markov chain sampling more efficient.
+
+Here, the prior for the precision is specified to be Gamma with shape
+parameter of 1 and scale of 0.2 (which gives a mean value of 5).
+Since we will generally want to represent Gamma variables by their
+logs, the built-in ExpGamma distribution used here is for a variable
+whose exponential has a Gamma distribution with the indicated shape
+and scale parameters.
+
+
+Specifying the data source.
+
+After specifying the model with 'dist-spec', we need to say where the
+data is found using 'data-spec', as follows:
+
+    &gt; data-spec rlog.met 2 1 / rdata .
+
+The arguments after the name of the log file say that there are two
+input values and one target value.  After the slash, the files where
+the inputs and targets are found are given.  The "." says that the
+targets are found in the same file as the inputs, following them on
+the same line.  See <A HREF="data-spec.html">data-spec.doc</A> for more details and other options.
+
+
+Sampling with Metropolis updates.
+
+We can now sample from the posterior distribution of the model
+parameters, after specifying how we want this to be done.  Here we'll
+try sampling by Metropolis updates to all variables simultaneously:
+
+    &gt; mc-spec rlog.met repeat 45 metropolis 0.02 
+    &gt; dist-mc rlog.met 500
+
+Each iteration will consist of 45 Metropolis updates, done using a
+proposal distribution that adds a normally-distributed offset to each
+variable with standard deviation 0.02.  The 'dist-mc' command does 500
+such iterations (for a total of 22500 Metropolis updates).  This takes
+about 30 seconds on our machine.
+
+We can see what the average rejection rate was for these updates as
+follows:
+
+    &gt; dist-tbl r rlog.met | series m
+
+    Number of realizations: 1  Total points: 500
+
+    Mean: 0.708978  
+
+A rejection rate of 0.7 is about right, so the stepsize of 0.02 looks
+to be about optimal.  If you had started by trying a much larger or
+smaller stepsize, you would need to adjust it by trial and error to
+get a rejection rate in the range of about 0.3 to 0.8.
+
+We can look at how well the chain is sampling by plotting the four
+state variables over time:
+
+    &gt; dist-plt t uw0w1v rlog.met | plot
+
+From this plot, it appears that the equilibrium distribution is
+reached by about iteration 100, and that the chain is sampling
+somewhat adequately from then on, though with a substantial degree of
+autocorrelation.  We can quantify the inefficiency in estimation of
+the precision, v, that results from these autocorrelations as follows:
+
+    &gt; dist-tbl v rlog.met 100: | series mac 30
+
+    Number of realizations: 1  Total points: 401
+ 
+    Mean: 4.461414  S.E. from correlations: 0.026037
+   
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.893653    2.787307
+        2   0.807894    4.403095
+        3   0.709395    5.821885
+        4   0.621722    7.065329
+        5   0.539335    8.143999
+        6   0.462553    9.069106
+        7   0.379245    9.827595
+        8   0.311431   10.450456
+        9   0.244173   10.938802
+       10   0.198226   11.335254
+       11   0.164614   11.664482
+       12   0.126405   11.917293
+       13   0.092779   12.102850
+       14   0.074293   12.251436
+       15   0.049729   12.350895
+       16   0.037565   12.426024
+       17   0.028010   12.482045
+       18   0.026148   12.534341
+       19   0.043167   12.620674
+       20   0.062433   12.745541
+       21   0.083616   12.912773
+       22   0.108346   13.129465
+       23   0.112400   13.354265
+       24   0.111866   13.577997
+       25   0.092298   13.762593
+       26   0.076360   13.915313
+       27   0.051526   14.018364
+       28   0.038505   14.095374
+       29   0.018084   14.131542
+       30   0.006680   14.144903
+
+The cumulative correlation up to lag 30, where the autocorrelation is
+approximately zero, indicates that about 14 times as many points will
+be needed to get an estimate of a given accuracy as would be needed if
+the points were independent.  This inefficiency results from the high
+dependency between w0 and w1, which can be seen in the following plot:
+
+    &gt; dist-plt w0 w1 rlog.met 100: | plot-points
+
+This dependency is why the stepsize must be so small - proposed
+changes must be small, as otherwise the new point is likely to be
+incompatible with this dependency between w0 and w1.
+
+Estimates for various functions of state can be found using
+'dist-est'.  For example, we can predict the target value for input
+values of i0=1.9 and i1=2.1 as follows:
+
+    &gt; dist-est "u + w0*1.9 + w1*2.1" rlog.met 100:
+    
+    Number of sample points: 401
+    
+    Estimates for u + w0*1.9 + w1*2.1:
+
+      Mean:    4.18959  (standard error 0.00150075)
+      Std.dev: 0.0300526
+
+    NOTE: The standard errors assume points are independent
+
+Note that since the points aren't close to being independent, the
+standard error shown is not correct.  Note also that the standard
+deviation shown is the posterior standard deviation of the linear fit
+at this point.  The prediction for a target value in a case with these
+inputs would have additional uncertainty due to the noise.
+
+
+Sampling with hybrid Monte Carlo.
+
+The posterior dependency between w0 and w1 makes Markov chain sampling
+somewhat difficult for this problem.  One could try to eliminate this
+dependency by a reparameterization, which would certainly be possible
+for this fairly simple problem, but in general this may be tedious or
+infeasible.  However, the inefficiencies caused by dependencies may be
+reduced by suppressing the random walk aspect of the sampling, which
+can be done by using hybrid Monte Carlo rather than the simple
+Metropolis updates used above.
+
+After 'dist-spec' and 'data-spec' commands that are the same as those
+described above (apart from the name of the log file), we can sample
+using hybrid Monte Carlo with commands such as the following:
+
+    &gt; mc-spec rlog.hmc heatbath hybrid 25 0.01
+    &gt; dist-mc rlog.hmc 500
+
+One hybrid Monte Carlo update is done each iteration, consisting of a
+"heatbath" operation that picks new values for the momentum variables,
+followed by a dynamical trajectory of 25 leapfrog steps, with a
+stepsize of 0.01.  This stepsize was picked by trial and error, and
+results in a rejection rate of about 0.13.  In general, the stepsize
+for this standard form of hybrid Monte Carlo should chosen so that the
+rejection rate is somewhere between about 0.05 and 0.25.  The 500
+iterations take about 30 seconds, the same as the Metropolis run.
+
+From examining plots of the state variables over time, it seems that
+the hybrid Monte Carlo chain reaches equilibrium much more quickly
+than the Metropolis chain, and samples more efficiently once
+equilibrium is reached.  For example, here are the autocorrelations
+for the precision parameter, which we also looked at for the
+Metropolis chain:
+
+    &gt; dist-tbl v rlog.hmc 20: | series mac 5
+
+    Number of realizations: 1  Total points: 481
+    
+    Mean: 4.451747  S.E. from correlations: 0.005397
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1  -0.077573    0.844854
+        2   0.048169    0.941192
+        3  -0.059657    0.821878
+        4   0.021492    0.864861
+        5  -0.071308    0.722244
+
+The estimated autocorrelations above do not differ significantly from
+zero.  It therefore appears that hybrid Monte Carlo is about 14 times
+more efficient than the simple Metropolis algorithm for this problem.
+
+
+Hybrid Monte Carlo with windows.
+
+Many other Markov chain methods could be applied to this problem, but
+I will mention just one more - the variation of hybrid Monte Carlo in
+which acceptance is based on "windows" of states at the start and at
+the end of a trajectory.  This variation is described in my paper on
+"An improved acceptance procedure for the hybrid Monte Carlo
+algorithm" (Journal of Computational Physics, vol. 111, pp. 194-203,
+1994), and more briefly in my book on Bayesian Learning for Neural
+Networks.
+
+This method can be applied to this problem as follows (after suitable
+'dist-spec' and 'data-spec' commands):
+
+    &gt; mc-spec rlog.whmc heatbath hybrid 25:2 0.01
+    &gt; dist-mc rlog.whmc 500
+
+The only difference compared to the specification for standard hybrid
+Monte Carlo is the ":2" after the number of leapfrog steps (25).  This
+specifies that windows of two states at the start and end of the
+trajectory should be used.  Acceptance is based on the difference in
+the total probability of all states in the window at the start and in
+the window at the end.  The next state is picked from the end window,
+if the trajectory was accepted, or from the start window, if the
+trajectory was rejected, with state selected from the appropriate
+window according to their relative probabilities.
+
+Note that when windows are used the state may change even when there
+was a "rejection", as long as one of the states in the start window is
+of comparable probability to the starting state.  This provides some
+insurance against getting stuck at a point where the rejection rate is
+very high.  The use of windows also tends to reduce the rejection
+rate.  In this problem, the rejection rate with windows is only 0.05,
+less than the rate of 0.13 seen above for the standard hybrid Monte
+Carlo algorithm, while the time is only slightly greater (due to a
+slight overhead from using windows).  The benefit is small here, since
+the standard hybrid Monte Carlo method was doing very well in any
+case, but use of windows can make a bigger difference for some other
+problems, and is almost cost-free if the window size is a small
+fraction of the trajectory length.
+</pre>
+</body>
+</html>

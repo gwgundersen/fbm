@@ -1,0 +1,44 @@
+
+
+DIST-EST:  Estimate the expectation of some function of state.
+
+Dist-est reads data from one or more log files and uses it to estimate
+the expectation of a function of the state variables.  If annealed
+importance sampling was used, the estimate accounts for the differing
+importance weights.
+
+Usage:
+
+    dist-est formula [ temp-index ] { log-file [ range ] }
+
+Estimates the expectation of the function of state specified by the
+formula given as the first argument.  This formula may refer to state
+variables, and to other variables defined in the specification given
+to dist-spec.  The expectation is normally with respect to the
+distribution at inverse temperature one, but if Annealed Importance
+Sampling or simulated tempering was done, an index into the tempering
+schedule may be given in order to produce an estimate with respect to
+one of the other distributions in the schedule.
+
+The data comes from one or more log files, at iterations within the
+specified ranges.  The ranges have the form "[low][:[high]]][%mod]".
+The low bound defaults to one.  If no high bound is given, the range
+extends to the highest index in the log file.  If the "%mod" option is
+present, only iterations within the range whose index is a multiple of
+"mod" are used (e.g. "5:12%3" is equivalent to 6 9 12).  If no range
+is given, the default is "1:".
+
+The output gives the estimated mean of the function, along with the
+number points used and the standard error for the estimate.  If
+annealed importance sampling was used, the mean of the importance
+weights is also reported, along with the adjusted sample size
+(dividing by one plus the variance of the normalized weights), and the
+effective sample size for the particular function whose expectation is
+being estimated.
+
+Note: The standard errors reported assume the points were generated
+independently, which will not generally be true unless annealed
+importance sampling was done (with independent starting points).
+
+            Copyright (c) 1998 by Radford M. Neal
+

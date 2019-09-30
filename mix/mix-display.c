@@ -59,7 +59,7 @@ void main
 
   int N_active, N_cases;
 
-  int l, i, n;
+  int i;
 
   /* Look at arguments. */
 

@@ -1,6 +1,6 @@
 /* GP-SPEC.C - Program to specify a Gaussian process model. */
 
-/* Copyright (c) 1996 by Radford M. Neal 
+/* Copyright (c) 1996, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -41,6 +41,8 @@ void main
   log_file logf;
   log_gobbled logg;
 
+  int need_spread;
+  char s[10000];
   char ps[100];
   char **ap;
   int l;
@@ -83,7 +85,17 @@ void main
     }
     
     if (gp->has_linear)
-    { printf("\nLinear part of covariance:   %s\n",prior_show(ps,gp->linear));
+    { printf("\nLinear part of covariance:   %s",prior_show(ps,gp->linear));
+      if (list_flags(gp->linear_flags,gp->N_inputs,Flag_omit,s))
+      { printf("  omit%s",s);
+      }
+      if (list_flags(gp->linear_flags,gp->N_inputs,Flag_spread,s))
+      { printf("  spread%s",s);
+      }
+      if (gp->linear_spread)
+      { printf("  %d",gp->linear_spread);
+      }
+      printf("\n");
     }
   
     if (gp->has_jitter)
@@ -94,8 +106,7 @@ void main
     { printf("\nExponential parts of covariance:\n\n");
       printf("   Scale           Relevance            Power   Flags\n");
       for (l = 0; l<gp->N_exp_parts; l++)
-      { char s[10000];
-        printf("\n  %-15s", prior_show(ps,gp->exp[l].scale));
+      { printf("\n  %-15s", prior_show(ps,gp->exp[l].scale));
         printf(" %-20s", prior_show(ps,gp->exp[l].relevance));
         printf(" %6.3f ",gp->exp[l].power);
         if (list_flags(gp->exp[l].flags,gp->N_inputs,Flag_delta,s))
@@ -103,6 +114,12 @@ void main
         }
         if (list_flags(gp->exp[l].flags,gp->N_inputs,Flag_omit,s))
         { printf("  omit%s",s);
+        }
+        if (list_flags(gp->exp[l].flags,gp->N_inputs,Flag_spread,s))
+        { printf("  spread%s",s);
+        }
+        if (gp->exp[l].spread)
+        { printf("  %d",gp->exp[l].spread);
         }
         printf("\n");
       }
@@ -127,7 +144,7 @@ void main
   if (*ap==0 || (gp->N_inputs = atoi(*ap++))<=0) usage();
   if (*ap==0 || (gp->N_outputs = atoi(*ap++))<=0) usage();
 
-  if (*ap!=0 && strcmp(*ap,"/")!=0) 
+  if (*ap!=0 && strchr("/abcdefghijklmnopqrstuvwxyz",**ap)==0)
   { if (strcmp(*ap,"-")!=0)
     { gp->has_constant = 1;
       if (!prior_parse(&gp->constant,*ap)) usage();
@@ -135,7 +152,7 @@ void main
     ap += 1;
   }
 
-  if (*ap!=0 && strcmp(*ap,"/")!=0) 
+  if (*ap!=0 && strchr("/abcdefghijklmnopqrstuvwxyz",**ap)==0)
   { if (strcmp(*ap,"-")!=0)
     { gp->has_linear = 1;
       if (!prior_parse(&gp->linear,*ap)) usage();
@@ -143,13 +160,43 @@ void main
     ap += 1;
   }
 
-  if (*ap!=0 && strcmp(*ap,"/")!=0) 
+  if (*ap!=0 && strchr("/abcdefghijklmnopqrstuvwxyz",**ap)==0)
   { if (strcmp(*ap,"-")!=0)
     { gp->has_jitter = 1;
       if (!prior_parse(&gp->jitter,*ap)) usage();
     }
     ap += 1;
   }
+
+  need_spread = 0;
+
+  while (*ap!=0 && strchr("abcdefghijklmnopqrstuvwxyz",**ap))
+  {
+    if (*ap!=0 && strncmp(*ap,"omit",4)==0)
+    { parse_flags (*ap+4, gp->linear_flags, gp->N_inputs, Flag_omit);
+    }
+    else if (*ap!=0 && strncmp(*ap,"spread",4)==0)
+    { parse_flags (*ap+6, gp->linear_flags, gp->N_inputs, Flag_spread);
+      need_spread = 1;
+    }
+    else
+    { fprintf(stderr,"Unknown linear flag argument: %s\n",*ap);
+      exit(1);
+    }
+
+    ap += 1;
+  }
+
+  if (need_spread)
+  { gp->linear_spread = atoi(*ap);
+    if (gp->linear_spread<=0) 
+    { fprintf(stderr,"Need to specify spread width for linear part\n");
+      exit(1);
+    }
+    ap += 1;
+  }
+ 
+  if (*ap!=0 && strcmp(*ap,"/")!=0) usage();
 
   l = 0;
 
@@ -169,16 +216,25 @@ void main
     gp->exp[l].power = 2;
 
     if (*ap!=0 && strcmp(*ap,"/")!=0 && strchr("0123456789.+-",**ap))
-    { if ((gp->exp[l].power = atof(*ap++)) <= 0 || gp->exp[l].power>2) usage();
+    { if ((gp->exp[l].power = atof(*ap++)) == 0 || gp->exp[l].power>2
+       || gp->exp[l].power<0 && gp->exp[l].power!=-1) 
+      { usage();
+      }
     }
 
-    while (*ap!=0 && strcmp(*ap,"/")!=0)
+    need_spread = 0;
+
+    while (*ap!=0 && strchr("abcdefghijklmnopqrstuvwxyz",**ap))
     {
       if (*ap!=0 && strncmp(*ap,"delta",5)==0)
       { parse_flags (*ap+5, gp->exp[l].flags, gp->N_inputs, Flag_delta);
       }
       else if (*ap!=0 && strncmp(*ap,"omit",4)==0)
       { parse_flags (*ap+4, gp->exp[l].flags, gp->N_inputs, Flag_omit);
+      }
+      else if (*ap!=0 && strncmp(*ap,"spread",4)==0 && 0) /* Disabled */
+      { parse_flags (*ap+6, gp->exp[l].flags, gp->N_inputs, Flag_spread);
+        need_spread = 1;
       }
       else
       { fprintf(stderr,"Unknown flag argument: %s\n",*ap);
@@ -187,6 +243,21 @@ void main
 
       ap += 1;
     }
+
+    if (need_spread)
+    { gp->exp[l].spread = atoi(*ap);
+      if (gp->linear_spread<=0) 
+      { fprintf(stderr,"Need to specify spread width\n");
+        exit(1);
+      }
+      ap += 1;
+      /* SPREAD IS DISABLED FOR NOW */
+      fprintf (stderr,
+        "The spread option is presently allowed only for the linear part\n");
+      exit(1);
+    }
+ 
+    if (*ap!=0 && strcmp(*ap,"/")!=0) usage();
 
     l += 1;
   }
@@ -198,6 +269,12 @@ void main
   if (gp->has_constant && (gp->constant.scale || gp->constant.alpha[1]!=0 
                                               || gp->constant.alpha[2]!=0))
   { fprintf(stderr,"Illegal prior for constant part of covariance\n");
+    exit(1); 
+  }
+
+  if (gp->has_jitter && (gp->jitter.scale || gp->jitter.alpha[1]!=0 
+                                          || gp->jitter.alpha[2]!=0))
+  { fprintf(stderr,"Illegal prior for jitter part of covariance\n");
     exit(1); 
   }
 
@@ -240,9 +317,9 @@ static void usage(void)
   fprintf(stderr,
    "Usage: gp-spec log-file N-inputs N-outputs\n");
   fprintf(stderr,
-   "               [ const-part [ linear-part [ jitter-part ] ] ]\n");
+   "         [ const-part [ linear-part [ jitter-part ] ] ] { flag } [ spread ] \n");
   fprintf(stderr,
-   "               { / scale-prior relevance-prior [ power ] }\n");
+   "         { / scale-prior relevance-prior [ power ] { flag } }\n");
   fprintf(stderr,
    "   or: gp-spec log-file (to display stored specifications)\n");
   fprintf(stderr,

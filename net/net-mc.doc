@@ -19,6 +19,12 @@ The following applications-specific sampling procedures are implemented:
 Default stepsizes are set by a complicated heuristic procedure that is
 described in Appendix A of the thesis.
 
-Tempering methods are not currently supported.
+Tempering methods and Annealed Importance sampling are supported.  The
+effect of running at an inverse temperature other than one is to
+multiply the likelihood part of the energy by that amount.  At inverse
+temperature zero, the distribution is simply the prior for the
+hyperparameters and weights.  The marginal likelihood for a model can
+be found using Annealed Importance Sampling, since the log likelihood
+part of the energy has all the appropriate normalizing constants.
 
-            Copyright (c) 1995 by Radford M. Neal
+            Copyright (c) 1995, 1998 by Radford M. Neal

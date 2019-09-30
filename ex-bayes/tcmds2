@@ -1,0 +1,12 @@
+
+# These commands fit a univariate t-distribution with d degrees of freedom
+# to the data in the file "tdata".  The prior for the location parameter 
+# is Normal(0,10^2).  The prior for the log of the scale parameter is 
+# Normal(0,1).  Metropolis updates are done, with a stepsize of 2 for 
+# both parameters.
+
+dist-spec tlog2 d=2 "u ~ Normal(0,10^2) + w ~ Normal(0,1)" \
+                    "w + [(d+1)/2] Log { 1 + [(t-u)/Exp(w)]^2/d }"
+data-spec tlog2 0 1 / tdata .
+mc-spec tlog2 repeat 10 metropolis 2
+dist-mc tlog2 5000

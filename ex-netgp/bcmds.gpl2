@@ -1,0 +1,13 @@
+
+# Commands to apply a Gaussian process model to the binary response problem,
+# using only a small amount of jitter (close to a logistic model).  Done
+# here using met-values.
+
+gp-spec blog.gpl2 2 1 1 - 0.1 / 0.05:0.5 0.05:0.5
+model-spec blog.gpl2 binary
+
+data-spec blog.gpl2 2 1 2 / bdata@1:300 . bdata@301:500 .
+
+gp-gen blog.gpl2 fix 0.5 1
+mc-spec blog.gpl2 repeat 4 met-values 0.04 100 heatbath hybrid 8 0.3
+gp-mc blog.gpl2 50

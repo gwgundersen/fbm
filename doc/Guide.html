@@ -7,11 +7,12 @@ GUIDE TO FURTHER DOCUMENTATION
 
 The overview and examples above are intended just to get you started.
 To use the software to do real work, you will probably need to refer
-to the detailed documentation on the commands (and common aspects of
-commands) contained in the files ending with ".doc" which are found in
-the various sub-directories, and also all collected in the 'doc'
-directory.  For quick reference, all commands print a brief summary of
-the command syntax when they are invoked with no arguments.
+to the detailed documentation on the commands (and on the features
+common to more than one command) that is contained in the files ending
+with ".doc".  These files are found in the various sub-directories,
+and are also all linked to from the 'doc' directory.  For quick
+reference, all commands print a brief summary of the command syntax
+when they are invoked with no arguments.
 
 In the syntax descriptions used, the characters "[" and "]" enclose
 parts of the command that are optional, "{" and "}" enclose optional
@@ -26,28 +27,29 @@ with the more important files marked by "*".  Programs listed as
 an application (eg, "net", "gp", or "mix").  In some cases, further
 documentation is available under the specific name.
 
-The file index.html is a hypertext index to this documenation.  It can
-be accessed using a Web browser (eg, xmosaic or netscape), by a
-command such as
-
-    &gt; xmosaic index.html
-
-or by opening index.html as a local file in a browser that you are
-already running. The index.html file must reside in the 'doc'
-directory for this software.  One needn't start the browser from this
-directory, however, provided one uses a full path name to identify
-index.html.  The files accessed this way are .html files derived from
+The file index.html is a hypertext index to this documentation.  It
+can be accessed using a Web browser (eg, netscape), by opening
+index.html as a local file (which will probably require giving its
+full path name).  The index.html file must reside in the 'doc'
+directory for this software, so that relative references will work
+correctly.  The files accessed this way are .html files derived from
 the .doc files.  The content is identical, except that references to
 other .doc files have been converted into hypertext links that you can
 follow with the browser.
 
-All the introductory documentation (including this) is collected into
-the 'manual' file.  You can print all the documentation by going to
-the main directory for this software and issuing a command such as
+The 'doc' directory also contains comments on the various software
+releases, in files of the form 'Release.YYYY-MM-DD.doc'.
 
-  lpr doc/manual util/*.doc mc/*.doc net/*.doc gp/*.doc mix/*.doc doc/rel*
+All the introductory documentation (including this) is collected into
+the 'manual' file, as plain text.  You can print all the documentation
+by going to the main directory for this software and issuing a command
+such as
+
+  lpr doc/manual util/*.doc mc/*.doc dist/*.doc bvg/*.doc \
+      net/*.doc gp/*.doc mix/*.doc doc/Rel*.doc
  
 (or using whatever command other than 'lpr' you use to print text files).
+This will produce about 150 pages of paper.
 
 
 Generic utility programs [util]:
@@ -59,6 +61,9 @@ Generic utility programs [util]:
     log-append      Append records from one log file to the end of another
     log-last        Display the index of the last record in a log file
     log-records     List all records in a log file  
+
+    formula         Syntax for arithmetic formulas
+    calc            Simple calculator program
 
   * data-spec       Specify data sets for training and testing
   * numin           Facilities for input of numeric data
@@ -77,8 +82,9 @@ Generic utility programs [util]:
 
   * quantities      Numeric quantities obtainable from log files
 
-  * xxx-plt         Write quantities from a log file, suitable for plotting
-    xxx-hist        Build a histogram for a quantity obtained from a log file
+  * xxx-plt         Write quantities from log files, suitable for plotting
+    xxx-tbl         Write quantities from log files in a tabular form
+    xxx-hist        Build a histogram for a quantity using data from log files
 
   * series          Analyse stationary time series data
 
@@ -93,9 +99,37 @@ Markov chain Monte Carlo facilities [mc]:
 
     mc-temp-sched   Specify temperature schedule for tempering methods
     mc-temp-filter  Copy only iterations at a given temperature
+    mc-ais          Monitor annealed importance sampling (AIS) runs
 
     xxx-grad-test   Test the correctness of the energy gradient computations
     xxx-stepsizes   Display and evaluate stepsizes used for dynamics
+
+
+Markov chain sampling for a specified distribution [dist]:
+
+  * dist            Markov chain sampling for a specified distribution
+  * dist-spec       Specify a distribution to sample from
+
+    dist-initial    Specify initial state for Markov chain
+    dist-stepsizes  Display, evaluate, or set stepsizes used for dynamics
+  * dist-mc         Do Markov chain sampling for the specified distribution
+    dist-gen        Generate values for state variables from the prior
+
+    dist-display    Print state variables at a specified iteration
+  * dist-quantities Quantities defined for a specified distribution
+
+  * dist-est        Estimate the expectation of some function of state
+
+
+Markov chain sampling for a bivariate Gaussian [bvg]:
+
+    bvg             Demo of Markov chain sampling from a bivariate Gaussian
+    bvg-spec        Specify a bivariate Gaussian distribution to sample from
+
+    bvg-initial     Set initial state for sampling from a bivariate Gaussian
+    bvg-mc          Do Markov chain simulation for a bivariate Gaussian
+
+    bvg-plt         Get quantities from a bvg log file, suitable to plot
 
 
 Bayesian neural networks [net]:
@@ -110,8 +144,9 @@ Bayesian neural networks [net]:
   * net-display     Print network parameters and/or hyperparameters
 
   * net-quantities  Quantities from log files relating to networks
-  * net-plt         Get quantities from a net log file, suitable for plotting
-    net-hist        Build histogram for quantity obtained from a net log file
+  * net-plt         Get quantities from net log files, suitable for plotting
+    net-tbl         Get quantities from net log files and output as table
+    net-hist        Build histogram for quantity obtained from net log files
 
   * net-pred        Make predictions for test cases
 
@@ -153,14 +188,6 @@ Bayesian inference for mixture models [mix]:
     mix-cases       Generate cases from a mixture model
 
     mix-extensions  Possible extensions to the mixture modeling software
-
-
-Markov chain sampling for a bivariate Gaussian [bvg]:
-
-    bvg             Demo of Markov chain sampling from a bivariate Gaussian
-    bvg-spec        Specify a bivariate Gaussian distribution to sample from
-    bvg-mc          Do Markov chain simulation for a bivariate Gaussian
-    bvg-plt         Get quantities from a bvg log file, suitable to plot
 </pre>
 </body>
 </html>

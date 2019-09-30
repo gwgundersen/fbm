@@ -1,0 +1,11 @@
+
+# Commands to sample from the "ring" distribution using single variable
+# slice sampling.  The stepsize to use is given as an argument.  Four
+# slice sampling operation are done per iteration, which takes about 60
+# function evaluations when the stepsize is either 1 or 5.  (This is 
+# slightly more than needed to equalize times with other command files.)
+
+dist-spec glog.slc1,$1 \
+  "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
+mc-spec glog.slc1,$1 repeat 4 slice-1 $1 end
+dist-mc glog.slc1,$1 500

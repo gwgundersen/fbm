@@ -1,3 +1,26 @@
-cat Copyright.doc Facilities.doc Install.doc Overview.doc \
-    Examples.doc Examples-r.doc Examples-b.doc Examples-c.doc Examples-o.doc \
-    Hints.doc Guide.doc Acknowledgements.doc >manual
+cat Copyright.doc
+catff Contents
+
+catff Facilities.doc
+catff Install.doc 
+catff Overview.doc
+
+catff Ex-intro.doc
+
+catff Ex-dist.doc 
+cat Ex-dist-n.doc Ex-dist-g.doc
+
+catff Ex-bayes.doc
+cat Ex-bayes-r.doc Ex-bayes-t.doc Ex-bayes-p.doc
+
+catff Ex-netgp.doc
+cat Ex-netgp-r.doc Ex-netgp-b.doc Ex-netgp-c.doc Ex-netgp-o.doc
+
+catff Ex-mix.doc
+cat Ex-mix-b.doc Ex-mix-r.doc
+
+catff Ex-gdes.doc
+
+catff Hints.doc 
+catff Guide.doc 
+catff Acknowledgements.doc 

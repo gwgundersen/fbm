@@ -1,0 +1,146 @@
+<html>
+<body>
+<pre>
+
+
+FORMULA:  Syntax for arithmetic formulas.
+
+Arithmetic formulas are used to specify a distribution (see <A HREF="dist.html">dist.doc</A>),
+and by the calculator program (see <A HREF="calc.html">calc.doc</A>).  These formulas are
+written in pretty much the usual way, with the following conventions:
+
+  1) A variable name is either a single lower-case letter (a-z) or a 
+     lower-case letter followed by a single digit (0-9).  Note,
+     however, that when a formula is used to specify a distribution,
+     the allowed state variables are restricted (see <A HREF="dist.html">dist.doc</A>).
+
+  2) Function names start with an upper-case letter (eg, Sin or Sqrt).
+     
+  3) As usual, addition and subtraction (+ and -) have lowest
+     precedence, with multiplication and division (* and /) having
+     higher precedence, and exponentiation (^) having highest
+     precedence.  Evaluation is otherwise left to right.
+
+  4) The multiplication operator can be omitted.  Note, however, that
+     x6 is a variable name, not x*6 (but x 6 and 6x are products).
+
+  5) Only positive integer constants are allowed as exponents (eg,
+     x^2 is allowed, but not x^y or x^0.5).
+
+  6) Three kinds of brackets can be used: (), [], and {}.  There's no
+     difference in their effects, but they must be properly matched.
+
+  7) Scientific notation uses "E", not "e" - eg, 2.1E-10, not 2.1e-10.
+
+The constant Pi=3.14159... is defined.  Use Exp(1), defined below, to
+get the value of e=2.71828...
+
+The following univariate functions are known:
+
+  Sin   Cos   Tan   Log   Exp     Abs   Theta  Delta
+  Sinh  Cosh  Tanh  Sqrt  LGamma  Frac  Sign   
+
+These compute the obvious things, except as follows:
+
+  LGamma  Computes the log of the Gamma function.
+
+  Frac    Computes the fractional part of a number (eg, Frac(2.7) is 
+          0.7, Frac(3.0) is 0, and Frac(-0.1) is 0.9).
+
+  Sign    Finds the sign of its argument, -1 or +1, or 0.
+
+  Theta   Has the value 1 for non-negative arguments, 0 for negative 
+          arguments.
+
+  Delta   Has the value 1 for an argument of zero, 0 for non-zero
+          arguments.
+
+A special function LogSumExp, which takes an indefinite number of
+arguments, is also provided.  It computes the log of the sum of the
+exponentials of its arguments.  This is done in such a way as to avoid
+overflow whenever the final result is within range.  For example
+LogSumExp(1000,2000,1500) evaluates to 2000 (or very close to it),
+without overflow occurring.
+
+The following functions return minus the log of the probability
+density for a quantity with respect to some distribution:
+
+  Normal  Gaussian  ExpGamma  ExpGamma2
+
+The Normal (equivalently, Gaussian) function computes minus the log of
+the probability density for the normal distribution with the given
+mean and variance.  That is, Normal(x,m,v) is equivalent to
+
+  Log(2*Pi*v)/2 + (x-m)^2/(2*v)
+
+The ExpGamma function computes minus the log of the probability
+density for a quantity whose exponential has the Gamma distribution
+with the given shape and mean.  ExpGamma(x,s,b) is equivalent to
+
+  - s*Log(b) + LGamma(s) + Exp(x)*b - s*x
+
+ExpGamma2(x,a,m) is an alternative parameterization, defined by
+
+  ExpGamma2 (x, a, m) = ExpGamma (x, a/2, (a/2)/m)
+
+This is closer to the way priors are specified for neural network and
+other models.  For example, the log of a hyperparameter whose prior is
+specified by "5:3" has the ExpGamma2(3,1/5^2) distribution.
+
+If the first parameter of one of these density functions is a
+variable, it can be written as follows instead:
+
+  x ~ Normal(m,v)     is equivalent to   Normal(x,m,v)
+  x ~ Gaussian(m,v)   is equivalent to   Gaussian(x,m,v)
+  x ~ ExpGamma(s,b)   is equivalent to   ExpGamma(x,s,b)
+  x ~ ExpGamma2(a,m)  is equivalent to   ExpGamma2(x,a,m)
+
+Use of this form can allow random number generation by some programs.
+
+Errors in computations (eg, division by zero) are handled in whatever
+way C handles them.  Multiplications and divisions in which the first
+operand evaluates to zero evaluate to zero without evaluating the
+second operand being evaluated.  For example, 0*Log(0) will evaluate
+to zero, whereas Log(0)*0 might generate an error.  (However, this
+shortcut does not apply when derivatives are also being computed.)
+
+When formulas are given as arguments to commands, they must often be
+quoted, to prevent the shell from interpreting the special characters
+they contain.
+
+The detailed syntax of formulas is as follows, with | indicating
+alternatives, [] indicating optional parts, and {} indicating parts
+that can occur zero or more times).
+
+ &lt;formula&gt;   ::= [ &lt;term&gt; ] { &lt;plusminus&gt; &lt;term&gt; }
+ &lt;plusminus&gt; ::= "+" | "-"
+
+ &lt;term&gt;      ::=  &lt;factor&gt; { &lt;timesdiv&gt; &lt;factor&gt; }
+ &lt;timesdiv&gt;  ::= [ "*" ] | "/" 
+
+ &lt;factor&gt;    ::= &lt;prefactor&gt; [ "^" &lt;integer&gt; ]
+ &lt;prefactor&gt; ::= "(" &lt;formula&gt; ")" | "[" &lt;formula&gt; "]" | "{" &lt;formula&gt; "}"
+               | &lt;variable&gt; | &lt;constant&gt; | &lt;number&gt; 
+               | &lt;ufunction&gt; &lt;prefactor&gt; | &lt;dfunction&gt; &lt;arglist&gt;
+               | &lt;variable&gt; ~ &lt;dfunction&gt; &lt;arglist&gt;
+               | "LogSumExp" &lt;arglist&gt;
+ &lt;arglist&gt;   ::= "(" &lt;formula&gt; { "," &lt;formula&gt; } ")"
+               | "[" &lt;formula&gt; { "," &lt;formula&gt; } "]"
+               | "{" &lt;formula&gt; { "," &lt;formula&gt; } "}"
+
+ &lt;ufunction&gt; ::= &lt;one of the univariate functions listed above&gt;
+ &lt;dfunction&gt; ::= &lt;one of the log density functions listed above&gt;
+ &lt;variable&gt;  ::= &lt;lower-case-letter&gt; [ &lt;digit&gt; ]
+ &lt;constant&gt;  ::= Pi
+ &lt;number&gt;    ::= &lt;integer&gt; [ "." { &lt;digit&gt; } ] [ &lt;exponent&gt; ]
+               | "." &lt;digit&gt; { &lt;digit&gt; } [ &lt;exponent&gt; ]
+ &lt;exponent&gt;  ::= "E" [ &lt;plusminus&gt; ] &lt;integer&gt; 
+ &lt;integer&gt;   ::= &lt;digit&gt; { &lt;digit&gt; }
+
+Spaces may be inserted anywhere except inside variable names, function
+names, or numbers.
+
+See <A HREF="calc.html">calc.doc</A> for some examples of formulas.
+</pre>
+</body>
+</html>

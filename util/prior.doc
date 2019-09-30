@@ -4,7 +4,9 @@ PRIOR:  Form of hierarchical prior specifications.
 
 Priors for parameters such as network weights, biases, and offsets, or
 for the noise levels in a regression model are specified using a
-common syntax, described here.
+common syntax, described here.  These priors also used for Gaussian
+process models, in which the parameters are implicit - the priors
+above the parameter level are still analogous.
 
 The prior for a group of parameters is hierarchical.  At the lowest
 level, each parameter is picked either from a Gaussian distribution
@@ -82,9 +84,9 @@ noise variance) at the top of the hierarchical prior.  Alpha-group
 gives the shape parameter for picking a precision with this mean that
 is common to all outputs.  Alpha-sub-group gives the shape parameter
 for picking precisions for each target with the common precision as
-mean.  Alpha-paramerer gives the shape parameter for picking a
+mean.  Alpha-parameter gives the shape parameter for picking a
 precision for a particular output in a particular case, using that
-targets's precision as the mean.  Specifying a finite value for
+target's precision as the mean.  Specifying a finite value for
 Alpha-parameter has the effect of changing the distribution of the
 noise for a particular output in a particular case from a Gaussian to
 a t distribution.
@@ -101,4 +103,4 @@ of the square root of the inverse of the precision (a 'sigma' value),
 not in terms of the precisions themselves, even though those are the
 values in terms of which the priors are mathematically expressed.
 
-            Copyright (c) 1995, 1996 by Radford M. Neal
+            Copyright (c) 1995, 1996, 1998 by Radford M. Neal

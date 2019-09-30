@@ -1,0 +1,8 @@
+
+# Commands to sample from the "ring" distribution using multivariate slice
+# sampling with outside reflection. The stepsize to use is given as an argument.
+
+dist-spec glog.slco,$1 \
+  "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
+mc-spec glog.slco,$1 heatbath slice-outside 45 $1 
+dist-mc glog.slco,$1 500

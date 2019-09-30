@@ -1,0 +1,52 @@
+
+# Commands to train a neural network on the binary response problem using
+# an ensemble of networks trained by gradent descent with early stopping.
+
+net-spec blog.gdese1 2 15 1 / - + + - + - +
+model-spec blog.gdese1 binary
+data-spec blog.gdese1 2 1 2 / bdata.train@-226:300 . bdata.train@226:300 .
+
+rand-seed blog.gdese1 1
+
+net-gd blog.gdese1 100 5 / 0.4 batch
+net-gd blog.gdese1 1000 50 / 0.4 batch
+net-gd blog.gdese1 20000 500 / 0.4 batch
+
+net-plt t L blog.gdese1 | find-min
+
+net-spec blog.gdese2 2 15 1 / - + + - + - +
+model-spec blog.gdese2 binary
+data-spec blog.gdese2 2 1 2 / bdata.train@-151:225 . bdata.train@151:225 .
+
+rand-seed blog.gdese2 2
+
+net-gd blog.gdese2 100 5 / 0.4 batch
+net-gd blog.gdese2 1000 50 / 0.4 batch
+net-gd blog.gdese2 20000 500 / 0.4 batch
+
+net-plt t L blog.gdese2 | find-min
+
+net-spec blog.gdese3 2 15 1 / - + + - + - +
+model-spec blog.gdese3 binary
+data-spec blog.gdese3 2 1 2 / bdata.train@-76:150 . bdata.train@75:150 .
+
+rand-seed blog.gdese3 3 
+
+net-gd blog.gdese3 100 5 / 0.4 batch
+net-gd blog.gdese3 1000 50 / 0.4 batch
+net-gd blog.gdese3 20000 500 / 0.4 batch
+
+net-plt t L blog.gdese3 | find-min
+
+net-spec blog.gdese4 2 15 1 / - + + - + - +
+model-spec blog.gdese4 binary
+data-spec blog.gdese4 2 1 2 / bdata.train@-1:75 . bdata.train@1:75 .
+
+rand-seed blog.gdese4 4
+
+net-gd blog.gdese4 100 5 / 0.4 batch
+net-gd blog.gdese4 1000 50 / 0.4 batch
+net-gd blog.gdese4 20000 500 / 0.4 batch
+
+net-plt t L blog.gdese4 | find-min
+

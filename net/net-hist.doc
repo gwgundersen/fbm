@@ -1,6 +1,6 @@
 
 
-NET-HIST:  Build a histogram for a quantity obtained from a net log file.
+NET-HIST:  Build a histogram for a quantity obtained from net log files.
 
 The net-hist program is a specialization of xxx-hist to the neural
 network application.  It can access any of the quantities documented

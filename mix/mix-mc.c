@@ -1,6 +1,6 @@
 /* MIX-MC.C - Interface between mixture model and Markov chain modules. */
 
-/* Copyright (c) 1997 by Radford M. Neal 
+/* Copyright (c) 1997, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -31,7 +31,7 @@
 
 /* MIXTURE MODEL VARIABLES. */
 
-static initialize_done = 0;	/* Has this all been set up? */
+static int initialize_done = 0;	/* Has this all been set up? */
 
 static mix_spec *mx;		/* Mixture model specification */
 static model_specification *model; /* Data model */
@@ -61,8 +61,8 @@ static double *svar;		/* Sample variances for each component */
 
 /* PROCEDURES. */
 
-static void gibbs_hypers (void), gibbs_params (void), gibbs_indicators (void),
-            met_indicators (int, mc_iter *);
+static void gibbs_hypers (void), gibbs_params (void), gibbs_indicators (int),
+            met_indicators (int, mc_iter *, int);
 
 static double case_prob (int, int);
 
@@ -86,8 +86,7 @@ void mc_app_initialize
   mc_dynamic_state *ds	/* Structure holding pointers to dynamical state */
 )
 { 
-  int optional_left;
-  int i, j, l, t;
+  int i, t;
 
   if (!initialize_done)
   {
@@ -313,7 +312,9 @@ int mc_app_sample
 ( mc_dynamic_state *ds,
   char *op,
   double pm,
-  mc_iter *it
+  double pm2,
+  mc_iter *it,
+  mc_temp_sched *sch
 )
 {
   if (strcmp(op,"gibbs-hypers")==0)
@@ -343,7 +344,16 @@ int mc_app_sample
     }
     
     if (N_train>0)
-    { gibbs_indicators();
+    { gibbs_indicators(0);
+    }
+
+    return 1;
+  }
+
+  else if (strcmp(op,"gibbs1-indicators")==0)
+  { 
+    if (N_train>0)
+    { gibbs_indicators(1);
     }
 
     return 1;
@@ -351,7 +361,14 @@ int mc_app_sample
 
   else if (strcmp(op,"met-indicators")==0)
   {
-    met_indicators (pm==0 ? 1 : pm, it);
+    met_indicators (pm==0 ? 1 : pm, it, 0);
+
+    return 1;
+  }
+
+  else if (strcmp(op,"met1-indicators")==0)
+  {
+    met_indicators (pm==0 ? 1 : pm, it, 1);
 
     return 1;
   }
@@ -377,20 +394,18 @@ void mc_app_energy
 }
 
 
-/* EVALUATE CHANGE IN ENERGY WITH TEMPERING CHANGE.  */
+/* SAMPLE FROM DISTRIBUTION AT INVERSE TEMPERATURE OF ZERO.  Returns zero
+   if this is not possible. */
 
-int mc_app_energy_diff
-( mc_dynamic_state *ds,	/* Current dyanamical state */
-  mc_temp_sched *sch,	/* Tempering schedule */
-  int dir,		/* Direction of change */
-  double *energy	/* Place to store energy */
+int mc_app_zero_gen
+( mc_dynamic_state *ds	/* Current dynamical state */
 )
-{
+{ 
   return 0;
 }
 
 
-/* SET STEPSIZES FOR EACH COORDINATE.  Nothing to do, since the are
+/* SET STEPSIZES FOR EACH COORDINATE.  Nothing to do, since there are
    no coordinates. */
 
 void mc_app_stepsizes
@@ -737,43 +752,61 @@ static void gibbs_params (void)
 }
 
 
-/* DO GIBBS SAMPLING FOR COMPONENT INDICATORS.  This is only possible when
-   the number of components in the model is finite. */
+/* DO GIBBS SAMPLING FOR COMPONENT INDICATORS.  The parameter indicates
+   whether this is a "gibbs-indicators" or "gibbs1-indicators" operation.
+   The "gibbs-indicators" operation is possible only if the number of 
+   components in the model is finite. */
 
-static void gibbs_indicators (void)
+static void gibbs_indicators
+( int gibbs1
+)
 {
   double c, m;
   int i, x, t;
 
-  if (mx->N_components==0) abort();
+  if (!gibbs1 && mx->N_components==0) abort();
 
-  /* Extend number of active components to the maximum, sampling the
-     parameters of the previously unused ones from the prior. */
+  /* For "gibbs-indicators", extend number of active components to the 
+     maximum, sampling the parameters of the previously unused ones from 
+     the prior. */
 
-  while (N_active < mx->N_components)
+  if (!gibbs1)
   {
-    freq[N_active] = 0;
-
-    for (t = 0; t<N_targets; t++)
+    while (N_active < mx->N_components)
     {
-      offsets[N_active*N_targets+t] = hyp->mean[t] + hyp->SD[t]*rand_gaussian();
-
-      if (model->type=='R')
-      { noise_SD[N_active*N_targets+t] = 
-          prior_pick_sigma (hyp->noise[t], model->noise.alpha[2]);
+      freq[N_active] = 0;
+  
+      for (t = 0; t<N_targets; t++)
+      {
+        offsets[N_active*N_targets+t] = 
+          hyp->mean[t] + hyp->SD[t]*rand_gaussian();
+  
+        if (model->type=='R')
+        { noise_SD[N_active*N_targets+t] = 
+            prior_pick_sigma (hyp->noise[t], model->noise.alpha[2]);
+        }
       }
-    }
-
-    N_active += 1;
-  }  
+  
+      N_active += 1;
+    }  
+  }
 
   /* Do Gibbs sampling for indicators. */
 
-  c = hyp->con;
-  if (mx->con_prior.scale) c /= mx->N_components;
+  if (mx->N_components==0)
+  { c = 0;
+  }
+  else
+  { c = hyp->con;
+    if (mx->con_prior.scale) c /= mx->N_components;
+  }
 
   for (i = 0; i<N_train; i++)
   {
+    if (gibbs1 && freq[indicators[i]]==1) 
+    { continue;
+    }
+
     freq[indicators[i]] -= 1;
 
     for (x = 0; x<N_active; x++)
@@ -812,19 +845,22 @@ static void gibbs_indicators (void)
 
 static void met_indicators
 ( int n_updates,	/* Number of updates to do for each indicator */
-  mc_iter *it
+  mc_iter *it,		/* Iteration record */
+  int met1		/* Is this a "met1-indicators" operation? */
 )
 { 
-  double c, lp, np;
+  int Di, singleton, E, N;
+  double c, lp, np, dp;
   int i, x, t, u;
-  int Di;
+
+  N = mx->N_components;
 
   c = hyp->con;
-  if (mx->N_components!=0 && mx->con_prior.scale) c /= mx->N_components;
+  if (N!=0 && mx->con_prior.scale) c /= N;
 
   /* Do Metropolis-Hastings updates for each indicator. */
 
-  Di = rand_int(N_train);
+  Di = rand_int(N_train); /* Selects a training case to record delta for */
 
   for (i = 0; i<N_train; i++)
   {
@@ -832,21 +868,49 @@ static void met_indicators
 
     for (u = 0; u<n_updates; u++)
     {
-      /* Compute the distribution for this indicator based on frequencies and
-         the concentration parameter.  A new component may be possible. */
+      E = N - N_active;
+
+      /* Pick from the distribution for this indicator based on frequencies and
+         the concentration parameter.  For a "met-indicators" operation, all 
+         components are possible, including a new one.  For "met1-indicators",
+         the possible components are determined by whether it's a singleton. */
+
+      if (met1)
+      { 
+        singleton = freq[indicators[i]]==1;
+
+        if (singleton)
+        { 
+          for (x = 0; x<N_active; x++)
+          { if (x==indicators[i] || freq[x]==0)
+            { pr[x] = 0;
+            }
+            else
+            { pr[x] = freq[x];
+              if (N!=0) pr[x] += c;
+            }
+          }
   
-      for (x = 0; x<N_active; x++)
-      { pr[x] = freq[x];
-        if (mx->N_components!=0) pr[x] += c;
+          x = rand_pickd(pr,N_active);
+        }
+        else
+        { 
+          x = N!=0 && E==0 ? indicators[i] : N_active;
+        }
       }
+      else  
+      { 
+        for (x = 0; x<N_active; x++)
+        { pr[x] = freq[x];
+          if (N!=0) pr[x] += c;
+        }
   
-      pr[indicators[i]] -= 1;
+        pr[indicators[i]] -= 1;
   
-      pr[N_active] = mx->N_components==0 ? c : c*(mx->N_components-N_active);
+        pr[N_active] = N==0 ? c : c*E;
   
-      /* Pick from this distribution. */
-  
-      x = rand_pickd(pr,N_active+1);
+        x = rand_pickd(pr,N_active+1);
+      }
   
       /* Generate parameters from the prior if we picked a new component. */
   
@@ -867,16 +931,27 @@ static void met_indicators
       /* Decide whether to accept the switch to new component, and if so, update
          things as required. */
   
-      np = case_prob (x, i);
+      np = x==indicators[i] ? lp : case_prob (x, i);
+      dp = lp - np;
+
+      if (met1)
+      { if (N==0)
+        { dp += singleton ? log(c/(N_train-1)) : -log(c/(N_train-1));
+        }
+        else if (singleton || E>0)
+        { dp += singleton ?  log(c*(E+1)/(N_train-1+c*(N-E-1))) 
+                          : -log(c*(E+1)/(N_train-1+c*(N-E-1)));
+        }
+      }
 
       it->proposals += 1;
-      if (i==Di) it->delta = lp - np;
-  
-      if (np>lp || rand_uniform()<exp(np-lp))
+      if (i==Di) it->delta = dp;
+
+      if (dp<0 || rand_uniform()<exp(-dp))
       { 
         if (x==N_active)
         { N_active += 1;
-          if (mx->N_components!=0 && N_active>mx->N_components) abort();
+          if (N!=0 && N_active>N) abort();
         }
   
         freq[indicators[i]] -= 1;
@@ -893,10 +968,10 @@ static void met_indicators
           N_active -= 1;
         }
 
-        it->move_point = 1;
+        if (i==Di) it->move_point = 1;
       }
       else
-      { it->move_point = 0;
+      { if (i==Di) it->move_point = 0;
         it->rejects += 1;
       }
     }

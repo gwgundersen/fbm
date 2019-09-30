@@ -1,6 +1,6 @@
 /* NET-MC.C - Interface between neural network and Markov chain modules. */
 
-/* Copyright (c) 1995, 1996, 1997 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1997, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -29,9 +29,21 @@
 #include "net-data.h"
 
 
+/* SHOULD A CHEAP ENERGY FUNCTION BE USED?  If set to 0, the full energy
+   function is used, equal to minus the log of the probability of the 
+   training data, given the current weights and noise hyperparameters.
+   This is necessary if marginal likelihoods are to be found using Annealed
+   Importance Sampling.  If set to 1, the energy omits constant terms.
+   If set to 2, the energy omits terms involving the noise hyperparameters,
+   which is OK for sampling weights with hybrid Monte Carlo, etc., but does
+   not work when tempering or annealing schemes are used. */
+
+#define Cheap_energy 0		/* Normally set to 0 */
+
+
 /* NETWORK VARIABLES. */
 
-static initialize_done = 0;	/* Has this all been set up? */
+static int initialize_done = 0;	/* Has this all been set up? */
 
 static net_arch *arch;		/* Network architecture */
 static model_specification *model; /* Data model */
@@ -54,7 +66,7 @@ static net_params grad;		/* Pointers to gradient for network parameters*/
 
 /* PROCEDURES. */
 
-static void gibbs_noise (void);
+static void gibbs_noise (double);
 
 static void gibbs_unit (net_param *, net_sigma *, net_sigma *, 
                         int, prior_spec *);
@@ -105,7 +117,7 @@ void mc_app_initialize
     priors = logg->data['P'];
     surv   = logg->data['V'];
 
-    net_check_specs_present(arch,priors,1,model,surv);
+    net_check_specs_present(arch,priors,0,model,surv);
 
     if (model!=0 && model->type=='R' && model->autocorr)
     { fprintf(stderr,"Can't handle autocorrelated noise in net-mc\n");
@@ -263,7 +275,9 @@ int mc_app_sample
 ( mc_dynamic_state *ds,
   char *op,
   double pm,
-  mc_iter *it
+  double pm2,
+  mc_iter *it,
+  mc_temp_sched *sch
 )
 {
   int sample_hyper, sample_noise;
@@ -286,7 +300,7 @@ int mc_app_sample
 
   if (sample_noise && model->type=='R')
   { 
-    gibbs_noise();
+    gibbs_noise (!ds->temp_state ? 1 : ds->temp_state->inv_temp);
   }
 
   if (sample_hyper)
@@ -366,7 +380,9 @@ int mc_app_sample
 
 /* DO GIBBS SAMPLING FOR NOISE SIGMAS. */
 
-static void gibbs_noise (void)
+static void gibbs_noise 
+( double inv_temp
+)
 {
   double nalpha, nprec, sum, d, ps;
   prior_spec *pr;
@@ -383,10 +399,10 @@ static void gibbs_noise (void)
       sum = pr->alpha[1] * (*sigmas.noise_cm * *sigmas.noise_cm);
       for (i = 0; i<N_train; i++)
       { d = train_values[i].o[j] - train_targets[i*arch->N_outputs+j];
-        sum += d*d;
+        sum += inv_temp * d*d;
       }
 
-      nalpha = pr->alpha[1] + N_train;
+      nalpha = pr->alpha[1] + inv_temp * N_train;
       nprec = nalpha / sum;
 
       sigmas.noise[j] = prior_pick_sigma (1/sqrt(nprec), nalpha);
@@ -402,7 +418,7 @@ static void gibbs_noise (void)
       sum = 0;
       for (i = 0; i<N_train; i++)
       { d = train_values[i].o[j] - train_targets[i*arch->N_outputs+j];
-        sum += rand_gamma((pr->alpha[2]+1)/2) / ((ps+d*d)/2);
+        sum += rand_gamma((pr->alpha[2]+inv_temp)/2) / ((ps+inv_temp*d*d)/2);
       }
 
       sigmas.noise[j] = cond_sigma (*sigmas.noise_cm, pr->alpha[1],
@@ -416,11 +432,11 @@ static void gibbs_noise (void)
     for (i = 0; i<N_train; i++)
     { for (j = 0; j<arch->N_outputs; j++)
       { d = train_values[i].o[j] - train_targets[i*arch->N_outputs+j];
-        sum += d*d;
+        sum += inv_temp * d*d;
       }
     }
 
-    nalpha = pr->alpha[0] + N_train * arch->N_outputs;
+    nalpha = pr->alpha[0] + inv_temp * N_train * arch->N_outputs;
     nprec = nalpha / sum;
     *sigmas.noise_cm = prior_pick_sigma (1/sqrt(nprec), nalpha);
 
@@ -437,7 +453,7 @@ static void gibbs_noise (void)
     for (i = 0; i<N_train; i++)
     { for (j = 0; j<arch->N_outputs; j++) 
       { d = train_values[i].o[j] - train_targets[i*arch->N_outputs+j];
-        sum += rand_gamma((pr->alpha[2]+1)/2) / ((ps+d*d)/2);
+        sum += rand_gamma((pr->alpha[2]+inv_temp)/2) / ((ps+inv_temp*d*d)/2);
       }
     }
 
@@ -695,8 +711,10 @@ void mc_app_energy
   mc_value *gr		/* Place to store gradient, null if not required */
 )
 {
-  double log_prob;
+  double log_prob, inv_temp;
   int i, low, high;
+
+  inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
   if (gr && gr!=grad.param_block)
   { grad.param_block = gr;
@@ -715,10 +733,14 @@ void mc_app_energy
     return;
   }
 
-  if (data_spec!=0)
+  if (data_spec!=0 && inv_temp!=0)
   {
     if (N_approx>1 && gr)
     { for (i = 0; i<ds->dim; i++) gr[i] /= N_approx;
+    }
+
+    if (inv_temp!=1 && gr)
+    { for (i = 0; i<ds->dim; i++) gr[i] /= inv_temp;
     }
 
     low  = (N_train * (w_approx-1)) / N_approx;
@@ -732,6 +754,12 @@ void mc_app_energy
         double ot, ft, t0, t1;
         int censored;
         int w;
+
+        if (inv_temp!=1)
+        { fprintf(stderr,
+            "Can't handle tempering with piecewise-constant hazard models\n");
+          exit(1);
+        }
 
         if (train_targets[i]<0)
         { censored = 1;
@@ -756,9 +784,9 @@ void mc_app_energy
 
           net_model_prob(&train_values[i], &ft,
                          &log_prob, gr ? &deriv[i] : 0, arch, model, surv, 
-                         &sigmas, 2);
+                         &sigmas, Cheap_energy);
 
-          if (energy) *energy -= log_prob;
+          if (energy) *energy -= inv_temp * log_prob;
 
           if (gr && i>=low && i<high)
           { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
@@ -789,9 +817,9 @@ void mc_app_energy
 
         net_model_prob(&train_values[i], train_targets + data_spec->N_targets*i,
                        &log_prob, gr ? &deriv[i] : 0, arch, model, surv,
-                       &sigmas, 2);
+                       &sigmas, Cheap_energy);
   
-        if (energy) *energy -= log_prob;
+        if (energy) *energy -= inv_temp * log_prob;
 
         if (gr && i>=low && i<high)
         { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
@@ -804,20 +832,24 @@ void mc_app_energy
     if (N_approx>1 && gr)
     { for (i = 0; i<ds->dim; i++) gr[i] *= N_approx;
     }
+
+    if (inv_temp!=1 && gr)
+    { for (i = 0; i<ds->dim; i++) gr[i] *= inv_temp;
+    }
   }
 }
 
 
-/* EVALUATE CHANGE IN ENERGY WITH TEMPERING CHANGE.  */
+/* SAMPLE FROM DISTRIBUTION AT INVERSE TEMPERATURE OF ZERO.  Returns zero
+   if this is not possible. */
 
-int mc_app_energy_diff
-( mc_dynamic_state *ds,	/* Current dyanamical state */
-  mc_temp_sched *sch,	/* Tempering schedule */
-  int dir,		/* Direction of change */
-  double *energy	/* Place to store energy */
+int mc_app_zero_gen
+( mc_dynamic_state *ds	/* Current dynamical state */
 )
-{
-  return 0;
+{ 
+  net_prior_generate (&params, &sigmas, arch, model, priors, 0, 0, 0);
+
+  return 1;
 }
 
 
@@ -827,12 +859,20 @@ void mc_app_stepsizes
 ( mc_dynamic_state *ds	/* Current dynamical state */
 )
 { 
+  double inv_temp, w;
   int i, j, k, l;
-  double w;
+
+  inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
   /* Compute second derivatives of minus log likelihood for unit values. */
 
   net_model_max_second (seconds.o, arch, model, surv, &sigmas);
+
+  if (inv_temp!=1)
+  { for (i = 0; i<arch->N_outputs; i++)
+    { seconds.o[i] *= inv_temp;
+    }
+  }
 
   for (l = arch->N_layers-1; l>=0; l--)
   { 
@@ -1004,7 +1044,7 @@ static double logp (double l, double *d, void *vp)
   double v;
   *d = p->a/2 - t*p->a0/(2*p->w) + p->a1*p->s/(2*t);
   v = l*p->a/2 - t*p->a0/(2*p->w) - p->a1*p->s/(2*t);
-  /* fprintf(stderr,"%.3lf %g %g\n",t,v,*d); */
+  /* fprintf(stderr,"%.3f %g %g\n",t,v,*d); */
   return v;
 }
 

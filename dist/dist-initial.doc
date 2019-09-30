@@ -1,0 +1,17 @@
+
+
+DIST-INITIAL:  Specify initial state for Markov chain.
+
+The start state for the Markov chain used to sample from the specified
+distribution can be set with dist-initial.  The default if no state is
+specified is all zeros.
+
+Usage:
+
+    dist-initial log-file { var=value }
+
+Appends a record to the log file (with index one greater than that in
+the last record) that contains values for the state variables as
+specified.  Variables that are not mentioned are set to zero.
+
+            Copyright (c) 1998 by Radford M. Neal

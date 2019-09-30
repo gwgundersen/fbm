@@ -3,5 +3,5 @@
 # You may wish to modify this file to fit your local installation.
 
 CC     = cc  # C compiler to use
-CFLAGS = -O2 # C compiler options when compiling .c files to .o files
+CFLAGS = -O  # C compiler options when compiling .c files to .o files
 LFLAGS =     # Options when linking .o files

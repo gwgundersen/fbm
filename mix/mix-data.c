@@ -141,7 +141,7 @@ static double *read_inputs
   double raw_inputs[Max_inputs];
   double *values;
   int N_cases;
-  int i, j, j0;
+  int i, j;
 
   N_cases = numin_start(ns);
 

@@ -1,0 +1,44 @@
+<html>
+<body>
+<pre>
+
+
+EXAMPLES OF MARKOV CHAIN SAMPLING FOR SIMPLE BAYESIAN MODELS
+
+The 'dist' programs can be used to sample from the posterior
+distribution of the parameters of a Bayesian model, specified by
+giving formulas for minus the log of the prior distribution, and for
+minus the log likelihood for one case.  The model defines the
+conditional distribution of one or more "target" values in a case,
+given the values of the "inputs" for that case.  The cases are
+independent of each other.
+
+Models of this sort can handle regression and classification problems,
+in which the "targets" are the response variables and the "inputs" the
+predictor variables.  When the number of inputs is zero, the models
+will estimate the joint probability or probability density of the
+target values.  However, the set of allowed models is restricted by
+the range of formulas supported, as well as by the present restriction
+to no more than 10 inputs and 10 targets per case.  Also, latent
+variables cannot be explicitly represented at present, though some
+latent variable models can be defined by summing over the possible
+latent values in the likelihood.  The facilities of this module are
+meant primarily as a way of demonstrating the Markov chain sampling
+methods on statistical problems, not as a comprehensive statistical
+modeling package.
+
+These examples also illustrate some of the Markov chain sampling
+facilities not demonstrated earlier.  The linear regression example
+(<A HREF="Ex-bayes-r.html">Ex-bayes-r.doc</A>) illustrates the use of "windows" with hybrid Monte
+Carlo.  The t-distribution example (<A HREF="Ex-bayes-t.html">Ex-bayes-t.doc</A>) shows how one can
+set stepsizes differently for different variables.  The example of
+probability estimation for categorical data (<A HREF="Ex-bayes-p.html">Ex-bayes-p.doc</A>) shows how
+the marginal likelihood for a model (more generally, the normalizing
+constant for the distribution) can be found using Annealed Importance
+Sampling.
+
+The data and command files for these examples are in the "ex-bayes"
+directory.
+</pre>
+</body>
+</html>

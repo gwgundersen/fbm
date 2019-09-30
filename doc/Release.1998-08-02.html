@@ -1,0 +1,156 @@
+<html>
+<body>
+<pre>
+
+
+NOTES ON THE VERSION OF 1998-08-02
+
+Changes in this version:
+
+1) The documentation has been revised, and extended to cover the features
+   described below.
+
+2) Distributions can now be specified by giving an arithmetic formula
+   for the "energy", and the various Markov chain methods can then be 
+   applied to sample from this distribution.  Bayesian posterior 
+   distributions can also be specified, by giving the prior and the
+   likelihood.  This is meant primarily for demonstrating the Markov
+   chain methods.  Some real problems might be solvable with these
+   facilities, but many features that would often be needed have not
+   been provided.  See the new introductory documentation, and <A HREF="dist.html">dist.doc</A> 
+   for details.
+
+3) A calculator program (see <A HREF="calc.html">calc.doc</A>) has been written, mainly as
+   a demo and test of the routines for evaluating arithmetic formulas
+   needed for the 'dist' programs (see <A HREF="formula.html">formula.doc</A>).
+
+4) Annealed Importance Sampling (AIS) is now supported for neural network 
+   models and for Bayesian models sampled from using the 'dist' module.  
+   See the technical report available from my web page for a description 
+   of Annealed Importance Sampling.  See <A HREF="mc-spec.html">mc-spec.doc</A> for details of how
+   to use AIS.
+
+5) A 'Q' quantity is now provided for mc log files, allowing access
+   to the importance weights when annealed importance sampling is used. 
+   See <A HREF="mc-quantities.html">mc-quantities.doc</A> for details.
+
+6) New "met-values" and "mh-values" operations have been implemented for 
+   updating the latent values in a Gaussian process model.  See <A HREF="gp-mc.html">gp-mc.doc</A>
+   for details.
+
+7) The matrix operations for Gaussian process prediction and energy
+   computation have been improved, so that they now do not explicitly
+   compute the inverse covariance matrix except when this is needed for
+   calculating derivatives of the energy.  Forward and backward 
+   substitution with the Cholesky decomposition is used instead.  This
+   is faster and possibly more accurate.  Unfortunately, there is little
+   speed improvement for hybrid Monte Carlo, since it needs derivatives.
+
+8) Two new Markov chain update operations for mixture models have been
+   added: gibbs1-indicators and met1-indicators.  These are mostly useful
+   for models with an infinite number of components.  See <A HREF="mix-mc.html">mix-mc.doc</A> for 
+   details.
+
+9) The energy for neural network models is now exactly minus the log of
+   the probability of the training targets given the current weights and
+   noise hyperparameters.  Previously, terms that were constant or that
+   involved only the noise hyperparameters were omitted, as they weren't
+   relevant for sampling the weights.  The full form is needed for 
+   annealing/tempering schemes, and for computation of the marginal
+   likelihood.
+
+10)The energy for Gaussian process models is also now exactly minus the
+   log of the probability of the targets or latent values given the
+   current hyperparameters and case-specific noise-variances, plus minus
+   the log of the prior for the hyperparameters.  This is for consistency 
+   with the change above for neural network models, and makes the likelihood
+   equal to minus the energy when the hyperparameters are all constant.
+
+11)Options for finding 10% and 90% quantiles of predictive distributions 
+   have been added.  See <A HREF="net-pred.html">net-pred.doc</A> and <A HREF="gp-pred.html">gp-pred.doc</A> for details.
+
+12)Components of additive models can now be examined using gp-pred.  See
+   the documentation on the options 1-9 in <A HREF="gp-pred.html">gp-pred.doc</A>.
+
+13)Each application now has a "tbl" as well as a "plt" program.  The "tbl"
+   programs are very similar to the "plt" programs, but output data in
+   a different order when more than one quantity is "plotted", which is 
+   better for manual examination, and for some plot programs and statistical 
+   packages.  See <A HREF="xxx-tbl.html">xxx-tbl.doc</A> for details.
+
+14)The quantity 'E0' is now defined, giving the energy at inverse 
+   temperature zero, along with 'E1', which is E minus E0.  See 
+   <A HREF="mc-quantities.html">mc-quantities.doc</A> for details.  
+
+15)Quantities 'F1' and 'F2' are now provided to allow ratios of 
+   normalizing constants to be estimated using tempered transitions.  
+   See <A HREF="mc-quantities.html">mc-quantities.doc</A> for details.  (The old meaning of 'F' no longer 
+   exists.  It previously was the same as 'f' divided by two.  I must 
+   once have thought this was convenient, but I can see no good use for 
+   it now.)  
+
+16)The mc-temp-sched command has been extended to allow arithmetic as 
+   well as geometric sequences of inverse temperatures.
+
+17)The maximum size of a tempering schedule has been increased to 2001
+   from 1001.  This makes old log files that used the tempering features
+   unreadable by the new version.
+
+18)The heuristics for setting the stepsizes for the top-level linear
+   and relevance hyperparameters for GP models were changed for the
+   case where there are no lower-level hyperparameters (the stepsize
+   now does not depend on the number of inputs).  This could possibly
+   result in a high rejection rate if you use a stepsize designed for
+   the previous version.  Reducing the stepsize by a factor of the
+   square root of the number of inputs should fix any such problems.
+
+19)A "Cauchy" style covariance function has been implemented.  It is
+   obtained by setting the "power" to -1.  See <A HREF="gp-spec.html">gp-spec.doc</A> for details.
+
+20)The 'z' option for net-pred has been removed.  It was a fudge used
+   for only one dataset, and is now inconvenient to retain.
+
+
+Compatibility with past versions.
+
+As far as I know, the only potential program compatibility problems
+are the removal of two obscure options (see (15) and (20) above), and
+the change in stepsize heuristics in gp-mc (see (18) above). 
+
+Log files created with the previous version should be readable with
+this version as long as they didn't contain a tempering schedule (the
+maximum size of which was increased in this version).
+
+
+Bug fixes.
+
+Fixed error check on jitter prior in GP models.  Fixed bug in gp-gen
+that in some circumstances prevented proper scaling of relevance
+priors with "x" specified.  Fixed bug in net-gen that sometimes (when
+"fix" was used) set hyperparameters that according to the spec were
+supposed to have pre-determined values.  Fixed bug that caused the "l"
+quantity for Gaussian process models of "class" data to be incorrect.
+Fixed an error in the gradient calculation in GP models with
+case-by-case variances.
+
+
+Known bugs and other deficiencies.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The latent value update operations for Gaussian processes may recompute 
+   the inverse covariance matrix even when an up-to-date version was 
+   computed for the previous Monte Carlo operation.
+
+4) Covariance matrices are stored in full, even though they are symmetric,
+   which sometimes costs a factor of two in memory usage.
+</pre>
+</body>
+</html>

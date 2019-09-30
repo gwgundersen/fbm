@@ -1,0 +1,9 @@
+(cd util; echo " "; echo "Making programs in util directory"; echo " "; make)
+(cd mc;   echo " "; echo "Making programs in mc directory"; echo " "; make)
+(cd dist; echo " "; echo "Making programs in dist directory"; echo " "; make)
+(cd bvg;  echo " "; echo "Making programs in bvg directory"; echo " "; make)
+(cd net;  echo " "; echo "Making programs in net directory"; echo " "; make)
+(cd gp;   echo " "; echo "Making programs in gp directory"; echo " "; make)
+(cd mix;  echo " "; echo "Making programs in mix directory"; echo " "; make)
+
+echo " "; echo "Done making programs in all directories"; echo " "

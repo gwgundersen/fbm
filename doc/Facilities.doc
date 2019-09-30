@@ -2,23 +2,66 @@
 
 FACILITIES PROVIDED BY THIS SOFTWARE
 
-This software implements flexible Bayesian models for regression,
-classification, and probability or density estimation applications.
-The regression and classification models are based on multilayer
-perceptron neural networks or on Gaussian processes.  The probability
-and probability density models are based on finite or countably
-infinite mixture models; the infinite models are also know as
-Dirichlet process mixture models.  Bayesian inference for these model
-is done using Markov chain Monte Carlo methods.  Software modules that
-support Markov chain sampling are included in the distribution, and
-may be useful in other applications.  Note that I am distributing this
-software to facilitate research in this area.  Potential users should
-make note of the copyright notice at the beginning of this document
-(or accessible via the first hypertext link).  You must obtain
-permission from me before using this software for purposes other than
-research or education.  You should also note that the software may
-have bugs, particularly regarding recently added or experimental
-features.
+This software is meant to support research and education regarding:
+
+   * Flexible Bayesian models for regression and classification 
+     based on neural networks and Gaussian processes, and for
+     probability density estimation using mixtures.  Neural net
+     training using early stopping is also supported.
+
+   * Markov chain Monte Carlo methods, and their applications to
+     Bayesian modeling, including implementations of Metropolis,
+     hybrid Monte Carlo, slice sampling, and tempering methods.
+
+These facilities might be useful for actual problems, but you should
+note that many features that might be needed for real problems have
+not been implemented, that the programs have not been tested to the
+extent that would be desirable for important applications, and that
+permission to use the software for free is granted only for purposes
+of research and education.
+
+The complete source code (in C) is provided, allowing researchers to
+modify the program to test new ideas.  It is not necessary to known C
+to use the programs (assuming you manage to install them correctly).
+
+This software is designed for use on a Unix system, using commands
+issued to the Unix command interpreter (shell).  No particular window
+system or other GUI is required, but a plotting program will be very
+useful.  I use the xgraph plot program, written by David Harrison,
+which allows plots to be produced by just piping data from one of the
+commands; it can be obtained from my web page.
+
+
+Markov chain Monte Carlo facilities.
+
+All the Bayesian models are implemented using Markov chains to sample
+from the posterior distribution.  For the elaborate models based on
+neural networks, Gaussian processes, and mixtures, this is done by
+combining general-purpose Markov chain sampling procedures with
+special modules written in C.  Other models could be implemented in
+the same way, but this is a fairly major project.
+
+To allow people to play around with the various Markov chain methods
+more easily, a facility is provided for defining distributions (on
+R^n) by giving a simple formula for the probability density.  Many
+Markov chain sampling methods, such as the Metropolis algorithm,
+hybrid Monte Carlo, slice sampling, and simulated tempering, may then
+be used to sample from this distribution.  Bayesian posterior
+distributions can be defined by giving a formula for the prior density
+and for the likelihood based on each of the cases (which are assumed
+to be independent).
+
+A long review paper of mine on "Probabilistic Inference Using Markov
+Chain Monte Carlo Methods" can be obtained from my web page.  This
+review discusses methods based on Hamiltonian dynamics, including the
+"hybrid Monte Carlo" method.  These methods are also discussed in my
+book on "Bayesian Learning for Neural Networks".  My web page also has
+papers on slice sampling ("Markov chain Monte Carlo methods based on
+`slicing' the density function") and on Annealed Importance Sampling,
+both of which are implemented in this software.
+
+
+Neural network and Gaussian process models.
 
 The neural network models are described in my thesis, "Bayesian
 Learning for Neural Networks", which has now been published by
@@ -26,14 +69,14 @@ Springer-Verlag (ISBN 0-387-94724-8).  The neural network models
 implemented are essentially as described in the Appendix of this book.
 The Gaussian process models are in many ways analogous to the network
 models.  The Gaussian process models implemented in this software, and
-computatonal methods that used, are described in my technical report
+computational methods that used, are described in my technical report
 entitled "Monte Carlo implementation of Gaussian process models for
 Bayesian regression and classification", available in compressed
 Postscript at URL ftp://ftp.cs.utoronto.ca/pub/radford/mc-gp.ps.Z.
 The Gaussian process models for regression are similar to those
 evaluated by Carl Rasmussen in his thesis, "Evaluation of Gaussian
 Processes and other Methods for Non-Linear Regression", available from
-his home page, at the URL http://www.cs.utoronto.ca/~carl/; he also
+his web page, at the URL http://www.cs.utoronto.ca/~carl/; he also
 talks about neural network models.  To understand how to use the
 software implementing these models, it is essential for you to have
 read at least one of these references.
@@ -59,44 +102,62 @@ inputs, 20 hidden units), fully training a neural network model (to
 the point where one can be reasonably sure that the correct Bayesian
 answer has been found) typically takes several hours to a day on our
 SGI machine.  However, quite good results, competitive with other
-methods, are often obtained after training for under an hour. The time
-required to train the Gaussian process models depends a lot on the
-number of training cases.  For 100 cases, these models may take only a
-few minutes to train (again, to the point where one can be reasonably
-sure that convergence to the correct answer has occurred).  For 1000
-cases, however, training might well require a day of computation.
+methods, are often obtained after training for under an hour.  The
+time required to train the Gaussian process models depends a lot on
+the number of training cases.  For 100 cases, these models may take
+only a few minutes to train (again, to the point where one can be
+reasonably sure that convergence to the correct answer has occurred).
+For 1000 cases, however, training might well take a day.
 
-The finite mixture models are similar to those which have been used by
-many people - for example, Lavine and West (Canadian Journal of
-Statistics, vol. 20, pp. 451-461, 1992) fit similar models using
-similar Markov chain Monte Carlo methods.  The countably infinite
-mixture models are equivalent to Dirichlet process mixtures.  Markov
-chain sampling for these models has been described by Escobar and 
-West (Journal of the American Statistical Association, vol. 90,
-pp. 577-588, 1995).  Both finite and infinite mixture models (for
-binary data) are described in my tech report, "Bayesian mixture
-modeling by Monte Carlo simulation", available by anonymous ftp at the
-URL ftp://ftp.cs.utoronto.ca/pub/radford/bmm.ps.Z.  The models and
-Markov chain methods used in the software are not identical to those
+The software also implements neural network training using early
+stopping, as described in my paper on "Assessing relevance
+determination methods using DELVE" (to appear in Generalization in
+Neural Networks and Machine Learning, C. M. Bishop (editor),
+Springer-Verlag).  A similar early stopping method is also described
+in Carl Rasmussen's thesis (see above).
+
+
+Bayesian mixture models.
+
+The software includes a preliminary implementation of Bayesian mixture
+models for multivariate real or binary data.  The finite mixture
+models are similar to those which have been used by many people.  For
+example, Lavine and West (Canadian Journal of Statistics, vol. 20,
+pp. 451-461, 1992) fit similar models using similar Markov chain Monte
+Carlo methods.  The countably infinite mixture models are equivalent
+to Dirichlet process mixtures.  Markov chain sampling for these models
+is described by Escobar and West (Journal of the American Statistical
+Association, vol. 90, pp. 577-588, 1995).  Both finite and infinite
+mixture models (for binary data) are described in my technical report,
+"Bayesian mixture modeling by Monte Carlo simulation", available at
+ftp://ftp.cs.utoronto.ca/pub/radford/bmm.ps.Z.  The models and Markov
+chain methods used in the software are not identical to those
 described in any of these references, however.  The details can be
 found only in the software documentation.  For this reason, the
-mixture software may be a bit difficult to figure out until such time
-as I get around to writing up a paper describing this implemention.
-This part of the software is rather preliminary in other respects as
-well.
+mixture model software may be a bit difficult to figure out until such
+time as I get around to writing up a paper describing this
+implementation.  This part of the software is rather preliminary in
+other respects as well.
 
-The software consists of a number of programs and modules.  Four major
-components are included in this distribution, each with its own
-directory:
+
+Software components.
+
+The software consists of a number of programs and modules.  Each major
+component has its own directory, as follows:
   
     util    Modules and programs of general utility.
 
     mc      Modules and programs that support sampling using Markov 
             chain Monte Carlo methods, using modules from util.
 
+    dist    Programs for doing Markov chain sampling on a distribution
+            given by a simple formula, or by giving a Bayesian prior
+            and likelihood, using the modules from util and mc.
+
     net     Modules and programs that implement Bayesian inference
-            for models based on multilayer perceptrons, using the
-            modules from util and mc.
+            for models based on multilayer perceptron neural networks, 
+            using the modules from util and mc.  Also implements simple
+            gradient descent training, possibly with early stopping.
 
     gp      Modules and programs that implement Bayesian inference
             for models based on Gaussian processes, using the modules
@@ -108,21 +169,34 @@ directory:
 
 In addition, the 'bvg' directory contains modules and programs for
 sampling from a bivariate Gaussian distribution, as a simple
-demonstration of the capabilities of the Markov chain Monte Carlo
-facilities.  Other than by providing this example, and the detailed
-documentation on various commands, I have not attempted to document
-how you might go about using the Markov chain Monte Carlo modules for
-another application.
+demonstration of how the Markov chain Monte Carlo facilities can be
+used from a special module written in C.  Other than by providing this
+example, and the detailed documentation on various commands, I have
+not attempted to document how you might go about using the Markov
+chain Monte Carlo modules for another application written in C.
 
-The 'examples' directory contains the data sets that are used in the
-tutorial examples, along with shell scripts containing the commands
-used.
+The following directories contain examples of how these programs can
+be used, many of which are discussed in the documentation:
 
-It is possible to use this software to do learning and prediction
-without any knowledge of how the programs are written (assuming that
-the software can be installed as described below without any
-problems).  However, the complete source code is included so that
-researchers can modify the programs to try out their own ideas.
+    ex-netgp  Examples of Bayesian regression and classification 
+              models based on neural networks and Gaussian processes.
+
+    ex-mix    Examples of Bayesian mixture models.
+
+    ex-dist   Examples of Markov chain sampling on distributions
+              specified by simple formulas.
+
+    ex-bayes  Examples of Markov chain sampling for Bayesian models
+              specified using formulas for the prior and likelihood.
+
+    ex-gdes   Examples of neural network learning using gradient 
+              descent and early stopping.
+
+The 'bin' directory contains links to all the programs.  The 'doc'
+directory contains all the documentation.
+
+
+Portability of the software.
 
 The software is written in ANSI C, and is meant to be run in a UNIX
 environment.  Specifically, it was developed on an SGI machine running
@@ -130,11 +204,11 @@ IRIX Release 5.3.  It also seems to run OK on a SPARC machine running
 SunOS 5, using the 'gcc' C compiler, and on DEC Alpha machines.  As
 far as I know, the software does not depend on any peculiarities of
 these environments (except perhaps for the use of the drand48
-psuedo-random number generator), but you may nevertheless have
-problems getting it to work in substantially different environments,
-and I can offer little or no assistance in this regard.  There is no
-dependence on any particular graphics package or graphical user
-interface.  (The 'xxx-plt' programs are designed to allow their output
-to be piped directly into the 'xgraph' plotting program, but other
-plotting programs can be used instead, or the numbers can be examined
-directly.)
+pseudo-random number generator, and the lgamma function), but you may
+nevertheless have problems getting it to work in substantially
+different environments, and I can offer little or no assistance in
+this regard.  There is no dependence on any particular graphics
+package or graphical user interface.  (The 'xxx-plt' programs are
+designed to allow their output to be piped directly into the 'xgraph'
+plotting program, but other plotting programs can be used instead, or
+the numbers can be examined directly.)

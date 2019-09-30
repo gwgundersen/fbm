@@ -1,0 +1,13 @@
+
+# These commands sample from the posterior distribution for the linear
+# regression problem using hybrid Monte Carlo with "windows" of two states.
+
+dist-spec rlog.whmc \
+  "u ~ Normal(0,10^2) + w0 ~ Normal(0,10^2) + w1 ~ Normal(0,10^2) \
+      + v ~ ExpGamma(1,0.2)" \
+  "t ~ Normal (u + w0i0 + w1i1, Exp(-v))"
+
+data-spec rlog.whmc 2 1 / rdata .
+
+mc-spec rlog.whmc heatbath hybrid 25:2 0.01
+dist-mc rlog.whmc 500

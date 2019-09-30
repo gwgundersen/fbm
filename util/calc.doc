@@ -1,0 +1,45 @@
+
+
+CALC:  Simple calculator program.
+
+The calc program computes the value of an arithmetic expression, and
+prints it on standard output.  Although this program may be useful, it
+was mostly written as a test of the formula module (see formula.doc).
+
+Usage:
+
+    calc { var=formula } formula
+
+The value of the final formula is computed and printed.  This formula
+may contain references to variables that were assigned values in the
+earlier arguments.  These assignments are performed in order; the
+formulas they contain may reference variables that were assigned
+values earlier.  A variable name may be a single lower-case letter, or
+a lower-case letter followed by a single digit.
+
+For the syntax of formulas, see formula.doc.
+
+Some examples:
+
+   > calc "3+5"
+   8
+
+   > calc "p=0.913" "100p(1-p)"
+   7.9431
+
+   > calc "x1=8.9E5" "x2=1.2E6" "Sqrt(x1*x2)"
+   1.03344E+06
+
+   > calc "x=4.8" "y=x+1.9" "z=y-3.1" "Exp { - (x^2+y^2+z^2) / 2 }"
+   2.72245E-18
+
+   > calc "s=3" "i=2" "n=10" "sin(4)"
+   240
+
+   Note that "sin(4)" is interpreted as "s*i*n*(4)"!
+   "Sin(4)" would evaluate the sine of 4.
+
+   > calc "1.3e4+12.1"
+   Undefined variable: e4
+  
+   You have to use upper-case "E" for numbers in scientific notation.

@@ -20,7 +20,7 @@
    is opened by the 'numin_spec' procedure; the other fields are initialized
    at this point. */
 
-#define Max_items 130	/* Max number of items than can be required */
+#define Max_items 250	/* Max number of items than can be required */
 
 typedef struct
 {

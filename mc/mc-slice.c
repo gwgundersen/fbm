@@ -1,6 +1,6 @@
 /* MC-SLICE.C - Procedures for performing slice sampling updates. */
 
-/* Copyright (c) 1996 by Radford M. Neal 
+/* Copyright (c) 1996, 1997 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -28,7 +28,13 @@
 static void step_out   (mc_dynamic_state *, mc_iter *, int, double, double, int,
                         double *, double *);
 
-static void pick_value (mc_dynamic_state *, mc_iter *, int, double, double, 
+static void dbl_out    (mc_dynamic_state *, mc_iter *, int, double, double, int,
+                        double *, double *);
+
+static int dbl_ok      (mc_dynamic_state *, mc_iter *, int, double, double,
+                        double, double);
+
+static void pick_value (mc_dynamic_state *, mc_iter *, int, double, double, int,
                         double, double);
 
 
@@ -39,7 +45,8 @@ void mc_slice_1
   mc_iter *it,		/* Description of this iteration */
   int firsti,		/* Index of first component to update (-1 for all) */
   int lasti,		/* Index of last component to update */
-  int max_steps		/* Maximum number of intervals, zero for unlimited */
+  int max_steps		/* Maximum number of intervals, zero for unlimited;
+			   if negative, intervals are found by doubling */
 )
 {
   double curr_q, slice_point, low_bnd, high_bnd;
@@ -65,10 +72,14 @@ void mc_slice_1
     slice_point = ds->pot_energy + rand_exp();
     curr_q = ds->q[k];
 
-    step_out (ds, it, k, slice_point, curr_q, max_steps, &low_bnd, &high_bnd);
-    pick_value (ds, it, k, slice_point, curr_q, low_bnd, high_bnd);
+    if (max_steps>=0)
+    { step_out (ds, it, k, slice_point, curr_q, max_steps, &low_bnd, &high_bnd);
+    }
+    else
+    { dbl_out (ds, it, k, slice_point, curr_q, -max_steps, &low_bnd, &high_bnd);
+    }
 
-    ds->know_pot = 1;
+    pick_value (ds, it, k, slice_point, curr_q, max_steps, low_bnd, high_bnd);
   }
 
   ds->know_grad = 0;
@@ -87,7 +98,8 @@ void mc_slice_over
   int max_steps		/* Maximum number of intervals, zero for unlimited */
 )
 {
-  double sf, curr_q, slice_point, low_bnd, high_bnd, olow_bnd, ohigh_bnd, width;
+  double low_bnd, high_bnd, olow_bnd, ohigh_bnd, dlow_bnd, dhigh_bnd;
+  double sf, curr_q, slice_point, width;
   int k, r;
 
   sf = it->stepsize_factor;
@@ -112,18 +124,26 @@ void mc_slice_over
     slice_point = ds->pot_energy + rand_exp();
     curr_q = ds->q[k];
 
-    step_out (ds, it, k, slice_point, curr_q, max_steps, &low_bnd, &high_bnd);
+    if (max_steps>=0)
+    { step_out (ds, it, k, slice_point, curr_q, max_steps, &low_bnd, &high_bnd);
+    }
+    else
+    { dbl_out (ds, it, k, slice_point, curr_q, -max_steps, &low_bnd, &high_bnd);
+    }
 
     if (rand_uniform() < refresh_prob)
-    { 
-      pick_value (ds, it, k, slice_point, curr_q, low_bnd, high_bnd);
-      ds->know_pot = 1;
-
+    { pick_value (ds, it, k, slice_point, curr_q, max_steps, low_bnd, high_bnd);
       continue;
     }
 
     width = sf * ds->stepsize[k];
     r = refinements;
+
+    if (max_steps<0) 
+    { width = high_bnd-low_bnd;  /* So we'll shrink 'til midpoint inside */
+      dlow_bnd = low_bnd;
+      dhigh_bnd = high_bnd;
+    }
 
     if (high_bnd-low_bnd <= width*1.1)
     {
@@ -184,8 +204,8 @@ void mc_slice_over
 
     it->proposals += 1;
 
-    if (ds->q[k]<olow_bnd || ds->q[k]>ohigh_bnd
-     || ds->pot_energy > slice_point)
+    if (ds->q[k]<olow_bnd || ds->q[k]>ohigh_bnd || ds->pot_energy > slice_point
+     || (max_steps<0 && !dbl_ok(ds,it,k,slice_point,curr_q,dlow_bnd,dhigh_bnd)))
     { ds->q[k] = curr_q;
       it->rejects += 1;
       ds->know_pot = 0;
@@ -210,51 +230,154 @@ static void step_out
 )
 {
   int low_steps, high_steps;
-  int low_out, high_out;
-  double sf;
+  double width;
 
-  sf = it->stepsize_factor;
+  width = it->stepsize_factor * ds->stepsize[k];
 
   low_steps  = max_steps==0 ? 1000000000 : rand_int(max_steps);
   high_steps = max_steps==0 ? 1000000000 : (max_steps-1) - low_steps;
 
-  *low_bnd  = curr_q - rand_uniopen() * sf * ds->stepsize[k];
-  *high_bnd = *low_bnd + sf * ds->stepsize[k];
+  *low_bnd  = curr_q - rand_uniopen() * width;
+  *high_bnd = *low_bnd + width;
 
-  low_out = high_out = -1;
-
-  for (;;)
+  while (low_steps>0)
   {
-    if (low_out==-1)
-    { ds->q[k] = *low_bnd;
-      mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);    
-      it->slice_evals += 1;
-      low_out = ds->pot_energy > slice_point;
-    }
+    ds->q[k] = *low_bnd;
+    mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);    
+    it->slice_evals += 1;
 
-    if (high_out==-1)
-    { ds->q[k] = *high_bnd;
-      mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);    
-      it->slice_evals += 1;
-      high_out = ds->pot_energy > slice_point;
-    }
+    if (ds->pot_energy>slice_point) break;
 
-    if ((low_out || low_steps==0) && (high_out || high_steps==0)) return;
+    *low_bnd -= width;
+    low_steps -= 1;
+  }
 
-    if (!low_out && low_steps>0)
-    { *low_bnd -= sf * ds->stepsize[k];
-      low_out = -1;
-    }
-    
-    if (!high_out && high_steps>0)
-    { *high_bnd += sf * ds->stepsize[k];
-      high_out = -1;
-    }
+  while (high_steps>0)
+  {
+    ds->q[k] = *high_bnd;
+    mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);    
+    it->slice_evals += 1;
+
+    if (ds->pot_energy>slice_point) break;
+
+    *high_bnd += width;
+    high_steps -= 1;
   }
 }
 
 
-/* PICK VALUE FROM INTERVAL AROUND PART OF THE SLICE. */
+/* FIND INTERVAL AROUND PART OF SLICE BY DOUBLING. */
+
+static void dbl_out
+( mc_dynamic_state *ds,	/* Current state */
+  mc_iter *it,		/* Description of this iteration */
+  int k,		/* Index of coordinate being updated */
+  double slice_point,	/* Potential energy level that defines slice */
+  double curr_q,	/* Current value for coordinate */
+  int max_int,		/* Maximum number of intervals to go through */
+  double *low_bnd,	/* Place to store low bound for interval */
+  double *high_bnd	/* Place to store high bound for interval */
+)
+{
+  int low_out, high_out;
+  double width;
+
+  width = it->stepsize_factor * ds->stepsize[k];
+
+  *low_bnd  = curr_q - rand_uniopen() * width;
+  *high_bnd = *low_bnd + width;
+
+  ds->q[k] = *low_bnd;
+  mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);    
+  it->slice_evals += 1;
+  low_out = ds->pot_energy>slice_point;
+
+  ds->q[k] = *high_bnd;
+  mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);    
+  it->slice_evals += 1;
+  high_out = ds->pot_energy>slice_point;
+
+  while (max_int>1 && (!low_out || !high_out))
+  { 
+    if (rand_int(2))
+    { *low_bnd -= (*high_bnd - *low_bnd);
+      ds->q[k] = *low_bnd;
+      mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);    
+      it->slice_evals += 1;
+      low_out = ds->pot_energy>slice_point;
+    }
+    else
+    { *high_bnd += (*high_bnd - *low_bnd);
+      ds->q[k] = *high_bnd;
+      mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);    
+      it->slice_evals += 1;
+      high_out = ds->pot_energy>slice_point;
+    }
+
+    max_int -= 1;
+  }
+}
+
+
+/* CHECK THAT DOUBLING WOULD FIND SAME INTERVAL FROM NEW POINT.  Returns 1
+   if it would, 0 if it would not.  Will set ds->know_pot to 0 if it 
+   disturbs ds->pot_energy. */
+
+static int dbl_ok
+( mc_dynamic_state *ds,	/* Current state */
+  mc_iter *it,		/* Description of this iteration */
+  int k,		/* Index of coordinate being updated */
+  double slice_point,	/* Potential energy level that defines slice */
+  double curr_q,	/* Current value for coordinate */
+  double low_bnd,	/* Low bound for interval */
+  double high_bnd	/* High bound for interval */
+)
+{
+  double width, mid;
+  double new_q;
+  int diff;
+
+  width = it->stepsize_factor * ds->stepsize[k];
+
+  new_q = ds->q[k];
+  diff = 0;
+
+  while (high_bnd-low_bnd>1.1*width)
+  { mid = (high_bnd+low_bnd)/2;
+    if (!diff) 
+    { diff = (curr_q<mid) != (new_q<mid);
+    }
+    if (diff)
+    { ds->q[k] = mid;
+      mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);    
+      it->slice_evals += 1;
+      ds->know_pot = 0;
+    }
+    if (new_q<mid)
+    { high_bnd = mid;
+      ds->q[k] = low_bnd;
+    }
+    else
+    { low_bnd = mid;
+      ds->q[k] = high_bnd;
+    }
+    if (diff && ds->pot_energy>slice_point)
+    { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);    
+      it->slice_evals += 1;
+      if (ds->pot_energy>slice_point)
+      { ds->q[k] = new_q;
+        return 0;
+      }
+    }
+  }
+
+  ds->q[k] = new_q;
+  return 1;
+}
+
+
+/* PICK VALUE FROM INTERVAL AROUND PART OF THE SLICE.  Sets ds->know_pot
+   appropriately. */
 
 static void pick_value
 ( mc_dynamic_state *ds,		/* Current state, updated with new value */
@@ -262,24 +385,34 @@ static void pick_value
   int k,			/* Index of coordinate being updated */
   double slice_point,		/* Potential energy level that defines slice */
   double curr_q,		/* Current value for coordinate */
+  int max_steps,		/* Negative if interval was found by doubling */
   double low_bnd,		/* Low bound for interval */
   double high_bnd		/* High bound for interval */
 )
 {
+  double nlow_bnd, nhigh_bnd;
+
+  nlow_bnd = low_bnd;
+  nhigh_bnd = high_bnd;
+
   for (;;)
   {
-    ds->q[k] = low_bnd + rand_uniopen() * (high_bnd-low_bnd);
+    ds->q[k] = nlow_bnd + rand_uniopen() * (nhigh_bnd-nlow_bnd);
 
     mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);    
     it->slice_evals += 1;
+    ds->know_pot = 1;
 
-    if (ds->pot_energy<=slice_point) return;
+    if (ds->pot_energy<=slice_point && (max_steps>=0 
+         || dbl_ok(ds,it,k,slice_point,curr_q,low_bnd,high_bnd)))
+    { return;
+    }
 
     if (ds->q[k]<curr_q) 
-    { low_bnd = ds->q[k];
+    { nlow_bnd = ds->q[k];
     }
     else
-    { high_bnd = ds->q[k];
+    { nhigh_bnd = ds->q[k];
     }
   }
 }

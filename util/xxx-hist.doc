@@ -1,6 +1,6 @@
 
 
-XXX-HIST:  Build a histogram for a quantity obtained from a log file.
+XXX-HIST:  Build a histogram for a quantity using data from log files.
 
 There is a version of this program for each application (eg, net-hist). 
 Each version allows histograms to be created for the set of quantities
@@ -17,7 +17,7 @@ program.  The 'quantities' specification says what to make a histogram
 of; 'low' and 'high' give the range, which is divided into 'bins'
 bins.  There follow specifications of where the data comes from; and
 perhaps further arguments, depending on the application (for which,
-see the documentation specific to that application - eg, net-hist).
+see the documentation specific to that application - eg, net-hist.doc).
 
 For the format of the quantity specifications, see the documentation
 on generic quantities, quantities for Monte Carlo runs, quantities for

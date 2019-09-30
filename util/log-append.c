@@ -35,7 +35,6 @@ void main
   int low, high, modulus;
   int last, index;
   void *data;
-  char *p;
 
   if (argc!=3 && argc!=4) usage();
 

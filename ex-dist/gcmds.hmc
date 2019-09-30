@@ -1,0 +1,11 @@
+
+# Commands to sample from the "ring" distribution using the hybrid Monte
+# Carlo algorithm (after a few Metropolis updates).  The number of leapfrog
+# steps each iteraton is 45.  The stepsize is given as an argument.
+
+dist-spec glog.hmc,$1 \
+  "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
+mc-spec glog.hmc,$1 repeat 50 metropolis 1
+dist-mc glog.hmc,$1 1
+mc-spec glog.hmc,$1 heatbath hybrid 45 $1
+dist-mc glog.hmc,$1 500

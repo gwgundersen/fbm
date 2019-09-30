@@ -297,7 +297,7 @@ void main
       tvar[j] += tv[j]*tv[j];
       if (ds->int_target)
       { if (tv[j]!=(int)tv[j] || tv[j]<0 || tv[j]>=ds->int_target)
-        { fprintf(stderr,"Training target out of bounds or not integer: %lf\n",
+        { fprintf(stderr,"Training target out of bounds or not integer: %f\n",
                   tv[j]);
           exit(1);
         }
@@ -356,7 +356,7 @@ void main
         if (ds->int_target)
         { for (j = 0; j<ds->N_targets; j++)
           { if (tv[j]!=(int)tv[j] || tv[j]<0 || tv[j]>=ds->int_target)
-            { fprintf(stderr,"Test target out of bounds or not integer: %lf\n",
+            { fprintf(stderr,"Test target out of bounds or not integer: %f\n",
                       tv[j]);
               exit(1);
             }

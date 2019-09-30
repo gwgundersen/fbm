@@ -1,0 +1,14 @@
+
+# Commands to train a neural network on the binary response problem using
+# gradent descent training, with early stopping.
+
+net-spec blog.gdes 2 15 1 / - + + - + - +
+model-spec blog.gdes binary
+
+data-spec blog.gdes 2 1 2 / bdata.train@1:225 . bdata.train@226:300 .
+
+net-gd blog.gdes 100 5 / 0.4 batch
+net-gd blog.gdes 1000 50 / 0.4 batch
+net-gd blog.gdes 20000 500 / 0.4 batch
+
+net-plt t L blog.gdes | find-min

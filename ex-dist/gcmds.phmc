@@ -1,0 +1,11 @@
+
+# Commands to sample from the "ring" distribution using the "persistent"
+# form of hybrid Monte Carlo (after a few Metropolis updates).  The number 
+# of leapfrog steps each iteraton is 35.  The stepsize is given as an argument.
+
+dist-spec glog.phmc,$1 \
+  "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
+mc-spec glog.phmc,$1 repeat 50 metropolis 1
+dist-mc glog.phmc,$1 1
+mc-spec glog.phmc,$1 repeat 35 heatbath 0.99 hybrid 1 $1 negate end
+dist-mc glog.phmc,$1 500

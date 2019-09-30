@@ -25,7 +25,7 @@ variable, the noise added is that for the first target.  If the extra
 argument is a positive number, that number is added to the diagonal.
 
 By default, the covariance matrix is for the set of training inputs,
-but this can be overrriden by specifying a file of inputs at the end
+but this can be overridden by specifying a file of inputs at the end
 of the command line.
 
 By default, or if only the "-values" option is specified, the

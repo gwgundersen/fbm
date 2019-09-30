@@ -1,6 +1,6 @@
 /* GP-COVM.C - Procedures to compute covariances and their derivatives. */
 
-/* Copyright (c) 1996, 1997 by Radford M. Neal 
+/* Copyright (c) 1996, 1997, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -34,12 +34,19 @@
    in which the rows are points, and the columns are the inputs for those
    points).
 
+   The 'keep' argument should be zero to get the usual covariances.  It may
+   be instead set to a pointer to an array of flags indicating which non-linear
+   terms of the covariance should be kept; the constant and linear parts are
+   never kept if 'keep' is not zero.  This is useful for separating the 
+   various components of an additive model.
+
    The covariances are stored in 'cov', as an array with n1 rows and n2
-   columns.  The exponential terms in the covariances may also be stored,
-   in arrays pointed to from exp_cov.  If exp_cov is zero, or if one of then
-   corresponding pointer in exp_cov is zero, the exponential term will not
-   be stored.  These terms can speed up the computation of the derivatives on
-   the covariance by diff_cov, as well as possibly being useful in themselves.
+   columns.  The terms in the covariances for non-linear components may also 
+   be stored, in arrays pointed to from exp_cov.  If exp_cov is zero, or if 
+   one of then corresponding pointer in exp_cov is zero, the non-linear term 
+   will not be stored.  Storing these terms can speed up the computation of the 
+   derivatives on the covariance by diff_cov, as well as possibly being useful 
+   in themselves.
 
    Note that the jitter part of the covariance and the noise for a regression 
    model are not included here, since they are not determined by the inputs,
@@ -53,20 +60,24 @@ void gp_cov
   double *x2,		/* Second set of input points */
   int n2,		/* Number of points in second set */
   double *cov,		/* Place to store covariances (n1 by n2 array) */
-  double **exp_cov	/* Places to store exponential terms of covariance;
+  double **exp_cov,	/* Places to store exponential terms of covariance;
 			   may be zero, or contain zeros, if not desired */
+  int *keep		/* Array of flags saying whether to keep non-linear
+			   terms in the covariance, or zero to keep them all */
 )
 { 
-  double r[Max_inputs], d, s, pw, c, v;
-  int l, i, k1, k2, ni;
+  double r[Max_inputs];
+  double d, s, pw, c, v;
+  int l, i, j, k1, k2, ni;
   double *p1, *p2, *pc, *ec;
   char *flags;
+  int spread;
 
   ni = gp->N_inputs;
 
   /* Constant part of covariance. */
 
-  v = gp->has_constant ? exp(2 * *h->constant) : 0;
+  v = gp->has_constant && keep==0 ? exp(2 * *h->constant) : 0;
 
   pc = cov; 
 
@@ -78,10 +89,21 @@ void gp_cov
 
   /* Linear part of covariance. */
 
-  if (gp->has_linear)
+  if (gp->has_linear && keep==0)
   { 
+    flags = gp->linear_flags;
+    spread = gp->linear_spread;
+
     for (i = 0; i<ni; i++)
-    { r[i] = exp(2 * *h->linear[i]);
+    { if (!(flags[i]&Flag_omit))
+      { r[i] = exp(2 * *h->linear[i]);
+        for (j = i-spread; j<=i+spread; j++)
+        { if (j!=i && j>=0 && j<ni
+           && !(flags[j]&Flag_omit) && (flags[i]&Flag_spread))
+          { r[i] += exp(2 * *h->linear[j]);
+          }
+        }
+      }
     }
 
     pc = cov;
@@ -90,21 +112,26 @@ void gp_cov
     { for (p2 = x2, k2 = 0; k2<n2; p2 += ni, k2++)
       { s = 0;
         for (i = 0; i<ni; i++)
-        { s += r[i] * p1[i] * p2[i];
+        { if (!(flags[i]&Flag_omit))
+          { s += r[i] * p1[i] * p2[i];
+          }
         }
         *pc++ += s;
       }
     }
   }
 
-  /* Exponential parts of covariance. */
+  /* Non-linear parts of covariance. */
 
   for (l = 0; l<gp->N_exp_parts; l++)
   { 
+    if (keep!=0 && !keep[l]) continue;
+
     flags = gp->exp[l].flags;
+    spread = gp->exp[l].spread;
 
     for (i = 0; i<ni; i++)
-    { if (!(flags[i]&Flag_omit))
+    { if ((!flags[i]&Flag_omit))
       { r[i] = exp(*h->exp[l].rel[i]);
       }
     }
@@ -134,6 +161,16 @@ void gp_cov
             { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
               if (d<0) d = -d;
               s += d;
+            }
+          }
+        }
+        else if (pw<0)
+        { if (pw!=-1) abort();
+          s = 0;
+          for (i = 0; i<ni; i++)
+          { if (!(flags[i]&Flag_omit))
+            { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
+              s += log (1 + d * d);
             }
           }
         }
@@ -191,10 +228,10 @@ int gp_cov_deriv
 )
 { 
   double r[Max_inputs], s, d, t, c, pw, v;
-  int l, i, j, k1, k2, ni;
+  int l, i, j, k, k1, k2, ni;
   double *p1, *p2, *pd, *ec;
+  int spread, found;
   char *flags;
-  int found;
 
   ni = gp->N_inputs;
 
@@ -225,14 +262,30 @@ int gp_cov_deriv
 
   if (gp->has_linear)
   {
+    flags = gp->linear_flags;
+    spread = gp->linear_spread;
+
     if (wrt==h->linear_cm && gp->linear.alpha[1]==0)
     { t = 2 * exp(2 * *h->linear_cm);
       for (i = 0; i<ni; i++)
-      { pd = deriv;
-        for (p1 = x, k1 = 0; k1<n; p1 += ni, k1++)
-        { pd += k1;
-          for (p2 = x+k1*ni, k2 = k1; k2<n; p2 += ni, k2++)
-          { *pd++ += p1[i] * p2[i] * t;
+      { if (!(flags[i]&Flag_omit))
+        { pd = deriv;
+          for (p1 = x, k1 = 0; k1<n; p1 += ni, k1++)
+          { pd += k1;
+            for (p2 = x+k1*ni, k2 = k1; k2<n; p2 += ni, k2++)
+            { if (flags[i]&Flag_spread)
+              { for (k = i-spread; k<=i+spread; k++)
+                { if (k>=0 && k<ni && !(flags[k]&Flag_omit) 
+                                   && (flags[k]&Flag_spread))
+                  { *pd += p1[k] * p2[k] * t;
+                  }
+                }
+              }
+              else
+              { *pd += p1[i] * p2[i] * t;
+              }
+              pd += 1;
+            }
           }
         }
       }
@@ -240,13 +293,24 @@ int gp_cov_deriv
     }
     else
     { for (i = 0; i<ni; i++)
-      { if (wrt==h->linear[i])
+      { if (!(flags[i]&Flag_omit) && wrt==h->linear[i])
         { t = 2 * exp(2 * *h->linear[i]);
           pd = deriv;
           for (p1 = x, k1 = 0; k1<n; p1 += ni, k1++)
           { pd += k1;
             for (p2 = x+k1*ni, k2 = k1; k2<n; p2 += ni, k2++)
-            { *pd++ += p1[i] * p2[i] * t;
+            { if (flags[i]&Flag_spread)
+              { for (k = i-spread; k<=i+spread; k++)
+                { if (k>=0 && k<ni && !(flags[k]&Flag_omit) 
+                                   && (flags[k]&Flag_spread))
+                  { *pd += p1[k] * p2[k] * t;
+                  }
+                }
+              }
+              else
+              { *pd += p1[i] * p2[i] * t;
+              }
+              pd += 1;
             }
           }
           found = 1;
@@ -296,8 +360,6 @@ int gp_cov_deriv
         {
           if (wrt==h->exp[l].rel[i])
           {
-            v = exp(*wrt);
-
             pd = deriv;
             ec = exp_cov[l];
 
@@ -311,16 +373,20 @@ int gp_cov_deriv
                 d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
 
                 if (pw==2)
-                { t = d*d;
+                { t = 2*d*d;
                 }
                 else if (pw==1)
                 { t = d>0 ? d : -d;
                 }
+                else if (pw<0)
+                { if (pw!=-1) abort();
+                  t = 2*d*d / (1+d*d);
+                }
                 else
-                { t = pow (d>0 ? d : -d, pw);
+                { t = pw * pow (d>0 ? d : -d, pw);
                 }
 
-                *pd++ -= pw * t * *ec++;
+                *pd++ -= t * *ec++;
               } 
             }
           }
@@ -329,7 +395,6 @@ int gp_cov_deriv
       else /* Previously computed covariances are not available */
       {
         pd = deriv;
-        ec = exp_cov[l];
 
         for (p1 = x, k1 = 0; k1<n; p1 += ni, k1++)
         { 
@@ -350,6 +415,7 @@ int gp_cov_deriv
                   }
                 }
               }
+              t *= 2;
             }
             else if (pw==1)
             { s = 0;
@@ -361,6 +427,20 @@ int gp_cov_deriv
                   s += d;
                   if (wrt==h->exp[l].rel[i])
                   { t -= d;
+                  }
+                }
+              }
+            }
+            else if (pw<0)
+            { if (pw!=-1) abort();
+              s = 0;
+              t = 0;
+              for (i = 0; i<ni; i++)
+              { if (!(flags[i]&Flag_omit))
+                { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
+                  s += log(1+d*d);
+                  if (wrt==h->exp[l].rel[i])
+                  { t -= 2*d*d / (1+d*d);
                   }
                 }
               }
@@ -379,9 +459,10 @@ int gp_cov_deriv
                   }
                 }
               }
+              t *= pw;
             }
   
-            *pd++ += pw * t * exp(c-s);
+            *pd++ += t * exp(c-s);
           }
         }
       }
@@ -420,6 +501,14 @@ int gp_cov_deriv
               { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
                 if (d<0) d = -d;
                 s += d;
+              }
+            }
+            else if (pw<0)
+            { if (pw!=-1) abort();
+              s = 0;
+              for (i = 0; i<ni; i++)
+              { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
+                s += log (1 + d * d);
               }
             }
             else
@@ -474,7 +563,7 @@ void gp_train_cov
      with jitter, and store in latent_cov. */
 
   gp_cov (gp, h, train_inputs, N_train, train_inputs, N_train,
-          latent_cov, exp_cov);
+          latent_cov, exp_cov, 0);
 
   if (gp->has_jitter)
   { for (i = 0; i<N_train; i++)

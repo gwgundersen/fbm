@@ -8,21 +8,25 @@ generic quantities documented in quantities.doc will also be
 available, as will quantities specific to the particular Markov chain
 application being used.
 
-    T   Temperature used this iteration (NOT the simulated tempering temp)
+    T   Temperature used (see xxx-mc.doc, NOT from the tempering schedule)
     E   Potential energy at end of iteration
+    E0  Potential energy at end of iteration at inverse temperature of 0
+    E1  Equal to E - E0
     K   Kinetic energy at end of iteration
     H   Total energy at end of iteration (sum of E and K)
     D[n] Change in total energy for last state proposed (up to max of n)
 
-    i   Inverse temperature (for simulated tempering)
-    I   Index of current inverse temperature value
+    i   Inverse temperature being used (from the tempering schedule)
+    I   Index of current inverse temperature value in schedule
     j   Direction of change for inverse temperature
     J   Higher temperature for attempted transition (meaningful only if
         last operation in iteration was sim-temp)
+    Q[n] Importance weight, or log of importance weight (see below)
+    F[n] Factor for estimating ratio of normalizing constants using
+         tempered transitions (see below).
 
     d   Heatbath decay factor used in this iteration
     f   Stepsize factor used in this iteration
-    F   Stepsize factor used in this iteration divided by two
     m   Point last moved to (zero is starting point)
     r   Rejection rate for this iteration
     e   Average number of evaluations per slice sampling update this iteration
@@ -33,7 +37,26 @@ application being used.
     sn  Stepsize selected by application for component n
 
 None of these quantities can be used with a range; 'q', 'p', and 's'
-must have a modifier, 'D' may have a modifier, the others may not have
-a modifier.  Momenta of zero are assumed if none exist.
+must have a modifier, 'D' and 'Q' may have a modifier, 'E' may only
+have a modifier of '0' or '1', the others may not have a modifier.
 
-            Copyright (c) 1995 by Radford M. Neal
+The 'Q' quantity is the importance weight, which will always be one
+except during annealed importance sampling.  Note that these weights
+might sometimes be so extreme that this value overflows or underflows.
+If a modifier of 0 is given to 'Q', the value is the log of the
+importance weight, which is much less likely to be out of bounds.  If
+a modifier n greater than zero is given for 'Q', the value is the log
+of the importance weight unless that is less than -n, in which case
+the value is -n.
+
+The 'F' quantities are factors obtained from the last tempered
+transition in the iterations, which can be averaged to estimate the
+ratio of normalizing constants for the distribution at temperature one
+to that of the distribution at the highest temperature.  The 'F1'
+quantity is based on only the first half of the tempered transition.
+The 'F2' quantity is based on both halves if the tempered transition
+is accepted, and is otherwise based on just the first half.
+
+Momenta of zero are assumed if none exist.
+
+            Copyright (c) 1995, 1998 by Radford M. Neal

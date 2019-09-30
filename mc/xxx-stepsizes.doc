@@ -5,9 +5,10 @@ XXX-STEPSIZES:  Display and evaluate stepsizes used for dynamics.
 There is a version of this program for each 'mc' application (eg,
 net-stepsizes).  These programs display the stepsizes selected by the
 application-specific module linked with the 'mc' modules, along with
-the stepsizes that would come from taking the second derivatives,
-computed by differences using the application-specific procedure for
-computing the gradient of the energy.  
+the "optimal" stepsizes that would be selected on the basis of the
+second derivatives of the energy, which are computed by differences
+using the application-specific procedure for computing the gradient of
+the energy.
 
 These programs are meant primarily for use in debugging, but they
 might occasionally be useful in checking whether the heuristic choice
@@ -24,4 +25,7 @@ that would be selected based on the second derivatives at that point
 are also displayed, the second derivatives being found by differences
 of first derivatives, using the given delta.
 
-            Copyright (c) 1995 by Radford M. Neal
+The 'dist' module uses a specialized stepsizes program that also
+allows stepsizes to be set.  See dist-stepsizes.doc for details.
+
+            Copyright (c) 1995, 1998 by Radford M. Neal

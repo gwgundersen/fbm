@@ -41,7 +41,8 @@ HINTS AND WARNINGS
   
       a) Decrease the constant part of the covariance function.  There's
          almost never any reason for this to be greater than the range of
-         the targets in the training cases.
+         the targets in the training cases, assuming the targets are
+         centred at about zero.
 
       b) Increase the jitter part of the covariance.  For 'gp-eval' with
          the "targets" option, noise in the regression model acts the 
@@ -61,7 +62,18 @@ HINTS AND WARNINGS
          inverted in sample-values.  However, scan-values does not produce
          independent draws, so convergence may be slower.
 
-5) If the system crashes in the middle of a run of 'net-mc' (say), one
+5) When using Annealed Importance Sampling, be careful that the number
+   of temperatures in the annealing schedule (set by mc-temp-sched) is
+   what you intend.  Remember that there's one more at the end (at a 
+   temperature of one) that isn't explicitly specified.  Also be careful 
+   that the number of AIS operations in the mc-spec command is such as to
+   move through this schedule as desired.  You can check that things are 
+   working as desired with a command such as such as "xxx-plt t I".  If 
+   you get things wrong, looking at the iterations that were supposed to 
+   be at inverse temperature one but aren't will give completely misleading
+   results.
+
+6) If the system crashes in the middle of a run of 'net-mc' (say), one
    can usually continue from the last iteration written to the log file 
    by just invoking 'net-mc' again with the same arguments (just as 
    one can continue for more iterations after 'net-mc' terminates 
@@ -72,7 +84,7 @@ HINTS AND WARNINGS
    a less-than-complete set of full records.  It is best to assess the 
    situation using 'log-records' before proceeding.
 
-6) If you need to change the name of a program to avoid conflicts with 
+7) If you need to change the name of a program to avoid conflicts with 
    other programs you use, it is probably best to simply change the name 
    of the link in this software's 'bin' directory, leaving the name 
    unchanged in all the other directories.

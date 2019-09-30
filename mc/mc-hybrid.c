@@ -127,9 +127,9 @@ void mc_hybrid
         { ds->p[k] /= temper_factor;
         } 
         if (N_quantities<0)
-        { printf ("%6d %20.10lf\n", jmps-n+1, 
+        { printf ("%6d %20.10f\n", jmps-n+1, 
                    mc_kinetic_energy(ds) * (temper_factor*temper_factor - 1));
-          printf ("%6d %20.10lf\n", jmps-n, 
+          printf ("%6d %20.10f\n", jmps-n, 
                    mc_kinetic_energy(ds) * (temper_factor*temper_factor - 1));
         }
       }
@@ -144,9 +144,9 @@ void mc_hybrid
       if (temper_factor!=0 && n>=window && 2*n<jmps)
       { 
         if (N_quantities<0)
-        { printf ("%6d %20.10lf\n", n, 
+        { printf ("%6d %20.10f\n", n, 
                    mc_kinetic_energy(ds) * (temper_factor*temper_factor - 1));
-          printf ("%6d %20.10lf\n", n+1, 
+          printf ("%6d %20.10f\n", n+1, 
                    mc_kinetic_energy(ds) * (temper_factor*temper_factor - 1));
           if (2*(n+1)>=jmps) printf("\n");
         }

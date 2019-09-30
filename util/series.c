@@ -164,7 +164,7 @@ void main
       if (r>0) printf("\n");
  
       for (t = 0; t<length[r]; t++)
-      { printf("%20.8le\n",data[r][t]);
+      { printf("%20.8e\n",data[r][t]);
       }
     }
 
@@ -239,7 +239,7 @@ void main
   /* Print presumed mean, if there is one, and bare listing not desired. */
 
   if (!op_b && have_presumed_mean)
-  { printf("\nPresumed mean: %.6lf\n", presumed_mean);
+  { printf("\nPresumed mean: %.6f\n", presumed_mean);
   }
 
   /* Print simple statistics, if desired. */
@@ -248,7 +248,7 @@ void main
   {
     printf("\n");
 
-    printf("Mean: %.6lf  ",mean);
+    printf("Mean: %.6f  ",mean);
 
     /* Print standard error estimated from multiple realizations. */
 
@@ -259,7 +259,7 @@ void main
         s += d*d;
       }
       s /= nr-1;
-      printf("S.E. from submeans: %.6lf  ",sqrt(s/nr));
+      printf("S.E. from submeans: %.6f  ",sqrt(s/nr));
     }
 
     /* Print standard error estimated from correlations. */
@@ -280,7 +280,7 @@ void main
       { s += subvar[r] * (length[r]*length[r]) / (n*n);
       }
 
-      printf("S.E. from correlations: %.6lf",sqrt(s));
+      printf("S.E. from correlations: %.6f",sqrt(s));
     }
 
     printf("\n");
@@ -288,8 +288,8 @@ void main
 
   if (op_v || op_s)
   { printf("\n");
-    if (op_v) printf("Variance: %.6lf  ",variance);
-    if (op_s) printf("Standard deviation: %.6lf  ",sqrt(variance));
+    if (op_v) printf("Variance: %.6f  ",variance);
+    if (op_s) printf("Standard deviation: %.6f  ",sqrt(variance));
     printf("\n");
   }
 
@@ -310,11 +310,11 @@ void main
     {
       printf("%5d  ",l);
       
-      if (op_a) printf("%9.6lf ",(cvs[l]/cvn[l]) / variance);
+      if (op_a) printf("%9.6f ",(cvs[l]/cvn[l]) / variance);
 
       s += 2 * (cvs[l]/cvn[l]) / variance;
 
-      if (op_c) printf("%11.6lf",s);
+      if (op_c) printf("%11.6f",s);
 
       printf("\n");
     }

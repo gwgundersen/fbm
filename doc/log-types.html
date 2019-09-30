@@ -4,6 +4,10 @@
 
 
 LOG-TYPES:  Types of log file records used by various programs.
+
+Users do not usually need to know this information; it is mainly for
+program maintainers.  However, these types are visible in the output
+of the log-records program (see <A HREF="log-records.html">log-records.doc</A>).
  
 
 Class of Programs          Type   Description
@@ -14,12 +18,17 @@ Class of Programs          Type   Description
 
 * Markov Chain Monte Carlo   i    Description of state/events at one iteration
                              o    List of Monte Carlo operations to apply
+                             s    Explicitly set stepsizes (only some programs)
 
   Dynamic MCMC               p    Values of "momentum" variables
                              t    Specification of how to compute trajectories
 
   Tempered MCMC              m    Schedule of temperatures and maybe biases
                              b    Current temperature and associated state
+
+
+* Specified distribution     d    Specification of distribution
+                             q    Values of variables ("position" variables)
 
 
 * Bivariate Gaussian         B    Specification of bivariate Gaussian 
@@ -29,9 +38,11 @@ Class of Programs          Type   Description
 * Multivariate Gaussian      M    Specification of multivariate Gaussian 
                              X    Point from multivariate Gaussian distribution
 
+
 * Ising system               I    Specification of Ising system
                              S    State of spins in system
                              D    Direction to push 
+
 
 * Statistical modeling       D    Data specifications for training and test sets
                              M    Model specification
@@ -53,7 +64,7 @@ Class of Programs          Type   Description
                              O    Offset parameters for components
                              N    Noise variance parameters
 
-            Copyright (c) 1995, 1996, 1997 by Radford M. Neal
+            Copyright (c) 1995, 1996, 1997, 1998 by Radford M. Neal
 </pre>
 </body>
 </html>

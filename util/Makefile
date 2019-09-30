@@ -1,6 +1,6 @@
 # MAKEFILE FOR UTILITY PROGRAMS AND MODULES.
 
-# Copyright (c) 1995, 1996, 1997 by Radford M. Neal 
+# Copyright (c) 1995, 1996, 1997, 1998 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 
@@ -13,23 +13,26 @@
 
 include ../make.include
 
-all:		programs test-progs modules
+all:		programs modules
 
 programs:	data-spec model-spec log-records log-copy log-append log-last \
-		rand-seed grid series extract find-min
-
-test-progs:	demo-plt demo-hist rand-test numin-test
+		rand-seed grid series extract combine find-min calc
 
 modules:	misc.o matrix.o log.o quantities.o plt.o hist.o rand.o numin.o \
-		data-trans.o model.o prior.o ars.o
+		data-trans.o model.o prior.o ars.o digamma.o
 
 clean:
 	rm -f *.o data-spec model-spec log-records log-copy log-append log-last\
-	          rand-seed grid series extract find-min \
-	          demo-plt demo-hist rand-test numin-test
+	          rand-seed grid series extract combine find-min calc
 
 
 include util.make
+
+
+calc:		calc.o formula.o digamma.o rand.o
+		$(CC) $(LFLAGS) calc.o formula.o digamma.o rand.o -lm -o calc
+
+calc.o:		calc.c		formula.h
 
 
 grid:		grid.o
@@ -93,32 +96,12 @@ extract:	extract.o	rand.o
 
 extract.o:	extract.c	rand.h
 
+combine:	combine.o
+		$(CC) $(LFLAGS) combine.o -lm -o combine
+
+combine.o:	combine.c
+
 find-min:	find-min.o
 		$(CC) $(LFLAGS) find-min.o -lm -o find-min
 
 find-min.o:	find-min.c
-
-demo-plt:	demo-plt.o	demo-quantities.o plt.o quantities.o \
-				misc.o log.o
-		$(CC) $(LFLAGS) demo-plt.o demo-quantities.o plt.o \
-		  quantities.o misc.o log.o -lm -o demo-plt
-
-demo-hist:	demo-plt.o	demo-quantities.o hist.o quantities.o \
-				misc.o log.o
-		$(CC) $(LFLAGS) demo-plt.o demo-quantities.o hist.o \
-		  quantities.o misc.o log.o -lm -o demo-hist
-
-demo-plt.o:	demo-plt.c	log.h quantities.h 
-demo-quantities.o: demo-quantities.c log.h quantities.h
-
-
-rand-test:	rand-test.o	rand.o
-		$(CC) $(LFLAGS) rand-test.o rand.o -lm -o rand-test
-
-rand-test.o:	rand-test.c	rand.h
-
-
-numin-test:	numin-test.o	numin.o
-		$(CC) $(LFLAGS) numin-test.o numin.o -lm -o numin-test
-
-numin-test.o:	numin-test.c	numin.h

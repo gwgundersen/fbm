@@ -13,8 +13,8 @@ specifications of the Gaussian process model stored in that log file.
 Usage:
   
     gp-spec log-file N-inputs N-outputs 
-            [ const-part [ linear-part [ jitter-part ] ] ]
-            { / scale-prior relevance-prior [ power ] { flag } }
+      [ const-part [ linear-part [ jitter-part ] ] ] { flag } [ spread ]
+      { / scale-prior relevance-prior [ power ] { flag } }
 
 or:
 
@@ -41,7 +41,7 @@ The linear-part argument gives the prior for the hyperparameters, s_i,
 controlling the linear part of the covariance function.  This part of
 the covariance between inputs x and x' is
 
-       SUM_i s_i^2 x_i x'_i
+       SUM_i x_i x'_i s_i^2 
 
 This prior can have up to two levels, allowing for a common
 hyperparameter that controls the priors for the coefficients, s_i,
@@ -64,9 +64,10 @@ slow, and numerical problems can arise.  If the jitter-part is "-" or
 missing, it is taken to be zero.
 
 Zero or more additional terms in the covariance function may be
-specified using further groups of arguments.  These terms in the
-expression for the covariance between a particular output at inputs
-x and x' have the form:
+specified using further groups of arguments.  A group for which
+"power" is absent or positive results in a term in the expression for
+the covariance between a particular output at inputs x and x' that has
+the form:
 
       v^2 * exp( - SUM_i (w_i |x_i - x'_i|)^R )
 
@@ -75,12 +76,19 @@ given by the last argument in a group, with the default being R=2.
 The first argument in the group gives the prior for the scale
 hyperparameter, v, which must have only one level.  The prior for the
 w_i, which determine the relevance of the various inputs, can have up
-to two levels, allowing for a common hyparameter and hyperparameters
-for each input, i.  Here again, the "x" option may be used to
-automatically scale the prior.
+to two levels, allowing for a common hyperparameter and for
+hyperparameters for each input, i.  Here again, the "x" option may be
+used to automatically scale the prior.
 
-The optional flags at the end of the specification of an exponential
-part have the form:
+A group can also have a "power" of -1, in which case it produces a
+term in the covariance function of the form
+
+      v^2 / PROD_i (1 + w_i^2 (x_i - x'_i)^2 )
+
+The v and w hyperparameters play the same roles as described above.
+
+Optional flags may be appended to the specifications of the linear
+and other parts of the covariance.  They have the form:
 
       &lt;flag&gt;[:[-]&lt;input&gt;{,&lt;input&gt;}]
 
@@ -91,15 +99,30 @@ only the flag name is given, it applies to all inputs.  The possible
 flags are as follows:
 
     delta     Use a "delta" distance for these inputs, in which the
-              distance is 0 if x_i=x'_i and 1 otherwise.  
+              distance is 0 if x_i=x'_i and 1 otherwise.  Not allowed
+              for the linear part of the covariance.
 
     omit      Ignore these inputs when computing the covariance
               (ie, don't include them in the sum above).  
 
+    spread    Spread out the relevance parameters for these inputs.
+              This is presently allowed only for the linear part, and
+              causes this term in the covariance function to become
+
+                 SUM_i x_i x'_i SUM_j s_j^2 
+ 
+              The sum over j includes only i when i is not marked for 
+              spreading.  When i is being spread, j includes all 
+              indexes from i-spread to i+spread that are marked for 
+              spreading.  Here, "spread" is the spreading width, which 
+              must be specified after the flags.
+
 The "delta" flag is useful when the inputs are categorical.  The
 "omit" flag is useful in setting up additive models, in which
 different covariance parts correspond to additive components, with
-each component looking at only a subset of the inputs.
+each component looking at only a subset of the inputs.  The "spread"
+flag is useful for data such as spectra where nearby inputs are
+likely to be of similar relevance.
 
 Note that the prior for the const-part corresponds closely to the
 prior for output biases in neural network models, and that the prior
@@ -114,7 +137,7 @@ the model used, state information in addition to the hyperparameter
 values for the Gaussian process may need to be kept (case-specific
 function values and/or case-specific noise variances).
 
-            Copyright (c) 1996 by Radford M. Neal
+            Copyright (c) 1996, 1998 by Radford M. Neal
 </pre>
 </body>
 </html>

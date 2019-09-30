@@ -83,11 +83,11 @@ static void grid
     val = i*r->mod;
 
     if (n>1)
-    { sprintf(s,"%s %+.6le",prefix,val);
+    { sprintf(s,"%s %+.6e",prefix,val);
       grid(r+1,n-1,s);
     }
     else
-    { printf("%s %+.6le\n",prefix,val);
+    { printf("%s %+.6e\n",prefix,val);
     }
   }
 }

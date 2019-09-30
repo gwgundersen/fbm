@@ -1,0 +1,15 @@
+
+# Commands to apply a Gaussian process model to a 3-way classification problem,
+# using a logistic-like model (with only a little jitter), using the scan-values
+# operation.
+
+gp-spec clog.gpl 4 3 1 - 0.1 / 0.05:0.5 x0.2:0.5:1
+model-spec clog.gpl class
+
+data-spec clog.gpl 4 1 3 / cdata@1:400 . cdata@401:1000 .
+
+gp-gen clog.gpl fix 0.5 1
+mc-spec clog.gpl repeat 5 scan-values 100 heatbath 0.9 hybrid 1 0.15 negate
+gp-mc clog.gpl 5
+mc-spec clog.gpl repeat 5 scan-values 100 heatbath 0.98 hybrid 1 0.15 negate
+gp-mc clog.gpl 100

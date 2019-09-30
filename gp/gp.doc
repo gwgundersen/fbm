@@ -4,9 +4,10 @@ GP:  Bayesian modelling using Gaussian processes.
 
 The 'gp' programs implement Bayesian models for regression and
 classification tasks that are based on Gaussian process priors over
-functions.  For details, see the thesis, Evaluation of Gaussian
-Process and Other Methods for Non-linear Regression, by Carl Edward
-Rasmussen, Dept. of Computer Science, University of Toronto.
+functions.  For details, see Carl Rasmussen's thesis, Evaluation of
+Gaussian Process and Other Methods for Non-linear Regression, and my
+technical report on "Monte Carlo implementation of Gaussian process
+models for Bayesian regression and classification".
 
 A Gaussian process specifies a distribution over functions from some
 number of inputs to some number of real outputs.  (For the Gaussian
@@ -28,4 +29,4 @@ The models based on these Gaussian processes are described using a
 general scheme that is also used for neural network models, see
 model-spec.doc for details.  Survival models are not allowed.
 
-            Copyright (c) 1996 by Radford M. Neal
+            Copyright (c) 1996, 1998 by Radford M. Neal

@@ -1,0 +1,41 @@
+<html>
+<body>
+<pre>
+
+
+DIST:  Markov chain sampling for a specified distribution.
+
+The 'dist' programs allow you to specify a distribution by giving an
+"energy" function (minus the log of the density, plus an arbitrary
+constant), and to then generate a sample from this distribution using
+the various Markov chain methods.  
+
+These programs are primarily intended for use in demonstrating the
+Markov chain methods; using these programs to sample from many of the
+distributions encountered in real Bayesian inference problems would be
+tedious or impossible.  However, the C source for the 'dist' programs,
+as well that for the demo for a bivariate Gaussian (see <A HREF="bvg.html">bvg.doc</A>), does
+illustrate how to interface to the generic Markov chain routines, in
+order to write a suite of programs for some new application.  The code
+for this in the 'dist' and 'bvg' programs is perhaps more easily
+understood than the more complex code in the 'net', 'gp', and 'mix'
+programs.
+
+The distribution is specified using the dist-spec program (see
+<A HREF="dist-spec.html">dist-spec.doc</A>).  An initial state for the Markov chain can then be
+specified (see <A HREF="dist-initial.html">dist-initial.doc</A>).  The Markov chain operations to use
+should then be specified (see <A HREF="mc-spec.html">mc-spec.doc</A>), after which the Markov
+chain is run using dist-mc (see <A HREF="dist-mc.html">dist-mc.doc</A>).  The resulting states
+can be printed (see <A HREF="dist-display.html">dist-display.doc</A>), or the values of selected state
+variables can be plotted (see <A HREF="xxx-plt.html">xxx-plt.doc</A> and <A HREF="dist-quantities.html">dist-quantities.doc</A>).
+
+Note that values for the energy function, and its gradient if
+required, are calculated by an interpreter written in C, which is
+considerably slower than compiled C code.  The compute time required
+to sample from a distribution using the 'dist' programs will therefore
+be greater than would be required using a specially-written module.
+
+            Copyright (c) 1998 by Radford M. Neal
+</pre>
+</body>
+</html>

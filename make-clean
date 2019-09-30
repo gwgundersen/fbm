@@ -1,0 +1,9 @@
+(cd util; echo " "; echo "Cleaning util directory"; echo " "; make clean)
+(cd mc;   echo " "; echo "Cleaning mc directory"; echo " "; make clean)
+(cd dist; echo " "; echo "Cleaning dist directory"; echo " "; make clean)
+(cd bvg;  echo " "; echo "Cleaning bvg directory"; echo " "; make clean)
+(cd net;  echo " "; echo "Cleaning net directory"; echo " "; make clean)
+(cd gp;   echo " "; echo "Cleaning gp directory"; echo " "; make clean)
+(cd mix;  echo " "; echo "Cleaning mix directory"; echo " "; make clean)
+
+echo " "; echo "Done cleaning all directories"; echo " "

@@ -197,7 +197,7 @@ void main
 
   /* Compute covariance for latent values at training points.*/
 
-  gp_cov(gp, h, inputs, N_cases, inputs, N_cases, cov, 0);
+  gp_cov(gp, h, inputs, N_cases, inputs, N_cases, cov, 0, 0);
 
   if (gp->has_jitter)
   { for (i = 0; i<N_cases; i++)

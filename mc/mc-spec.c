@@ -1,6 +1,6 @@
 /* MC-SPEC.C - Specify parameters of Markov chain Monte Carlo simulation. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -207,7 +207,7 @@ void main
         ap += 1;
       }
 
-      if (*ap && strchr("0123456789",**ap))
+      if (*ap && strchr("-0123456789",**ap))
       { ops->op[o].steps = atoi(*ap);
         ap += 1;
       }
@@ -363,16 +363,22 @@ void main
       ap += 1;
     }
 
+    else if (strcmp(*ap,"AIS")==0)
+    { ops->op[o].type = 'a';
+      ap += 1;
+    }
+
     else if (strcmp(*ap,"plot")==0)
     { 
       ops->op[o].type = 'p';
       ap += 1;
     }
 
-    else if (**ap>='a' && **ap<='z' || **ap>='A' && **ap<='Z')
-    {
+    else if (**ap>='a' && **ap<='z' || **ap>='A' && **ap<='Z') 
+    {                                       /* Application-specific operation */
       ops->op[o].type = 'A';
       ops->op[o].app_param = 0;
+      ops->op[o].app_param2 = 0;
 
       strcpy(ops->op[o].appl,*ap);
 
@@ -380,6 +386,11 @@ void main
 
       if (*ap && strchr("0123456789+-.",**ap))
       { ops->op[o].app_param = atof(*ap);
+        ap += 1;
+      }
+
+      if (*ap && strchr("0123456789+-.",**ap))
+      { ops->op[o].app_param2 = atof(*ap);
         ap += 1;
       }
     }
@@ -489,7 +500,7 @@ static void display_specs
         case 'B':
         { printf(" heatbath");
           if (ops->op[o].heatbath_decay!=0)
-          { printf(" %.4lf",ops->op[o].heatbath_decay);
+          { printf(" %.4f",ops->op[o].heatbath_decay);
           }
           printf("\n");
           break;
@@ -505,14 +516,14 @@ static void display_specs
           break;
         }
   
-        case 'M':
-        { printf(" metropolis");
+        case 'M': case 'C':
+        { printf (ops->op[o].type=='M' ? " metropolis" : " slice-all");
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,
+          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
                                   ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1)
-          { printf(" %.4lf",ops->op[o].stepsize_adjust);
+          { printf(" %.4f",ops->op[o].stepsize_adjust);
           }
           printf("\n");
           break;
@@ -521,11 +532,11 @@ static void display_specs
         case 'm':
         { printf(" met-1");
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,
+          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
                                   ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1 || ops->op[o].firsti!=-1)
-          { printf(" %.4lf",ops->op[o].stepsize_adjust);
+          { printf(" %.4f",ops->op[o].stepsize_adjust);
           }
           if (ops->op[o].firsti!=-1)
           { printf(" %d",ops->op[o].firsti);
@@ -548,11 +559,11 @@ static void display_specs
           }
 
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,
+          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
                                   ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1)
-          { printf(" %.4lf",ops->op[o].stepsize_adjust);
+          { printf(" %.4f",ops->op[o].stepsize_adjust);
           }
           printf("\n");
           break;
@@ -572,11 +583,11 @@ static void display_specs
           { printf(":%d",ops->op[o].jump);
           }
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,
-                                  ops->op[o].stepsize_alpha);
+          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
+                                ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1)
-          { printf(" %.4lf",ops->op[o].stepsize_adjust);
+          { printf(" %.4f",ops->op[o].stepsize_adjust);
           }
           printf("\n");
           break;
@@ -585,13 +596,13 @@ static void display_specs
         case 'S':
         { printf(" slice-1");
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,
-                                  ops->op[o].stepsize_alpha);
+          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
+                                ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1 
                 || ops->op[o].steps!=0
                 || ops->op[o].firsti!=-1)
-          { printf(" %.4lf",ops->op[o].stepsize_adjust);
+          { printf(" %.4f",ops->op[o].stepsize_adjust);
           }
           if (ops->op[o].steps!=0 || ops->op[o].firsti!=-1)
           { printf(" %d",ops->op[o].steps);
@@ -619,16 +630,16 @@ static void display_specs
            || ops->op[o].stepsize_alpha!=0
            || ops->op[o].stepsize_adjust!=1 
            || ops->op[o].firsti!=-1)
-          { printf(" %.5lf",ops->op[o].refresh_prob);
+          { printf(" %.5f",ops->op[o].refresh_prob);
           }
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,
-                                  ops->op[o].stepsize_alpha);
+          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
+                                ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1 
                 || ops->op[o].steps!=0
                 || ops->op[o].firsti!=-1)
-          { printf(" %.4lf",ops->op[o].stepsize_adjust);
+          { printf(" %.4f",ops->op[o].stepsize_adjust);
           }
           if (ops->op[o].steps!=0 || ops->op[o].firsti!=-1)
           { printf(" %d",ops->op[o].steps);
@@ -644,8 +655,8 @@ static void display_specs
         }
   
         case 'T': 
-        { printf(" tempered-hybrid %.6lf %d",ops->op[o].temper_factor,
-                                              ops->op[o].steps);
+        { printf(" tempered-hybrid %.6f %d",ops->op[o].temper_factor,
+                                            ops->op[o].steps);
           if (ops->op[o].window!=1)
           { printf(":%d",ops->op[o].window);
             if (ops->op[o].jump!=0)
@@ -653,11 +664,11 @@ static void display_specs
             }
           }
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,
-                                  ops->op[o].stepsize_alpha);
+          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
+                                ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1)
-          { printf(" %.4lf",ops->op[o].stepsize_adjust);
+          { printf(" %.4f",ops->op[o].stepsize_adjust);
           }
           printf("\n");
           break;
@@ -680,7 +691,8 @@ static void display_specs
   
         case 'A':
         { printf(" %s",ops->op[o].appl);
-          if (ops->op[o].app_param!=0) printf(" %.4lf",ops->op[o].app_param);
+          if (ops->op[o].app_param!=0) printf(" %.4f",ops->op[o].app_param);
+          if (ops->op[o].app_param2!=0) printf(" %.4f",ops->op[o].app_param2);
           printf("\n");
           break;
         }
@@ -695,6 +707,11 @@ static void display_specs
         case 't':
         { printf(" temp-trans\n");
           depth += 1;
+          break;
+        }
+
+        case 'a':
+        { printf(" AIS\n");
           break;
         }
 

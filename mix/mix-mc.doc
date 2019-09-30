@@ -42,25 +42,56 @@ application specific sampling operations:
        This operation is not allowed for models with an infinite
        number of components.  
 
+   gibbs1-indicators
+
+       Does a Gibbs sampling scan over the indicators for which
+       component is currently associated with each training case,
+       except that the component for a training case is not updated
+       if this training case is currently associated with a singleton
+       component - ie, if no other training case is associated with
+       the same component as this one.  This operation is possible
+       for both finite and infinite models.  Note that to produce
+       an ergodic Markov chain, at least one of gibbs-indicators, 
+       met-indicators, and met1-indicators will need to be used as
+       well.
+
    met-indicators [ N ]
 
        For each training case in turn, does N Metropolis-Hastings
        updates for the indicator that specifies which component is 
-       associated with that case.  For each update, a new component 
-       is proposed, selected according to the mixing probabilities.  
-       This component is then accepted or rejected based on the
-       relative probability of the case with respect to the new and
-       the old components.  This operation is possible with both
+       associated with that case.  For each update, a new component is
+       proposed, selected according to the predictive prior probability
+       based on the current component frequencies and the concentration 
+       parameter.  This component is then accepted or rejected based 
+       on the relative probability of the case with respect to the new 
+       and the old components.  This operation is possible with both
        finite and infinite models.
 
-Note that the gibbs-indicators and met-indicators operations may
-change the set of components that are associated with some training
-case.  New components that were not previously associated with any
+   met1-indicators [ N ]
+
+       This operation is like met-indicators, except that the new
+       component proposed for a training case depends on whether or 
+       not the case is a singleton - ie, whether no other case has
+       the same component.  For singleton cases, the only components
+       associated with training cases are proposed, with probabilities
+       proportional to their predictive prior probabilities.  For
+       cases that are not singletons, only components that are not
+       currently associated with any training case are proposed, with
+       equal probabilities.  The acceptance criterion is adjusted to
+       make these proposals valid.  This operation is possible with 
+       both finite and infinite models.
+
+Note that the gibbs-indicators, met-indicators, and met1-indicators
+operations may change the set of components that are associated with
+some training case.  New components not previously associated with any
 training case have parameters drawn from the prior, given the current
 hyperparameters.  Components are removed from the current list when
 they are no longer associated with any training case.
 
-Statistics regarding the met-indicators operation can be accessed via
-the 'r', 'm', and 'D' quantities, as documented in mc-quantities.doc.
+Statistics regarding the met-indicators and met1-indicators operations
+can be accessed via the 'r', 'm', and 'D' quantities, as documented in
+mc-quantities.doc.  The values of the 'm' and 'D' quantities are for
+the update of the component associated with one training case,
+selected at random each time.
 
-            Copyright (c) 1997 by Radford M. Neal
+            Copyright (c) 1997, 1998 by Radford M. Neal

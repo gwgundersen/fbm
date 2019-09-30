@@ -1,0 +1,9 @@
+
+# Commands to sample from the "ring" distribution using the Metropolis
+# algorithm with updates to all components at once.  The stepsize to 
+# use is given as an argument.
+
+dist-spec glog.met,$1 \
+  "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
+mc-spec glog.met,$1 repeat 50 metropolis $1 end
+dist-mc glog.met,$1 500

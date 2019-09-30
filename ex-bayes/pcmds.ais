@@ -1,0 +1,15 @@
+
+# These commands apply Annealed Importance Sampling to the model for categorical
+# data, in order to find the marginal likelihood.  
+
+dist-spec plog.ais \
+ "w0~ExpGamma(1,1) + w1~ExpGamma(1,1) + w2~ExpGamma(1,1)" \
+ "-Delta(t-0)*(w0-LogSumExp(w0,w1,w2)) \
+  -Delta(t-1)*(w1-LogSumExp(w0,w1,w2)) \
+  -Delta(t-2)*(w2-LogSumExp(w0,w1,w2))"
+
+data-spec plog.ais 0 1 3 / pdata .
+
+mc-temp-sched plog.ais 0.1 0.3 0.6
+mc-spec plog.ais AIS repeat 10 metropolis 0.5
+dist-mc plog.ais 1000

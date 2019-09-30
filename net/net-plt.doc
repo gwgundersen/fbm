@@ -1,6 +1,6 @@
 
 
-NET-PLT:  Get quantities from a net log file, in a form suitable to plot.
+NET-PLT:  Get quantities from net log files, in a form suitable to plot.
 
 The net-plt program is a specialization of xxx-plt to the neural network 
 application.  It is capable of plotting any of the quantities documented 

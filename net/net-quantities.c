@@ -161,10 +161,10 @@ void net_available
     letter = qd[v].letter;
     mod = qd[v].modifier;
 
-    if (letter && qd[v].available==0)
+    if (letter && qd[v].available==0 && (strchr("iItT",letter)==0 || mod!=-1))
     {
-      if (strchr("xoygzlbav",letter)!=0 && !have_train_data
-       || strchr("XOYGZLBAV",letter)!=0 && !have_test_data
+      if (strchr("ixoygtzlbav",letter)!=0 && !have_train_data
+       || strchr("IXOYGTZLBAV",letter)!=0 && !have_test_data
        || strchr("ZBA",letter)!=0       && !have_test_targets)
       { qd[v].available = -1;
         continue;
@@ -175,10 +175,10 @@ void net_available
       { qd[v].available = 1;
       }
 # endif
-      if (strchr("xX",letter)!=0)
+      if (strchr("xXiI",letter)!=0)
       { qd[v].available = mod<arch->N_inputs ? 1 : -1; 
       }
-      else if (strchr("oOyYgGzZ",letter)!=0)
+      else if (strchr("oOyYgGzZtT",letter)!=0)
       { qd[v].available = mod<arch->N_outputs ? 1 : -1; 
       }
       else if (strchr("bBaA",letter)!=0)
@@ -228,20 +228,20 @@ void net_available
 
       if (qd[v].available<0) continue;
 
-      if (strchr("xoygzlba",letter)!=0)
-      { if (strchr("xoyzg",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_train) 
+      if (strchr("ixoygtzlba",letter)!=0)
+      { if (strchr("ixoytzg",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_train)
         { qd[v].available = -1;
           continue;
         }
         if (qd[v].low!=-1 && qd[v].high==-1) qd[v].high = N_train-1;
       }
 
-      else if (strchr("XOYGZLBA",letter)!=0)
-      { if (strchr("XOYZG",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_test) 
+      else if (strchr("IXOYGTZLBA",letter)!=0)
+      { if (strchr("IXOYTZG",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_test) 
         { qd[v].available = -1;
           continue;
         }
-        if (strchr("ZLAB",letter)!=0 && !have_test_targets)
+        if (strchr("TZLAB",letter)!=0 && !have_test_targets)
         { qd[v].available = -1;
           continue;
         }
@@ -333,8 +333,11 @@ void net_evaluate
   for (v = 0; v<Max_quantities; v++)
   {
     letter = qd[v].letter;
+    low  = qd[v].low;
+    high = qd[v].high;
+    mod  = qd[v].modifier;
 
-    if (letter && !qh->updated[v])
+    if (letter && !qh->updated[v] && (strchr("iItT",letter)==0 || mod!=-1))
     {
       if (letter>='a' && letter<='z')
       { cases = train_values;
@@ -365,15 +368,11 @@ void net_evaluate
         ev_test = 1;
       }
 
-      low  = qd[v].low;
-      high = qd[v].high;
-      mod  = qd[v].modifier;
-
       if (mod<0) mod = 0;
 
       switch (letter)
       { 
-        case 'x': case 'X':
+        case 'x': case 'X': case 'i': case 'I':
         { for (i = low; i<=high; i++)
           { qh->value[v][i-low] = cases[i].i[mod];
           }
@@ -409,7 +408,7 @@ void net_evaluate
           break;
         }
 
-        case 'z': case 'Z':
+        case 'z': case 'Z': case 't': case 'T':
         { for (i = low; i<=high; i++)
           { qh->value[v][i-low] = 
               model_type=='C' && qd[v].modifier>=0 ? targets[i]==mod

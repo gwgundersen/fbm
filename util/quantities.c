@@ -138,8 +138,8 @@ void quantities_available
   { 
     if (qd[i].letter)
     { 
-      if (qd[i].letter=='t' && qd[i].available==0)
-      { qd[i].available = qd[i].modifier==-1 && qd[i].low==-1 ? 1 : -1;
+      if (qd[i].letter=='t' && qd[i].modifier==-1 && qd[i].available==0)
+      { qd[i].available = qd[i].low==-1 ? 1 : -1;
       }
 
       else if (qd[i].letter=='#' && qd[i].available==0)
@@ -243,7 +243,7 @@ void quantities_evaluate
 
   for (i = 0; i<Max_quantities; i++)
   { 
-    if (qd[i].letter=='t' && !qh->updated[i])
+    if (qd[i].letter=='t' && qd[i].modifier==-1 && !qh->updated[i])
     { for (j = qd[i].low; j<=qd[i].high; j++)
       { qh->value [i] [j - qd[i].low] = logg->last_index;
       }

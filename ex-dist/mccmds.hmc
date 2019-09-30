@@ -1,0 +1,16 @@
+
+# Commands to demonstrate Hybrid Monte Carlo methods.
+
+ENERGY="w^2/200 + [x-2w]^2 + [y-10Cos(w)]^2 + [z-10Sin(w)]^2"
+
+dist-spec mclog.hmc "$ENERGY"
+mc-spec mclog.hmc heatbath hybrid 900 0.1
+dist-mc mclog.hmc 500
+
+dist-spec mclog.hmcw "$ENERGY"
+mc-spec mclog.hmcw heatbath hybrid 900:20 0.1
+dist-mc mclog.hmcw 500
+
+dist-spec mclog.hmcp "$ENERGY"
+mc-spec mclog.hmcp repeat 600 heatbath 0.999 hybrid 1 0.02 negate 
+dist-mc mclog.hmcp 500

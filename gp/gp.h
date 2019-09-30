@@ -23,6 +23,7 @@
 
 #define Flag_omit 1		/* Flag bit indicating input ignored */
 #define Flag_delta 2		/* Flag bit indicating delta distance */
+#define Flag_spread 4		/* Flag saying relevance should be spread out */
 
 typedef struct
 {
@@ -49,11 +50,16 @@ typedef struct
 
     char flags[Max_inputs];	  /* Flags saying how inputs are treated */
 
-    int resvd[10];		  /* Reserved for future use */
+    int spread;			  /* Amount to spread relevance outward by */
+
+    int resvd[9];		  /* Reserved for future use */
 
   } exp[Max_exp_parts];
 
-  int reserved[100];		/* Reserved for future use */
+  char linear_flags[Max_inputs];/* Flags for linear part */
+  int linear_spread;		/* Amount of relevance spread for linear part */
+
+  int reserved[49];		/* Reserved for future use */
 
 } gp_spec;
 
@@ -123,10 +129,13 @@ double gp_gdens (double, double, double, int);
 void   gp_gdiff (double, double, double, double*, double*);
 
 void gp_cov (gp_spec *, gp_hypers *, double *, int, double *, int, 
-             double *, double **);
+             double *, double **, int *);
 
 int gp_cov_deriv (gp_spec *, gp_hypers *, double **, double *, 
                   double *, double *, int);
 
 void gp_train_cov (gp_spec *, model_specification *, gp_hypers *, int,
                    double *, double *, double *, double **);
+
+double gp_likelihood (gp_hypers *, model_specification *, data_specifications *,
+                      double *, double *, double *);

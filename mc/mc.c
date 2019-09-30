@@ -1,6 +1,6 @@
 /* MC.C - Skeleton of program to run Markov chain Monte Carlo simulation. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -36,6 +36,11 @@
 #endif
 
 
+/* THE FOLLOWING IS NEEED BY THE PLOTTING ROUTINES. */
+
+enum { PLT, TBL, HIST } program_type = PLT;
+
+
 static void usage(void);
 
 
@@ -48,7 +53,7 @@ void main
 {
   int index, max, modulus;
 
-  static mc_ops ops0, *ops;	/* Static so fields get initialized to zero */
+  static mc_ops *ops;
   static mc_traj tj0, *tj;
   static mc_iter it0, *it;
 
@@ -161,9 +166,10 @@ void main
 
   it = logg.data['i'];
 
-  if (it==0)
-  { it = &it0;
-    na = tj->N_approx>0 ? tj->N_approx : -tj->N_approx;
+  if (it==0) it = &it0;
+
+  if (it->approx_order[0]==0)
+  { na = tj->N_approx>0 ? tj->N_approx : -tj->N_approx;
     if (na>Max_approx) na = Max_approx;
     for (j = 0; j<na; j++) it->approx_order[j] = j+1;
   }

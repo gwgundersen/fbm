@@ -1,0 +1,282 @@
+<html>
+<body>
+<pre>
+
+
+SAMPLING FROM A UNIVARIATE NORMAL DISTRIBUTION
+
+I will start with a trivial example showing how the "Metropolis"
+Markov chain method can be used to sample from a univariate normal
+distribution.  This will illustrate the basic facilities for
+specifying distributions, for specifying the Markov chain operations
+to use, for looking at log files, and for estimating the expectations
+of functions.
+
+
+Specifying the distribution.
+
+We begin by specifying the distribution we want to sample from.  This
+is done by giving a formula for the "energy function", which is minus
+the log of the probability density, plus any arbitrary constant.  To
+sample from a univariate normal distribution for a variable called
+"x", with mean 10 and variance 1, we can type the following command to
+the Unix command interpreter (the shell):
+
+    &gt; dist-spec nlog "(x-10)^2/2"
+
+Here, "nlog" is the name of a "log file", in which this specification
+is saved, and in which the results of sampling will later be stored.
+The energy formula "(x-10)^2/2" is minus the log of the probability
+density for the desired distribution over "x", with the constant term
+Log(2*Pi)/2 omitted, as it is not necessary for most purposes.  Such
+formulas must usually be put in quotes, since some characters such as
+parentheses will otherwise have special meaning to the shell.  See
+<A HREF="formula.html">formula.doc</A> for the syntax of formulas, which is fairly conventional,
+except perhaps that function names must be capitalized (eg, "Sin").
+
+Since only a single variable, "x", is mentioned in the specification,
+this is a univariate distribution.  We could have mentioned other
+"state variables" in the specification, as in the example in the next
+section (see <A HREF="Ex-dist-g.html">Ex-dist-g.doc</A>).  Valid state variable names start with
+one of "u", "v", "w", "x", "y", or "z", which may optionally be
+followed by a single digit.  See <A HREF="dist-spec.html">dist-spec.doc</A> for further details.
+
+The density functions for some distributions, including the normal,
+are pre-defined.  We could have used the following command instead of
+the one above:
+
+    &gt; dist-spec nlog "Normal(x,10,1)"
+
+The same result can also be obtained as follows:
+
+    &gt; dist-spec nlog "x ~ Normal(10,1)"
+
+This last form is particularly useful for specifying Bayesian models
+(see <A HREF="Ex-bayes.html">Ex-bayes.doc</A>).
+
+
+Sampling using Metropolis updates.
+
+After specifying the distribution, we specify what Markov chain
+operations should be used to sample from this distribution, using a
+command such as:
+
+    &gt; mc-spec nlog metropolis 1
+
+This specifies that each Markov chain iteration should consist of a
+single Metropolis operation, with a "stepsize" of 1.  In a Metropolis
+operation, a new state is proposed by randomly drawing from the normal
+distribution centred at the current state, with standard deviation
+given by the stepsize.  This proposed state is then accepted or
+rejected based on the change in the energy (ie, on the change in
+probability density).  If the proposed state is rejected, the new
+state is the same as the old state.
+
+This Markov chain specification is saved in the log file, after the
+distribution specification.  We could also specify an initial state
+for the Markov chain (see <A HREF="dist-initial.html">dist-initial.doc</A>), but here we will let the
+initial state default to x=0.  To actually do some Markov chain
+iterations, we use a command such as:
+
+    &gt; dist-mc nlog 1000
+
+This performs 1000 Markov chain updates, as specified by the last
+mc-spec command, and saves the state after each update in the log
+file.  This takes only a fraction of a second on our machine, but
+Markov chain sampling runs for more difficult problems can take much
+longer, so one would often wish to run the 'dist-mc' command in the
+background, by putting an "&amp;" at the end of the command line.
+
+If we later decided that we wanted to continue Markov chain sampling
+for more iterations, we could just use another 'dist-mc' command with
+a larger iteration limit.  For example, the command
+
+    &gt; dist-mc nlog 10000
+
+would produce another 9000 iterations, for a total of 10000.  We could
+issue another mc-spec command before this, if we wished to use
+different Markov chain operations for these further iterations.
+
+
+Checking how well the sampling worked.
+
+After or during the Markov chain sampling, we can look at how the
+state has changing during the run, and at certain properties of the
+Markov chain methods.
+
+The 'dist-display' command lets us see the state at any given
+iteration.  For example, the state at iteration 10 of the Markov chain
+run above might look like this:
+
+    &gt; dist-display nlog 10
+
+    STATE VARIABLES IN FILE "nlog" WITH INDEX 10
+
+        x = 1.45784   
+
+However, what you see might not be exactly the same as this, due to
+differences in random number generators or in floating-point roundoff
+errors.  If the iteration number is omitted, 'dist-display' shows the
+last iteration.
+
+The 'dist-plt' command is usually more useful in getting a picture of
+how well the chain is sampling.  The following command will show how
+the state changes over the course of the run:
+
+    &gt; dist-plt t x nlog | plot
+
+If 'plot' is an appropriate plotting program, this will display a
+graph of the state variable "x" vs. the iteration number (the "t"
+quantity).  From this plot, you will likely see that up to about
+iteration 50, the values of "x" are not typical of those seen later in
+the run.  These early iterations should be discarded when estimating
+functions of state (see below).
+
+After iteration 50, the chain seems to move around the region that has
+high probability fairly rapidly.  It should therefore be possible to
+estimate expectations of functions of the state with reasonable
+accuracy.  If instead, the chain moved very slowly, it would be
+necessary to run it for many more iterations, or to use better Markov
+chain operations.
+
+Other interesting quantities can also be plotted using 'dist-plt'.
+For instance, the energy can be monitored with the following command:
+
+    &gt; dist-plt t E nlog | plot
+
+The change in energy on the basis of which the Metropolis proposals
+were accepted or rejected can be examined as follows:
+
+    &gt; dist-plt t D nlog | plot-points
+
+Here, it is best if the plot program used is set up to plot individual
+points, rather than lines.  For this chain, the energy difference is
+often less than one, so many proposals will be accepted.  If instead
+the energy change was almost always large, it would be necessary to
+reduce the "stepsize" argument following the "metropolis" operation in
+'mc-spec'.  On the other hand, if the energy change is usually very
+close to zero, a larger stepsize would produce better sampling.
+
+Other quantities that can be plotted are documented in <A HREF="quantities.html">quantities.doc</A>,
+<A HREF="mc-quantities.html">mc-quantities.doc</A>, and <A HREF="dist-quantities.html">dist-quantities.doc</A>.
+
+
+Estimating expectations of functions.
+
+Finally, we can use the states from the Markov chain to estimate the
+expectations of functions of this state.  Since we decided above that
+the first 50 iterations were not typical of the chain's equilibrium
+distribution, we will use only states after these when estimating
+expectations.
+
+The 'dist-est' command is one way of estimating expectations.  The
+following command estimates the expectation of the "x" itself:
+
+    &gt; dist-est x nlog 51:
+
+    Number of sample points: 950
+
+    Estimates for x:
+
+      Mean:    10.1496  (standard error 0.0336591)
+      Std.dev: 1.03744
+
+    NOTE: The standard errors assume points are independent
+
+The arguments to 'dist-est' are a formula for what we want to
+estimate, the log file for the run, and the range of iterations to use
+from that log file (here, from 51 on).  The output (which might be a
+bit different when you run the programs) gives the estimated
+expectation (mean) for the requested function of state, along with its
+estimated standard deviation.  
+
+A standard error is also given for the estimated mean, but it is valid
+only if the points are independent, which is generally not true if
+they were obtained using Markov chain sampling.  In the output above,
+the estimate differs from the true mean of 10 by over four times the
+standard error, which illustrates that the standard error cannot be
+trusted when the points are not independent.
+
+Ideally, the 'dist-est' program would automatically compensate for
+this lack of independence, and give correct standard errors, but it
+doesn't yet.  If you are interested in the expectation of a state
+variable, however, you can get correct standard errors using the
+'series' program, which adjusts the standard errors based on estimated
+autocorrelations, if told how far out to look.  The following command
+illustrates the procedure:
+
+    &gt; dist-tbl x nlog 51: | series msac 15
+
+    Number of realizations: 1  Total points: 950
+    
+    Mean: 10.149550  S.E. from correlations: 0.096872
+    
+    Standard deviation: 1.037442  
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.793346    2.586691
+        2   0.620884    3.828460
+        3   0.492481    4.813421
+        4   0.406282    5.625986
+        5   0.332223    6.290432
+        6   0.261235    6.812903
+        7   0.195664    7.204231
+        8   0.162258    7.528748
+        9   0.129544    7.787835
+       10   0.104300    7.996435
+       11   0.079715    8.155866
+       12   0.055909    8.267684
+       13   0.032055    8.331795
+       14   0.011870    8.355534
+       15  -0.020351    8.314831
+
+The 'dist-tbl' command produces a list of values for "x" at iterations
+from 51 on.  This list is piped into the 'series' program, which looks
+only at the first value (for "x").  With the options "msac 15", the
+'series' program calculates estimates for the mean and standard
+deviation, which match those calculated above by 'dist-est'.  It also
+estimates the autocorrelations for "x" at lags up to 15.  From these
+autocorrelation estimates, 'series' finds the "cumulative
+correlations" at the various lags, which are defined as one plus twice
+the sum of the autocorrelations up to that lag.  In calculating the
+standard error for the mean, 'series' divides the sample size by the
+cumulative correlation for the last lag requested.
+
+In the example above, the standard error calculated by 'series'
+appears to be realistic.  This will be true only if the maximum lag
+given as an argument to series is appropriate, however.  This maximum
+lag should be large enough that the autocorrelations at larger lags
+are close to zero, but not too much larger than this, since including
+autocorrelations at many lags introduces extra noise into the
+cumulative correlation.
+
+An alternative approach is to use 'series' to find out the lag at
+which the autocorrelations have fallen almost to zero, and then use
+'dist-est' to find the expectation, telling it to look at iterations
+separated by that lag.  This is somewhat wasteful of data, but is at
+present the only easy way to get correct standard errors when
+estimating some function of state rather than a state variable itself.
+For example, from the output of 'series' above, it seems that
+autocorrelations for "x" are almost zero at about lag 10.  This is
+consistent with states at that lag being almost independent (although
+lack of correlation does not guarantee independence).  On that basis,
+we might estimate the expectation of Sin(x) with the following
+command:
+
+    &gt; dist-est "Sin(x)" nlog 51:%10
+
+    Number of sample points: 95
+
+    Estimates for Sin(x):
+
+      Mean:    -0.358403  (standard error 0.0654498)
+      Std.dev: 0.637926
+
+    NOTE: The standard errors assume points are independent
+
+These results are consistent with the true expectation of Sin(x) with
+respect to the Normal(10,1) distribution, which is -0.330.
+</pre>
+</body>
+</html>

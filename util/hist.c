@@ -1,6 +1,6 @@
 /* HIST.C - Skeleton of program to make histogram of data from a log file. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -26,6 +26,8 @@
    linked with application-specific routines (the same as for plt.c) to 
    produce a program for building a histogram of values for a quantity
    obtained from a log file.  */
+
+enum { PLT, TBL, HIST } program_type = HIST;
 
 
 /* DISPLAY USAGE MESSAGE AND EXIT.  The plt_usage procedure must be defined 
@@ -64,7 +66,7 @@ void main
   quantities_held *qh;
   double *val;
 
-  int total, below, above;
+  int total;
   int *bin;
 
   int N, V, a, i, b;
@@ -106,6 +108,8 @@ void main
   /* Allocate space for bins, and set counts to zero. */
 
   bin = chk_alloc (bins, sizeof *bin);
+
+  total = 0;
 
   for (i = 0; i<bins; i++) bin[i] = 0;
 
@@ -190,13 +194,7 @@ void main
 
       for (i = 0; i<V; i++) 
       {
-        if (val[i]<low)
-        { below += 1;
-        }
-        else if (val[i]>=high)
-        { above += 1;
-        }
-        else
+        if (val[i]>=low && val[i]<high)
         { b = (int) ( bins * ((val[i]-low)/(high-low)) );
           if (b<0 || b>=bins) abort();
           bin[b] += 1;
@@ -231,10 +229,10 @@ void main
   for (b = 0; b<bins; b++)
   {
     if (frac)
-    { printf( "%+.6le %.6lf\n", low + wid*(b+0.5), (double)bin[b]/total);
+    { printf( "%+.6e %.6f\n", low + wid*(b+0.5), (double)bin[b]/total);
     }
     else
-    { printf( "%+.6le %6d\n", low + wid*(b+0.5), bin[b]);
+    { printf( "%+.6e %6d\n", low + wid*(b+0.5), bin[b]);
     }
   }
 

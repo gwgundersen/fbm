@@ -13,6 +13,8 @@ available.
 
     xn   Array of n'th input values for training cases
     Xn   Array of n'th input values for test cases
+    in   Same as xn, except n must not be omitted
+    In   Same as Xn, except n must not be omitted
 
     on   Array of n'th output values for training cases
     On   Array of n'th output values for test cases
@@ -25,6 +27,8 @@ available.
 
     z[n] Array of n'th target values for training cases
     Z[n] Array of n'th target values for test cases
+    tn   Same as zn, except n must not be omitted
+    Tn   Same as Zn, except n must not be omitted
 
     P    Log prior probability of the network parameters with current 
          hyperparameter values
@@ -93,6 +97,8 @@ available.
          expected entropy on test cases, assuming model is right.
 
 When a value for 'n' is needed but not specified, it defaults to zero.
+This isn't allowed with 'i', 'I', 't', and 'T', however, since they
+have other meanings when 'n' is omitted.
 
 The 'o' values are the values of the units in the final layer, before
 interpretation by the model.  The 'y' values are the same as the 'o'
@@ -106,13 +112,14 @@ single 1 indicating the correct class.
 
 Depending on whether any training/test cases are available, and if
 they are, whether they include targets, some of the above quantities
-may not be defined.  The 'c' and 'C' quantities are not
-defined for regression models.  The 'o' quantities are allowed with
-survival models only when the hazard is constant (independent of
-time).  For multi-class models, the 'z' and 'Z' quantities with a
-modifier ('n') refer to the representation of the class as a binary
-vector with the true class indicated by a one; with no modifier, they
-refer to the numeric value of the class.
+may not be defined.  The 'c' and 'C' quantities are not defined for
+regression models.  The 'o' quantities are allowed with survival
+models only when the hazard is constant (independent of time).  For
+multi-class models, the 'z' and 'Z' quantities with a modifier ('n')
+refer to the representation of the class as a binary vector with the
+true class indicated by a one; with no modifier, they refer to the
+numeric value of the class.  (Since 'n' can't be omitted for 't' and
+'T', these synonyms can't be used for 'z' and 'Z' with no modifier.)
 
 For censored survival data, the target for the 'A', 'a', 'B', 'b', 'Z',
 and 'z' options is taken to be the censoring time, which is not very 
@@ -127,7 +134,7 @@ arguments of the form
 as the last arguments of the command that accesses these quantities
 (eg, net-plt).
 
-            Copyright (c) 1995 by Radford M. Neal
+            Copyright (c) 1995, 1998 by Radford M. Neal
 </pre>
 </body>
 </html>

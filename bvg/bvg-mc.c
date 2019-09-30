@@ -100,7 +100,9 @@ int mc_app_sample
 ( mc_dynamic_state *ds,
   char *op,
   double a,
-  mc_iter *it
+  double a2,
+  mc_iter *it,
+  mc_temp_sched *sch
 )
 {
   double tf, t, m;
@@ -221,15 +223,13 @@ void mc_app_energy
 }
 
 
-/* EVALUATE CHANGE IN ENERGY WITH TEMPERING CHANGE.  */
+/* SAMPLE FROM DISTRIBUTION AT INVERSE TEMPERATURE OF ZERO.  Returns zero
+   if this is not possible. */
 
-int mc_app_energy_diff
-( mc_dynamic_state *ds,	/* Current dyanamical state */
-  mc_temp_sched *sch,	/* Tempering schedule */
-  int dir,		/* Direction of change */
-  double *energy	/* Place to store energy */
+int mc_app_zero_gen
+( mc_dynamic_state *ds	/* Current dynamical state */
 )
-{
+{ 
   return 0;
 }
 

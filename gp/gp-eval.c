@@ -335,7 +335,7 @@ void main
     if (N_train>0)
     { 
       gp_cov (gp, h, grid_inputs, grid_total, train_inputs, N_train, 
-              gr_tr_cov, 0);
+              gr_tr_cov, 0, 0);
 
       matrix_product (gr_tr_cov, train_cov, prd, grid_total, N_train, N_train);
     }
@@ -356,7 +356,7 @@ void main
        grid points. */
 
     gp_cov (gp, h, grid_inputs, grid_total, grid_inputs, grid_total, 
-            grid_cov, 0);
+            grid_cov, 0, 0);
 
     if (gp->has_jitter)
     { for (i = 0; i<grid_total; i++)
@@ -370,7 +370,7 @@ void main
     if (N_train>0)
     { 
       gp_cov (gp, h, train_inputs, N_train, grid_inputs, grid_total,
-              tr_gr_cov, 0);
+              tr_gr_cov, 0, 0);
  
       matrix_product (prd, tr_gr_cov, grid_cov2, grid_total, grid_total, 
                       N_train);
@@ -448,10 +448,10 @@ void main
         }
 
         for (i = 0; i<gp->N_inputs; i++)  
-        { printf (" %8.5lf", grid_inputs[gp->N_inputs*j+i]);
+        { printf (" %8.5f", grid_inputs[gp->N_inputs*j+i]);
         }
 
-        printf (" %.7le\n", output[j]);
+        printf (" %.7e\n", output[j]);
       }
     
     }

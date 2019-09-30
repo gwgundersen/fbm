@@ -119,7 +119,7 @@ void main
               printf("\n\n");
               printf("  Time points for piecewise constant hazard:\n"); 
               for (i = 0; i<Max_time_points && v->time[i]>0; i++)
-              { printf("\n  %2d %9.4lf",i+1,v->time[i]);
+              { printf("\n  %2d %9.4f",i+1,v->time[i]);
               }
               break;
             }

@@ -53,7 +53,7 @@ static void max_second (net_param *, int, net_sigma, net_sigma *, double);
    are stored in the arrays pointed to from the structures passed as the
    first two arguments, which must have been properly set up by the caller. 
    
-   The last two arguments can be used to set parameters and hyperparameters
+   The last three arguments can be used to set parameters and hyperparameters
    to non-random values.  If 'centre' is non-zero, the weights are set to 
    zero, and the hyperparameters to a "centre" value that is either the
    "width" part of the prior specification or the 'value' argument passed
@@ -149,10 +149,8 @@ static void pick_unit_params
   net_sigma unit_sigma;
   int i;
 
-  *sd_cm = centre 
-         ? (value==0 || pr.alpha[0]==0 && pr.alpha[1]==0 && pr.alpha[2]==0 
-              ? pr.width : value)
-         : prior_pick_sigma (pr.width, pr.alpha[0]);
+  *sd_cm = centre ? (value==0 || pr.alpha[0]==0 ? pr.width : value)
+                  : prior_pick_sigma (pr.width, pr.alpha[0]);
 
   for (i = 0; i<n; i++)
   { 
@@ -190,14 +188,13 @@ static void pick_weights
 
   width = prior_width_scaled(&pr,n);
 
-  *sd_cm = centre 
-         ? (value==0 || pr.alpha[0]==0 && pr.alpha[1]==0 && pr.alpha[2]==0 
-              ? width : value)
+  *sd_cm = centre ? (value==0 || pr.alpha[0]==0 ? width : value)
          : prior_pick_sigma (width, pr.alpha[0]);
 
   for (i = 0; i<n; i++)
   { 
-    sd[i] = centre ? *sd_cm : prior_pick_sigma (*sd_cm, pr.alpha[1]);
+    sd[i] = centre ? (value==0 || pr.alpha[1]==0 ? *sd_cm : value)
+                   : prior_pick_sigma (*sd_cm, pr.alpha[1]);
 
     for (j = 0; j<nd; j++)
     { 

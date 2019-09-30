@@ -1,0 +1,15 @@
+
+# These commands apply simple importance sampling to the model for categorical
+# data, in order to find the marginal likelihood.  
+
+dist-spec plog.is \
+ "w0~ExpGamma(1,1) + w1~ExpGamma(1,1) + w2~ExpGamma(1,1)" \
+ "-Delta(t-0)*(w0-LogSumExp(w0,w1,w2)) \
+  -Delta(t-1)*(w1-LogSumExp(w0,w1,w2)) \
+  -Delta(t-2)*(w2-LogSumExp(w0,w1,w2))"
+
+data-spec plog.is 0 1 3 / pdata .
+
+mc-temp-sched plog.is -
+mc-spec plog.is AIS 
+dist-mc plog.is 1000

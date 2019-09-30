@@ -1,6 +1,6 @@
 /* MC.H - Interface to Markov chain Monte Carlo module. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -58,7 +58,9 @@ typedef struct
     int in_steps;	  /* Maximum number of inside steps in trajectory,
 			     zero if this feature is not being used */
 
-    int reserved[3];      /* Reserved for future use */
+    float app_param2;	  /* Second application-specific parameter */
+
+    int reserved[2];      /* Reserved for future use */
 
     char appl[101];	  /* Name of application-specific procedure */
 
@@ -120,10 +122,11 @@ typedef struct
 
 typedef struct
 {
-  float inv_temp;	/* Current inverse temperature, must correspond to  */
-			/*   an entry in the tempering schedule             */
+  float inv_temp;	/* Current inverse temperature, must correspond to an 
+			     entry in the tempering schedule, except that it's
+                             set to zero at the start of an ais run. */
 
-  int temp_dir;		/* Direction in which to change inverse temperature */
+  int temp_dir;		/* Direction in which to change inverse temperature   */
 
 } mc_temp_state;
 
@@ -154,7 +157,11 @@ typedef struct
   int slice_evals;	/* Number of energy evaluations in slice calls */
   int time;             /* Cumulative cpu-usage in ms */
 
-  int reserved[4];	/* Reserved for future use */
+  float log_weight;	/* Log of weight for importance sampling */
+  float log_tt_weight;	/* Log of weight from last tempered transition */
+  float log_tt_weight2;	/* Log of combined weight from last tempered trans. */
+
+  int reserved[1];	/* Reserved for future use */
 
 } mc_iter;
 
@@ -199,11 +206,11 @@ extern void mc_app_record_sizes (log_gobbled *);
 extern void mc_app_initialize (log_gobbled *, mc_dynamic_state *);
 extern void mc_app_save (mc_dynamic_state *, log_file *, int);
 
-extern int mc_app_sample (mc_dynamic_state *, char *, double, mc_iter *);
+extern int mc_app_sample (mc_dynamic_state *, char *, double, double,
+                          mc_iter *, mc_temp_sched *);
 
 extern void mc_app_energy (mc_dynamic_state *, int, int, double *, mc_value *);
-extern int mc_app_energy_diff (mc_dynamic_state *, mc_temp_sched *,  
-                               int, double *);
+extern int mc_app_zero_gen (mc_dynamic_state *);
 
 extern void mc_app_stepsizes (mc_dynamic_state *);
 

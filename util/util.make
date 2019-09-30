@@ -1,6 +1,6 @@
 # UTILITY MAKEFILE, FOR INCLUSION IN OTHER MAKEFILES.
 
-# Copyright (c) 1995, 1996 by Radford M. Neal 
+# Copyright (c) 1995, 1996, 1998 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 
@@ -27,12 +27,14 @@ rand.h:
 	ln -s ../util/rand.h .
 ars.h:
 	ln -s ../util/ars.h .
-seq.h:
-	ln -s ../util/seq.h .
 prior.h:
 	ln -s ../util/prior.h .
 model.h:
 	ln -s ../util/model.h .
+formula.h:
+	ln -s ../util/formula.h .
+pred.h:
+	ln -s ../util/pred.h .
 
 misc.c:
 	ln -s ../util/misc.c .
@@ -44,6 +46,8 @@ quantities.c:
 	ln -s ../util/quantities.c .
 plt.c:
 	ln -s ../util/plt.c .
+tbl.c:
+	ln -s ../util/tbl.c .
 hist.c:
 	ln -s ../util/hist.c .
 rand.c:
@@ -54,25 +58,33 @@ numin.c:
 	ln -s ../util/numin.c .
 data-trans.c:
 	ln -s ../util/data-trans.c .
-seq-read.c:
-	ln -s ../util/seq-read.c .
 prior.c:
 	ln -s ../util/prior.c .
 model.c:
 	ln -s ../util/model.c .
+formula.c:
+	ln -s ../util/formula.c .
+pred.c:
+	ln -s ../util/pred.c .
+digamma.c:
+	ln -s ../util/digamma.c .
 
 
 misc.o:		misc.c		misc.h
 log.o:		log.c		log.h
 quantities.o:	quantities.c	log.h quantities.h
 plt.o:		plt.c		misc.h log.h quantities.h
+tbl.o:		tbl.c		misc.h log.h quantities.h
 hist.o:		hist.c		misc.h log.h quantities.h
 ars.o:		ars.c		rand.h ars.h
 numin.o:	numin.c		numin.h
 data-trans.o:	data-trans.c	data.h
-seq-read.o:	seq-read.c	misc.h seq.h
 prior.o:	prior.c		rand.h prior.h 
 matrix.o:	matrix.c	matrix.h
+formula.o:	formula.c	formula.h rand.h
+pred.o:		pred.c		misc.h rand.h log.h prior.h model.h data.h \
+				mc.h pred.h
+digamma.o:	digamma.c
 
 rand.o:		rand.c		rand.h
 	$(CC) $(CFLAGS) -DRAND_FILE=\"`pwd`/../util/randfile\" -c rand.c

@@ -1,0 +1,111 @@
+
+
+DIST-SPEC:  Specify a distribution to sample from.
+
+Dist-spec creates a log file containing the formulas that specify a
+distribution to sample from.  The distribution may be specified by
+giving a formula for the energy (minus the log probability density).
+Alternatively, the distribution may be the Bayesian posterior
+distribution resulting from a specified prior and likelihood.  When
+invoked with just the log file as argument, dist-spec displays the
+specification stored in an existing log file.
+
+Usage:
+
+    dist-spec log-file { var=formula } energy [ -zero-temper ]
+
+or:
+
+    dist-spec log-file { var=formula } prior likelihood [ -read-prior ]
+
+or:
+
+    dist-spec log-file 
+
+Distributions are over a set of real-valued state variables, which
+consist of one of the letters 'u', 'v', 'w', 'x', 'y', or 'z',
+possibly followed by a single digit ('0' to '9').  
+
+Constants may be defined immediately after the log-file argument.
+These have names of the same form as state variables, but starting
+with other lower-case letters.  They may be used in the formulas for
+the energy, minus-log-prior, or minus-log-likelihood.  Constant
+definitions must not refer to state variables, or to inputs or
+targets, but may refer to constants defined earlier.
+
+In the first form of the dist-spec command, the distribution is given
+by an "energy" function, specified by an arithmetic formula involving
+the state variables that evaluates to minus the log of the probability
+density (plus any arbitrary constant).
+
+In the second form, the energy function is minus the log of the
+posterior density for a Bayesian model, whose parameters are a subset
+of the state variables (of the same form as described above).  The
+model is specified by giving formulas for minus the log of the prior
+density and for minus the log likelihood for a single observation.
+Observations are assumed to be independent.  The inputs for an
+observation are referred to by the names i0, i1, etc., with i being a
+synonym for i0.  The targets are referred to by t0, t1, etc., with t
+being a synonym for t0.  There can be at most ten inputs or targets
+(ie, up to i9 and t9).  These variables are rebound to the inputs and
+targets for each observation in turn, and the formula for minus the
+log likelihood is re-evaluated for each observation.  Note that, by
+convention, the model describes the conditional distribution of the
+targets (aka the response variables), given values for the inputs (aka
+the predictor variables, or covariates), if any.
+
+When the distribution is a Bayesian posterior, a data specification
+will normally be provided (see data-spec.doc), giving the source of
+the observations.  If none is specified, it is assumed that there are
+no observations, in which case the posterior distribution is the same
+as the prior.
+
+For the syntax of formulas, see formula.doc.  Although all state
+variables are unbounded real values, the effect of a non-negative
+variable can be obtained by always referring to an appropriately
+transformed version of the variable (eg, Abs(x) or Exp(x)), but note
+that one must then include a term in the energy equal to minus the log
+of the Jacobian of the transformation (though this term is zero for
+Abs(x)).
+
+For distributions specified by a single energy function, the behaviour
+of tempering methods is controlled by whether the -zero-temper option
+is specified.  If -zero-temper is not specified, the energy at inverse
+temperature b is b*E + (1-b)*N, where E is the specified energy, and N
+is minus the log of the Gaussian probability density function for the
+state variables, with all variables being independent, and having mean
+zero and variance one.  That is,
+
+    N = (D/2) * log(2*Pi) + (1/2) * SUM_i q_i^2
+
+where D is the number of state variables, and q_i is the value of the
+i'th variable.  If -zero-temper is specified the energy at an inverse
+temperature other than one is found by simply multiplying the energy
+specified in dist-spec by the inverse temperature - ie, it is what
+would be obtained if N above were zero rather than minus the log of
+the Gaussian probability density.  Note that annealed importance
+sampling cannot be used when -zero-temper is specified, since the
+distribution at inverse temperature zero is improper.
+
+For Bayesian posterior distributions, the various distributions used
+in tempering methods are found by multiplying the log likelihood terms
+by the inverse temperature.  The distribution at inverse temperature
+one is thus the usual posterior, whereas that at inverse temperature
+zero is the prior.  
+
+The 'dist' programs known how to sample from the prior distribution
+only when it is specified as a sum of terms of the form v~D(...),
+where D is one of the parameterized distributions as described in
+formula.doc, and where the parameters of the distribution refer only
+to variables whose distributions are given in earlier terms.  Sampling
+from the prior is needed to perform Annealed Importance Sampling.
+Sampling from the prior can also be done just for its own interest, or
+to initialize Markov chain sampling.  See dist-gen.doc for how to do
+this.  If the prior does not have the form that allows automatic
+sampling, prior generation can be done only if the -read-prior option
+is given, in which case points from the prior are obtained by reading
+from standard input, which must be a file of points, or a pipe from a
+separate program for sampling from the prior.  See dist-mc.doc for
+details.
+
+            Copyright (c) 1998 by Radford M. Neal

@@ -1,0 +1,20 @@
+
+
+NET-TBL:  Get quantities from net log files and output as a table.
+
+The net-tbl program is a specialization of xxx-tbl to the neural
+network application.  It is capable of finding any of the quantities
+documented in net-quantities.doc, mc-quantities.doc, and quantities.doc.
+
+The form of the net-tbl command is 
+
+    net-tbl [ -h ] quantities { log-file [ range ] } 
+            [ / test-inputs [ test-targets ] ]
+
+The optional arguments at the end allow the quantities relating to test
+cases to be evaluated with respect to a test set other than the one
+specified with data-spec.
+
+For the generic features of net-tbl, see xxx-tbl.doc.
+
+            Copyright (c) 1998 by Radford M. Neal

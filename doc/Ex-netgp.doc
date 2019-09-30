@@ -1,0 +1,13 @@
+
+
+EXAMPLES OF FLEXIBLE BAYESIAN REGRESSION AND CLASSIFICATION MODELS BASED ON 
+NEURAL NETWORKS AND GAUSSIAN PROCESSES
+
+Neural networks and Gaussian processes can be used to to predict a
+target value (or values) from a set of input values.  When the target
+is real-valued, this is known as "regression".  When the target takes
+on values from a finite set, it is known as "classification".
+Examples of both sorts are discussed here.
+
+The data and command files for these examples are in the "ex-netgp"
+directory.

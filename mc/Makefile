@@ -13,7 +13,7 @@
 
 include ../make.include
 
-programs:	mc-spec mc-temp-sched mc-temp-filter
+programs:	mc-spec mc-temp-sched mc-temp-filter mc-ais
 
 modules:	mc-traj.o mc-iter.o mc-metropolis.o mc-hybrid.o mc-slice.o \
 		mc-util.o mc-quantities.o \
@@ -29,16 +29,22 @@ include mc.make
 mc-spec:	mc-spec.o	misc.o log.o
 		$(CC) $(LFLAGS) mc-spec.o misc.o log.o -lm -o mc-spec 
 
-mc-spec.o:	mc-spec.c	log.h mc.h
+mc-spec.o:	mc-spec.c	misc.h log.h mc.h
 
 mc-temp-sched:	mc-temp-sched.o	misc.o log.o
 		$(CC) $(LFLAGS) mc-temp-sched.o misc.o log.o \
 		      -lm -o mc-temp-sched 
 
-mc-temp-sched.o: mc-temp-sched.c log.h mc.h
+mc-temp-sched.o: mc-temp-sched.c misc.h log.h mc.h
 
 mc-temp-filter:	mc-temp-filter.o misc.o log.o
 		$(CC) $(LFLAGS) mc-temp-filter.o misc.o log.o \
 		      -lm -o mc-temp-filter 
 
-mc-temp-filter.o: mc-temp-filter.c log.h mc.h
+mc-temp-filter.o: mc-temp-filter.c misc.h log.h mc.h
+
+mc-ais:		mc-ais.o misc.o log.o
+		$(CC) $(LFLAGS) mc-ais.o misc.o log.o \
+		      -lm -o mc-ais 
+
+mc-ais.o: 	mc-ais.c misc.h log.h mc.h

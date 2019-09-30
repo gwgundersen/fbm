@@ -174,7 +174,12 @@ void main
       { if (i>0 && i%5==0)
         { printf("\n             ");
         }
-        printf(" %10.3f",exp(*h->linear[i]));
+        if (gp->linear_flags[i]&Flag_omit)
+        { printf("       -   ");
+        }
+        else
+        { printf(" %10.3f",exp(*h->linear[i]));
+        }
       }
       printf("\n");
     }

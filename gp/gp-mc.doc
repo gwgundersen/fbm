@@ -48,6 +48,34 @@ The following application-specific sampling procedures are implemented:
        This operation is not allowed for regression models with
        autocorrelated noise.
 
+   met-values [ scale [ N ] ]
+
+       Does N Metropolis updates of the latent values (default is one),
+       using a Gaussian proposal distribution whose mean is the current
+       set of latent variables and whose covariance matrix is the prior
+       covariance of the latent variables multiplied by scale^2 (with
+       default of one).  
+
+       As a special fudge (probably useful only for testing), a negative 
+       scale can be given, in which case the covariance matrix for the
+       proposal is diagonal, based simply on the prior variances.
+
+       If latent values do not exist beforehand, this procedure operates 
+       as if the previous values were all zero.  
+
+   mh-values [ scale [ N ] ]
+
+       Does N Metropolis-Hastings updates of the latent values (default 
+       is one), in which the proposed state is found by multiplying all
+       the latent values by sqrt(1-scale^2) and then adding Gaussian noise 
+       with mean zero and covariance given by the prior covariance of the 
+       latent values multiplied by scale^2.  The default for scale is one, 
+       in which case the proposal is a sample from the prior, but this is 
+       probably not good for most problems.  
+
+       If latent values do not exist beforehand, this procedure operates 
+       as if the previous values were all zero.  
+
    sample-values
 
        Samples latent values associated with training cases given the 
@@ -76,4 +104,7 @@ The following application-specific sampling procedures are implemented:
        values the training cases be available.  If these are not recorded, 
        such values are automatically sampled and then discarded.
 
-            Copyright (c) 1996 by Radford M. Neal
+Tempering methods and Annealed Importance Sampling are not currently
+supported.
+
+            Copyright (c) 1996, 1998 by Radford M. Neal

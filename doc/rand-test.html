@@ -1,36 +1,6 @@
 <html>
 <body>
 <pre>
- 
-
-RAND-TEST:  Test random number generators.  
-
-Usage:
-
-  rand-test seed generator { parameters } / sample-size [ low high bins ]
-
-Using the seed given, tests the random number generator identified by
-the second argument, for the parameter values specified.  The possible
-generators and required parameters are as follows:
-
-    uniform                  Uniform from [0,1)
-    uniopen                  Uniform from (0,1)
-    int n                    Uniform from the set { 0, 1, ..., (n-1) }
-    gaussian                 From Gaussian with mean zero and unit variance
-    exp                      From exponential with mean one
-    cauchy                   From Cauchy centred at zero with unit width
-    gamma alpha              From Gamma with shape parameter (and mean) alpha
-    beta a b                 From Beta with parameters a and b
-
-The size of the sample to use is also specified.  The program reports
-the mean and variance of the sample.  A histogram is also printed if a
-low and high range and number of bins are for it are specified.
-
-These tests are not really adequate to detect subtle forms of bias due
-to use of pseudo-random numbers, but are hopefully good enough to find
-most programming errors.
-
-            Copyright (c) 1995 by Radford M. Neal
 </pre>
 </body>
 </html>

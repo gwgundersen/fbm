@@ -1,0 +1,198 @@
+<html>
+<body>
+<pre>
+
+
+MODELING REAL-VALUED DATA WITH A T-DISTRIBUTION
+
+One can also define models for the unconditional distribution of one
+or more target values, without reference to any input values.  Here, 
+I will show how one can sample from the posterior distribution for the
+parameters of a univariate t-distribution.  This example also shows
+how to specify different stepsizes for different state variables.
+
+
+Specifying the model.
+
+Here is a specification for a model in which the degrees of freedom of
+the t-distribution are fixed (at two), but the location and scale
+parameters are unknown:
+
+    &gt; dist-spec tlog1 d=2 "u ~ Normal(0,10^2) + w ~ Normal(0,1)" \
+                          "w + [(d+1)/2] Log { 1 + [(t-u)/Exp(w)]^2/d }"
+
+The "d=2" argument defines a constant (the degrees of freedom), which
+may be used in the formulas for the prior and the likelihood.  The
+location parameter, u, is given a normal prior with mean zero and
+standard deviation 10.  The log of the scale parameter, w, is given a
+normal prior with mean zero and standard deviation 1.  The software
+does not have a built-in t-distribution, so the likelihood has to be
+specified by explicitly writing a formula for minus the log of the
+probability of the target value (t) for given values of the model
+parameters.  This formula must include all terms that depend on the
+model parameters, but for sampling from the posterior it is not
+necessary to include constant terms.  (However, it is necessary to
+include all terms in the likelihood if the marginal likelihood for the
+model is to be found using Annealed Importance Sampling.)
+
+
+Specifying the data source.
+
+We can specify that the data comes from the file "tdata" as follows:
+
+    &gt; data-spec tlog1 0 1 / tdata .
+
+This says that there are no input values and one target value, and
+that the data comes from the file "tdata" (note that one must say
+where the input values come from even though there are zero of them,
+but that one can then say that the targets come from the same place
+using the "." specification).
+
+The contents of "tdata" are as follows:
+
+    0.9
+    1.0
+    1.1
+    6.9
+    7.0
+    7.1
+
+
+Sampling with the Metropolis algorithm.
+
+We can now try sampling using the Metropolis algorithm with a stepsize
+of 1, repeated 10 times each iteration:
+
+    &gt; mc-spec tlog1 repeat 10 metropolis 1
+    &gt; dist-mc tlog1 5000
+
+This takes about 12 seconds on our machine.  We can look at plots such
+as the following to assess convergence:
+
+    &gt; dist-plt t uw tlog1 | plot
+
+Equilibrium appears to have been reached within 50 iterations.  We can
+now see a picture of the posterior distribution using a command such as
+
+    &gt; dist-plt u w tlog1 50:%3 | plot-points
+
+This produces a scatterplot for the values of the two state variables
+at those iterations from 50 on that are divisible by three.  Looking
+at only every third state reduces the number of points that will be
+superimposed, due to rejections of the Metropolis proposals.  (If some
+points are superimposed, the scatterplot might be misleading.)
+
+If you produce such a plot, you should see a tooth-shaped distribution
+whose main mass is around u=3.9 and w=1, with two roots descending at
+u=1 and u=7.
+
+
+Varying the stepsizes.
+
+The rejection rate of the metropolis operations with stepsize of 1 can
+be estimated as follows:
+
+    &gt; dist-tbl r tlog1 | series m
+
+    Number of realizations: 1  Total points: 5000
+
+    Mean: 0.620760  
+
+The efficiency of this chain at estimating the mean of u can be
+assessed as follows:
+
+    &gt; dist-tbl u tlog1 50: | series mac 10
+
+    Number of realizations: 1  Total points: 4951
+    
+    Mean: 3.963551  S.E. from correlations: 0.055950
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.625358    2.250717
+        2   0.388528    3.027772
+        3   0.254716    3.537205
+        4   0.168077    3.873358
+        5   0.106168    4.085695
+        6   0.062758    4.211211
+        7   0.031260    4.273732
+        8   0.009645    4.293023
+        9   0.001954    4.296931
+       10  -0.006025    4.284882
+
+An inefficiency factor of 4.2 is not bad, but we still might try to
+improve sampling by using a different stepsize.  We can use a stepsize
+twice as big by changing the 'mc-spec' command as follows:
+
+    &gt; mc-spec tlog2 repeat 10 metropolis 2
+
+This produces a higher rejection rate:
+
+    &gt; dist-tbl r tlog2 | series m
+
+    Number of realizations: 1  Total points: 5000
+
+    Mean: 0.813800  
+
+Despite this, the efficiency of sampling is improved:
+
+    &gt; dist-tbl u tlog2 50: | series mac 10
+    
+    Number of realizations: 1  Total points: 4951
+    
+    Mean: 3.916702  S.E. from correlations: 0.048513
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.502745    2.005491
+        2   0.246632    2.498755
+        3   0.133819    2.766394
+        4   0.081335    2.929063
+        5   0.053313    3.035689
+        6   0.028491    3.092671
+        7   0.013611    3.119892
+        8   0.024985    3.169861
+        9   0.013700    3.197261
+       10   0.018007    3.233274
+
+From the scatterplot of the posterior distribution, the larger
+stepsize seems appropriate for u, but it seems too big for w.  We can
+specify different stepsizes for u and w as follows:
+
+    &gt; dist-stepsizes tlog12 w=1 u=2
+    &gt; mc-spec tlog12 repeat 10 metropolis 1
+
+The 'dist-stepsizes' command lets you specify individual stepsizes for
+the state variables.  These values are multiplied by the stepsize
+specified for the "metropolis" operation before being used, so you can
+change the overall size of the steps by changing this argument, while
+keeping the relative stepsizes the same.  
+
+Using twice as big a stepsize for u as for w seems to work well, as 
+seen by looking at the autocorrelations for u:
+
+    &gt; dist-tbl u tlog12 50: | series mac 10
+    
+    Number of realizations: 1  Total points: 4951
+    
+    Mean: 3.876082  S.E. from correlations: 0.036181
+    
+      Lag  Autocorr.  Cum. Corr.
+    
+        1   0.282051    1.564102
+        2   0.061686    1.687474
+        3   0.019975    1.727424
+        4   0.010014    1.747453
+        5  -0.004439    1.738575
+        6   0.000983    1.740540
+        7   0.000207    1.740954
+        8   0.025230    1.791413
+        9   0.004726    1.800866
+       10  -0.001624    1.797619
+
+The autocorrelations have been reduced to the point where the estimate
+based on the points from this chain are a factor of only about 1.7
+times less efficient than an estimate based on independent points.
+</pre>
+</body>
+</html>

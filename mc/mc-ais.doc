@@ -1,0 +1,49 @@
+
+
+MC-AIS:  Monitor annealed importance sampling (AIS) runs.
+
+MC-ais reads logs files containing data from Annealed Importance
+Sampling (AIS) runs, and produces various indicators of how well AIS
+is performing.
+
+Usage:
+
+    mc-ais values { log-file [ range ] }
+
+Reads data from the log files given, in the indicated ranges (default
+is the whole files), and computes from this data various values for
+each temperature in the tempering schedule, and writes them to
+standard output.  The values computed are given by the first argument,
+which should consist of one or more letters form the following list:
+
+    I   index in tempering schedule
+    i   inverse temperature at this index
+    T   temperature at this index
+
+    m   mean of the importance weights at this index
+    M   log of the mean of the importance weights
+    F   minus the log of the mean of the importance weights
+
+    v   variance of the normalized importance weights at this index
+    V   variance of the logs of the importance weights at this index
+    a   adjusted sample size at this index
+
+The values requested are written to standard output.  Each line of
+output pertains to one index in the tempering schedule, and contains
+the values for that index, in the order requested.
+
+The mean of the importance weights converges to the ratio of the
+normalizing constants for the distribution at the given index and for
+the distribution at inverse temperature zero.  The normalized
+importance weights are obtained by dividing by the mean weight.  The
+adjusted sample size is the number of points for which data exists
+divided by one plus the variance of the normalized importance weights.
+It is a rough indicator of the effective size of the sample available
+for computing expectations.  Ideally, for maximum efficiency, the
+tempering schedule should be chosen so that the variance of the log
+weights goes up linearly with the tempering index, ending at the value
+of about one, though this may not be achievable when there are
+isolated modes.  The variance of the normalized weights would ideally
+be e-1 (about 1.7).
+
+            Copyright (c) 1998 by Radford M. Neal

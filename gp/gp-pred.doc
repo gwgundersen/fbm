@@ -43,6 +43,9 @@ The 'options' argument consists of one or more of the following letters:
     n   Display the guess based on the mean, and its squared error
     d   Display the guess based on the median, and its absolute error
 
+    q   Display the 10% and 90% quantiles of the predictive distributions
+        for the targets.  Note that these distributions include the noise.
+
     l   Use stored latent values for predictions with a regression model
         (if available).  Normally, predictions for regression models are 
         done as if no latent values were stored, since this is better, 
@@ -57,6 +60,15 @@ The 'options' argument consists of one or more of the following letters:
         the results for individual cases (makes sense only in combination 
         with one or more of 'p', 'm', 'n', and 'd', and not with 'i' or 't')
 
+    1-9 If any of these characters are used, only the corresponding 
+        non-linear parts of the covariance is used when computing 
+        covariances involving test cases (other non-linear parts and the 
+        constant and linear parts are ignored).  This results in predictions 
+        for just these components of the function, allowing one to see the 
+        components of an additive model.  (But note that if the identity of 
+        a component can change during a run, this option will be meaningful
+        only when the predictions are based on a single iteration.)
+
 Some of these options are illegal for some data models.  The illegal
 combinations are marked with an 'X' in the following table:
 
@@ -67,16 +79,16 @@ combinations are marked with an 'X' in the following table:
      m                     X           X
      n                  
      d    X       X    
-     f    X       X                    X
+     q    X       X    
 
-Furthermore, the 'a' and 'b' options are incompatible, and the 't',
-'p', and 'a' options may be used only if the true targets are given.
-The errors for individual cases are also displayed only if the true
-targets are known.  The 'n' option for class models displays the mean
-probabilities for each class, and computes a single figure for squared
-error that is the sum of the squares of the differences between these
-probabilities and the indicator variables that are one for the right
-class and zero for the wrong classes.
+Furthermore, the 'a' option is incompatible with 'b', 'i', 't', or
+'q', and the 't', 'p', and 'a' options may be used only if the true
+targets are given.  The errors for individual cases are also displayed
+only if the true targets are known.  The 'n' option for class models
+displays the mean probabilities for each class, and computes a single
+figure for squared error that is the sum of the squares of the
+differences between these probabilities and the indicator variables
+that are one for the right class and zero for the wrong classes.
 
 Making predictions requires inverting the covariance matrix of the
 training points for each Gaussian process used, which can take a
@@ -86,7 +98,7 @@ the log file for each iteration, but this could take up a very large
 amount of disk space.  When the number of test cases is large, it will
 take much longer to compute the median or log probability predictions
 (options "d" or "p") for a regression model than to compute only the
-mean predictons (option "n").  For binary and class models, all 
+mean predictions (option "n").  For binary and class models, all 
 sorts of predictions take about the same amount of time.
 
 The median is calculated by Monte Carlo, using a sample consisting of
@@ -111,4 +123,11 @@ If only inputs and targets are to be displayed (no predictions), one
 may give just a single log file with no range.  Otherwise, at least
 one Gaussian process must be specified.
 
-            Copyright (c) 1996 by Radford M. Neal
+An additional option of -use-inverse or -alt-mean may appear before
+the "options" argument above.  These control the way the matrix
+operations are done, and are primarily mean for testing purposes.
+However, users might have a use for -alt-mean, which forces a possibly
+more accurate computation of the mean prediction (which is, however,
+slower, if only the mean is being computed).
+
+            Copyright (c) 1996, 1998 by Radford M. Neal

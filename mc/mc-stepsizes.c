@@ -1,6 +1,6 @@
 /* MC-STEPSIZES.C - Skeleton program to display and evaluate stepsizes. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -21,6 +21,11 @@
 #include "rand.h"
 #include "log.h"
 #include "mc.h"
+
+
+/* THE FOLLOWING IS NEEED BY THE PLOTTING ROUTINES. */
+
+enum { PLT, TBL, HIST } program_type;
 
 
 /* MAIN PROGRAM. */
@@ -57,8 +62,7 @@ void main
 
   logf.file_name = argv[1];
 
-  /* Open log file and read records with indexes less than zero and with
-     index equal to that at the end. */
+  /* Open log file and read records with indexes less than zero. */
 
   log_file_open (&logf, 1);
 
@@ -85,10 +89,6 @@ void main
   /* Initialize using records found. */
 
   mc_app_initialize(&logg,&ds);
-
-  if (logg.data['r']!=0) 
-  { rand_use_state(logg.data['r']);
-  }
 
   grad = chk_alloc (ds.dim, sizeof *grad);
   bgrad = chk_alloc (ds.dim, sizeof *bgrad);
@@ -122,7 +122,7 @@ void main
   if (dosec)
   { printf(
      "\nStepsizes selected by application and from second derivatives\n\n");
-    printf("Log file: %s  Index: %d  Delta: %.6lf\n\n",
+    printf("Log file: %s  Index: %d  Delta: %.6f\n\n",
             logf.file_name, index, delta);
     printf("  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize\n\n");
   }
@@ -136,16 +136,16 @@ void main
   { 
     if (dosec)
     { if (seconds[i]>0)
-      { printf ("%6d %+10.5lf   %+11.4le  %+11.4le   %+10.5lf\n",
+      { printf ("%6d %+10.5f   %+11.4e  %+11.4e   %+10.5f\n",
                 i, ds.stepsize[i], bgrad[i], fgrad[i], 1/sqrt(seconds[i]));
       }
       else
-      { printf ("%6d %+10.5lf   %+11.4le  %+11.4le   **********\n",
+      { printf ("%6d %+10.5f   %+11.4e  %+11.4e   **********\n",
                 i, ds.stepsize[i], bgrad[i], fgrad[i]);
       }
     }
     else
-    { printf ("%6d %+10.5lf\n", i, ds.stepsize[i]);
+    { printf ("%6d %+10.5f\n", i, ds.stepsize[i]);
     }
   }
 

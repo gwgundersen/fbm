@@ -1,0 +1,11 @@
+
+# Commands to sample from the "ring" distribution using the Metropolis
+# algorithm with updates to one components at a time.  The stepsize to 
+# use is given as an argument.  The 18 repetitions result in 54 energy
+# function evaluations per iteration, and takes about the same time
+# as 50 "metropolis" updates.
+
+dist-spec glog.met1,$1 \
+  "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
+mc-spec glog.met1,$1 repeat 18 met-1 $1 end
+dist-mc glog.met1,$1 500

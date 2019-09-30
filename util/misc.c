@@ -374,7 +374,7 @@ void parse_flags
    Returns the number of items that the flag applies to. */
 
 int list_flags
-( char *a,		/* Char array in holding flag bits */
+( char *a,		/* Char array holding flag bits */
   int  n,		/* Length of a */
   int  flag,		/* Bit set in a to indicate flag applies */
   char *s		/* Place to store list - must be big enough! */

@@ -1,0 +1,40 @@
+
+
+DIST-STEPSIZES:  Display, evaluate, or set stepsizes used for dynamics.
+
+This program is an extension of the generic stepsizes program (see
+xxx-stepsizes.doc) for the 'dist' module.  This program includes the
+standard capability of displaying the stepsizes used by Markov chain
+sampling methods along with the "optimal" stepsizes based on second
+derivatives.  It also allows one to set the stepsizes for particular
+state variables, and to display the stepsizes used by variable name,
+rather than by numeric position in the vector of state variables.
+
+Usage:
+
+    dist-stepsizes log-file index delta
+
+or:
+
+    dist-stepsizes log-file { var=value }
+
+or:
+
+    dist-stepsizes log-file [ index ]
+ 
+For the first form, the actual stepsizes used and the "optimal"
+stepsizes that would be selected based on the second derivatives at
+that point are displayed, the second derivatives being found by
+differences of first derivatives, using the given delta.  This is the
+same as generic stepsizes program, described in xxx-stepsizes.doc.
+
+The second form allows you to set the stepsizes that are used for
+particular variables.  The new stepsizes are written to the end of the
+log file, and are used in subsequent Markov chain operations until set
+to new values by a subsequent dist-stepsizes call.  Variables that are
+not mentioned have the default stepsize of one.
+
+The final form displays the selection of stepsizes stored at the given
+index, or the last stepsizes set if no index is given.
+
+            Copyright (c) 1998 by Radford M. Neal

@@ -25,11 +25,13 @@
 #include "rand.h"
 
 
-/* CONSTANT PI.  Defined here if not in <math.h>. */
+/* CONSTANTS INVOLVING PI. */
 
 #ifndef M_PI
-#define M_PI 3.14159265358979323846
+#define M_PI 3.14159265358979323846	/* Define pi, if not defined already */
 #endif
+
+#define Log2pi  1.83787706640934548356	/* Log(2*M_PI) */
 
 
 /* COMPUTE LOG PROBABILITY OF TARGETS AND/OR ITS DERIVATIVES.  Computes the 
@@ -68,6 +70,9 @@ void net_model_prob
 )
 {
   extern double lgamma(double);
+
+  static double alpha_saved=0.0;/* Constant is already computed for this alpha*/
+  static double cnst;		/* Saved value of this constant */
 
   double p1, d, x, alpha, z;
   int i;
@@ -135,7 +140,7 @@ void net_model_prob
         }
 
         if (pr && op<1) 
-        { *pr -= 0.5 * a->N_outputs * log(2*M_PI);
+        { *pr -= 0.5 * a->N_outputs * Log2pi;
         }
       }
 
@@ -160,8 +165,11 @@ void net_model_prob
         }
 
         if (pr && op<1) 
-        { *pr += a->N_outputs * (lgamma((alpha+1)/2) - lgamma(alpha/2) 
-                                  - 0.5*log(M_PI*alpha));
+        { if (alpha!=alpha_saved)
+          { cnst = lgamma((alpha+1)/2) - lgamma(alpha/2) - 0.5*log(M_PI*alpha);
+            alpha_saved = alpha;
+          }
+          *pr += a->N_outputs * cnst;
         }
       }
 

@@ -1,0 +1,310 @@
+<html>
+<body>
+<pre>
+
+
+MODELING PROBABILITIES FOR CATEGORICAL DATA
+
+As an example of a model for categorical data, I will show here how to
+model probabilities for targets that come from the set {0,1,2}, with
+the prior distribution for these probabilities being uniform over the
+simplex of valid probabilities.  This example illustrates one way of
+representing probabilities using unbounded real parameters.  It can
+easily be generalized to arbitrary Dirichlet priors.  I also show how
+to compute the marginal likelihood for this model by using Annealed
+Importance Sampling, and also by using simple importance sample (which
+can be done as a degenerate case of AIS).
+
+
+Specifying the model.
+
+The probabilities for the three possible values of the target will be
+represented using the parameters w0, w1, and w2, with the probability
+of the value "0" being Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)] and similarly
+for the other values.  These probabilities will be positive and sum to
+one for any values of the parameters.  This is necessary if we are to
+use this software, since it doesn't allow state variables to be
+constrained.
+
+With this representation, the model can be specified by the following
+somewhat formidable command:
+
+    &gt; dist-spec plog.met \
+       "w0~ExpGamma(1,1) + w1~ExpGamma(1,1) + w2~ExpGamma(1,1)" \
+       "-Delta(t-0)*(w0-LogSumExp(w0,w1,w2)) \
+        -Delta(t-1)*(w1-LogSumExp(w0,w1,w2)) \
+        -Delta(t-2)*(w2-LogSumExp(w0,w1,w2))"
+
+These priors for w0, w1, and w2 will produce a uniform prior for the
+resulting probabilities.  More generally, if the priors for w0, w1,
+etc. are ExpGamma(a1,1), ExpGamma(a2,1), etc., the prior distribution
+for the probabilities Exp(w0)/[Exp(w0)+...], Exp(w1)/[Exp(w0)+...],
+and so forth will be Dirichlet with parameters a1, a2, etc.
+
+The terms in the likelihood are constructed using the "Delta" function
+which has the value one when its argument is zero and has the value
+zero otherwise.  Since the target, t, is in the set {0,1,2}, exactly
+one of the terms in the likelihood will be non-zero for each case.
+When the target has the value "0", the likelihood should be minus the
+log of the probability of the target being "0", that is:
+
+    - Log { Exp(w0) / [ Exp(w0) + Exp(w1) + Exp(w2) ] }
+
+In the specification above, this is written as
+
+    - (w0 - LogSumExp(w0,w1,w2))
+
+using the "LogSumExp" function, which computes the log of the sum of
+the exponentials of its arguments.  This is shorter and faster.  More
+importantly, the LogSumExp function is guaranteed to produce a valid
+result even when computing Exp(w0), Exp(w1), or Exp(w2) would result
+in floating point overflow or underflow.  This is probably not crucial
+for this example, but it is important in some similar contexts.
+
+
+Specifying the data source.
+
+The data is stored one item per line in the file "pdata".  This source
+is specified with the following command:
+
+    &gt; data-spec plog.met 0 1 3 / pdata .
+
+The arguments after the log file are the number of input variables
+(0), the number of target variables (1), and an argument (3) that
+indicates that the targets are categorical with three possible values,
+represented by the integers 0, 1, and 2.  This argument could have
+been left out, but including it causes the data to be checked to
+ensure that each item is in the set {0,1,2}.
+
+zThe remaining arguments give the files where the inputs (all zero of
+them) and targets come from, with the "." for the latter indicating
+that the targets come from the same place as the inputs.
+
+The file "pdata" contains 17 items, of which 6 are "0", 8 are "1", and
+3 are "2".
+
+
+Sampling with the Metropolis algorithm.
+
+We can sample from the posterior distribution using any of various
+Markov chain methods.  Here's one example using the Metropolis
+algorithm:
+
+    &gt; mc-spec plog.met repeat 10 metropolis 1
+    &gt; dist-mc plog.met 1000
+
+This takes about eight seconds on our machine.  Convergence is quite
+rapid, and the sampling efficiency is reasonably good.
+
+We can estimate the probabilities of the three possible values as
+follows:
+
+    &gt; dist-est "Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.met 100:
+    
+    Number of sample points: 901
+    
+    Estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.349174  (standard error 0.00342273)
+      Std.dev: 0.102739
+    
+    NOTE: The standard errors assume points are independent
+    
+    &gt; dist-est "Exp(w1)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.met 100:
+    
+    Number of sample points: 901
+    
+    Estimates for Exp(w1)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.450742  (standard error 0.00354029)
+      Std.dev: 0.106268
+    
+    NOTE: The standard errors assume points are independent
+    
+    &gt; dist-est "Exp(w2)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.met 100:
+    
+    Number of sample points: 901
+    
+    Estimates for Exp(w2)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.200084  (standard error 0.00290151)
+      Std.dev: 0.0870937
+    
+    NOTE: The standard errors assume points are independent
+
+Note that since the points are not entirely independent, the standard
+errors are not quite right.  For comparison, the exactly correct
+posterior means of the three probabilities (found analytically) are
+0.35, 0.45, and 0.2.
+
+    
+Computing the marginal likelihood with Annealed Importance Sampling.
+
+We can use Annealed Importance Sampling (AIS) to find the prior
+probability of the observed data given this model - sometimes called
+the "marginal likelihood".  This is the normalizing constant for the
+posterior distribution, if it is specified as the product of the prior
+and the likelihood.  Annealed Importance Sampling (which is described
+in a technical report of this name available from my web page) can
+also help in handling isolated modes, though this should not be a
+problem for this model.
+
+To use AIS, we specify the model and the data source as above, and
+then use the following commands:
+
+    &gt; mc-temp-sched plog.ais 0.1 0.3 0.6
+    &gt; mc-spec plog.ais AIS repeat 10 metropolis 0.5
+    &gt; dist-mc plog.ais 1000
+
+The 'mc-temp-sched' command specifies a "tempering schedule": a series
+of distributions that the annealing run will pass through.  For a
+Bayesian model, these distributions are created by multiplying the log
+likelihood part of the "energy" by various "inverse temperatures",
+listed as arguments to 'mc-temp-sched'.  A final distribution with
+inverse temperature of 1 is assumed at the end of the schedule.  This
+final distribution is the posterior, which we wish to sample from, and
+to find the normalizing constant for.
+
+The chain proceeds sequentially through these distributions.  The
+"AIS" operation moves to the next distribution in the schedule, and
+updates a "weight" according to the ratio of probabilities under the
+new and old distributions.  If the chain is at the last distribution
+(at inverse temperature 1), it moves to the first distribution (here,
+at inverse temperature 0.1), after first drawing a new state from the
+distribution at inverse temperature 0, which for a Bayesian model is
+the prior.  There are four temperatures in the tempering schedule
+here, and each iteration does one "AIS" operation.  The 1000
+iterations will therefore produce 250 annealing runs.
+
+Markov chain operations such as "metropolis" operate as usual, except
+that the "energy function" is modified by the inverse temperature.
+
+For AIS to operate, it must be possible to sample from the prior.  If
+the prior is specified entirely as a sum of "~" terms, with no
+circular references, the software knows how to sample from it.
+Otherwise, you must provide a separate program to do the sampling.
+For how this is done, see the documentation on the -read-prior option
+in <A HREF="dist-spec.html">dist-spec.doc</A> and also the information in <A HREF="dist-mc.html">dist-mc.doc</A>.
+
+The commands above take about nine seconds on our machine.  Once they
+have finished, we can estimate functions of state with 'dist-est',
+which will automatically look at only the iterations that pertain to
+the final distribution of interest.  It also computes weighted
+estimates using the weights found during the annealing runs.  Here is
+an example:
+
+    &gt; dist-est "Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.ais
+    
+    Number of sample points: 250
+    
+      Variance of normalized weights: 1.21148
+      Adjusted sample size: 113.0  (reduction factor 0.452)
+    
+    Estimates for importance weights:
+    
+      Mean of weights: 2.85948e-09  (standard error 1.99056e-10)
+      Log of mean:    -19.6726  (standard error 0.0696127)
+    
+    Standard estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.342344  (standard error 0.00925806)
+      Std.dev: 0.100527
+    
+      Effective sample size: 117.9  (reduction factor 0.472)
+    
+    Jacknife estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.342353  (standard error 0.00934127)
+    
+      Effective sample size: 115.8  (reduction factor 0.463)
+    
+    NOTE: The standard errors assume points are independent
+    
+Note that there is no need to discard any of the early iterations,
+since each annealing run is independent.  Because of this
+independence, the standard errors computed are valid, subject to the
+usual caveats regarding the possibility that some important part of
+the distribution has been missed entirely.
+
+Along with an estimate for expectation of the specified function,
+'dist-est' outputs an estimate for the mean of the weights, which for
+a Bayesian model will be the marginal likelihood, provided the
+likelihood specification included all terms, even those that are
+constant.  The log of this estimate is also output, since the value
+will often be extremely small or large.
+
+For this model, the marginal likelihood can be computed exactly by
+multiplying successive predictive probabilities.  For this data, it is
+
+       6! 8! 3! 
+       --------  =  2.86378e-9    log is -19.67112
+       19! / 2!
+
+The estimates and estimated standard errors are consistent with this.
+
+This problem is actually easy enough that the marginal likelihood can
+be found by simple importance sampling.  This can be viewed as a
+degenerate form of Annealed Importance Sampling in which the tempering
+schedule has only one distribution - the assumed one, at temperature
+1, which is the posterior.  We can do simple importance sampling with
+the following commands:
+
+    &gt; mc-temp-sched plog.is -
+    &gt; mc-spec plog.is AIS 
+    &gt; dist-mc plog.is 1000
+
+The 'mc-temp-sched' command with the argument "-" sets up the null
+tempering schedule.  The 'mc-spec' command just has an "AIS"
+operation, with no Markov chain operations.  This causes a new state
+to be drawn from the prior every iteration, and the appropriate weight
+to be computed based on the likelihood.
+
+Estimates for expectations and for the marginal likelihood can be
+found using 'dist-est'.  For example:
+
+    &gt; dist-est "Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.is
+
+    Number of sample points: 1000
+    
+      Variance of normalized weights: 3.85409
+      Adjusted sample size: 206.0  (reduction factor 0.206)
+    
+    Estimates for importance weights:
+    
+      Mean of weights: 2.83221e-09  (standard error 1.75827e-10)
+      Log of mean:    -19.6822  (standard error 0.0620814)
+    
+    Standard estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.344737  (standard error 0.00530831)
+      Std.dev: 0.104735
+    
+      Effective sample size: 389.3  (reduction factor 0.389)
+    
+    Jacknife estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
+    
+      Mean:    0.344731  (standard error 0.00532859)
+    
+      Effective sample size: 386.3  (reduction factor 0.386)
+    
+    NOTE: The standard errors assume points are independent
+    
+Doing importance sampling takes only a second on our machine, which is
+faster than Annealed Importance Sampling.  However, importance
+sampling quickly becomes infeasible for problems with more parameters
+or with more data.  Annealed Importance Sampling is more feasible for
+realistic problems, though some work is needed to set up a good
+tempering schedule.  See <A HREF="mc-ais.html">mc-ais.doc</A> for documentation on how to obtain
+information that is helpful in doing this.
+
+The software also supports the related methods of simulated tempering,
+tempered transitions, and tempered hybrid Monte Carlo.  There's no
+tutorial documentation on how to use these methods, though - just the
+documentation in <A HREF="mc-spec.html">mc-spec.doc</A>.
+
+Annealed importance sampling and the tempering schemes are also
+supported for neural network models, but not for Gaussian process and
+mixture models.
+</pre>
+</body>
+</html>

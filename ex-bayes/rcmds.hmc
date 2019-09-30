@@ -1,0 +1,13 @@
+
+# These commands sample from the posterior distribution for the linear
+# regression problem using hybrid Monte Carlo.
+
+dist-spec rlog.hmc \
+  "u ~ Normal(0,10^2) + w0 ~ Normal(0,10^2) + w1 ~ Normal(0,10^2) \
+      + v ~ ExpGamma(1,0.2)" \
+  "t ~ Normal (u + w0i0 + w1i1, Exp(-v))"
+
+data-spec rlog.hmc 2 1 / rdata .
+
+mc-spec rlog.hmc heatbath hybrid 25 0.01
+dist-mc rlog.hmc 500

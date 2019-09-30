@@ -32,9 +32,11 @@ void mc_record_sizes
   mc_app_record_sizes(logg);
 
   logg->req_size['r'] = sizeof (rand_state);
+  logg->req_size['i'] = sizeof (mc_iter);
   logg->req_size['o'] = sizeof (mc_ops);
   logg->req_size['t'] = sizeof (mc_traj);
   logg->req_size['b'] = sizeof (mc_temp_state);
+  logg->req_size['m'] = sizeof (mc_temp_sched);
 }
 
 
@@ -90,7 +92,10 @@ int mc_temp_index
 { 
   int i;
 
-  if (sch==0) abort();
+  if (sch==0)
+  { fprintf(stderr,"No tempering schedule has been specified\n");
+    exit(1);
+  }
 
   for (i = 0; sch->sched[i].inv_temp!=inv_temp; i++)
   { if (i==Max_temps-1) abort();
@@ -102,10 +107,7 @@ int mc_temp_index
 
 /* FIND DIFFERENCE IN ENERGY FOR TEMPERING CHANGE.  Computes the difference
    in energy resulting from a change in the tempering index by one step
-   up or down.
-
-   Uses the mc_app_energy_diff procedure provided by the application if this 
-   is available.  Otherwise does it the hard way using mc_app_energy. */
+   up or down. */
 
 double mc_energy_diff
 ( mc_dynamic_state *ds,		/* Dynamical state structure */
@@ -121,18 +123,16 @@ double mc_energy_diff
   { abort();
   }
 
-  if (!mc_app_energy_diff(ds,sch,dir,&ed)) 
-  { if (!ds->know_pot) 
-    { mc_app_energy(ds,1,1,&ds->pot_energy,0);
-      ds->know_pot = 1;
-    }
-    ds->temp_index += dir;
-    ds->temp_state->inv_temp = sch->sched[ds->temp_index].inv_temp;
-    mc_app_energy(ds,1,1,&e2,0);
-    ds->temp_index -= dir;
-    ds->temp_state->inv_temp = sch->sched[ds->temp_index].inv_temp;
-    ed = e2 - ds->pot_energy;
+  if (!ds->know_pot) 
+  { mc_app_energy(ds,1,1,&ds->pot_energy,0);
+    ds->know_pot = 1;
   }
+  ds->temp_index += dir;
+  ds->temp_state->inv_temp = sch->sched[ds->temp_index].inv_temp;
+  mc_app_energy(ds,1,1,&e2,0);
+  ds->temp_index -= dir;
+  ds->temp_state->inv_temp = sch->sched[ds->temp_index].inv_temp;
+  ed = e2 - ds->pot_energy;
 
   return ed;
 }
