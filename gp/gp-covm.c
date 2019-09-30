@@ -1,6 +1,6 @@
 /* GP-COVM.C - Procedures to compute covariances and their derivatives. */
 
-/* Copyright (c) 1996, 1997, 1998 by Radford M. Neal 
+/* Copyright (c) 1996, 1997, 1998, 1999 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -131,7 +131,7 @@ void gp_cov
     spread = gp->exp[l].spread;
 
     for (i = 0; i<ni; i++)
-    { if ((!flags[i]&Flag_omit))
+    { if (!(flags[i]&Flag_omit))
       { r[i] = exp(*h->exp[l].rel[i]);
       }
     }

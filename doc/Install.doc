@@ -29,11 +29,6 @@ you can remove the file 'fbm.YYYY-MM-DD.tar'.  You should now change
 into the 'fbm.YYYY-MM-DD' directory, as the following instructions
 assumed that you are there.
 
-NOTE: If you don't like the name 'fbm.YYYY-MM-DD' for this directory,
-change the name now, BEFORE compiling the programs, since the programs
-look for a file of natural random numbers in this directory, under the
-name it has when they are compiled.
-
 
 Looking at the documentation.
 

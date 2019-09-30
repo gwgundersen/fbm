@@ -111,10 +111,10 @@ For 1000 cases, however, training might well take a day.
 
 The software also implements neural network training using early
 stopping, as described in my paper on "Assessing relevance
-determination methods using DELVE" (to appear in Generalization in
-Neural Networks and Machine Learning, C. M. Bishop (editor),
-Springer-Verlag).  A similar early stopping method is also described
-in Carl Rasmussen's thesis (see above).
+determination methods using DELVE" (in Neural Networks and Machine
+Learning, C. M. Bishop, editor, Springer-Verlag, 1998).  A similar
+early stopping method is also described in Carl Rasmussen's thesis
+(see above).
 
 
 Bayesian mixture models.
@@ -202,7 +202,7 @@ Portability of the software.
 The software is written in ANSI C, and is meant to be run in a UNIX
 environment.  Specifically, it was developed on an SGI machine running
 IRIX Release 6.5.  It also seems to run OK on a SPARC machine running
-SunOS 5, using the 'gcc' C compiler, on Linux systems, and on DEC
+SunOS 5, using the 'gcc' C compiler, on Linius systems, and on DEC
 Alpha machines, provided that the -ieee and -std options are given to
 the C compiler.  As far as I know, the software does not depend on any
 peculiarities of these environments (except perhaps for the use of the

@@ -20,7 +20,7 @@ modules:	mc-traj.o mc-iter.o mc-metropolis.o mc-hybrid.o mc-slice.o \
 		mc-grad-test.o mc-stepsizes.o mc.o
 
 clean:
-	rm -f *.o mc-spec mc-temp-sched mc-temp-filter
+	rm -f *.o mc-spec mc-temp-sched mc-temp-filter mc-ais
 
 
 include ../util/util.make

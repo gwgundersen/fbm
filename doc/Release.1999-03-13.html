@@ -3,7 +3,13 @@
 <pre>
 
 
-NOTES ON THE VERSION OF 1999-02-20
+NOTES ON THE VERSION OF 1999-03-13
+
+These notes give the changes since the version of 1998-09-01.  A
+release dated 1999-02-20 was briefly available.  The only thing
+substantial change in this release is that the bug with the "delta"
+option noted below has been fixed.  There are also some very minor
+documentation updates and a fix to make-clean.
 
 Changes in this version:
 
@@ -13,11 +19,16 @@ Changes in this version:
 
 Bug fixes.
 
+A serious bug with the "delta" option for Gaussian process models has
+been fixed.  This bug was present in version from 1998-08-02 until
+this version.
+
 Some bugs regarding the survival analysis models have been fixed.  A
-problem that arose when automatic standardization was used for a variable
-that always had the same value in the training data has been fixed.  The
-computation of the likelihood for binary models is now more bullet-proof,
-and should avoid floating point overflow even in extreme cases.
+problem that arose when automatic standardization was used for a
+variable that always had the same value in the training data has been
+fixed.  The computation of the likelihood for binary models is now
+more bullet-proof, and should avoid floating point overflow even in
+extreme cases.  Make-clean now knows to remove mc-ais.
 
 
 Known bugs and other deficiencies.
