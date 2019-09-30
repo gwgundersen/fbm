@@ -1,6 +1,6 @@
 /* MC.C - Skeleton of program to run Markov chain Monte Carlo simulation. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -214,6 +214,8 @@ void main
 
   it->proposals = 0;
   it->rejects = 0;
+  it->slice_calls = 0;
+  it->slice_evals = 0;
 
   old_clock_count = clock();      /* start clock */
 
@@ -257,6 +259,8 @@ void main
 
       it->proposals = 0;
       it->rejects = 0;
+      it->slice_calls = 0; 
+      it->slice_evals = 0;
     }
   }
 

@@ -1,0 +1,122 @@
+
+
+GUIDE TO FURTHER DOCUMENTATION
+
+The overview and examples above are intended just to get you started.
+To use the software to do real work, you will probably need to refer
+to the detailed documentation on the commands (and common aspects of
+commands) contained in the files ending with ".doc" which are found in
+the various sub-directories, and also all collected in the 'doc'
+directory.  For quick reference, all commands print a brief summary of
+the command syntax when they are invoked with no arguments.
+
+In the syntax descriptions used, the characters "[" and "]" enclose
+parts of the command that are optional, "{" and "}" enclose optional
+parts that can be repeated, and "|" separates alternatives.  Except
+for the command name (or other obvious keywords), the words in the
+syntax descriptions are descriptive of what is to be entered, except
+that words in quotes are to be entered literally (without the quotes).
+
+The ".doc" files present in the various directories are listed below,
+with the more important files marked by "*".  Programs listed as
+"xxx-something" are generic, with "xxx" being replaced by the name of
+an application (eg, "net" or "bvg").  In some cases, further
+documentation is available under the specific name.
+
+The file index.html is a hypertext index to this documenation.  It can
+be accessed using a Web browser (eg, xmosaic or netscape), by a
+command such as
+
+    > xmosaic index.html
+
+or by opening index.html as a local file in a browser that you are
+already running. The index.html file must reside in the 'doc'
+directory for this software.  One needn't start the browser from this
+directory, however, provided one uses a full path name to identify
+index.html.  The files accessed this way are .html files derived from
+the .doc files.  The content is identical, except that references to
+other .doc files have been converted into hypertext links that you can
+follow with the browser.
+
+All the introductory documentation (including this) is collected into
+the 'manual' file.  You can print all the documentation by going to
+the main directory for this software and issuing a command such as
+
+    > lpr doc/manual util/*.doc mc/*.doc net/*.doc bvg/*.doc doc/release*
+ 
+(or using whatever command other than 'lpr' you use to print text files).
+
+
+Generic utility programs [util]:
+
+  * log             Facilities for handling log files
+    log-types       Types of log file records used by various programs
+
+    log-copy        Copy part of a log file to a new log file
+    log-last        Display the index of the last record in a log file
+    log-records     List all records in a log file  
+
+  * data-spec       Specify data sets for training and testing
+  * numin           Facilities for input of numeric data
+    numin-test      Test numeric input module
+
+  * model-spec      Specify model for targets
+  * prior           Meaning and syntax of prior specifications
+
+    grid            Output a grid of points  
+    extract         Extract items at random from a data file 
+
+  * rand-seed       Specify a random number seed  
+    rand-test       Test random number generators
+
+  * quantities      Numeric quantities obtainable from log files
+
+  * xxx-plt         Write quantities from a log file, suitable for plotting
+    xxx-hist        Build a histogram for a quantity obtained from a log file
+
+  * series          Analyse stationary time series data
+
+
+Markov chain Monte Carlo facilities [mc]:
+
+  * mc              Programs and modules supporting Markov chain Monte Carlo 
+  * mc-spec         Specify how to do the Markov chain simulation
+  * xxx-mc          Run Markov chain simulation
+
+  * mc-quantities   Quantities from log files relating to Monte Carlo 
+
+    mc-temp-sched   Specify temperature schedule for tempering methods
+    mc-temp-filter  Copy only iterations at a given temperature
+
+    xxx-grad-test   Test the correctness of the energy gradient computations
+    xxx-stepsizes   Display and evaluate stepsizes used for dynamics
+
+
+Bayesian neural networks [net]:
+
+  * net             Bayesian inference for neural networks using MCMC
+  * net-spec        Create a new network, or display existing specifications 
+
+  * net-mc          Do Markov chain simulation to sample networks
+  * net-gen         Generate networks from the prior, or with fixed values  
+
+  * net-display     Print network parameters and/or hyperparameters
+
+  * net-quantities  Quantities from log files relating to networks
+  * net-plt         Get quantities from a net log file, suitable for plotting
+    net-hist        Build histogram for quantity obtained from a net log file
+
+  * net-pred        Make predictions for test cases
+
+    net-eval        Evaluate network functions over a grid  
+    net-dvar        Find the variance of a difference in function values
+
+    net-rej         Generate networks from the posterior by rejection sampling
+
+
+Markov chain sampling for a bivariate Gaussian [bvg]:
+
+    bvg             Demo of Markov chain sampling from a bivariate Gaussian
+    bvg-spec        Specify a bivariate Gaussian distribution to sample from
+    bvg-mc          Do Markov chain simulation for a bivariate Gaussian
+    bvg-plt         Get quantities from a bvg log file, suitable to plot

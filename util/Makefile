@@ -1,6 +1,6 @@
 # MAKEFILE FOR UTILITY PROGRAMS AND MODULES.
 
-# Copyright (c) 1995 by Radford M. Neal 
+# Copyright (c) 1995, 1996 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 
@@ -15,17 +15,18 @@ CFLAGS = -O
 
 all:		programs test-progs modules
 
-programs:	data-spec log-records log-copy log-last rand-seed \
-		grid series extract
+programs:	data-spec model-spec log-records log-copy log-last \
+		rand-seed grid series extract
 
 test-progs:	demo-plt demo-hist rand-test numin-test
 
 modules:	misc.o log.o quantities.o plt.o hist.o rand.o numin.o \
-		data-trans.o 
+		data-trans.o model.o prior.o ars.o
 
 clean:
 	rm -f *.o data-spec log-records log-copy log-last rand-seed \
-	          grid series extract demo-plt demo-hist rand-test numin-test
+	          grid series extract demo-plt demo-hist rand-test numin-test \
+	          model-spec
 
 
 include util.make
@@ -47,6 +48,13 @@ data-spec:	data-spec.o	log.o numin.o data-trans.o
 		$(CC) data-spec.o log.o numin.o data-trans.o -lm -o data-spec
 
 data-spec.o:	data-spec.c	data.h log.h
+
+
+model-spec:	model-spec.o	log.o rand.o prior.o 
+		$(CC) model-spec.o log.o rand.o prior.o \
+		-lm -o model-spec
+
+model-spec.o:	model-spec.c	log.h prior.h model.h
 
 
 log-last:	log-last.o	log.o

@@ -1,6 +1,6 @@
 /* NET-QUANTITIES.C - Module defining quantities for neural networks. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -20,6 +20,8 @@
 #include "misc.h"
 #include "log.h"
 #include "quantities.h"
+#include "prior.h"
+#include "model.h"
 #include "net.h"
 #include "data.h"
 #include "net-data.h"
@@ -28,7 +30,9 @@
 /* NETWORK VARIABLES. */
 
 static net_arch *arch;
+static model_specification *model;
 static net_priors *priors;
+static model_survival *surv;
 
 static net_sigmas sigmas;
 static net_params params;
@@ -73,19 +77,16 @@ void net_initialize
 
   /* Check that required specification records are present. */
 
-  if ((arch = logg->data['A'])==0)
-  { fprintf(stderr,"No architecture specification in log file\n");
-    exit(1);
-  }
+  arch   = logg->data['A'];
+  model  = logg->data['M'];
+  priors = logg->data['P'];
+  surv   = logg->data['V'];
 
-  if ((priors = logg->data['P'])==0)
-  { fprintf(stderr,"No prior specification in log file\n");
-    exit(1);
-  }
+  net_check_specs_present(arch,priors,0,model,surv);
 
   /* Check that network is present, and set up pointers. */
 
-  sigmas.total_sigmas = net_setup_sigma_count(arch);
+  sigmas.total_sigmas = net_setup_sigma_count(arch,model);
   params.total_params = net_setup_param_count(arch);
 
   sigmas.sigma_block = logg->data['S'];
@@ -103,7 +104,7 @@ void net_initialize
     exit(1);
   }
 
-  net_setup_sigma_pointers (&sigmas, arch);
+  net_setup_sigma_pointers (&sigmas, arch, model);
   net_setup_param_pointers (&params, arch);
 
   /* Read training and test data, if present. */
@@ -124,7 +125,7 @@ void net_initialize
     have_test_targets = data_spec->test_targets[0]!=0;
 
     net_data_free ();   
-    net_data_read (1, 1, arch);
+    net_data_read (1, 1, arch, model, surv);
 
     M_targets = arch->N_outputs;
 
@@ -140,6 +141,8 @@ void net_available
   log_gobbled *logg
 )
 { 
+  char model_type = model ? model->type : 0;
+
   char letter;
   int mod, low;
   int v, o, n, s;
@@ -165,10 +168,10 @@ void net_available
       { qd[v].available = mod<arch->N_outputs ? 1 : -1; 
       }
       else if (strchr("bBaA",letter)!=0)
-      { qd[v].available = arch->data_model!='C' && mod<arch->N_outputs ? 1 : -1;
+      { qd[v].available = model_type!='C' && mod<arch->N_outputs ? 1 : -1;
       }
       else if (letter=='c' || letter=='C')
-      { qd[v].available = arch->data_model=='C' && qd[v].low==-1 ? 1 : -1;
+      { qd[v].available = model_type=='C' && qd[v].low==-1 ? 1 : -1;
       }
       else if (strchr("PlL",letter)!=0)
       { qd[v].available = mod==-1 ? 1 : -1;
@@ -192,7 +195,7 @@ void net_available
         }
       }
       else if (letter=='n' || letter=='N')
-      { qd[v].available = (arch->data_model=='R' || arch->data_model=='C')
+      { qd[v].available = (model_type=='R' || model_type=='C')
                              && mod==-1 ? 1 : -1;
       }
       else if (letter=='v' || letter=='V')
@@ -235,7 +238,7 @@ void net_available
       }
  
       else if (letter=='n' || letter=='N')
-      { if (arch->data_model=='R')
+      { if (model_type=='R')
         { if (qd[v].high>=arch->N_outputs)
           { qd[v].available = -1;
             continue;
@@ -272,6 +275,13 @@ void net_available
         { qd[v].low = qd[v].high = 0;
         }
       }
+
+      else if (strchr("oO",letter)!=0)
+      { if (model_type=='V' && surv->hazard_type!='C') 
+        { qd[v].available = -1;
+          continue;
+        }
+      }
     }
   }
 }
@@ -285,6 +295,8 @@ void net_evaluate
   log_gobbled *logg
 )
 { 
+  char model_type = model ? model->type : 0;
+
   int mod, low, high;
   net_values *cases;
   double *targets;
@@ -318,7 +330,7 @@ void net_evaluate
       }
 
       if (!ev_train 
-      && (strchr("oyglbacv",letter)!=0 || letter=='n' && arch->data_model=='C'))
+      && (strchr("oyglbacv",letter)!=0 || letter=='n' && model_type=='C'))
       { if (!have_train_data) abort();
         for (i = 0; i<N_train; i++)
         { net_func (&train_values[i], 0, arch, &params);
@@ -327,7 +339,7 @@ void net_evaluate
       }
 
       if (!ev_test 
-      && (strchr("OYGLBACV",letter)!=0 || letter=='N' && arch->data_model=='C'))
+      && (strchr("OYGLBACV",letter)!=0 || letter=='N' && model_type=='C'))
       { if (!have_test_data) abort();
         for (i = 0; i<N_test; i++)
         { net_func (&test_values[i], 0, arch, &params);
@@ -361,7 +373,8 @@ void net_evaluate
 
         case 'y': case 'Y':
         { for (i = low; i<=high; i++)
-          { net_model_guess (&cases[i], target_guess, arch, priors, &sigmas, 0);
+          { net_model_guess (&cases[i], target_guess, arch, model, surv,
+                             &params, &sigmas, 0);
             qh->value[v][i-low] = target_guess[mod];
           }
           qh->updated[v] = 1;
@@ -370,7 +383,8 @@ void net_evaluate
 
         case 'g': case 'G':                                
         { for (i = low; i<=high; i++)
-          { net_model_guess (&cases[i], target_guess, arch, priors, &sigmas, 1);
+          { net_model_guess (&cases[i], target_guess, arch, model, surv,
+                             &params, &sigmas, 1);
             qh->value[v][i-low] = target_guess[mod];
           }
           qh->updated[v] = 1;
@@ -380,8 +394,11 @@ void net_evaluate
         case 'z': case 'Z':
         { for (i = low; i<=high; i++)
           { qh->value[v][i-low] = 
-              arch->data_model=='C' && qd[v].modifier>=0 ? targets[i]==mod
+              model_type=='C' && qd[v].modifier>=0 ? targets[i]==mod
                : targets[data_spec->N_targets*i+mod];
+            if (model_type=='V' && qh->value[v][i-low]<0)
+            { qh->value[v][i-low] = -qh->value[v][i-low];
+            }
           }
           qh->updated[v] = 1;
           break;
@@ -401,8 +418,61 @@ void net_evaluate
 
           for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
           { 
-            net_model_prob (&cases[i], targets + data_spec->N_targets*i,
-                            &p1, 0, arch, priors, &sigmas, 0);
+            if (model_type=='V' && surv->hazard_type=='P')
+            { 
+              double ot, ft, t0, t1, lp;
+              int censored;
+              int w;
+
+              if (targets[i]<0)
+              { censored = 1;
+                ot = -targets[i];
+              }
+              else
+              { censored = 0;
+                ot = targets[i];
+              }
+
+              p1 = 0;
+
+              t0 = 0;
+              t1 = surv->time[0];
+              cases[i].i[0] = surv->log_time ? log(t1) : t1;
+
+              w = 0;
+
+              for (;;)
+              {
+                net_func (&cases[i], 0, arch, &params);
+          
+                ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+
+                net_model_prob(&cases[i], &ft, &lp, 0, arch, model, surv, 
+                               &sigmas, 2);
+                p1 += lp;
+
+                if (ot<=t1) break;
+ 
+                t0 = t1;
+                w += 1;
+          
+                if (surv->time[w]==0) 
+                { t1 = ot;
+                  cases[i].i[0] = surv->log_time ? log(t0) : t0;
+                }
+                else
+                { t1 = surv->time[w];
+                  cases[i].i[0] = surv->log_time ? (log(t0)+log(t1))/2
+                                                 : (t0+t1)/2;
+                }
+              }
+
+            }
+            else
+            { net_model_prob (&cases[i], targets + data_spec->N_targets*i,
+                              &p1, 0, arch, model, surv, &sigmas, 0);
+            }
+
             if (low==-1)
             { p += p1;
             }
@@ -422,21 +492,24 @@ void net_evaluate
 
         case 'a': case 'A':
         { 
-          double d, e;
+          double d, e, tv;
           int m;
 
           if (low==-1) e = 0;
 
           for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
           { 
-            net_model_guess (&cases[i], target_guess, arch, priors, &sigmas, 0);
+            net_model_guess (&cases[i], target_guess, arch, model, surv,
+                             &params, &sigmas, 0);
 
             if (low!=-1) 
             { qh->value[v][i-low] = 0;
             }
 
             for (m = mod; m<=(qd[v].modifier==-1 ? M_targets-1 : mod); m++)
-            { d = target_guess[m] - targets[M_targets*i+m];
+            { tv = targets[M_targets*i+m];
+              if (model_type=='V' && tv<0) tv = -tv;
+              d = target_guess[m] - tv;
               if (low==-1) 
               { e += (d>0 ? d : -d);
               }
@@ -457,21 +530,24 @@ void net_evaluate
 
         case 'b': case 'B':
         { 
-          double d, e;
+          double d, e, tv;
           int m;
 
           if (low==-1) e = 0;
 
           for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
           { 
-            net_model_guess (&cases[i], target_guess, arch, priors, &sigmas, 0);
+            net_model_guess (&cases[i], target_guess, arch, model, surv,
+                             &params, &sigmas, 0);
 
             if (low!=-1) 
             { qh->value[v][i-low] = 0;
             }
 
             for (m = mod; m<=(qd[v].modifier==-1 ? M_targets-1 : mod); m++)
-            { d = target_guess[m] - targets[M_targets*i+m];
+            { tv = targets[M_targets*i+m];
+              if (model_type=='V' && tv<0) tv = -tv;
+              d = target_guess[m] - tv;
               if (low==-1) 
               { e += d*d;
               }
@@ -499,7 +575,8 @@ void net_evaluate
 
           for (i = 0; i<N_cases; i++)
           { 
-            net_model_guess (&cases[i], target_guess, arch, priors, &sigmas, 0);
+            net_model_guess (&cases[i], target_guess, arch, model, surv,
+                             &params, &sigmas, 0);
 
             p = qd[v].modifier==-1 ? target_guess[0] 
                                    : target_guess[0]+target_guess[1];
@@ -584,7 +661,7 @@ void net_evaluate
 
         case 'n': case 'N':
         { 
-          if (arch->data_model=='R')
+          if (model_type=='R')
           {
             if (low==-1)
             { *qh->value[v] = letter=='n' ? *sigmas.noise_cm 
@@ -608,8 +685,8 @@ void net_evaluate
   
             for (i = 0; i<N_cases; i++)
             { 
-              net_model_guess (&cases[i], target_guess, arch, 
-                               priors, &sigmas, 0);
+              net_model_guess (&cases[i], target_guess, arch, model, surv,
+                               &params, &sigmas, 0);
   
               for (c = 0; c<arch->N_outputs; c++)
               { e -= target_guess[c]==0 ? 0 

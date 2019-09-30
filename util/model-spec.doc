@@ -1,0 +1,109 @@
+
+
+MODEL-SPEC:  Specify model to use for target variables.
+
+Model-spec writes a specification to an existing log file for how the
+distribution of targets in a case is defined in terms of the function
+computed from the inputs for the case.  How this function of the
+inputs is found is specified separately (it might, for instance, be
+computed by a neural network).
+
+Models are available for regression with real-valued targets, logistic
+regression with binary targets, generalized logistic regression with
+targets taking on a finite set of values, and survival analysis with a
+hazard function that may depend on various covariates, and on time.
+
+Usage:
+
+     model-spec log-file specifications...
+
+or:
+
+     model-spec log-file 
+
+
+The second form displays the existing specification stored in the log
+file, if any.
+
+The first form appends a specification to the log file, which must
+not contain any iteratons yet.  If model-spec is invoked more than
+once, the last specification is used.  The model is described by
+one or more arguments after the log file argument.
+
+
+Regression for real-valued targets.
+
+A regression model is specified by the argument "real", followed by a
+noise prior (see prior.doc).  With this model, the data for each case
+consists of the same number of input values as the network has input
+units, and the same number of target values as the network has output
+units.  The network outputs give the means of independent Gaussian
+distributions, with variances determined by the noise hyperparameters.
+(Note, however, that if there are implicit case-by-case
+hyperparameters, the noise effectively comes from a t-distribution,
+rather than a Gaussian.)
+
+
+Logistic regression for binary targets.
+
+A logistic regression model for binary data is specified by the
+argument "binary".  With this model, the data for each case consists
+of the same number of inputs values as the network has input units,
+and the same number of binary target values as the network has output
+units.  The targets must be specified to be binary using the
+int-target option of data-spec.  Each output, o, of the network is
+used to derive the probability, p, that the corresponding target will
+be '1', via the logistic function, p = 1/(1+exp(-o)).
+
+
+Generalized logistic regression for class targets ("softmax").
+
+The "class" data model is used to model target values representing
+some finite number of "classes".  As with the "real" and "binary"
+models, the number of input units must match the number of input
+values in each case.  There must be only one target in each case, with
+the number of possible values for this target (specified with the
+int-target option of data-spec) corresponding to the number of output
+units in the network.  The distribution over target values for a case
+is found by letting the probability of a particular target value be
+proportional to the exponential of the value of the corresponding
+output.
+
+
+Survival data.
+
+The data-model arguments to net-spec can also specify that the net is
+to be used to model survival data, indicated by a first argument of
+"survival".  With a survival model, the inputs to the networks will be
+the values of various covariates that may affect survival, plus
+perhaps the time.  The net must have a single output, which is used to
+construct the log of the hazard function.  The form of the hazard
+function is specified by the arguments following "survival", in one of
+the following ways:
+
+    const-hazard
+
+       The hazard function is constant through time, though it may depend 
+       on the covariates.  Only the covariates are provided as inputs to 
+       the network.
+
+    pw-const-hazard  [ "log" ] { time-point }
+
+       The hazard function is piecewise constant, with changes in value
+       at the time points listed.  There must be at least two time points, 
+       they must be greater than zero, and they must be increasing.  The 
+       log of the hazard for times before the first time point is obtained
+       from the network output with the first network input set to the first
+       time point (or the log of this time, if "log" is specified), and with
+       any other inputs set to the covariates.  Similarly, the log of the
+       hazard after the last time point is obtained by setting the first
+       input to the last time point (or its log).  The log of the hazard at 
+       times between two time points is obtained by setting the first input 
+       to the average of the two time points (or the average of the logs of
+       the two time points if "log" is specified).
+
+The data specification for a survival model must give the number of
+covariates as the number of inputs, and must specify that there is a
+single target.  Negative values of the target are interpreted as
+censored values (with observation stopping at the time given by the
+target's absolute value).

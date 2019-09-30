@@ -1,0 +1,39 @@
+<html>
+<body>
+<pre>
+
+
+HINTS AND WARNINGS
+
+1) Some confusion is possible regarding hyperparameter values because
+   they can be looked at in three ways:  as standard deviations (widths),
+   as variances (squares of the standard deviations), and as precisions
+   (inverse variances).  In particular, note that although the priors 
+   for hyperparameters are described in terms of Gamma distributions for
+   the precisions, their scale is specified in the net-spec and
+   model-spec commands in terms of the corresponding standard deviations.
+
+2) When there is a single output unit, a specification of the form
+   "w:a:b" for the hidden-to-output weights is mathematically
+   equivalent to one of the form "w:a::b".  The two specifications
+   differ computationally, however.  In the "w:a:b" form, lower-level
+   hyperparameters that each control a single weight are explicitly
+   represented; with "w:a::b", equivalent hyperparameters exist
+   mathematically, but are not represented explicitly.  The "w:a:b"
+   form is probably to be preferred, since explicit hyperparameters 
+   are of assistance to the heuristic procedure that chooses
+   stepsizes for the dynamical updates.
+
+3) If the system crashes in the middle of a run of 'net-mc', one can
+   usually continue from the last iteration written to the log file 
+   by just invoking 'net-mc' again with the same arguments (just as 
+   one can continue for more iterations after 'net-mc' terminates 
+   normally).  Problems could arise if the system crashed in the middle 
+   of writing the records pertaining to an iteration, in which case some 
+   fixup using 'log-copy' may be required.  Such problems could come
+   either from a partial record at the end of the log file, or from
+   a less-than-complete set of full records.  It is best to assess the 
+   situation using 'log-records' before proceeding.
+</pre>
+</body>
+</html>

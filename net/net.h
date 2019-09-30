@@ -1,6 +1,6 @@
 /* NET.H - Interface to neural network modules. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -16,7 +16,9 @@
 /* NETWORK ARCHITECTURE.  Defines the dimensions of the input and output, the
    number of hidden layers, and the number of units in each hidden layer. 
    Also indicates which groups of network parameters the network contains,
-   and the data model used (if any). */
+   and the data model used (if any). 
+
+   Stored in log files under type 'A'.  Changes may invalidate old log files. */
 
 #define Max_layers 10	/* Maximum number of hidden layers in a network */
 
@@ -39,47 +41,32 @@ typedef struct
   int has_ah[Max_layers];	/* Do hidden layers have adjustments? */
   int has_ao;			/* Does output layer have adjustments? */
 
-  int data_model;	/* Model used for observed data, zero if no model */
-			/* 'B' = binary, 'C' = class, 'R' = regression    */
 } net_arch;
 
 
 /* NETWORK PRIORS.  Defines the priors to be used for various groups of 
    network parameters, and, in the case of a regression model, for the
-   noise levels.  The 'width' field gives the overall scale of the parameters,
-   which, for weights, may be scaled according to the number of units in
-   the source layer.  Setting the 'two_point' field causes the final
-   distribution to be concentrated at two points (positive and negative),
-   rather than being from a Gaussian.  The 'alpha' parameters control the 
-   hierarchical structure of the prior.
+   noise levels.  The general hierarchical scheme is used (see prior.h)
+   for priors on weights, except that the priors for the "adjustments" of 
+   the distributions of weights and biases going into a unit are specified 
+   by giving single alpha values. 
 
-   The priors for the "adjustments" of the distributions of weights and 
-   biases going into a unit are specified by giving single alpha values. */
-
-#define Max_alphas 3	/* Maximum depth for hierarchical priors */
-
-typedef struct
-{ int scale;		/* Scale width according to size of source layer? */
-  int two_point;	/* Use two point distribution rather than Gaussian? */
-  double width;		/* Value used to determine mean precision */
-  double alpha[Max_alphas]; /* Shape parameters down the hierarchy */
-} net_prior;
+   A record of type net_priors is stored in log files under type 'P'.  
+   Changes may invalidate old log files. */
 
 typedef struct
 { 
-  net_prior ti;			/* Prior for offsets of input units */
-  net_prior hh[Max_layers-1];	/* Priors for hidden to hidden wieghts */
-  net_prior ih[Max_layers];	/* Priors for input to hidden weights */
-  net_prior bh[Max_layers];	/* Priors for biases of hidden units */
-  net_prior th[Max_layers];	/* Priors for offsets of hidden units */
-  net_prior ho[Max_layers];	/* Priors for hidden to output weights */
-  net_prior io;			/* Prior for input to output weights */
-  net_prior bo;			/* Prior for biases of output units */
+  prior_spec ti;		/* Prior for offsets of input units */
+  prior_spec hh[Max_layers-1];	/* Priors for hidden to hidden wieghts */
+  prior_spec ih[Max_layers];	/* Priors for input to hidden weights */
+  prior_spec bh[Max_layers];	/* Priors for biases of hidden units */
+  prior_spec th[Max_layers];	/* Priors for offsets of hidden units */
+  prior_spec ho[Max_layers];	/* Priors for hidden to output weights */
+  prior_spec io;		/* Prior for input to output weights */
+  prior_spec bo;		/* Prior for biases of output units */
 
   double ah[Max_layers];	/* Alphas for adjustments of hidden units */
   double ao;			/* Alpha for adjustments of output units */
-
-  net_prior noise;	/* Prior for noise levels with the regression model. */
 
 } net_priors;
 
@@ -91,7 +78,9 @@ typedef struct
    weights are not stored.  The array pointers are null when the corresponding 
    parameters do not exist in the network.  All the 'xx_cm' fields point to
    single values; they are referenced indirectly to allow allow all the sigma 
-   values to be stored in a contiguous block. */
+   values to be stored in a contiguous block. 
+
+   Stored in log files under type 'S'.  Changes may invalidate old log files. */
 
 typedef double net_sigma; /* Precision of sigma values */
 
@@ -129,7 +118,9 @@ typedef struct
    i to unit j of hidden layer l is ih[l][N_hidden[l]*i + j].  The array 
    pointers are null when the corresponding parameters do not exist in the 
    network.  Structures of the same type are also used for other data 
-   associated with parameters, such as components of the "error" gradient. */
+   associated with parameters, such as components of the "error" gradient.
+
+   Stored in log files under type 'W'.  Changes may invalidate old log files. */
 
 typedef double net_param; /* Precision of weights, baises, and offsets */
 
@@ -171,10 +162,10 @@ typedef struct
 
 /* PROCEDURES. */
 
-int net_setup_sigma_count (net_arch *);
+int net_setup_sigma_count (net_arch *, model_specification *);
 int net_setup_param_count (net_arch *);
 
-void net_setup_sigma_pointers (net_sigmas *, net_arch *);
+void net_setup_sigma_pointers (net_sigmas *, net_arch *, model_specification *);
 void net_setup_param_pointers (net_params *, net_arch *);
 
 int net_setup_hyper_group (net_arch *, int, int *, int *, int *);
@@ -183,13 +174,9 @@ int net_setup_param_group (net_arch *, int, int *, int *, int *);
 int net_setup_value_count (net_arch *);
 void net_setup_value_pointers (net_values *, net_value *, net_arch *);
 
-int net_prior_parse (net_prior *, char *);
-char *net_prior_spec (char *, net_prior);
-
-double net_prior_width_scaled (net_prior *, int);
-
-void net_prior_generate (net_params *, net_sigmas *, net_arch *, net_priors *,
-                         int, double);
+void net_prior_generate (net_params *, net_sigmas *, net_arch *, 
+                         model_specification *m, net_priors *, int, 
+                         double, double);
 
 void net_prior_prob (net_params *, net_sigmas *, double *, net_params *,
                      net_arch *, net_priors *, int);
@@ -201,17 +188,20 @@ void net_back (net_values *, net_values *, int, net_arch *, net_params *);
 void net_grad (net_params *, net_params *, net_values *, net_values *, 
                net_arch *);
 
-int net_model_targets (net_arch *);
+void net_model_prob(net_values *, double *, double *, net_values *, net_arch *,
+                    model_specification *, model_survival *, net_sigmas *, int);
 
-void net_model_prob (net_values *, double *, double *, net_values *, 
-                     net_arch *, net_priors *, net_sigmas *, int);
+void net_model_max_second (net_value *, net_arch *, model_specification *,
+                           model_survival *, net_sigmas *);
 
-void net_model_max_second (net_value *, net_arch *, net_priors *, net_sigmas *);
-
-double net_model_guess (net_values *, double *, net_arch *, net_priors *,
+double net_model_guess (net_values *, double *, net_arch *, 
+                        model_specification *, model_survival *, net_params *,
                         net_sigmas *, int);
 
-net_sigma net_pick_sigma (net_sigma, double);
+void net_print_params (net_params *, net_sigmas *, net_arch *, 
+                       model_specification *);
+void net_print_sigmas (net_sigmas *, net_arch *, model_specification *);
 
-void net_print_params (net_params *, net_sigmas *, net_arch *);
-void net_print_sigmas (net_sigmas *, net_arch *);
+void net_record_sizes        (log_gobbled *);
+void net_check_specs_present (net_arch *, net_priors *, int,
+                              model_specification *, model_survival *);

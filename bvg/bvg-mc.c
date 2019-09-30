@@ -54,6 +54,8 @@ void mc_app_initialize
 
   ds->dim = 2*bs->rep;
 
+  ds->temp_state = 0;
+
   logg->req_size['X'] = 2 * bs->rep * sizeof(mc_value);
 
   if ((ds->q = logg->data['X'])==0)

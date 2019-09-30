@@ -1,0 +1,205 @@
+<html>
+<body>
+<pre>
+
+
+OVERVIEW OF THE SOFTWARE
+
+This software is being distributed primarily to further research in
+Bayesian learning for neural network models.  The software is designed
+for potentially wider use, however.  In particular, the programs and
+modules in the 'util' directory are of general utility, and those in
+the 'mc' directory provide generic support for Markov chain Monte
+Carlo methods.  These facilities are specialized to neural network
+learning by the modules and programs in the 'net' directory.  The
+'bvg' directory demonstrates in a simple context how the generic
+facilities in 'util' and 'mc' can be specialized for other tasks, but
+users interested only in neural network learning need not concern
+themselves with this.  This section provides an overview of the
+facilities offered by these various components of the software.
+
+
+Log files
+
+All the programs make use of a "log file" facility supported by
+modules and programs in 'util'.  A log file records all the
+information pertaining to a "run" of an iterative program.  The first
+few records of the log file (with "indexes" of -1) contain the
+specifications for the run (such as the network architecture and the
+source of training data).  These records are written by "spec"
+programs (eg, 'net-spec' and 'data-spec') that the user invokes at the
+beginning of the run.  Once the run has been specified, the program
+that performs iterations is invoked (eg, 'net-mc').  This program will
+append further records to the log file, one for each iteration for
+which the user has asked the state to be saved, which will usually be
+every iteration, unless minimizing disk usage is a concern.  Each
+record written has the iteration number as its index, and contains the
+complete state of the program at that time (eg, all the parameters and
+hyperparameters of the network being trained).
+
+Note that log files contain binary data; they are not human-readable.
+
+After an iterative program finishes, the user may decide to let the
+run continue for more iterations.  This is easily done by just
+invoking the program again with a larger iteration limit, whereupon it
+restarts using the last state stored in the log file, and then appends
+records to the log file for further iterations.
+
+The information about iterations that is stored in the log file can be
+examined using various programs both during and after a run.  In
+particular, the user can plot the progress of various quantities
+during the course of the run, without having to decide beforehand
+which quantities will be of interest.  The states saved at various
+iterations are also the basis for making Monte Carlo estimates, and in
+particular, for making Bayesian predictions based on a sample of
+networks from the posterior distribution.
+
+
+Models and data
+
+The 'util' directory also contains modules and programs that specify
+the final portion of a probabilistic model (which is independent of
+the details of networks or other functional schemes), that support
+reading of numeric input from data files or other sources, and that
+specify sets of training and test cases for supervised learning
+procedures (such as those based on multilayer perceptron networks).
+
+The models supported include those for regression, classification, 
+and survival analysis.  The survial analysis models were recently
+implemented, and should be regarded as experimental.  See
+<A HREF="model-spec.html">model-spec.doc</A> for details
+
+The data files used must contain numbers in standard ASCII form, with
+one line per case, but there is considerable freedom regarding
+separators and in the ordering of items.  "Input" and "target" items
+that pertain to a case may come from the same file, or different
+files, and the position within a line of each item may be specified
+independently.  The set of cases (lines) to be used for training or
+testing can be specified to be a subset of all the lines in a file.
+The data source can also be specified to be the output of a program,
+rather than a data file.
+
+Specifications for where the training and test data comes from are
+written to a log file by the 'data-spec' program, which also allows
+the user to specify that certain transformations are to be done to the
+data items before they are used.  In particular, the data can be
+translated and re-scaled in a user-specified way, or by amounts that
+are automatically determined from the training data.
+
+The source of "test" data can also be specified explicitly by
+arguments to the relevant commands, allowing the final results of
+learning to be applied to any data set for which predictions are
+desired.
+
+See <A HREF="data-spec.html">data-spec.doc</A> for details on how all this is specified.
+
+
+Random number generation
+
+A scheme for combining real and pseudo random numbers is implemented
+by modules in the 'util' directory, along with procedures for sampling
+from various standard distributions, and for saving the state of the
+random number generator.
+
+The 'rand-seed' program is used to specify a random number seed to use
+for a run.  The state of the random number generator is saved with
+each iteration in the log file in order to ensure that resuming a run
+produces the same results as if the run had continued without
+stopping.
+
+
+Markov chain Monte Carlo
+
+The 'mc' directory contains modules and programs that support the use
+of Markov chain Monte Carlo methods.  A Markov chain Monte Carlo
+application is created by adding modules that compute certain
+application-specific quantities, of which the most central is the
+probability distribution to sample from.  For example, the neural
+network application provides a procedure for computing the posterior
+probability density of the network parameters.  An application may
+also provide implementations of specialized sampling procedures, such
+as the procedures for doing Gibbs sampling for hyperparameters in the
+neural network application.
+
+A variety of Markov chain methods are supported by the 'mc' system,
+including some that are not of much use in the neural network
+application.  In particular, the "tempering" methods are not currently
+implemented for the neural networks, though they may be in future.
+Users interested only in neural networks should therefore ignore the
+tempering facilities (such as the 'mc-temp-sched' and 'mc-temp-filter'
+programs).
+
+For the neural network user, the most important 'mc' program is
+'mc-spec', which is used to specify how the Markov chain sampling is
+to be done.  There are a large number of reasonable ways of sampling
+for neural networks.  The best way is still the subject of research.
+Good results can be obtained using several standard approaches,
+however, as described in the examples in the next section.  You can
+also read all about the various methods in <A HREF="mc-spec.html">mc-spec.doc</A>.
+
+
+Neural network models
+
+The 'net' directory contains the modules and programs that implement
+Bayesian learning for models based on multilayer perceptron networks,
+making use of the modules in the 'util' and 'mc' directories.  The
+networks and data models supported are as described in my thesis, with
+the addition that the output units may now be connected to any of the
+hidden layers (not just the last), and models for survival analysis
+are now included.
+
+A network training run is started with the 'net-spec' program, which
+creates a log file to which it writes specifications for the network
+architecture and priors.  In a simple run, the 'model-spec',
+'data-spec' and 'mc-spec' programs would then be used to specify the
+way the outputs of the network are used to model the targets in the
+dataset, what data makes up the training set (and perhaps the test
+set), and the way the sampling should be done.  The 'net-mc' program
+(a specialization of the generic 'xxx-mc' program) would then be
+invoked to do the actual sampling.  Finally, the 'net-pred' program
+would be used to make predictions for test cases based on the networks
+saved in the log file.
+
+Usually, one would want to see how the run had gone before making
+predictions.  The 'net-display' program allows one to examine the
+network parameters and hyperparameters at any specified iteration.
+The 'net-plt' program can be used to obtain the values of various
+quantities, such as the training set error, for some range of
+iterations.  The output of 'net-plt' would usually be piped to a
+suitable plot program for visual examination, though it is also
+possible to directly look at the numbers.
+
+Several other programs are also present in the 'net' directory.  Some
+of these will probably not be of interest to the ordinary user, as
+they were written for debugging purposes, or to do specialized tasks
+relating to the thesis.
+
+
+Quantities obtainable from log files
+
+The 'xxx-plt' programs (eg, 'net-plt') are the principal means by
+which simulation runs are monitored.  These programs allow one to see
+the values of various "quantities", evaluated for each iteration
+stored in a log file within some range.  Some other programs (eg,
+'xxx-hist') also use the same set of quantities.
+
+A quantity is specified by an identifying character, perhaps with a
+numeric modifier.  Some quantities are single numeric values
+(scalars); others are arrays of values, in which case the desired
+range of values is also specified following an "@" sign.  Some
+quantities can be either scalars or arrays, depending on whether a
+range specification is included.
+
+There is a hierarchy of quantities, as defined by modules at different
+levels.  A few quantities are universally defined - principally 't',
+the index of the current iteration.  Many more are defined for any
+Markov chain Monte Carlo application - such as 'r', the rejection rate
+for Metropolis or Hybrid Monte Carlo updates.  A large number of
+quantities specific to neural networks are also defined - for example,
+'b', the average squared error on the training set, and 'n', the
+current value of the noise standard deviation (for a regression
+model).  See <A HREF="quantities.html">quantities.doc</A>, <A HREF="mc-quantities.html">mc-quantities.doc</A>, and <A HREF="net-quantities.html">net-quantities.doc</A>
+for details.
+</pre>
+</body>
+</html>

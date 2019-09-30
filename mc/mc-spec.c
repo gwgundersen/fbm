@@ -1,6 +1,6 @@
 /* MC-SPEC.C - Specify parameters of Markov chain Monte Carlo simulation. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -164,6 +164,60 @@ void main
       }
     }
 
+    else if (strcmp(*ap,"met-1")==0 
+          || strcmp(*ap,"slice-1")==0
+          || strcmp(*ap,"slice-over")==0)
+    {
+      ops->op[o].type = strcmp(*ap,"met-1")==0 ? 'm'
+                      : strcmp(*ap,"slice-1")==0 ? 'S' : 'O';
+                      
+      ops->op[o].refinements = 0;
+      ops->op[o].refresh_prob = 0.0;
+      ops->op[o].stepsize_adjust = 1;
+      ops->op[o].stepsize_alpha = 0;
+      ops->op[o].steps = 0;
+      ops->op[o].firsti = -1;
+
+      ap += 1;
+
+      if (ops->op[o].type=='O')
+      { 
+        if (*ap && strchr("0123456789",**ap))
+        { if ((ops->op[o].refinements = atoi(*ap)) < 0) usage();
+          ap += 1;
+        }
+
+        if (*ap && strchr("0123456789.",**ap))
+        { if ((ops->op[o].refresh_prob = atof(*ap)) < 0) usage();
+          ap += 1;
+        }
+      }
+
+      if (*ap && strchr("0123456789+-.",**ap))
+      { if ((ops->op[o].stepsize_adjust = atof(*ap))==0) usage();
+        if (strchr(*ap,':')!=0)
+        { if ((ops->op[o].stepsize_alpha = atof(strchr(*ap,':')+1))==0) usage();
+        }
+        ap += 1;
+      }
+
+      if (*ap && strchr("0123456789",**ap))
+      { ops->op[o].steps = atoi(*ap);
+        ap += 1;
+      }
+
+      if (*ap && strchr("0123456789",**ap))
+      { ops->op[o].firsti = atoi(*ap);
+        ops->op[o].lasti = ops->op[o].firsti;
+        if (strchr(*ap,':')!=0)
+        { if ((ops->op[o].lasti = atoi(strchr(*ap,':')+1)) < ops->op[o].firsti)
+          { usage();
+          }
+        }
+        ap += 1;
+      }
+    }
+
     else if (strcmp(*ap,"dynamic")==0 || strcmp(*ap,"permuted-dynamic")==0)
     {
       ops->op[o].type = strcmp(*ap,"dynamic")==0 ? 'D' : 'P';
@@ -255,16 +309,6 @@ void main
       ops->op[o].type = 't';
 
       ap += 1;
-
-      ops->op[o].repeat_count = 1;
-      if (strchr("0123456789+-.",**ap)!=0)
-      { if ((ops->op[o].repeat_count = atoi(*ap++))<2) usage();
-      }
-
-      ops->op[o].high_count = ops->op[o].repeat_count;
-      if (strchr("0123456789+-.",**ap)!=0)
-      { if ((ops->op[o].high_count = atoi(*ap++))<=0) usage();
-      }
 
       depth += 1;
     }
@@ -435,6 +479,25 @@ static void display_specs
           printf("\n");
           break;
         }
+
+        case 'm':
+        { printf(" met-1");
+          if (ops->op[o].stepsize_alpha!=0)
+          { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,
+                                  ops->op[o].stepsize_alpha);
+          }
+          else if (ops->op[o].stepsize_adjust!=1 || ops->op[o].firsti!=-1)
+          { printf(" %.4lf",ops->op[o].stepsize_adjust);
+          }
+          if (ops->op[o].firsti!=-1)
+          { printf(" %d",ops->op[o].firsti);
+            if (ops->op[o].lasti!=ops->op[o].firsti)
+            { printf(":%d",ops->op[o].lasti);
+            }
+          }
+          printf("\n");
+          break;
+        }
   
         case 'D': case 'P':
         { printf (" %s %d",
@@ -465,6 +528,67 @@ static void display_specs
           }
           else if (ops->op[o].stepsize_adjust!=1)
           { printf(" %.4lf",ops->op[o].stepsize_adjust);
+          }
+          printf("\n");
+          break;
+        }
+
+        case 'S':
+        { printf(" slice-1");
+          if (ops->op[o].stepsize_alpha!=0)
+          { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,
+                                  ops->op[o].stepsize_alpha);
+          }
+          else if (ops->op[o].stepsize_adjust!=1 
+                || ops->op[o].steps!=0
+                || ops->op[o].firsti!=-1)
+          { printf(" %.4lf",ops->op[o].stepsize_adjust);
+          }
+          if (ops->op[o].steps!=0 || ops->op[o].firsti!=-1)
+          { printf(" %d",ops->op[o].steps);
+          }
+          if (ops->op[o].firsti!=-1)
+          { printf(" %d",ops->op[o].firsti);
+            if (ops->op[o].lasti!=ops->op[o].firsti)
+            { printf(":%d",ops->op[o].lasti);
+            }
+          }
+          printf("\n");
+          break;
+        }
+    
+        case 'O':
+        { printf(" slice-over");
+          if (ops->op[o].refinements!=0
+           || ops->op[o].refresh_prob!=0 
+           || ops->op[o].stepsize_alpha!=0
+           || ops->op[o].stepsize_adjust!=1 
+           || ops->op[o].firsti!=-1)
+          { printf(" %d",ops->op[o].refinements);
+          }
+          if (ops->op[o].refresh_prob!=0 
+           || ops->op[o].stepsize_alpha!=0
+           || ops->op[o].stepsize_adjust!=1 
+           || ops->op[o].firsti!=-1)
+          { printf(" %.5lf",ops->op[o].refresh_prob);
+          }
+          if (ops->op[o].stepsize_alpha!=0)
+          { printf(" %.4lf:%.4lf",ops->op[o].stepsize_adjust,
+                                  ops->op[o].stepsize_alpha);
+          }
+          else if (ops->op[o].stepsize_adjust!=1 
+                || ops->op[o].steps!=0
+                || ops->op[o].firsti!=-1)
+          { printf(" %.4lf",ops->op[o].stepsize_adjust);
+          }
+          if (ops->op[o].steps!=0 || ops->op[o].firsti!=-1)
+          { printf(" %d",ops->op[o].steps);
+          }
+          if (ops->op[o].firsti!=-1)
+          { printf(" %d",ops->op[o].firsti);
+            if (ops->op[o].lasti!=ops->op[o].firsti)
+            { printf(":%d",ops->op[o].lasti);
+            }
           }
           printf("\n");
           break;
@@ -520,15 +644,7 @@ static void display_specs
         }
   
         case 't':
-        { printf(" temp-trans");
-          if (ops->op[o].repeat_count!=1 
-           || ops->op[o].high_count!=ops->op[o].repeat_count) 
-          { printf(" %d",ops->op[o].repeat_count);
-          }
-          if (ops->op[o].high_count!=ops->op[o].repeat_count) 
-          { printf(" %d",ops->op[o].high_count);
-          }
-          printf("\n");
+        { printf(" temp-trans\n");
           depth += 1;
           break;
         }

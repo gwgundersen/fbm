@@ -1,0 +1,65 @@
+<html>
+<body>
+<pre>
+
+
+NET-DISPLAY:  Print network parameters and/or hyperparameters.
+
+Net-display prints the parameters (weights, biases, and offsets)
+and/or the hyperparameters (sigmas) of the network.
+
+Usage:
+
+    net-display [ -p | -h ] log-file [ index ]
+
+If no index is specified, the last network in the log file is
+displayed.  By default, the parameters and hyperparameters are both
+displayed.  The -p option (or -w option) causes only the parameters
+(weights) to be displayed (to higher precision).  The -h option (or -s
+option) causes only the hyperparameters (sigmas) to be displayed.
+
+The output of the program consists of one section for each type of
+parameter, plus a section for noise levels, if a regression data model
+is being used.  The format of a section is best described by looking
+at the section for the weights from input units to output units, which
+is as follows, for a net with three input units and four output units,
+when no option is specified.
+
+  Input to Output Weights [1]
+
+    Common-sigma Unit-sigma:  Weight Weight Weight Weight
+
+                 Unit-sigma:  Weight Weight Weight Weight
+
+                 Unit-sigma:  Weight Weight Weight Weight
+
+The sigma values associated with this type of parameter are at the
+left, before the colons.  The top-level sigma is at the top left;
+sigmas associated with each source unit appear just to the right, on
+separate lines.  After the sigma for each unit are listed the weights
+out of that unit.  The sigma values associated with each weight are
+not displayed (neither are they explicitly represented in the file).
+The number in square brackets at the end of the title is the group
+number, useful in net-plt.
+
+For biases and offsets, this basic format is modified, since the
+unit-level sigma values are not explicitly represented; the common
+sigma is shown in the unit sigma column instead.
+
+When -p is specified, the format is the same, except that the sigmas
+are missing, allowing the parameters to be displayed to higher precision.
+
+When -h is specified, the format is as follows:
+
+  Input to Output Weights [1]
+
+    Common-sigma - Unit-sigma Unit-sigma Unit-sigma
+                   Unit-sigma Unit-sigma Unit-sigma
+
+and similarly for other groups.  This is also the format used for the
+noise sigmas.
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

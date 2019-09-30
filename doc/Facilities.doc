@@ -1,0 +1,85 @@
+
+
+FACILITIES PROVIDED BY THIS SOFTWARE
+
+This software implements Bayesian methods for learning multilayer
+perceptron networks, as described in my thesis, "Bayesian Learning for
+Neural Networks", which has now been published by Springer-Verlag
+(ISBN 0-387-94724-8).  The implementation uses Markov chain Monte
+Carlo methods.  Software modules that support Markov chain sampling
+are included in the distribution, and may be useful in other
+applications.  Note that I am distributing this software to facilitate
+research in this area.  Potential users should make note of the
+copyright notice at the beginning of this document (or accessible via
+the first hypertext link).  You must obtain permission from me before
+using this software for purposes other than research or education.
+You should also note that the software may have bugs, particularly
+regarding recently added experimental features.
+
+The software supports Bayesian learning for regression problems,
+classification problems, and survival analysis (experimental), using
+models based on networks with any number of hidden layers, with a wide
+variety of prior distributions for network parameters and
+hyperparameters.  The advantages of Bayesian learning include the
+automatic determination of "regularization" hyperparameters, without
+the need for a validation set, the avoidance of overfitting when using
+large networks, and the quantification of uncertainty in predictions.
+The software implements the Automatic Relevance Determination (ARD)
+approach to handling inputs that may turn out to be irrelevant
+(developed with David MacKay).  For problems and networks of moderate
+size (eg, 200 training cases, 10 inputs, 20 hidden units), full
+training (to the point where one can be reasonably sure that the
+correct Bayesian answer has been found) typically takes several hours
+to a day on our SGI machine.  However, quite good results, competitive
+with other methods, are often obtained after training for under an
+hour.  (Of course, your machine may not be as fast as ours!)
+
+To understand how to use this software, it is essential for you to
+have read my thesis or the book based on it.  The neural network
+models implemented are essentially as described in the Appendix of the
+thesis and book.
+
+The software consists of a number of programs and modules.  Three
+major components are included in this distribution, each with its own
+directory:
+  
+    util    Modules and programs of general utility.
+
+    mc      Modules and programs that support sampling using Markov 
+            chain Monte Carlo methods, using modules from util.
+
+    net     Modules and programs that implement Bayesian inference
+            for models based on multilayer perceptrons, using the
+            modules from util and mc.
+
+In addition, the 'bvg' directory contains modules and programs for
+sampling from a bivariate Gaussian distribution, as a simple
+demonstration of the capabilities of the Markov chain Monte Carlo
+facilities.  Other than by providing this example, and the detailed
+documentation on various commands, I have not attempted to document
+how you might go about using the Markov chain Monte Carlo modules for
+another application.
+
+The 'examples' directory contains the data sets that are used in the
+tutorial examples of Bayesian neural network learning, along with the
+shell scripts with the commands used.
+
+It is possible to use this software to do learning and prediction
+without any knowledge of how the programs are written (assuming that
+the software can be installed as described below without any
+problems).  However, the complete source code is included so that
+researchers can modify the programs to try out their own ideas.
+
+The software is written in ANSI C, and is meant to be run in a UNIX
+environment.  Specifically, it was developed on an SGI machine running
+IRIX Release 5.3.  It also seems to run OK on a SPARC machine running
+SunOS 5, using the 'gcc' C compiler.  As far as I know, the software
+does not depend on any peculiarities of these environments (except
+perhaps for the use of the drand48 psuedo-random number generator),
+but you may nevertheless have problems getting it to work in
+substantially different environments, and I can offer little or no
+assistance in this regard.  There is no dependence on any particular
+graphics package or graphical user interface.  (The 'xxx-plt' programs
+are designed to allow their output to be piped directly into the
+'xgraph' plotting program, but other plotting programs can be used
+instead, or the numbers can be examined directly.)

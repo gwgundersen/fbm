@@ -1,0 +1,87 @@
+<html>
+<body>
+<pre>
+
+
+NET:  Bayesian inference for neural networks using Markov chain Monte Carlo.
+
+The 'net' programs implement Bayesian inference for models based on
+multilayer perceptron networks using Markov chain Monte Carlo methods.
+For full details, see the thesis, Bayesian Learning for Neural Networks, 
+by Radford M. Neal, Dept. of Computer Science, University of Toronto.
+
+The networks handled have connections from a set of real-valued input
+units to each of zero or more layers of real-valued hidden units.
+Each hidden layer (except the last) has connections to the next hidden
+layer. The output layer has connections from the input layer and from
+the hidden layers.
+
+This architecture is diagramed below, for a network with three hidden
+layers:
+
+                                               -----------------------
+                                              |     Input Units       |
+                                               -----------------------
+                                                       |          |
+               ----------------------------------------           |
+              |                |             |                    |
+              v                |             |                    |
+     ------------------        |             |                    | 
+    |  Hidden layer 0  |       |             |                    |
+     ------------------        |             |                    | 
+         |       |             |             |                    |
+         |       ---------     |             |                    |
+         |                |    |             |                    |
+         |                v    v             |                    |
+         |           ------------------      |                    |
+         |          |  Hidden layer 1  |     |                    |
+         |           ------------------      |                    |
+         |                |     |            |                    |
+         |                |     ----------   |                    |   
+         |                |               |  |                    |
+         |                |               v  v                    |
+         |                |        ------------------             |
+         |                |       |  Hidden layer 2  |            |
+         |                |        ------------------             |
+         |                |                   |                   |
+         |                |                   ---------------     |
+         |                 -----------------------------     |    |
+          -----------------------------------------     |    |    |
+                                                   |    |    |    |
+                                                   v    v    v    v
+                                               -----------------------
+                                              |     Output Units      |
+                                               -----------------------
+
+Any of the connection groups shown above may be absent, which is the
+same as their weights all being zero.
+
+The hidden units use the 'tanh' activation function.  Nominally, the
+output units are real-valued and use a linear activation function, but
+discrete outputs and non-linearities may be obtained in effect with
+some data models (see below).
+
+Each hidden and output unit has a "bias" that is added to its other
+inputs before the activation function is applied.  Each input and
+hidden unit has an "offset" that is added to its output after the
+activation function is applied (or just to the specified input value,
+for input units).  Like connections, biases and offsets may also be
+absent if desired.
+
+A hierarchical scheme of prior distributions is used for the weights,
+biases, offsets and gains in a network, in which the priors for all
+parameters of one class can be coupled.  These priors can also be
+scaled in accord with the number of units in the source layer, in a
+way that is intended to produce a reasonable limit as the number of
+units in each hidden layer goes to infinity.  Networks with this
+architecture can also be defined that behave reasonably as the number
+of hidden layers goes to infinity.
+
+A data model may be defined that relates the values of the output
+units for given inputs to the probability distribution of the data
+observed in conjunction with these inputs in a training or test case.
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

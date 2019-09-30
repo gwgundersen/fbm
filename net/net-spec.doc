@@ -10,8 +10,7 @@ in that log file.
 Usage:
 
     net-spec log-file N-inputs { N-hidden } N-outputs 
-                 / ti [ ih bh th { hh ih bh th } ] { ho } io bo
-               [ / { ah } ao ] [ / Data-model ]
+             / ti [ ih bh th { hh ih bh th } ] { ho } io bo  [ / { ah } ao ] 
 or: 
 
     net-spec log-file
@@ -34,10 +33,10 @@ of the hidden-output priors may be omitted.  The order of "ho" priors
 is last to first; if not all are present, it is the priors for
 connections from the earlier layers that are absent.
 
-For the syntax of a prior specification, see the comments in
-net-prior.c.  If "-" is given instead of a prior specification (or,
-for "ho" priors, if they are omitted entirely), the parameters in
-question do not exist at all, which is equivalent to their being zero.
+For the syntax of a prior specification, see prior.doc.  If "-" is
+given instead of a prior specification (or, for "ho" priors, if they
+are omitted entirely), the parameters in question do not exist at all,
+which is equivalent to their being zero.
 
 The alpha values that specify the prior for the "adjustments" to the
 distributions of weights and biases going into a given unit are
@@ -45,16 +44,8 @@ specified following these priors.  A value of "-" corresponds to
 infinity (effectively eliminating the adjustment).  The entire set of
 adjustments may be omitted, eliminating them all.
 
-A data model may optionally be specified.  In a regression model,
-specified by "real" followed by a noise prior, the data for each case
-consists of N-outputs real values.  In the "binary" data model, the
-data for each case consists of N-outputs binary values.  In the
-"class" data model, it consists of a single class identifier having
-N-outputs possible values.  The data specification used with a binary
-model must specify that the data is binary (i.e. data-spec must be
-called with 'int-target' being "2").  The data specification used with
-a class model must specify that the data consists of integers in the
-range [0,N-outputs).
+Note that a data model will also have to be specified (with model-spec)
+if any learning is to be done.  
 
 Two records are written to the newly created log file - one with type
 'A' with a net_arch structure as data, and one with type 'P' with a

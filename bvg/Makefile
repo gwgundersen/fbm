@@ -21,24 +21,30 @@ bvg-spec.o:	bvg-spec.c	misc.h log.h mc.h bvg.h
 
 bvg-grad-test:	mc-grad-test.o bvg-mc.o bvg-plt.o misc.o log.o \
 				rand.o quantities.o \
-				mc-iter.o mc-traj.o mc-util.o mc-quantities.o
+				mc-iter.o mc-metropolis.o mc-hybrid.o \
+				mc-slice.o mc-traj.o mc-util.o mc-quantities.o
 		$(CC) $(LFLAGS) mc-grad-test.o bvg-mc.o bvg-plt.o misc.o log.o \
                   rand.o quantities.o \
-		  mc-iter.o mc-traj.o mc-util.o mc-quantities.o \
+		  mc-iter.o mc-metropolis.o mc-hybrid.o mc-slice.o \
+		  mc-traj.o mc-util.o mc-quantities.o \
 		  -lm -o bvg-grad-test
 
 bvg-stepsizes:	mc-stepsizes.o bvg-mc.o bvg-plt.o misc.o log.o \
 				rand.o quantities.o \
-				mc-iter.o mc-traj.o mc-util.o mc-quantities.o
+				mc-iter.o mc-metropolis.o mc-hybrid.o \
+				mc-slice.o mc-traj.o mc-util.o mc-quantities.o
 		$(CC) $(LFLAGS) mc-stepsizes.o bvg-mc.o bvg-plt.o misc.o log.o \
 		  rand.o quantities.o \
-		  mc-iter.o mc-traj.o mc-util.o mc-quantities.o \
+		  mc-traj.o mc-iter.o mc-metropolis.o mc-hybrid.o \
+		  mc-slice.o mc-util.o mc-quantities.o \
 		  -lm -o bvg-stepsizes
 
 bvg-mc:		mc.o bvg-mc.o	bvg-plt.o misc.o log.o rand.o quantities.o \
-				mc-iter.o mc-traj.o mc-util.o mc-quantities.o
+				mc-iter.o mc-metropolis.o mc-hybrid.o \
+				mc-slice.o mc-traj.o mc-util.o mc-quantities.o
 		$(CC) $(LFLAGS) mc.o bvg-mc.o bvg-plt.o misc.o log.o rand.o \
-		  quantities.o mc-iter.o mc-traj.o mc-util.o mc-quantities.o \
+		  quantities.o mc-traj.o mc-iter.o mc-metropolis.o mc-hybrid.o \
+		  mc-slice.o mc-util.o mc-quantities.o \
 		  -lm -o bvg-mc
 
 bvg-mc.o:	bvg-mc.c	misc.h log.h bvg.h mc.h

@@ -29,7 +29,8 @@ main
 
   do
   {
-    if (argc<3 || (n = atoi(argv[2]))<=0) 
+    if (argc<3 || (n = atoi(argv[2]))<0
+     || n==0 && strcmp(argv[2],"0")!=0) 
     { fprintf(stderr,"Usage: numin-test { specification n-items }\n");
       exit(1);
     }

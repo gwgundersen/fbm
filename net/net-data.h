@@ -1,6 +1,6 @@
 /* NET-DATA.H - Interface to module for reading data for networks. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -29,7 +29,9 @@ extern net_values *test_values;	/* Values associated with test cases */
 extern double *test_targets;	/* True targets for test cases */
 
 
-/* PROCEDURE. */
+/* PROCEDURES. */
 
-void net_data_read (int, int, net_arch *);
+void net_data_read (int, int, net_arch *, 
+                    model_specification *, model_survival *);
+
 void net_data_free (void);

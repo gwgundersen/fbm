@@ -1,6 +1,6 @@
 /* NET-MC.C - Interface between neural network and Markov chain modules. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -19,9 +19,12 @@
 
 #include "misc.h"
 #include "rand.h"
+#include "ars.h"
 #include "log.h"
 #include "mc.h"
 #include "data.h"
+#include "prior.h"
+#include "model.h"
 #include "net.h"
 #include "net-data.h"
 
@@ -31,7 +34,9 @@
 static initialize_done = 0;	/* Has this all been set up? */
 
 static net_arch *arch;		/* Network architecture */
+static model_specification *model; /* Data model */
 static net_priors *priors;	/* Network priors */
+static model_survival *surv;	/* Hazard type for survival model */
 
 static net_sigmas sigmas;	/* Hyperparameters for network, auxiliary state
 				   for Monte Carlo */
@@ -52,16 +57,16 @@ static net_params grad;		/* Pointers to gradient for network parameters*/
 static void gibbs_noise (void);
 
 static void gibbs_unit (net_param *, net_sigma *, net_sigma *, 
-                        int, net_prior *);
+                        int, prior_spec *);
 
 static void gibbs_conn (net_param *, net_sigma *, net_sigma *, net_sigma *,
-                        int, int, net_prior *);
+                        int, int, prior_spec *);
 
 static void gibbs_adjustments (net_sigma *, double, int,
                                net_param *, net_sigma *, double,
                                net_param *, net_sigma *, double, int,
                                int, int *, net_param **, net_sigma **, 
-                                 net_prior *, int *);
+                                 prior_spec *, int *);
 
 static double sum_squares (net_param *, net_sigma *, int);
 
@@ -73,10 +78,8 @@ static double cond_sigma (double, double, double, double, int);
 void mc_app_record_sizes
 ( log_gobbled *logg	/* Structure to hold gobbled data */
 )
-{
-  logg->req_size['A'] = sizeof (net_arch);
-  logg->req_size['P'] = sizeof (net_priors);
-  logg->req_size['D'] = sizeof (data_specifications);
+{ 
+  net_record_sizes(logg);
 }
 
 
@@ -97,19 +100,16 @@ void mc_app_initialize
   {
     /* Check that required specification records are present. */
   
-    if ((arch = logg->data['A'])==0)
-    { fprintf(stderr,"No architecture specification in log file\n");
-      exit(1);
-    }
-  
-    if ((priors = logg->data['P'])==0)
-    { fprintf(stderr,"No prior specification in log file\n");
-      exit(1);
-    }
+    arch   = logg->data['A'];
+    model  = logg->data['M'];
+    priors = logg->data['P'];
+    surv   = logg->data['V'];
+
+    net_check_specs_present(arch,priors,1,model,surv);
   
     /* Locate existing network, if one exists. */
   
-    sigmas.total_sigmas = net_setup_sigma_count(arch);
+    sigmas.total_sigmas = net_setup_sigma_count(arch,model);
     params.total_params = net_setup_param_count(arch);
   
     sigmas.sigma_block = logg->data['S'];
@@ -132,7 +132,7 @@ void mc_app_initialize
         exit(1);
       }
   
-      net_setup_sigma_pointers (&sigmas, arch);
+      net_setup_sigma_pointers (&sigmas, arch, model);
       net_setup_param_pointers (&params, arch);
     }
     else
@@ -140,10 +140,10 @@ void mc_app_initialize
       sigmas.sigma_block = chk_alloc (sigmas.total_sigmas, sizeof (net_sigma));
       params.param_block = chk_alloc (params.total_params, sizeof (net_param));
   
-      net_setup_sigma_pointers (&sigmas, arch);
+      net_setup_sigma_pointers (&sigmas, arch, model);
       net_setup_param_pointers (&params, arch);
    
-      net_prior_generate (&params, &sigmas, arch, priors, 1, 0);
+      net_prior_generate (&params, &sigmas, arch, model, priors, 1, 0, 0);
     }
 
     /* Set up stepsize structure. */
@@ -169,7 +169,7 @@ void mc_app_initialize
   
     if (data_spec!=0)
     { 
-      net_data_read (1, 0, arch);
+      net_data_read (1, 0, arch, model, surv);
     
       deriv = chk_alloc (N_train, sizeof *deriv);
     
@@ -184,6 +184,22 @@ void mc_app_initialize
       { for (i = 0; i<N_train; i++)
         { train_sumsq[j] += train_values[i].i[j] * train_values[i].i[j];
         }
+      }
+
+      if (model->type=='V' && surv->hazard_type!='C')
+      {
+        double tsq;
+        int n;
+
+        tsq = 0;
+
+        for (n = 0; surv->time[n]!=0; n++)
+        { if (n==Max_time_points) abort();
+          tsq += surv->log_time ? log(surv->time[n])*log(surv->time[n]) 
+                                : surv->time[n]*surv->time[n];
+        }
+
+        train_sumsq[0] = N_train * tsq / n;
       }
     }
 
@@ -261,7 +277,7 @@ int mc_app_sample
   { return 0;
   }
 
-  if (sample_noise && arch->data_model=='R')
+  if (sample_noise && model->type=='R')
   { 
     gibbs_noise();
   }
@@ -346,12 +362,12 @@ int mc_app_sample
 static void gibbs_noise (void)
 {
   double nalpha, nprec, sum, d, ps;
-  net_prior *pr;
+  prior_spec *pr;
   int i, j;
 
   for (i = 0; i<N_train; i++) net_func (&train_values[i], 0, arch, &params);
 
-  pr = &priors->noise;
+  pr = &model->noise;
 
   if (pr->alpha[1]!=0 && pr->alpha[2]==0)
   {
@@ -366,7 +382,7 @@ static void gibbs_noise (void)
       nalpha = pr->alpha[1] + N_train;
       nprec = nalpha / sum;
 
-      sigmas.noise[j] = net_pick_sigma (1/sqrt(nprec), nalpha);
+      sigmas.noise[j] = prior_pick_sigma (1/sqrt(nprec), nalpha);
     }
   }
 
@@ -399,7 +415,7 @@ static void gibbs_noise (void)
 
     nalpha = pr->alpha[0] + N_train * arch->N_outputs;
     nprec = nalpha / sum;
-    *sigmas.noise_cm = net_pick_sigma (1/sqrt(nprec), nalpha);
+    *sigmas.noise_cm = prior_pick_sigma (1/sqrt(nprec), nalpha);
 
     for (j = 0; j<arch->N_outputs; j++)
     { sigmas.noise[j] = *sigmas.noise_cm;
@@ -446,7 +462,7 @@ static void gibbs_unit
   net_sigma *sg_cm,	/* Common sigma controlling parameter distribution */
   net_sigma *adj,	/* Adjustments for each unit, or zero */
   int n,		/* Number of units */
-  net_prior *pr		/* Prior for sigmas */
+  prior_spec *pr		/* Prior for sigmas */
 )
 { 
   double nalpha, nprec, sum, ps, d;
@@ -459,7 +475,7 @@ static void gibbs_unit
     nprec= nalpha / (pr->alpha[0] * (pr->width*pr->width)
                       + sum_squares(wt,adj,n));
 
-    *sg_cm = net_pick_sigma (1/sqrt(nprec), nalpha);
+    *sg_cm = prior_pick_sigma (1/sqrt(nprec), nalpha);
   }
 
   if (pr->alpha[0]!=0 && pr->alpha[1]!=0)
@@ -487,13 +503,13 @@ static void gibbs_conn
   net_sigma *adj,	/* Adjustments for each destination unit, or zero */
   int ns,		/* Number of source units */
   int nd,		/* Number of destination units */
-  net_prior *pr		/* Prior for sigmas */
+  prior_spec *pr		/* Prior for sigmas */
 )
 { 
   double width, nalpha, nprec, sum, ps, d;
   int i, j;
 
-  width = net_prior_width_scaled(pr,ns);
+  width = prior_width_scaled(pr,ns);
 
   if (pr->alpha[1]!=0 && pr->alpha[2]==0)
   {
@@ -503,7 +519,7 @@ static void gibbs_conn
       nprec = nalpha / (pr->alpha[1] * (*sg_cm * *sg_cm)
                          + sum_squares(wt+nd*i,adj,nd));
 
-      sg[i] = net_pick_sigma (1/sqrt(nprec), nalpha);
+      sg[i] = prior_pick_sigma (1/sqrt(nprec), nalpha);
     }
   }
 
@@ -533,7 +549,7 @@ static void gibbs_conn
     }
     nprec = nalpha / sum;
 
-    *sg_cm = net_pick_sigma (1/sqrt(nprec), nalpha);
+    *sg_cm = prior_pick_sigma (1/sqrt(nprec), nalpha);
 
     for (i = 0; i<ns; i++)
     { sg[i] = *sg_cm;
@@ -588,7 +604,7 @@ static void gibbs_adjustments
   int *has,		/* Whether each remaining set is present */
   net_param **wr,	/* Remaining sets of weights */
   net_sigma **sr,	/* Sigmas associated with remaining sets */
-  net_prior *ar,	/* Priors for remaining sets */
+  prior_spec *ar,	/* Priors for remaining sets */
   int *nr		/* Numbers of source units in remaining sets */
 )
 { 
@@ -611,8 +627,8 @@ static void gibbs_adjustments
       { d /= *s;
       }
       else
-      { d /= net_pick_sigma (sqrt ((a * (*s * *s) + (d*d)/(ad*ad)) 
-                                    / (a+1)), a+1);
+      { d /= prior_pick_sigma (sqrt ((a * (*s * *s) + (d*d)/(ad*ad)) 
+                                      / (a+1)), a+1);
       } 
       sum += d*d;
     }
@@ -627,7 +643,7 @@ static void gibbs_adjustments
         { d /= s1[j];
         }
         else
-        { d /= net_pick_sigma (sqrt ((a1 * (s1[j] * s1[j]) + (d*d)/(ad*ad)) 
+        { d /= prior_pick_sigma (sqrt ((a1 * (s1[j] * s1[j]) + (d*d)/(ad*ad)) 
                                        / (a1+1)), a1+1);
         } 
         sum += d*d;
@@ -646,7 +662,7 @@ static void gibbs_adjustments
           { d /= sr[r][j];
           }
           else
-          { d /= net_pick_sigma 
+          { d /= prior_pick_sigma 
                  (sqrt ((ar[r].alpha[2] * (sr[r][j] * sr[r][j]) + (d*d)/(ad*ad))
                           / (ar[r].alpha[2]+1)), ar[r].alpha[2]+1);
           } 
@@ -657,7 +673,7 @@ static void gibbs_adjustments
   
     nprec = nalpha / sum;
   
-    adj[i] = net_pick_sigma (1/sqrt(nprec), nalpha);
+    adj[i] = prior_pick_sigma (1/sqrt(nprec), nalpha);
   }
 }
 
@@ -703,16 +719,78 @@ void mc_app_energy
 
     for (i = (energy ? 0 : low); i < (energy ? N_train : high); i++)
     {
-      net_func (&train_values[i], 0, arch, &params);
-      net_model_prob (&train_values[i], train_targets + data_spec->N_targets*i,
-                      &log_prob, gr ? &deriv[i] : 0, arch, priors, &sigmas, 2);
-  
-      if (energy) *energy -= log_prob;
+      if (model->type=='V'          /* Handle piecewise-constant hazard      */
+       && surv->hazard_type=='P')   /*   model specially                     */
+      { 
+        double ot, ft, t0, t1;
+        int censored;
+        int w;
 
-      if (gr && i>=low && i<high)
-      { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
-                  arch, &params);
-        net_grad (&grad, &params, &train_values[i], &deriv[i], arch);
+        if (train_targets[i]<0)
+        { censored = 1;
+          ot = -train_targets[i];
+        }
+        else
+        { censored = 0;
+          ot = train_targets[i];
+        }
+
+        t0 = 0;
+        t1 = surv->time[0];
+        train_values[i].i[0] = surv->log_time ? log(t1) : t1;
+
+        w = 0;
+
+        for (;;)
+        {
+          net_func (&train_values[i], 0, arch, &params);
+          
+          ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+
+          net_model_prob(&train_values[i], &ft,
+                         &log_prob, gr ? &deriv[i] : 0, arch, model, surv, 
+                         &sigmas, 2);
+
+          if (energy) *energy -= log_prob;
+
+          if (gr && i>=low && i<high)
+          { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
+                      arch, &params);
+            net_grad (&grad, &params, &train_values[i], &deriv[i], arch);
+          }
+
+          if (ot<=t1) break;
+ 
+          t0 = t1;
+          w += 1;
+          
+          if (surv->time[w]==0) 
+          { t1 = ot;
+            train_values[i].i[0] = surv->log_time ? log(t0) : t0;
+          }
+          else
+          { t1 = surv->time[w];
+            train_values[i].i[0] = surv->log_time ? (log(t0)+log(t1))/2
+                                                  : (t0+t1)/2;
+          }
+        }
+      }
+
+      else /* Everything except piecewise-constant hazard model */
+      { 
+        net_func (&train_values[i], 0, arch, &params);
+
+        net_model_prob(&train_values[i], train_targets + data_spec->N_targets*i,
+                       &log_prob, gr ? &deriv[i] : 0, arch, model, surv,
+                       &sigmas, 2);
+  
+        if (energy) *energy -= log_prob;
+
+        if (gr && i>=low && i<high)
+        { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
+                    arch, &params);
+          net_grad (&grad, &params, &train_values[i], &deriv[i], arch);
+        }
       }
     }
 
@@ -747,7 +825,7 @@ void mc_app_stepsizes
 
   /* Compute second derivatives of minus log likelihood for unit values. */
 
-  net_model_max_second (seconds.o, arch, priors, &sigmas);
+  net_model_max_second (seconds.o, arch, model, surv, &sigmas);
 
   for (l = arch->N_layers-1; l>=0; l--)
   { 
@@ -906,10 +984,50 @@ static double sum_squares
 }
 
 
-/* SAMPLE FROM CONDITIONAL DISTRIBUTION FOR SIGMA.  Draws a random value 
-   from the conditional distribution for a sigma that is defined by
-   its top-down prior and by the sum of the lower-level precision values 
-   that it controls. */
+/* ADAPTIVE REJECTION SAMPLING FROM CONDITIONAL DISTRIBUTION FOR A SIGMA VALUE.
+   Draws a random value from the conditional distribution for a sigma that is 
+   defined by its top-down prior and by the sum of the lower-level precision 
+   values that it controls, using the Adaptive Rejection Sampling method. */
+
+typedef struct { double w, a, a0, a1, s; } logp_data;
+
+static double logp (double l, double *d, void *vp)
+{ logp_data *p = vp;
+  double t = exp(l); 
+  double v;
+  *d = p->a/2 - t*p->a0/(2*p->w) + p->a1*p->s/(2*t);
+  v = l*p->a/2 - t*p->a0/(2*p->w) - p->a1*p->s/(2*t);
+  /* fprintf(stderr,"%.3lf %g %g\n",t,v,*d); */
+  return v;
+}
+
+static double cond_sigma
+( double width,		/* Width parameter for top-level prior */
+  double alpha0,	/* Alpha for top-level prior */
+  double alpha1,	/* Alpha for lower-level prior */
+  double sum,		/* Sum of lower-level precisions */
+  int n			/* Number of lower-level precision values */
+)
+{
+  logp_data data;
+
+  data.w  = 1 / (width * width);
+  data.a  = alpha0 - n*alpha1;
+  data.a0 = alpha0;
+  data.a1 = alpha1;
+  data.s  = sum;
+
+  /* fprintf(stderr,"\n"); */
+  return exp (-0.5*ars(log(data.w),log(1+1/sqrt(alpha0)),logp,&data));
+}
+
+
+#if 0 /* No longer used */
+
+/* SAMPLE FROM CONDITIONAL DISTRIBUTION FOR SIGMA - OLD VERSION, NOW OBSOLETE.
+   Draws a random value from the conditional distribution for a sigma that is 
+   defined by its top-down prior and by the sum of the lower-level precision 
+   values that it controls. */
 
 static double cond_sigma
 ( double width,		/* Width parameter for top-level prior */
@@ -948,3 +1066,5 @@ static double cond_sigma
 
   return sqrt(v);
 }
+
+#endif

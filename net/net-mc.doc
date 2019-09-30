@@ -5,7 +5,7 @@ NET-MC:  Do Markov chain simulation to sample networks.
 The net-mc program is the specialization of xxx-mc to the task of
 sampling from the posterior distribution for a neural network model,
 or from the prior distribution, if no training set is specified.  See
-xxx-mc.doc for the generic features of this program.s
+xxx-mc.doc for the generic features of this program.
 
 The following applications-specific sampling procedures are implemented:
 

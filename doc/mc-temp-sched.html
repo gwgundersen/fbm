@@ -1,0 +1,41 @@
+<html>
+<body>
+<pre>
+
+
+MC-TEMP-SCHED:  Specify temperature schedule for tempering methods.
+
+Usage:
+
+    mc-temp-sched log-file { inv-temp[@bias][:n] }
+  
+or:
+
+    mc-temp-sched log-file 
+
+The first form appends a tempering schedule to a log file, which must
+already exist, but not have iterations stored yet.  For the second
+form, the schedule stored in the log file is displayed.
+
+A schedule consists of one or more inverse "temperatures", in the
+interval [0,1), which are normally monotonically increasing.  An
+inverse temperature can be specified directly, or in the form "/temp",
+with "temp" being the non-inverse temperature.  A final temperature of
+1 is automatically added at the end of the list.  With each
+temperature may optionally be associated a "bias", which is added to
+the energy of states at that temperature when simulated tempering is
+done.  The default bias is zero, as is that for the final temperature
+of one.
+
+An argument with a colon represents a set of n temperatures/biases
+starting with that given and continuing up to but not including the
+next temperature specified (or up to a temperature of one if the
+argument is the last).  The temperatures are interpolated geometrically, 
+the biases linearly.  For example, the two arguments "/16@20:2" and
+"/4@10" give the same results as the three arguments "/16@20",
+"/8@15", and "/4@10".
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

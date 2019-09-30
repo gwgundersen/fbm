@@ -1,6 +1,6 @@
 # MAKEFILE FOR MARKOV CHAIN MONTE CARLO, FOR INCLUSION IN OTHER MAKEFILES
 
-# Copyright (c) 1995 by Radford M. Neal 
+# Copyright (c) 1995, 1996 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 
@@ -17,6 +17,12 @@ mc-traj.c:
 	ln -s ../mc/mc-traj.c .
 mc-iter.c:
 	ln -s ../mc/mc-iter.c .
+mc-metropolis.c:
+	ln -s ../mc/mc-metropolis.c .
+mc-hybrid.c:
+	ln -s ../mc/mc-hybrid.c .
+mc-slice.c:
+	ln -s ../mc/mc-slice.c .
 mc-util.c:
 	ln -s ../mc/mc-util.c .
 mc-quantities.c:
@@ -30,8 +36,11 @@ mc.c:
 
 mc-traj.o:	mc-traj.c	misc.h rand.h log.h mc.h
 mc-iter.o:	mc-iter.c	misc.h rand.h log.h mc.h quantities.h
+mc-metropolis.o:mc-metropolis.c	misc.h rand.h log.h mc.h 
+mc-hybrid.o:	mc-hybrid.c	misc.h rand.h log.h mc.h
+mc-slice.o:	mc-slice.c	misc.h rand.h log.h mc.h
 mc-util.o:	mc-util.c	misc.h rand.h log.h mc.h
-mc-quantities.o: mc-quantities.c misc.h log.h quantities.h mc.h
+mc-quantities.o:mc-quantities.c misc.h log.h quantities.h mc.h
 mc-grad-test.o:	mc-grad-test.c	misc.h rand.h log.h mc.h
 mc-stepsizes.o:	mc-stepsizes.c	misc.h rand.h log.h mc.h
 mc.o:		mc.c		misc.h rand.h log.h mc.h quantities.h

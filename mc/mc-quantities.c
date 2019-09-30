@@ -1,6 +1,6 @@
 /* MC-QUANTITIES.C - Module for quantities relating to Monte Carlo simulation.*/
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -64,7 +64,7 @@ void mc_available
       low = qd[i].low;
       mod = qd[i].modifier;
 
-      if (strchr("TEKHDdfFmrkiIjJ",qd[i].letter)!=0)
+      if (strchr("TEKHDdfFmrekiIjJ",qd[i].letter)!=0)
       { qd[i].available = low==-1 && (mod==-1 || qd[i].letter=='D') ? 1 : -1;
       }
 
@@ -258,6 +258,13 @@ void mc_evaluate
         case 'r':
         { if (it==0 || logg->index['i']!=logg->last_index) break;
           *qh->value[i] = (double)it->rejects / it->proposals;
+          qh->updated[i] = 1;
+          break;
+        }
+
+        case 'e':
+        { if (it==0 || logg->index['i']!=logg->last_index) break;
+          *qh->value[i] = (double)it->slice_evals / it->slice_calls;
           qh->updated[i] = 1;
           break;
         }

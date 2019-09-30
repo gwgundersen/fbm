@@ -1,6 +1,6 @@
 /* MC.H - Interface to Markov chain Monte Carlo module. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -32,25 +32,31 @@ typedef struct
   struct 		/* List of operations to perform */
   { 
     int type;		  /* Type of operation, zero for empty slot */
+    int repeat_count;	  /* Repetition count for type 'R'' */
 
-    int repeat_count;	  /* Repetition count for type 'R' and 't' */
-
-    int steps;		  /* Number of steps in trajectory */
+    int steps;		  /* Number of steps in trajectory, or max intervals
+                             for slice sampling */
 
     float stepsize_adjust;/* Adjustment factor for stepsizes */
     float stepsize_alpha; /* Gamma param for stepsize dist, zero is infinity */
 
     int window; 	  /* Window size for hybrid Monte Carlo updates */
-    int jump; 	  	  /* Steps in each jump for hybrid Monte Carlo */
+    int jump;	  	  /* Steps in each jump for hybrid Monte Carlo */
 
     float heatbath_decay; /* Momentum decay for heatbath step */
 
-    int high_count;	  /* Repeat count for highest temperature (for 't') */
     float temper_factor;  /* Tempering factor for tempered hybrid Monte Carlo */
     float app_param;	  /* Parameter for application-specific procedure */
 
-    int reserved[5];      /* Reserved for future use */
- 
+    int firsti, lasti;	  /* Indexes of first and last coordinates to apply
+                             single-variable updates to */
+
+    float refresh_prob;	  /* Prob. of refresh in overrelaxed slice sampling */
+
+    int refinements;	  /* Number of refinement steps */
+
+    int reserved[4];      /* Reserved for future use */
+
     char appl[101];	  /* Name of application-specific procedure */
 
   } op[Max_mc_ops];
@@ -141,9 +147,11 @@ typedef struct
   int window_offset;	/* Offset of start state within window, for hybrid */
   int rejects;		/* Number of rejections in this iteration */
   int proposals;	/* Number of proposals in this iteration */
+  int slice_calls;	/* Number of calls of slice sampling procedures */
+  int slice_evals;	/* Number of energy evaluations in slice calls */
   int time;             /* Cumulative cpu-usage in ms */
 
-  int reserved;	        /* Reserved for future use */
+  int reserved[4];        /* Reserved for future use */
 
 } mc_iter;
 
@@ -212,3 +220,5 @@ double mc_kinetic_energy (mc_dynamic_state *);
 void mc_temp_present     (mc_dynamic_state *, mc_temp_sched *);
 int mc_temp_index        (mc_temp_sched *, float);
 double mc_energy_diff    (mc_dynamic_state *, mc_temp_sched *, int);
+
+void mc_value_copy (mc_value *, mc_value *, int);

@@ -1,6 +1,6 @@
 /* NET-DVAR.C - Program to find variance of function difference. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,8 +18,10 @@
 #include <math.h>
 
 #include "misc.h"
-#include "net.h"
 #include "log.h"
+#include "prior.h"
+#include "model.h"
+#include "net.h"
 
 
 static void usage(void);
@@ -87,8 +89,7 @@ void main
   log_file_open (&logf, 0);
 
   log_gobble_init(&logg,0);
-  logg.req_size['A'] = sizeof *a;
-  logg.req_size['P'] = sizeof *p;
+  net_record_sizes(&logg);
 
   while (!logf.at_end && logf.header.index<0)
   { log_gobble(&logf,&logg);

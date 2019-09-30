@@ -50,7 +50,13 @@ An operation-spec may be one of the following:
 
     metropolis [ stepsize-adjust[:stepsize-alpha] ]  
 
-        Do a simple Metropolis update.
+        Do a simple Metropolis update, to all components at once.
+
+    met-1 [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ]
+
+        Do single-component Metropolis updates, for the range of components 
+        given.  The default if no components are given is all components. 
+        The default for last if first alone is given is last=first.
 
     dynamic steps [ stepsize-adjust[:stepsize-alpha] ] 
 
@@ -80,6 +86,27 @@ An operation-spec may be one of the following:
         of the trajectory outside any windows, and by 1/temper-factor
         in the second half.
 
+    slice-1 [ stepsize-adjust[:stepsize-alpha] [ max-steps [ first[:last] ] ] ]
+
+        Do single-component slice sampling, for the range of components 
+        given.  The max-steps argument gives the maximum number of 
+        intervals to create when stepping out, with zero indicating no
+        limit (this is the default).  The default for the range of components
+        (first:last) is all components.  The default for last if first alone 
+        is given is last=first.  Components are numbered starting with zero.
+
+    slice-over [ refinements [ refresh-prob [ stepsize-adjust[:stepsize-alpha] 
+                 [ max-steps [ first[:last] ] ] ] ] ]
+
+        Do overrelaxed slice sampling, for the range of components given.
+        The endpoints are computed using the given number of refinements
+        (default zero).  The refresh probability is the probability of doing 
+        an ordinary slice sampling update rather than an overrelaxed one; 
+        it defaults to zero.  The default maximum number of steps is zero
+        (indicating no limit).  The default range of components if no range is 
+        given is all components. The default for last if first alone is given 
+        is last=first.
+
     sim-temp
 
         Do a metropolis update of the simulated tempering inverse
@@ -102,19 +129,13 @@ An operation-spec may be one of the following:
         "xxx-mc" command on standard output, preceded by an index that
         is reset to zero every iteration.
 
-    temp-trans [ repeat-count [ high-count ] ]
+    temp-trans
 
         Perform a tempered transition, with components given by the
         following operations (terminated by 'end').  The components
         are done in forward order for the first half of the tempered
         transition, in reverse order for the second.  For this to  
         work, the components must be reversible in themselves.  
-
-        If a repeat-count is given, the components are over-relaxed
-        using that many states (which includes the start state), except
-        for the components at the highest temperature, which are done 
-        high-count times (default is same as repeat count), with no 
-        over-relaxation.
 
     (any other that starts with a letter)
 

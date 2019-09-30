@@ -1,0 +1,41 @@
+<html>
+<body>
+<pre>
+
+
+LOG-TYPES:  Types of log file records used by various programs.
+ 
+
+Class of Programs          Type   Description
+
+
+* Any                        r    State of random number generator
+
+
+* Markov Chain Monte Carlo   i    Description of state/events at one iteration
+                             o    List of Monte Carlo operations to apply
+
+  Dynamic MCMC               p    Values of "momentum" variables
+                             t    Specification of how to compute trajectories
+
+  Tempered MCMC              m    Schedule of temperatures and maybe biases
+                             b    Current temperature and associated state
+
+
+* Bivariate Gaussian         B    Specification of bivariate Gaussian 
+                             X    Point from bivariate Gaussian distribution
+
+
+* Supervised learning        D    Data specifications for training and test sets
+                             M    Model specification
+                             V    Characteristics of model for survival data
+
+  Neural network             A    Network architecture
+                             P    Specification of priors for network
+                             S    Hyperparameters ("sigmas")
+                             W    Parameters of network ("weights")
+
+            Copyright (c) 1995, 1996 by Radford M. Neal
+</pre>
+</body>
+</html>

@@ -1,6 +1,6 @@
 /* DATA-SPEC.C - Program for specifying data sets for training and testing. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -75,14 +75,14 @@ void main
 
     ds = logg.data['D'];
 
-    printf("\n");
+    printf("\nData specifications:\n\n");
 
-    printf("Number of inputs:  %d\n",ds->N_inputs);
-    printf("Number of targets: %d\n",ds->N_targets);
+    printf("  Number of inputs:  %d\n",ds->N_inputs);
+    printf("  Number of targets: %d\n",ds->N_targets);
     printf("\n");
 
     if (ds->int_target) 
-    { printf("Targets are integers in the range [0,%d)\n",ds->int_target);
+    { printf("  Targets are integers in the range [0,%d)\n",ds->int_target);
       printf("\n");
     }
 
@@ -101,10 +101,10 @@ void main
 
     if (anytrans)
     { 
-      printf("Transformations for input variables:\n\n");
+      printf("  Transformations for input variables:\n\n");
 
       for (i = 0; i<ds->N_inputs; i++)
-      { printf("  %2d: %s\n",i+1,data_trans_build(ds->input_trans[i]));
+      { printf("    %2d: %s\n",i+1,data_trans_build(ds->input_trans[i]));
       }
   
       printf("\n");
@@ -125,23 +125,23 @@ void main
 
     if (anytrans)
     { 
-      printf("Transformations for target variables:\n\n");
+      printf("  Transformations for target variables:\n\n");
 
       for (i = 0; i<ds->N_targets; i++)
-      { printf("  %2d: %s\n",i+1,data_trans_build(ds->target_trans[i]));
+      { printf("    %2d: %s\n",i+1,data_trans_build(ds->target_trans[i]));
       }
   
       printf("\n");
     }
 
-    printf ("Training inputs:  %s\n", ds->train_inputs);
-    printf ("Training targets: %s\n", ds->train_targets);
+    printf ("  Training inputs:  %s\n", ds->train_inputs);
+    printf ("  Training targets: %s\n", ds->train_targets);
     printf("\n");
 
     if (ds->test_inputs[0]!=0)
-    { printf ("Test inputs:  %s\n", ds->test_inputs);
+    { printf ("  Test inputs:  %s\n", ds->test_inputs);
       if (ds->test_targets[0]!=0)
-      { printf ("Test targets: %s\n", ds->test_targets);
+      { printf ("  Test targets: %s\n", ds->test_targets);
       }
       printf("\n");
     }
@@ -159,7 +159,8 @@ void main
   ds->test_inputs[0] = 0;
   ds->test_targets[0] = 0;
 
-  if (*ap==0 || (ds->N_inputs = atoi(*ap++))<=0) usage();
+  if (*ap==0 || (ds->N_inputs = atoi(*ap++))<0 
+   || ds->N_inputs==0 && strcmp(*(ap-1),"0")!=0) usage();
   if (*ap==0 || (ds->N_targets = atoi(*ap++))<=0) usage();
 
   if (*ap!=0 && strcmp(*ap,"/")!=0)

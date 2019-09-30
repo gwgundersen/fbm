@@ -1,6 +1,6 @@
 /* NET-DISPLAY.C - Program to print network parameters and other such info. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,8 +18,10 @@
 #include <math.h>
 
 #include "misc.h"
-#include "net.h"
 #include "log.h"
+#include "prior.h"
+#include "model.h"
+#include "net.h"
 
 
 /* MAIN PROGRAM. */
@@ -29,7 +31,8 @@ void main
   char **argv
 )
 {
-  net_arch    *a;
+  net_arch *a;
+  model_specification *m;
 
   net_params  params, *w = &params;
   net_sigmas  sigmas, *s = &sigmas;
@@ -74,18 +77,21 @@ void main
   log_file_open (&logf, 0);
 
   log_gobble_init(&logg,0);
-  logg.req_size['A'] = sizeof *a;
+  net_record_sizes(&logg);
 
   while (!logf.at_end && logf.header.index<0)
   { log_gobble(&logf,&logg);
   }
+
+  a = logg.data['A'];
+  m = logg.data['M'];
   
-  if ((a = logg.data['A'])==0)
+  if (a==0)
   { fprintf(stderr,"No architecture specification in log file\n");
     exit(1);
   }
 
-  s->total_sigmas = net_setup_sigma_count(a);
+  s->total_sigmas = net_setup_sigma_count(a,m);
   w->total_params = net_setup_param_count(a);
 
   logg.req_size['S'] = s->total_sigmas * sizeof(net_sigma);
@@ -131,7 +137,7 @@ void main
   s->sigma_block = logg.data['S'];
   w->param_block = logg.data['W'];
 
-  net_setup_sigma_pointers (s, a);
+  net_setup_sigma_pointers (s, a, m);
   net_setup_param_pointers (w, a);
 
   /* Print values of the parameters and hyperparameters, or whatever. */
@@ -140,13 +146,13 @@ void main
     sigmas_only ? " (sigmas only)" : params_only ? " (parameters only)" : "");
 
   if (params_only)
-  { net_print_params(w,0,a);
+  { net_print_params(w,0,a,m);
   }
   else if (sigmas_only)
-  { net_print_sigmas(s,a);
+  { net_print_sigmas(s,a,m);
   }
   else
-  { net_print_params(w,s,a);
+  { net_print_params(w,s,a,m);
   }
 
   printf("\n");

@@ -19,7 +19,9 @@ Each group of the remaining arguments describes the grid along one
 input dimension, with 'low' and 'high' being the range of the grid
 along that dimension, and grid-size + 1 being the number of grid
 points spread across that range.  The number of such argument groups
-must be the same as the number of input dimensions.
+must be the same as the number of input dimensions.  For survival
+models with non-constant hazard, the time input is included amongst
+these inputs.
 
 The output consists of a section for each network, with sections
 separated by blank lines.  Each section contains as many lines as
@@ -30,6 +32,13 @@ variable are the same.
 
 If the final argument is "targets", then rather than writing the
 network outputs, the program instead generates target values from
-these outputs, as defined by the data model.
+these outputs, as defined by the data model.  This option is not
+allowed for survival models, except for those with constant hazard.
+
+Note that the grid gives the actual values to which the input units
+are set.  Any transformations that may have been specified with 
+"data-spec" are ignored.  Similary, it is the raw output of the 
+network (or generated target value) that is displayed, without any 
+transformation.
 
             Copyright (c) 1995 by Radford M. Neal

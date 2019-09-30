@@ -1,0 +1,48 @@
+<html>
+<body>
+<pre>
+
+
+XXX-HIST:  Build a histogram for a quantity obtained from a log file.
+
+There is a version of this program for each application (eg, net-hist). 
+Each version allows histograms to be created for the set of quantities
+defined for that application.  The histogram is written to standard
+output, in a form suitable for plotting.
+
+Usage:
+  
+    xxx-hist quantities low high bins { log-file [ range ] } 
+           [ / { app-args } ]
+
+Here 'xxx' is a prefix identifying the particular incarnation of this
+program.  The 'quantities' specification says what to make a histogram
+of; 'low' and 'high' give the range, which is divided into 'bins'
+bins.  There follow specifications of where the data comes from; and
+perhaps further arguments, depending on the application (for which,
+see the documentation specific to that application - eg, net-hist).
+
+For the format of the quantity specifications, see the documentation
+on generic quantities, quantities for Monte Carlo runs, quantities for
+neural networks, etc.  Many quantities may be given; all their values
+are merged in one histogram.
+
+Data comes from records with indexes in the specified ranges within
+the log files mentioned.  The ranges have the form "[low][:[high]]][%mod]".  
+The low bound defaults to one.  If no high bound is given, the range
+extends to the highest index in the log file.  If the "%mod" option is
+present, only iterations within the range whose index is a multiple of
+"mod" are used (e.g. "5:12%3" is equivalent to 6 9 12).  If no range
+is given, the default is "1:".
+
+The output consists as many lines as bins, with each line giving the
+value at the centre of the bin and either the count of values falling
+within the bin or the fraction of values falling within the bin.  The
+latter option is selected by preceding the number of bins with a minus
+sign.  Values falling outside the range are discarded, except that
+they affect the normalization of counts to give fractions.
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

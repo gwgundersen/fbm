@@ -1,6 +1,6 @@
 /* NET-PRED.C - Program to make predictions for test cases. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -13,7 +13,7 @@
  *
  * Modifications to allow selection of a given number of networks and to
  * allow specification of ranges by cpu-time are adapted from modifications
- * by Carl Edward Rasmussen, 1995 
+ * by Carl Edward Rasmussen, 1995.
  */
 
 #include <stdlib.h>
@@ -22,8 +22,10 @@
 #include <math.h>
 
 #include "misc.h"
-#include "net.h"
 #include "log.h"
+#include "prior.h"
+#include "model.h"
+#include "net.h"
 #include "data.h"
 #include "numin.h"
 #include "net-data.h"
@@ -45,7 +47,9 @@ void main
   char **argv
 )
 {
-  net_arch   *a;
+  net_arch *a;
+  model_specification *m;
+  model_survival *sv;
   net_priors *p;
 
   net_sigmas sigmas, *s = &sigmas;
@@ -151,36 +155,31 @@ void main
   log_file_open (&logf, 0);
 
   log_gobble_init(&logg,0);
-  logg.req_size['A'] = sizeof *a;
-  logg.req_size['P'] = sizeof *p;
-  logg.req_size['D'] = sizeof *data_spec;
+  net_record_sizes(&logg);
 
   while (!logf.at_end && logf.header.index<0)
   { log_gobble(&logf,&logg);
   }
-  
-  if ((a = logg.data['A'])==0)
-  { fprintf(stderr,"No architecture specification in log file\n");
-    exit(1);
-  }
 
-  s->total_sigmas = net_setup_sigma_count(a);
+  a  = logg.data['A'];
+  m  = logg.data['M'];
+  p  = logg.data['P'];
+  sv = logg.data['V'];
+
+  net_check_specs_present(a,p,0,m,sv);
+
+  s->total_sigmas = net_setup_sigma_count(a,m);
   w->total_params = net_setup_param_count(a);
 
   logg.req_size['S'] = s->total_sigmas * sizeof(net_sigma);
   logg.req_size['W'] = w->total_params * sizeof(net_param);
-
-  if ((p = logg.data['P'])==0)
-  { fprintf(stderr,"No prior specification in log file\n");
-    exit(1);
-  }
 
   if ((data_spec = logg.data['D'])==0)
   { fprintf(stderr,"No data specification in log file\n");
     exit(1);
   }
 
-  M_targets = a->data_model=='C' ? a->N_outputs : data_spec->N_targets;
+  M_targets = m!=0 && m->type=='C' ? a->N_outputs : data_spec->N_targets;
 
   if (test_inputs_spec[0]!=0)  
   { strcpy (data_spec->test_inputs,  test_inputs_spec);
@@ -196,11 +195,11 @@ void main
 
   /* Check for illegal option combinations. */
 
-  if (op_r && (a->data_model=='B' || a->data_model=='C')
-   || op_p && (a->data_model==0)
-   || op_m && (a->data_model=='R' || a->data_model==0)
-   || op_n && (a->data_model=='C')
-   || op_d && (a->data_model=='B' || a->data_model=='C'))
+  if (op_r && (m!=0 && m->type=='B' || m!=0 && m->type=='C')
+   || op_p && (m==0)
+   || op_m && (m==0 || m->type=='R' || m->type=='V')
+   || op_n && (m!=0 && m->type=='C')
+   || op_d && (m!=0 && m->type=='B' || m!=0 && m->type=='C'))
   { fprintf(stderr,"Illegal combination of options with data model\n");
     exit(1);
   }
@@ -218,7 +217,7 @@ void main
 
   /* Read test data. */
 
-  net_data_read (0, 1, a);
+  net_data_read (0, 1, a, m, sv);
 
   /* Look at network to make guesses and/or probability judgements. */
 
@@ -391,7 +390,7 @@ void main
           s->sigma_block = logg.data['S'];
           w->param_block = logg.data['W'];
   
-          net_setup_sigma_pointers (s, a);
+          net_setup_sigma_pointers (s, a, m);
           net_setup_param_pointers (w, a);
 
           if (op_N)
@@ -430,7 +429,7 @@ void main
               net_model_prob (&test_values[i], 
                               test_targets + data_spec->N_targets * i, 
                               &curr_log_prob,
-                              0, a, p, s, 0);
+                              0, a, m, sv, s, 0);
               if (op_r)
               { for (j = 0; j<data_spec->N_targets; j++)
                 { tr = &data_spec->target_trans[j];
@@ -446,7 +445,7 @@ void main
                                       : addlogs(log_prob[i],curr_log_prob); 
             }
     
-            net_model_guess (&test_values[i], curr_targets, a, p, s, 0);
+            net_model_guess (&test_values[i], curr_targets, a, m, sv, w, s, 0);
     
             for (j = 0; j<M_targets; j++)
             { 
@@ -458,14 +457,14 @@ void main
 
                 if (tr->take_log)
                 {
-                  if (op_n && a->data_model=='R' && (p->noise.alpha[0]!=0 
-                       || p->noise.alpha[1]!=0 || p->noise.alpha[2]!=0))
+                  if (op_n && m!=0 && m->type=='R' && (m->noise.alpha[0]!=0 
+                       || m->noise.alpha[1]!=0 || m->noise.alpha[2]!=0))
                   { fprintf(stderr,"Predictive mean is undefined\n");
                     exit(1);
                   }
 
                   curr_targets[j] 
-                    *= exp ((1/p->noise.width) / (2*tr->scale*tr->scale));
+                    *= exp ((1/m->noise.width) / (2*tr->scale*tr->scale));
                 }
               }
 
@@ -478,7 +477,8 @@ void main
 
               for (k = 0; k<Median_sample; k++)
               {
-                net_model_guess (&test_values[i], curr_targets, a, p, s, 1);
+                net_model_guess (&test_values[i], curr_targets, 
+                                 a, m, sv, w, s, 1);
 
                 for (j = 0; j<M_targets; j++)
                 { if (op_r)
@@ -595,7 +595,8 @@ void main
  
     if (!op_a && op_i)
     { printf(" ");
-      for (j = 0; j<a->N_inputs; j++)
+      for (j = m!=0 && m->type=='V' && sv->hazard_type!='C' ? 1 : 0; 
+               j<a->N_inputs; j++)
       { printf(" %6.2lf",test_values[i].i[j]);
       }
     }
@@ -620,7 +621,7 @@ void main
 
     if (op_m)
     { 
-      if (a->data_model=='C')
+      if (m->type=='C')
       { int g;
         g = 0;
         for (j = 1+op_z; j<a->N_outputs; j++)
@@ -640,7 +641,7 @@ void main
         }
       }
 
-      if (a->data_model=='B')
+      if (m->type=='B')
       { for (j = 0; j<a->N_outputs; j++)
         { guess[j] = sum_targets[M_targets*i+j]/N_nets > 0.5;
           if (have_targets)
@@ -680,6 +681,7 @@ void main
         { double val, diff;
           val = test_targets[data_spec->N_targets*i+j];
           if (op_r) val = data_inv_trans(val,data_spec->target_trans[j]);
+          if (m!=0 && m->type=='V' && val<0) val = -val;
           diff = guess[j] - val;
           error[j] = diff * diff;
           tot_error += error[j];
@@ -717,6 +719,7 @@ void main
         { double val, diff;
           val = test_targets[data_spec->N_targets*i+j];
           if (op_r) val = data_inv_trans(val,data_spec->target_trans[j]);
+          if (m!=0 && m->type=='V' && val<0) val = -val;
           diff = guess[j] - val;
           error[j] = diff<0 ? -diff : diff;
           tot_error += error[j];
@@ -840,7 +843,7 @@ void main
 
 /* FIND MEDIAN OF ARRAY OF VALUES. */
 
-static int dbl_cmp (const void *a, const void *b) 
+static int flt_cmp (const void *a, const void *b) 
 { return *(float*)a > *(float*)b ? +1 : *(float*)a < *(float*)b ? -1 : 0;
 }
 
@@ -849,7 +852,7 @@ static float find_median
   int n			/* Number of values in array */
 )
 {
-  qsort (data, n, sizeof *data, dbl_cmp);
+  qsort (data, n, sizeof *data, flt_cmp);
  
   return n%2==1 ? data[(int)(n/2)] 
                 : (data[(int)(n/2)] + data[(int)((n-1)/2)]) / 2;

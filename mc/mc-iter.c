@@ -1,6 +1,6 @@
 /* MC-ITER.C - Procedures for performing Markov chain Monte Carlo iterations. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -24,27 +24,17 @@
 #include "quantities.h"
 
 
+/* OPTIONS. */
+
 #define Print_proposals 0	/* Print proposed changes by quadrant? 
 				   (not normally done, for test only) */
 
+static int echo = 0;		/* Debug option - echos operations first time */
 
-/* STRUCTURE AND PROCEDURE USED FOR SORTING. */
-
-typedef struct { int index; double value; } sort_table;
-
-int compare (const void *a, const void *b) 
-{ 
-  return ((sort_table*)a)->value < ((sort_table*)b)->value ? -1
-       : ((sort_table*)a)->value > ((sort_table*)b)->value ? +1
-       : 0;
-}
+#define Max_temp_repeat	1000	/* Max repeat count in a tempered transition */
 
 
 /* LOCAL VARIABLES. */
-
-#define Max_temp_repeat	1000 /* Max repetition count in a tempered transition */
-
-static int echo = 0;	/* Debug option - echos operations first time */
 
 static mc_ops *ops;	/* Operations to perform each iteration */
 static int endo;               /* Index of point past last operation */
@@ -75,28 +65,39 @@ static mc_value *p_rsv;	/* Place to save p values for reject state */
 
 static int print_index;	/* Index used to label printed quantities */
 
-static struct 		/* States saved for over-relaxation */
-{ mc_value *p, *q, *aux; 
-} osave[Max_temp_repeat];
 
-static sort_table osort[Max_temp_repeat]; /* Sort table for over-relaxation */
+/* EXTERNAL PROCEDURES IMPLEMENTING OPERATIONS. */
+
+void mc_metropolis (mc_dynamic_state *, mc_iter *, mc_value *);
+void mc_met_1 (mc_dynamic_state *, mc_iter *, int, int);
+void mc_slice (mc_dynamic_state *, mc_iter *, int, int, int);
+void mc_slice_over (mc_dynamic_state *, mc_iter *, int, float, int, int, int);
+void mc_hybrid (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int, double,
+  int, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *);
 
 
-/* LOCAL PROCEDURES. */
+/* LOCAL PROCEDURES.  Tempering procedures are included in this module
+   to simplify the interface. */
 
 static void do_group (mc_dynamic_state *, mc_iter *, int, int, int,
                       log_gobbled *, quantities_described, int);
 
-static void metropolis (mc_dynamic_state *, mc_iter *);
-static void hybrid (mc_dynamic_state *, mc_iter *, int, int, int, double, int);
-static void simulated_tempering (mc_dynamic_state *, mc_iter *);
-static void tempered_transition (mc_dynamic_state *, mc_iter *, 
-                                 int, int, int, int, int,
-                                 log_gobbled *, quantities_described, int);
-static void temp_over (mc_dynamic_state *, mc_iter *, int, int, int, 
-                       log_gobbled *, quantities_described, int);
+void mc_simulated_tempering (mc_dynamic_state *, mc_iter *);
+void mc_tempered_transition (mc_dynamic_state *, mc_iter *, 
+                             int, int, int, log_gobbled *, 
+                             quantities_described, int);
 
-static void copy (mc_value *, mc_value *, int);
+
+/* STRUCTURE AND PROCEDURE USED FOR SORTING. */
+
+typedef struct { int index; double value; } sort_table;
+
+int compare (const void *a, const void *b) 
+{ 
+  return ((sort_table*)a)->value < ((sort_table*)b)->value ? -1
+       : ((sort_table*)a)->value > ((sort_table*)b)->value ? +1
+       : 0;
+}
 
 
 /* SET UP FOR PERFORMING ITERATIONS. */
@@ -300,7 +301,8 @@ static void do_group
 
     /* Figure out what stepsize factor to use this time, if necessary. */
 
-    if (type=='M' || type=='D' || type=='P' || type=='H' || type=='T')
+    if (type=='M' || type=='m' || type=='S' || type=='O' 
+     || type=='D' || type=='P' || type=='H' || type=='T')
     { 
       stepsize_adjust = ops->op[i].stepsize_adjust;
       alpha = ops->op[i].stepsize_alpha;
@@ -312,7 +314,6 @@ static void do_group
       { it->stepsize_factor *= 
           alpha>0 ? 1 / sqrt (rand_gamma(alpha/2) / (alpha/2))
                   : pow(10.0,-alpha*(rand_uniopen()-0.5));
-          /* Used to be just rand_gamma(alpha) / alpha */
       }
 
       if (!have_ss)
@@ -355,7 +356,12 @@ static void do_group
       }
 
       case 'M': 
-      { metropolis(ds,it);
+      { mc_metropolis(ds,it,q_save);
+        break;
+      }
+
+      case 'm':
+      { mc_met_1(ds,it,ops->op[i].firsti,ops->op[i].lasti);
         break;
       }
 
@@ -373,20 +379,32 @@ static void do_group
       }
 
       case 'H': case 'T':
-      { hybrid (ds, it, ops->op[i].steps, ops->op[i].window, ops->op[i].jump,
-                type=='H' ? 0.0 : ops->op[i].temper_factor, N_quantities);
+      { mc_hybrid (ds, it, tj, ops->op[i].steps, ops->op[i].window, 
+                ops->op[i].jump, type=='H' ? 0.0 : ops->op[i].temper_factor, 
+                N_quantities, q_save, p_save, q_asv, p_asv, q_rsv, p_rsv);
+        break;
+      }
+
+      case 'S':
+      { mc_slice (ds, it, ops->op[i].firsti, ops->op[i].lasti, 
+                  ops->op[i].steps);
+        break;
+      }
+
+      case 'O':
+      { mc_slice_over (ds, it, ops->op[i].refinements, ops->op[i].refresh_prob,
+                       ops->op[i].firsti, ops->op[i].lasti, ops->op[i].steps);
         break;
       }
 
       case 's':
-      { simulated_tempering(ds,it);
+      { mc_simulated_tempering(ds,it);
         have_ss = 0;
         break;
       }
 
       case 't':
-      { tempered_transition (ds, it, i+1, endp[i]-1, reverse, 
-          ops->op[i].repeat_count, ops->op[i].high_count, 
+      { mc_tempered_transition (ds, it, i+1, endp[i]-1, reverse, 
           logg, qd, N_quantities);
         break;
       }
@@ -455,285 +473,9 @@ static void do_group
 }
 
 
-/* PERFORM METROPOLIS UPDATE. */
-
-static void metropolis
-( mc_dynamic_state *ds,	/* State to update */
-  mc_iter *it		/* Description of this iteration */
-)
-{
-  double old_energy;
-  double sf;
-  int k;
-
-  if (!ds->know_pot)
-  { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
-    ds->know_pot = 1;
-  }
-
-  old_energy = ds->pot_energy;
-
-  sf = it->stepsize_factor;
-
-  copy (q_save, ds->q, ds->dim);
-
-  for (k = 0; k<ds->dim; k++) 
-  { ds->q[k] += sf * ds->stepsize[k] * rand_gaussian();
-  }
-  
-  mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
-
-  it->proposals += 1;
-  it->delta = ds->pot_energy - old_energy;
-
-  if (it->delta<=0 || rand_uniform() < exp(-it->delta/it->temperature))
-  { 
-    it->move_point = 1;
-    ds->know_grad = 0;
-  }
-  else
-  { 
-    it->rejects += 1;
-    it->move_point = 0;
-
-    ds->pot_energy = old_energy;
-
-    copy (ds->q, q_save, ds->dim);
-  }
-}
-
-
-/* PERFORM HYBRID MONTE CARLO OPERATION. */
-
-static void hybrid
-( mc_dynamic_state *ds,	/* State to update */
-  mc_iter *it,		/* Description of this iteration */
-  int steps,		/* Total number of steps to do */
-  int window,		/* Window size to use */
-  int jump,		/* Number of steps in each jump */
-  double temper_factor,	/* Temper factor, zero if not tempering */
-  int N_quantities	/* Number of quantities to plot, -1 for tt plot */
-)
-{ 
-  double rej_pot_energy, rej_kinetic_energy, rej_free_energy;
-  double acc_pot_energy, acc_kinetic_energy, acc_free_energy;
-  double old_pot_energy, old_kinetic_energy;
-
-  int have_rej, rej_point;
-  int have_acc, acc_point;
-
-  int n, k, dir, jmps;
-  double H;
-
-  if (steps%jump!=0) abort();
-
-  jmps = steps/jump;
-
-  /* Decide on window offset, and save start state if we'll have to restore. */
-
-  it->window_offset = rand_int(window);
-
-  if (it->window_offset>0)  
-  {
-    copy (q_save, ds->q, ds->dim);
-    copy (p_save, ds->p, ds->dim);
-
-    if (!ds->know_pot)
-    { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
-      ds->know_pot = 1;
-    }
-  
-    if (!ds->know_kinetic)
-    { ds->kinetic_energy = mc_kinetic_energy(ds);
-      ds->know_kinetic = 1;
-    }
-
-    old_pot_energy = ds->pot_energy;
-    old_kinetic_energy = ds->kinetic_energy;
-  }
-
-  /* Set up for travelling about trajectory. */
-
-  mc_traj_init(tj,it);
-  mc_traj_permute();
-
-  have_rej = have_acc = 0;
-  n = it->window_offset;
-  dir = -1;
-
-  /* Loop that looks at one new state each iteration, which may possibly
-     be in the accept and/or reject windows. */
-
-  if (temper_factor!=0 && N_quantities<0)
-  { printf("\n");
-  }
-
-  while (dir==-1 || n!=jmps)
-  {
-    /* Restore if next state should be original start state. */
-
-    if (dir==-1 && n==0)
-    { 
-      if (it->window_offset>0)
-      { 
-        copy (ds->q, q_save, ds->dim);
-        copy (ds->p, p_save, ds->dim);
- 
-        ds->pot_energy = old_pot_energy;
-        ds->kinetic_energy = old_kinetic_energy;
-
-        ds->know_pot     = 1;
-        ds->know_kinetic = 1;
-        ds->know_grad    = 0;
-      }
-
-      n = it->window_offset;
-      dir = 1;
-    }
-
-    else 
-    { 
-      /* Do tempering in second half if appropriate. */
-
-      if (temper_factor!=0 && n<=jmps-window && 2*n>jmps)
-      { for (k = 0; k<ds->dim; k++)
-        { ds->p[k] /= temper_factor;
-        } 
-        if (N_quantities<0)
-        { printf ("%6d %20.10lf\n", jmps-n+1, 
-                   mc_kinetic_energy(ds) * (temper_factor*temper_factor - 1));
-          printf ("%6d %20.10lf\n", jmps-n, 
-                   mc_kinetic_energy(ds) * (temper_factor*temper_factor - 1));
-        }
-      }
-
-      /* Next state is found by following trajectory for 'jump' steps. */
-
-      mc_trajectory (ds, dir * jump);
-      n += dir;
-
-      /* Do tempering in first half if appropriate. */
-
-      if (temper_factor!=0 && n>=window && 2*n<jmps)
-      { 
-        if (N_quantities<0)
-        { printf ("%6d %20.10lf\n", n, 
-                   mc_kinetic_energy(ds) * (temper_factor*temper_factor - 1));
-          printf ("%6d %20.10lf\n", n+1, 
-                   mc_kinetic_energy(ds) * (temper_factor*temper_factor - 1));
-          if (2*(n+1)>=jmps) printf("\n");
-        }
-        for (k = 0; k<ds->dim; k++)
-        { ds->p[k] *= temper_factor;
-        } 
-      }
-    }
-
-    /* Make sure we know energy, if needed. */
-
-    if (n<window || n>jmps-window)
-    {
-      if (!ds->know_pot)
-      { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
-        ds->know_pot = 1;
-      }
-   
-      if (!ds->know_kinetic)
-      { ds->kinetic_energy = mc_kinetic_energy(ds);
-        ds->know_kinetic = 1;
-      }
-
-      H = ds->pot_energy + ds->kinetic_energy;
-    }
-
-    /* Account for state in reject window.  Reject window can be ignored if
-       windows consist of the entire trajectory. */
-  
-    if (window!=jmps+1 && n<window)
-    { 
-      rej_free_energy = !have_rej ? H : - addlogs (-rej_free_energy, -H);
-
-      if (!have_rej || rand_uniform() < exp(rej_free_energy-H))
-      { 
-        copy (q_rsv, ds->q, ds->dim);
-        copy (p_rsv, ds->p, ds->dim);
-
-        rej_pot_energy = ds->pot_energy;
-        rej_kinetic_energy = ds->kinetic_energy;
-
-        rej_point = n;
-        have_rej = 1;
-      }
-    }
-
-    /* Account for state in the accept window. */
-
-    if (n>jmps-window)
-    {
-      acc_free_energy = !have_acc ? H : - addlogs (-acc_free_energy, -H);
-
-      if (!have_acc || rand_uniform() < exp(acc_free_energy-H))
-      { 
-        if (n!=jmps)
-        { copy (q_asv, ds->q, ds->dim);
-          copy (p_asv, ds->p, ds->dim);
-        }
-  
-        acc_pot_energy = ds->pot_energy;
-        acc_kinetic_energy = ds->kinetic_energy;
-  
-        acc_point = n;
-        have_acc = 1;
-      }
-    }
-
-  }
-
-  /* Take new state from the appropriate window. */
-
-  if (!have_acc || !have_rej) abort();
-
-  it->proposals += 1;
-  it->delta = acc_free_energy - rej_free_energy;
-
-  if (it->delta<=0 || rand_uniform() < exp(-it->delta/it->temperature))
-  { 
-    it->move_point = jump * (acc_point - it->window_offset);
-
-    if (acc_point!=jmps)
-    { copy (ds->q, q_asv, ds->dim);
-      copy (ds->p, p_asv, ds->dim);
-      ds->pot_energy     = acc_pot_energy;
-      ds->kinetic_energy = acc_kinetic_energy;
-      ds->know_pot     = 1;
-      ds->know_kinetic = 1;
-      ds->know_grad    = 0;
-    }
-
-    for (k = 0; k<ds->dim; k++)
-    { ds->p[k] = -ds->p[k];
-    }
-  }
-  else
-  { 
-    it->rejects += 1;
-    it->move_point = jump * (rej_point - it->window_offset);
-
-    copy (ds->q, q_rsv, ds->dim);
-    copy (ds->p, p_rsv, ds->dim);
-
-    ds->pot_energy     = rej_pot_energy;
-    ds->kinetic_energy = rej_kinetic_energy;
-    ds->know_pot     = 1;
-    ds->know_kinetic = 1;
-    ds->know_grad    = 0;
-  }
-}
-
-
 /* COPY STATE VARIABLES. */
 
-static void copy
+void mc_value_copy
 ( mc_value *dest,	/* Place to copy to */
   mc_value *src,	/* Place to copy from */
   int n			/* Number of values to copy */
@@ -749,7 +491,7 @@ static void copy
 /* PERFORM SIMULATED TEMPERING UPDATE.  Does a Metropolis update for a
    proposal to increase or decrease the inverse temperature. */
 
-static void simulated_tempering
+void mc_simulated_tempering
 ( mc_dynamic_state *ds,	/* State to update */
   mc_iter *it		/* Description of this iteration */
 )
@@ -816,14 +558,12 @@ static void simulated_tempering
 
 /* DO A TEMPERED TRANSITION. */
 
-static void tempered_transition
+void mc_tempered_transition
 ( mc_dynamic_state *ds,	/* State to update */
   mc_iter *it,		/* Description of this iteration */
   int start,		/* Index of first operation in group */
   int end,		/* Index of terminator for group of operations */
   int reverse,		/* Do operations in reverse order? */
-  int repeat,		/* Number of times to repeat group */
-  int high_count,	/* Special repeat count for highest temperature */
   log_gobbled *logg,	/* Records gobbled */
   quantities_described qd, /* Descriptions of quantities to plot */
   int N_quantities	/* Number of quantities to plot, -1 for tt plot */
@@ -865,9 +605,9 @@ static void tempered_transition
   { printf("\n");
   }
 
-  copy (q_savet, ds->q, ds->dim);
-  if (ds->p) copy(p_savet, ds->p, ds->dim);
-  if (ds->aux) copy(aux_savet, ds->aux, ds->aux_dim);
+  mc_value_copy (q_savet, ds->q, ds->dim);
+  if (ds->p) mc_value_copy(p_savet, ds->p, ds->dim);
+  if (ds->aux) mc_value_copy(aux_savet, ds->aux, ds->aux_dim);
 
   delta = 0;
 
@@ -927,21 +667,9 @@ static void tempered_transition
     { break;  
     }
 
-    if (ds->temp_index==0)
-    { for (c = 0; c<high_count; c++)
-      { do_group (ds, it, start, end, 
-                  (ds->temp_state->temp_dir==-1 ? reverse : !reverse), 
-                  logg, qd, (N_quantities<0 ? 0 : N_quantities));
-      }
-    }
-    else if (repeat==1)
-    { do_group (ds, it, start, end, 
-                (ds->temp_state->temp_dir==-1 ? reverse : !reverse), 
-                logg, qd, (N_quantities<0 ? 0 : N_quantities));
-    }
-    else
-    { temp_over(ds, it, repeat, start, end, logg, qd, N_quantities);
-    }
+    do_group (ds, it, start, end, 
+              (ds->temp_state->temp_dir==-1 ? reverse : !reverse), 
+              logg, qd, (N_quantities<0 ? 0 : N_quantities));
   }
 
   if (Print_proposals)
@@ -963,9 +691,9 @@ static void tempered_transition
     it->rejects += 1;
     it->move_point = 0;
 
-    copy (ds->q, q_savet, ds->dim);
-    if (ds->p) copy(ds->p, p_savet, ds->dim);
-    if (ds->aux) copy(ds->aux, aux_savet, ds->aux_dim);
+    mc_value_copy (ds->q, q_savet, ds->dim);
+    if (ds->p) mc_value_copy(ds->p, p_savet, ds->dim);
+    if (ds->aux) mc_value_copy(ds->aux, aux_savet, ds->aux_dim);
   }
 
   if (Print_proposals)
@@ -980,112 +708,4 @@ static void tempered_transition
   ds->know_pot = 0;
   ds->know_grad = 0;
   have_ss = 0;
-}
-
-
-/* DO AN OVER-RELAXED TEMPERING STEP. */
-
-static void temp_over
-( mc_dynamic_state *ds,	/* State to update */
-  mc_iter *it,		/* Description of this iteration */
-  int repeat,		/* Repetition count */
-  int start,		/* Index of first operation in group */
-  int end,		/* Index of terminator for group of operations */
-  log_gobbled *logg,	/* Records gobbled */
-  quantities_described qd, /* Descriptions of quantities to plot */
-  int N_quantities	/* Number of quantities to plot, -1 for tt plot */
-)
-{
-  double b1, b2;
-  int st, above;
-  int i, d;
-
-  b1 = sch->sched[ds->temp_index+1].inv_temp;
-  b2 = sch->sched[ds->temp_index].inv_temp;
-
-  if (repeat>Max_temp_repeat)
-  { fprintf(stderr,"Repetition count too big in tempered transition (max %d)\n",
-                    Max_temp_repeat);
-    exit(1);
-  }
-
-  for (i = 0; i<repeat; i++)
-  { if (osave[i].q==0) 
-    { osave[i].q = chk_alloc (ds->dim, sizeof(mc_value));
-    }
-    if (ds->p!=0 && osave[i].p==0) 
-    { osave[i].q = chk_alloc (ds->dim, sizeof(mc_value));
-    }
-    if (ds->aux!=0 && osave[i].aux==0)
-    { osave[i].aux = chk_alloc (ds->aux_dim, sizeof(mc_value));
-    }
-  }
-
-  above = 0;
-  st = rand_int(repeat);
-
-  i = st;
-  d = +1;
-
-  if (echo) printf(" <");
-
-  for (;;)
-  {
-    copy (osave[i].q, ds->q, ds->dim);
-    if (ds->p) copy(osave[i].p, ds->p, ds->dim);
-    if (ds->aux) copy(osave[i].aux, ds->aux, ds->aux_dim);
-
-    osort[i].index = i;
-    osort[i].value = mc_energy_diff (ds, sch, +1);
-
-    if (osort[i].value>osort[st].value) above += 1;
-
-    if (N_quantities==-1)    
-    { printf("move %8.6lf %20.10le\n",ds->temp_state->inv_temp, 
-                                      osort[i].value/(b1-b2));
-      printf("  %8.6lf %20.10le\n",   ds->temp_state->inv_temp, 
-                                      osort[i].value/(b1-b2));
-    }
-
-    i += d;
-    if (i==repeat) 
-    { copy (ds->q, osave[st].q, ds->dim);
-      if (ds->p) copy(ds->p, osave[st].p, ds->dim);
-      if (ds->aux) copy(ds->aux, osave[st].aux, ds->aux_dim);
-      ds->know_pot = 0;
-      ds->know_grad = 0;
-      i = st-1;
-      d = -1;
-      if (echo) printf(" |");
-    }
-    if (i<0) break;
-
-    do_group (ds, it, start, end, (d==-1 ? 1 : 0),
-              logg, qd, (N_quantities<0 ? 0 : N_quantities));
-  }
-
-  if (echo) printf(" >");
-  
-  qsort (osort, repeat, sizeof *osort, compare);
-
-# if 0
-    for (i = 0; i<repeat; i++) 
-    { printf(" %2d %20.8le\n",osort[i].index,osort[i].value);
-    }
-    printf(" - %d -\n",above);
-# endif
-
-  i = osort[above].index;
-
-  copy (ds->q, osave[i].q, ds->dim);
-  if (ds->p) copy(ds->p, osave[i].p, ds->dim);
-  if (ds->aux) copy(ds->aux, osave[i].aux, ds->aux_dim);
-
-  ds->know_pot = 0;
-  ds->know_grad = 0;
- 
-  if (N_quantities==-1)
-  { printf("move %8.6lf %20.10le\n", ds->temp_state->inv_temp, 
-                                     osort[above].value/(b1-b2));
-  }
 }

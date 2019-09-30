@@ -1,0 +1,82 @@
+<html>
+<body>
+<pre>
+
+
+MC:  Programs and modules supporting Markov chain Monte Carlo methods.
+
+The 'mc' programs and modules support Monte Carlo methods based on
+sampling using Markov Chains.  The state space, desired distribution,
+and perhaps some special sampling procedures are defined by an
+application module linked with the generic 'mc' modules.  Successive
+states are stored in a log file, for use by programs that make Monte
+Carlo estimates.  
+
+Users of applications that use the 'mc' modules needn't know the
+details of how it works.  The following documentation is for
+programmers wishing to use these modules in a new application.
+
+The full state space sampled from consists of up to four components:
+
+    1) A set of "position" components, defined by the application, and
+       stored in whatever records it pleases.
+ 
+    2) A set of auxiliary components, also defined by the application,
+       and stored in whatever records it pleases.
+
+    3) A set of "momentum" components, in one-to-one correspondence
+       with the position components.  These are added by this module,
+       and stored in a record of type 'p'.
+
+    4) A current inverse temperature, and associated change direction,
+       if simulated tempering is being done.  These are added by this 
+       module, and stored in a record of type 'b'.
+
+The auxiliary components are updated only by the application module.
+The position, momentum, and inverse temperature components are updated
+by operations defined in this module, based on an "energy" function
+provided by the application.  The application module can directly
+update position coordinates as well.
+
+Sampling is an iterative procedure, each iteration being one transition 
+of a Markov chain.  An iteration consists of one or more of the
+following operations, each of which has an identifying letter, and
+each of which corresponds to a specification documented with mc-spec:
+
+    B  heatbath               b  rand-dir
+    N  negate                 n  neg-dir
+    M  Metropolis             s  sim-temp
+    m  1-variable Metropolis
+
+    D  dynamic                A  (application-specific operation)
+    P  permuted-dynamic       R  repeat
+    H  hybrid                 E  end
+    T  tempered-hybrid        p  plot
+
+    S  1-variable slice sampling
+    O  overrelaxed slice sampling
+
+    t  temp-trans
+
+The sequence of operations to use is specified by the user, and is
+stored in the log file as a record of type 'o'.  Some of the
+operations involve computing dynamical trajectories.  The method to be
+used to do this is also specified by the user, and is stored in the
+log file as a record of type 't'.  Tempering schemes use a temperature
+schedule stored in a record of type 'm'.  In all these cases, the last
+such record stored in the log file is used.
+
+Records of type 'i' containing information on an iteration are
+periodically written to the log file, along with the current state.
+The momentum part of the state is written as a record of type 'p'.
+The position and auxiliary parts of the state are written as defined
+by the application.
+
+The state of the random number generator after each iteration is
+stored in records of type 'r', the first of which may be written at
+index -1 using the 'rand-seed' program.
+
+            Copyright (c) 1995, 1996 by Radford M. Neal
+</pre>
+</body>
+</html>

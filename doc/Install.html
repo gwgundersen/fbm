@@ -1,0 +1,87 @@
+<html>
+<body>
+<pre>
+
+
+INSTALLING THE SOFTWARE
+
+The software is distributed as a Unix tar archive.  To obtain the
+files, create an empty directory and change to it, download the tar
+archive for the desired version by anonymous ftp or via your Web
+browser to a file of the form 'bnn.YYYY-MM-DD.tar', and then issue the
+Unix command
+
+    tar xf bnn.YYYY-MM-DD.tar
+
+If you got the archive in compressed form, as 'bnn.YYYY-MM-DD.tar.Z',
+you must use the command "uncompress bnn.YYYY-MM-DD.tar.Z" before
+doing the above.  The following instructions cover what to do next for
+the current version; you should read the old documentation if for some
+reason you are installing an older version.
+
+The tar command should create sub-directories 'util', 'mc', 'net',
+'bvg', 'examples', and 'doc', and place a large number of files in
+these sub-directories.  It should also place the file 'README' in the
+current directory.  If all this seems to have worked, you can remove
+the file 'bnn.YYYY-MM-DD.tar'.
+
+The directory 'doc' contains links to all the documentation files.
+The file 'manual' contains all the introductory documentation
+(including this) as a simple text file; the same information is also
+contained in several .doc files.  Other .doc files contain more
+detailed information.  Files of the form release.YYYY-MM-DD.doc
+contain information on current and past releases.  These may be of
+interest if you are upgrading from an older version of the software.
+You can read these text files directly, or if you have a Web browser,
+you can access them via 'index.html', as described in <A HREF="Guide.html">Guide.doc</A>.
+
+You will probably be able to compile the programs as described below
+without making having to change anything.  However, it is possible
+that you will want to use a different C compiler, or set certain
+compilation options, in which case you will need to modify the
+'Makefile' and 'xxx.make' files in the various directories.  Also, the
+'util' directory contains a file of 100,000 natural random bytes,
+which are used in combination with pseudo-random numbers.  This file
+is accessed by many of the programs, using a path name that by default
+points into this 'util' directory.  If you plan on moving this file
+elsewhere, you will need to change the compilation command for rand.c
+at the end of 'util/util.make'.
+
+Once you have made any required changes, you can compile the programs
+by issuing the following commands
+
+    cd util
+    make
+    cd ..
+
+    cd mc
+    make
+    cd ..
+
+    cd net
+    make
+    cd ..
+
+    cd bvg
+    make
+    cd ..
+
+The last three commands can be omitted if you have no interest in the
+demonstration of sampling from a bivariate Gaussian distribution. Note
+that common modules will be compiled over again for each directory
+where they are used; this is intentional.
+
+It is possible that these compilation commands will fail for some
+reason, in which case you'll have to figure out what's wrong and fix
+it.  Note that for the makes to work correctly, the programs MUST be
+kept in separate 'util', 'mc', 'net', and 'bvg' sub-directories, with
+these names.
+
+Once the above make commands have been successful, you should put the
+directories 'util', 'mc', 'net', and perhaps 'bvg' in your search
+path.  How this is done depends on the shell program you are using;
+consult a local expert if you don't know how.  Subsequent instructions
+assume that this has been done.
+</pre>
+</body>
+</html>

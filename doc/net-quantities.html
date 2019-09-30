@@ -1,0 +1,131 @@
+<html>
+<body>
+<pre>
+
+
+NET-QUANTITIES:  Quantities from log files relating to networks.
+
+The quantities below relating to neural network models can be obtained
+from log files (eg, for use in net-plt).  Note that the generic
+quantities documented in <A HREF="quantities.html">quantities.doc</A> and the quantities relating to
+Markov chain methods documented in <A HREF="mc-quantities.html">mc-quantities.doc</A> will also be
+available.
+
+    xn   Array of n'th input values for training cases
+    Xn   Array of n'th input values for test cases
+
+    on   Array of n'th output values for training cases
+    On   Array of n'th output values for test cases
+
+    yn   Array of n'th "guessed" values for training cases
+    Yn   Array of n'th "guessed" values for test cases
+
+    gn   Array of n'th randomly "guessed" values for training cases
+    Gn   Array of n'th randomly "guessed" values for test cases
+
+    z[n] Array of n'th target values for training cases
+    Z[n] Array of n'th target values for test cases
+
+    P    Log prior probability of the network parameters with current 
+         hyperparameter values
+
+    l    Array of minus log probabilities for training cases.  If not 
+         specified to be an array, the average minus log probability over 
+         training cases.
+
+    L    Array of minus log probabilities for test cases.  If not 
+         specified to be an array, the average minus log probability over 
+         test cases.
+
+    a[n] Array of absolute errors of n'th target for training cases, 
+         or sum of absolute errors if 'n' not specified.  If not 
+         specified to be an array, the average error over training 
+         cases.
+
+    A[n] Array of absolute errors of n'th target for test cases, or 
+         sum of absolute errors if 'n' not specified.  If not specified 
+         to be an array, the average error over test cases.
+
+    b[n] Array of squared errors of n'th target for training cases, or 
+         sum of squared errors if 'n' not specified.  If not specified 
+         to be an array, the average error over training cases.
+
+    B[n] Array of squared errors of n'th target for test cases, or sum 
+         of squared errors if 'n' not specified.  If not specified to 
+         be an array, the average error over test cases.
+
+    c    Expected classification error on training set, assuming that 
+         the model is right.
+ 
+    C    Expected classification error on test set, assuming that the
+         model is right.
+
+    vn   Array of std. dev. over training set of units in hidden layer 
+         n; average std. dev. if scalar.
+
+    Vn   Array of std. dev. over test set of units in hidden layer n;
+         average std. dev. if scalar.
+
+    hn   Value of n'th top-level (common) hyperparameter if scalar, or
+         array of associated unit-level hyperparameters.  The indexes
+         used are as displayed with net-display.  It is not valid to
+         use the scalar form for a group of adjustments.  Noise 
+         standard deviations cannot be accessed in this way - use 'n'.
+
+    wn   Array of values for n'th group of parameters for network.  
+         The indexes used are as displayed with net-display.
+
+    Wn   Square root of average squared magnitude for n'th group of 
+         parameters if scalar, or array of square roots of average 
+         squared magnitudes of parameters in group associated with 
+         each source unit.  The indexes used are as displayed with 
+         net-display.
+
+    Mn   Magnitudes of last hidden layer to output weights to n'th 
+         output, sorted in decreasing order of size
+
+    n    For regression model: Common noise std. dev. if scalar, 
+         or array of output-specific noise levels.  For class model:
+         expected entropy on training cases, assuming the model is right.
+
+    N    For regression model: Common noise variance if scalar, or 
+         array of output-specific noise levels.  For class model:
+         expected entropy on test cases, assuming model is right.
+
+When a value for 'n' is needed but not specified, it defaults to zero.
+
+The 'o' values are the values of the units in the final layer, before
+interpretation by the model.  The 'y' values are the same as the 'o'
+values for regression models.  For binary and multi-class models, the
+'y' values are the bit/class probabilities obtained from the 'o'
+values.  The 'g' values are taken randomly from the predictive
+distribution.  
+
+Depending on whether any training/test cases are available, and if
+they are, whether they include targets, some of the above quantities
+may not be defined.  The 'a', 'A', 'b', and 'B' quantities are not
+defined for multi-class models.  The 'c' and 'C' quantities are not
+defined for regression models.  The 'o' quantities are allowed with
+survival models only when the hazard is constant (independent of
+time).  For multi-class models, the 'z' and 'Z' quantities with a
+modifier ('n') refer to the representation of the class as a binary
+vector with the true class indicated by a one; with no modifier, they
+refer to the numeric value of the class.
+
+For censored survival data, the target for the 'A', 'a', 'B', 'b', 'Z',
+and 'z' options is taken to be the censoring time, which is not very 
+meaningful. 
+
+The quantities relating to test cases use the test set specified using
+data-spec by default.  A different test set can be used by including
+arguments of the form
+
+    / test-inputs [ test-targets ]
+
+as the last arguments of the command that accesses these quantities
+(eg, net-plt).
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

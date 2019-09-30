@@ -1,0 +1,45 @@
+<html>
+<body>
+<pre>
+
+
+MC-QUANTITIES:  Quantities from log files relating to Monte Carlo simulation.
+
+The quantities below relating to Markov chain Monte Carlo can be
+obtained from log files (eg, for use in xxx-plt).  Note that the
+generic quantities documented in <A HREF="quantities.html">quantities.doc</A> will also be
+available, as will quantities specific to the particular Markov chain
+application being used.
+
+    T   Temperature used this iteration (NOT the simulated tempering temp)
+    E   Potential energy at end of iteration
+    K   Kinetic energy at end of iteration
+    H   Total energy at end of iteration (sum of E and K)
+    D[n] Change in total energy for last state proposed (up to max of n)
+
+    i   Inverse temperature (for simulated tempering)
+    I   Index of current inverse temperature value
+    j   Direction of change for inverse temperature
+    J   Higher temperature for attempted transition (meaningful only if
+        last operation in iteration was sim-temp)
+
+    d   Heatbath decay factor used in this iteration
+    f   Stepsize factor used in this iteration
+    F   Stepsize factor used in this iteration divided by two
+    m   Point last moved to (zero is starting point)
+    r   Rejection rate for this iteration
+    e   Average number of evaluations per slice sampling update this iteration
+    k   Cumulative cpu usage in minutes.
+
+    qn  Component n of position
+    pn  Component n of momentum
+    sn  Stepsize selected by application for component n
+
+None of these quantities can be used with a range; 'q', 'p', and 's'
+must have a modifier, 'D' may have a modifier, the others may not have
+a modifier.  Momenta of zero are assumed if none exist.
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

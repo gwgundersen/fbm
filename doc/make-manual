@@ -1,0 +1,2 @@
+cat Copyright.doc Facilities.doc Install.doc Overview.doc Examples.doc \
+    Hints.doc Guide.doc Acknowledgements.doc >manual

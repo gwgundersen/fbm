@@ -1,0 +1,102 @@
+<html>
+<body>
+<pre>
+
+
+PRIOR:  Form of hierarchical prior specifications.
+
+Priors for parameters such as network weights, biases, and offsets, or
+for the noise levels in a regression model are specified using a
+common syntax, described here.
+
+The prior for a group of parameters is hierarchical.  At the lowest
+level, each parameter is picked either from a Gaussian distribution
+with mean zero and with some precision (inverse of the variance), or
+from a two point distribution concentrated at the corresponding plus
+or minus standard deviation points (the latter is meant primarily for
+debugging).  At the next level, the precision is picked from a Gamma
+distribution with a specified shape parameter and with a mean given by
+a hyperparameter common to all parameters of the same sub-group (eg,
+weights out of the same unit).  This common value for the precision of
+parameters in a sub-group is in turn picked from a Gamma distribution
+with another specified shape parameter and with a mean given by a
+hyperparameter common to all parameters in the group.  Finally, this
+top-level hyperparameter is picked from a Gamma distribution with a
+specified mean, and with yet another specified shape parameter.
+
+Priors for groups without sub-groups (eg, network biases and offsets)
+are similar, but go down only two levels.
+
+These priors are specified using the following syntax:
+ 
+     [x]Width[:[Alpha-group][:[Alpha-sub-group][:[Alpha-parameter]]]][!]
+
+The Width part of the specification is used to specify the mean of the
+precision at the top level, as described below.  The Alpha parts gives
+the shape parameters of the Gamma distributions.  Alpha-group is used
+when picking the common precision for all parameters in the group,
+Alpha-sub-group is used when picking the precision common to all
+parameters in one of the sub-groups, and Alpha-parameter is used when
+picking the precision for a single parameter.  If an Alpha is omitted,
+it is taken to be infinite, giving a distribution for the precision
+concentrated at the mean.
+
+A Gamma distribution with given mean and Alpha has a density
+proportional to p^{Alpha/2-1} * exp(-p*Alpha/2*mean), where p is the
+precision (always positive).
+
+Width specifies the top-level mean for the precision as follows.  If
+an "x" is not present, the mean precision is 1/Width^2.  If the prior
+does start with "x", which is meaningful only for network weights, the
+mean precision is determined as follows:
+
+   Alpha infinite:   N / Width^2
+   Alpha &gt; 2:        N * (Alpha/(Alpha-2)) / Width^2
+   Alpha = 2:        N * log(N) / Width^2
+   Alpha &lt; 2:        N^(2/Alpha) / Width^2
+
+Here N is the number of like weights going into a single unit,
+i.e. the number of units in a source layer for this type of weight.
+Alpha is Alpha-parameter, if that is finite, and is otherwise
+Alpha-sub-group.  This scheme is intended to give proper scaling
+behaviour as N goes to infinity (but it may not work when both
+Alpha-sub-group and Alpha-parameter are finite).  For Alpha &gt;= 2,
+convergence is to a Gaussian process, for Alpha &lt; 2, to a stable
+process of index Alpha.
+
+If the prior specification ends with "!", the lowest-level
+distribution is concentrated at the two standard deviation points,
+rather than being Gaussian.  This is primarily a debugging tool - it
+makes it easy to see whether each parameter was derived from the
+correct hyperparameter.
+
+A prior specification for the level of Gaussian noise in a regression
+model has the same syntax as that used to specify priors for model
+parameters.  The Width part gives the mean precision (inverse of the
+noise variance) at the top of the hierarchical prior.  Alpha-group
+gives the shape parameter for picking a precision with this mean that
+is common to all outputs.  Alpha-sub-group gives the shape parameter
+for picking precisions for each target with the common precision as
+mean.  Alpha-paramerer gives the shape parameter for picking a
+precision for a particular output in a particular case, using that
+targets's precision as the mean.  Specifying a finite value for
+Alpha-parameter has the effect of changing the distribution of the
+noise for a particular output in a particular case from a Gaussian to
+a t distribution.
+
+In network models, the distributions for weights may be modified by an
+"adjustment" sigma value associated with the destination unit for the
+weight.  This adjustment multiplies the sigma for that weight which
+would otherwise apply.  The precisions for the adjustments themselves
+are drawn from a Gamma distribution with mean one and shape parameter
+given by an alpha associated with the unit's layer.
+  
+Note that hyperparameters are generally input and displayed in terms
+of the square root of the inverse of the precision (a 'sigma' value),
+not in terms of the precisions themselves, even though those are the
+values in terms of which the priors are mathematically expressed.
+
+            Copyright (c) 1995, 1996 by Radford M. Neal
+</pre>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<html>
+<body>
+<pre>
+
+
+MC-SPEC:  Specify how to do the Markov chain simulation.
+
+MC-spec writes records to a log file that specify the operations
+making up a single Markov chain iteration, and that also specify how
+dynamic trajectories are to be computed.  When invoked with just a log
+file as argument, it displays the specifications stored at the given
+index, or the last specifications stored if no index is given.
+
+MC-spec is often invoked several times during a single simulation run.
+The last specification in the log file is used for further iterations.
+
+Usage:
+
+    mc-spec log-file { operation-spec } [ / trajectory-spec ]
+  
+or:
+
+    mc-spec log-file [ index ]
+
+The log file must already exist.  For the first form, specifications
+are appended to the log file with index equal that of the last record
+in the file, or 0 if the log file has no non-negative records.
+
+For the second form, with no index specified, the last specifications
+stored in the log file are displayed.  If an index is specified in the
+second form, the specifications in the record with the given index are
+displayed.
+
+An operation-spec may be one of the following:
+
+    repeat times
+
+        Repeat the following operations the specified number of times.
+        The repeated group of operations is terminated by 'end', or
+        the end of the list.
+
+    end
+
+        Terminates a group of operations.
+
+    heatbath [ decay ]
+
+        Do a heatbath update of the momentum variables.
+
+    negate
+
+        Negate the momentum variables.
+
+    metropolis [ stepsize-adjust[:stepsize-alpha] ]  
+
+        Do a simple Metropolis update, to all components at once.
+
+    met-1 [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ]
+
+        Do single-component Metropolis updates, for the range of components 
+        given.  The default if no components are given is all components. 
+        The default for last if first alone is given is last=first.
+
+    dynamic steps [ stepsize-adjust[:stepsize-alpha] ] 
+
+        Follow a dynamical trajectory for the given number of steps, 
+        always accepting the result (hence does not leave distribution 
+        exactly invariant).
+
+    permuted-dynamic steps [ stepsize-adjust[:stepsize-alpha] ] 
+
+        Like 'dynamic', but the order of approximations is randomly
+        permuted.
+
+    hybrid steps[:window[:jump]] 
+         [ stepsize-adjust[:stepsize-alpha] ] 
+
+        Use the results of following a dynamical trajectory as a 
+        candidate state for a Metropolis update.  Only steps at multiples 
+        of 'jump' are looked at; 'steps' must be a multiple of 'jump'.  
+        The momentum is negated if the proposal is accepted to make the 
+        step reversible.
+
+    tempered-hybrid temper-factor steps[:window[:jump]] 
+                  [ stepsize-adjust[:stepsize-alpha] ] 
+
+        Like hybrid, but the trajectory is "tempered" by multiplying
+        the momenta by temper-factor in the first half of the portion
+        of the trajectory outside any windows, and by 1/temper-factor
+        in the second half.
+
+    slice-1 [ stepsize-adjust[:stepsize-alpha] [ max-steps [ first[:last] ] ] ]
+
+        Do single-component slice sampling, for the range of components 
+        given.  The max-steps argument gives the maximum number of 
+        intervals to create when stepping out, with zero indicating no
+        limit (this is the default).  The default for the range of components
+        (first:last) is all components.  The default for last if first alone 
+        is given is last=first.  Components are numbered starting with zero.
+
+    slice-over [ refinements [ refresh-prob [ stepsize-adjust[:stepsize-alpha] 
+                 [ max-steps [ first[:last] ] ] ] ] ]
+
+        Do overrelaxed slice sampling, for the range of components given.
+        The endpoints are computed using the given number of refinements
+        (default zero).  The refresh probability is the probability of doing 
+        an ordinary slice sampling update rather than an overrelaxed one; 
+        it defaults to zero.  The default maximum number of steps is zero
+        (indicating no limit).  The default range of components if no range is 
+        given is all components. The default for last if first alone is given 
+        is last=first.
+
+    sim-temp
+
+        Do a metropolis update of the simulated tempering inverse
+        temperature, with a proposal of changing the temperature 
+        index in accord with the current tempering direction.  The 
+        direction is negated if the proposal is accepted to make the 
+        step reversible.
+
+    rand-dir
+
+        Randomize the tempering direction.
+
+    neg-dir
+
+        Negate the tempering direction.
+
+    plot
+
+        Prints the current values of those quantities specified in the
+        "xxx-mc" command on standard output, preceded by an index that
+        is reset to zero every iteration.
+
+    temp-trans
+
+        Perform a tempered transition, with components given by the
+        following operations (terminated by 'end').  The components
+        are done in forward order for the first half of the tempered
+        transition, in reverse order for the second.  For this to  
+        work, the components must be reversible in themselves.  
+
+    (any other that starts with a letter)
+
+        Invoke the application-specific update procedure, passing the
+        name of the operation.
+
+Certain of these operations are normally used in standard combinations, 
+in particular the following:
+
+ heatbath hybrid &lt;steps&gt;                 Standard hybrid Monte Carlo
+ heatbath &lt;decay&gt; hybrid &lt;steps&gt; negate  Persistent Hybrid Monte Carlo 
+ rand-dir sim-temp                       Standard simulated tempering
+ sim-temp neg-dir                        Persistent Simulated tempering 
+
+All individual operations are reversible, except for 'dynamic',
+'permuted-dynamic', and perhaps the application-specific operations.
+However, note that in general sequential combinations of reversible
+operations are not reversible.
+
+Defaults are decay of zero, stepsize-adjust of one, stepsize-alpha of
+infinity, window of one, and jump of one.  A minus sign before a
+stepsize-adjust value results in the adjustment being applied to
+uniform stepsizes of one; otherwise, the adjustment is applied to the
+application-specific stepsizes (which may be non-uniform).  A minus
+sign in front of stepsize alpha means that instead of the usual Gamma
+distribution for stepsizes, a distribution over 'alpha' orders of
+magnitude, uniform in the log domain, centred at the value found using
+stepsize-adjust, is used.
+
+Currently, the trajectory specification can have only the following
+form:
+
+    leapfrog [ halfp | halfq ] [ N-approx ]
+
+        Use the leapfrog method, repeated N-approx times using a randomly
+        selected ordering of that number of energy approximations (whose
+        average must be the true value).  The default for N-approx is one.
+        The "halfp" or "halfq" option specifies whether the half-steps
+        at the beginning and end of the trajectory are for p (momentum)
+        or q (position).  The default is "halfp".
+
+The default if no specification is given is "leapfrog halfp 1".
+
+The list of operations is stored in a record of type 'o'; the
+trajectory specification in a record of type 't'.
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

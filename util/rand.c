@@ -1,6 +1,6 @@
 /* RAND.C - Random number generation module. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -38,9 +38,10 @@
 /* TABLES OF REAL RANDOM NUMBERS.  A file of 100000 real random numbers
    (NOT pseudo-random) is used in conjunction with pseudo-random numbers
    for extra insurance.  These are employed in the form of five tables
-   of 5000 long integers. */
+   of 5000 long integers.  
 
-#define RAND_FILE "???/util/randfile" 
+   The file must be located at the path given by RAND_FILE, which should
+   be defined on the "cc" command line. */
 
 #define Table_size 5000			/* Number of words in each table */
 

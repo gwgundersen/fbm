@@ -1,0 +1,10 @@
+
+
+ACKNOWLEDGEMENTS
+
+The revised sampling method for top-level hyperparameters that uses
+adaptive rejection sampling, and the features allowing cpu time to be
+stored, displayed, and used to control the number of iterations, are
+based on work by Carl Edward Rasmussen.  Thanks also to David MacKay
+and Chris Williams for testing the programs on their machines, and for
+comments on the documentation.

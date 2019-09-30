@@ -15,7 +15,8 @@ CFLAGS = -O
 
 programs:	mc-spec mc-temp-sched mc-temp-filter
 
-modules:	mc-traj.o mc-iter.o mc-util.o mc-quantities.o \
+modules:	mc-traj.o mc-iter.o mc-metropolis.o mc-hybrid.o mc-slice.o \
+		mc-util.o mc-quantities.o \
 		mc-grad-test.o mc-stepsizes.o mc.o
 
 clean:

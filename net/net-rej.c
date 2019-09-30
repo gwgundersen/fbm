@@ -1,6 +1,6 @@
 /* NET-REJ.C - Generate networks from posterior by rejection sampling. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,10 +18,12 @@
 #include <math.h>
 
 #include "misc.h"
+#include "log.h"
+#include "prior.h"
+#include "model.h"
 #include "net.h"
 #include "data.h"
 #include "net-data.h"
-#include "log.h"
 #include "rand.h"
 
 
@@ -34,6 +36,8 @@ void main
 {
   net_arch *a;
   net_priors *p;
+  model_specification *m;
+  model_survival *sv;
 
   net_sigmas  sigmas, *s = &sigmas;
   net_params  params, *w = &params;
@@ -65,33 +69,29 @@ void main
   log_file_open (&logf, 1);
 
   log_gobble_init(&logg,0);
-  logg.req_size['A'] = sizeof *a;
-  logg.req_size['P'] = sizeof *p;
+  net_record_sizes(&logg);
   logg.req_size['r'] = sizeof (rand_state);
 
   while (!logf.at_end && logf.header.index<0)
   { log_gobble(&logf,&logg);
   }
   
-  if ((a = logg.data['A'])==0)
-  { fprintf(stderr,"No architecture specification in log file\n");
-    exit(1);
-  }
+  a = logg.data['A'];
+  p = logg.data['P'];
+  m = logg.data['M'];
+  sv = logg.data['V'];
 
-  if ((p = logg.data['P'])==0)
-  { fprintf(stderr,"No prior specification in log file\n");
-    exit(1);
-  }
+  net_check_specs_present(a,p,1,m,sv);
 
   /* Allocate space for parameters and hyperparameters. */
 
-  s->total_sigmas = net_setup_sigma_count(a);
+  s->total_sigmas = net_setup_sigma_count(a,m);
   w->total_params = net_setup_param_count(a);
 
   s->sigma_block = chk_alloc (s->total_sigmas, sizeof (net_sigma));
   w->param_block = chk_alloc (w->total_params, sizeof (net_param));
 
-  net_setup_sigma_pointers (s, a);
+  net_setup_sigma_pointers (s, a, m);
   net_setup_param_pointers (w, a);
 
   /* Read last records in log file to see where to start, and to get random
@@ -119,7 +119,7 @@ void main
     exit(1);
   }
 
-  net_data_read (1, 0, a);
+  net_data_read (1, 0, a, m, sv);
 
   /* Generate networks from the posterior and write them to the log file. */
 
@@ -130,24 +130,24 @@ void main
   {
     for (;;)
     {
-      net_prior_generate (w, s, a, p, 0, 0);
+      net_prior_generate (w, s, a, m, p, 0, 0, 0);
 
-      if (a->data_model=='R') 
+      if (m->type=='R') 
       { 
         double alpha;
  
-        alpha = p->noise.alpha[0];
+        alpha = m->noise.alpha[0];
 
-        *s->noise_cm = alpha==0 ? p->noise.width 
-          : net_pick_sigma (p->noise.width 
+        *s->noise_cm = alpha==0 ? m->noise.width 
+          : prior_pick_sigma (m->noise.width 
                              * sqrt(alpha/(N_train*a->N_outputs+alpha)),
                             N_train*a->N_outputs + alpha);
 
-        alpha = p->noise.alpha[1];
+        alpha = m->noise.alpha[1];
 
         for (i = 0; i<a->N_outputs; i++)
         { s->noise[i] = alpha==0 ? *s->noise_cm 
-           : net_pick_sigma (*s->noise_cm * sqrt(alpha/(N_train+alpha)), 
+           : prior_pick_sigma (*s->noise_cm * sqrt(alpha/(N_train+alpha)), 
                              N_train + alpha);
         }
       }
@@ -156,11 +156,19 @@ void main
 
       for (i = 0; i<N_train; i++)
       {
-        net_func (&train_values[i], 0, a, w);
-        net_model_prob(&train_values[i], train_targets + data_spec->N_targets*i,
-                       &lp, 0, a, p, s, 2);
-
-        log_prob += lp;
+        if (m->type=='V' && sv->hazard_type!='C')
+        { fprintf(stderr,
+"Rejection sampling for non-constant survival models is not implemented yet\n");
+          exit(1);
+        }
+        else
+        { 
+          net_func (&train_values[i], 0, a, w);
+          net_model_prob (&train_values[i], 
+                          train_targets + data_spec->N_targets*i,
+                          &lp, 0, a, m, sv, s, 2);
+          log_prob += lp;
+        }
       }
 
       tries += 1;

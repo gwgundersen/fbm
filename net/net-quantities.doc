@@ -27,12 +27,12 @@ available.
          hyperparameter values
 
     l    Array of minus log probabilities for training cases.  If not 
-         specified to be an array, the total log probability over 
+         specified to be an array, the average minus log probability over 
          training cases.
 
     L    Array of minus log probabilities for test cases.  If not 
-         specified to be an array, the total log probability over test
-         cases.
+         specified to be an array, the average minus log probability over 
+         test cases.
 
     a[n] Array of absolute errors of n'th target for training cases, 
          or sum of absolute errors if 'n' not specified.  If not 
@@ -96,16 +96,22 @@ interpretation by the model.  The 'y' values are the same as the 'o'
 values for regression models.  For binary and multi-class models, the
 'y' values are the bit/class probabilities obtained from the 'o'
 values.  The 'g' values are taken randomly from the predictive
-distribution.
+distribution.  
 
 Depending on whether any training/test cases are available, and if
 they are, whether they include targets, some of the above quantities
-may not be defined.  The 'e', 'E', 'a', and 'A' quantities are not
+may not be defined.  The 'a', 'A', 'b', and 'B' quantities are not
 defined for multi-class models.  The 'c' and 'C' quantities are not
-defined for regression models.  For multi-class models, the 'z' and
-'Z' quantities with a modifier ('n') refer to the representation of
-the class as a binary vector with the true class indicated by a one;
-with no modifier, they refer to the numeric value of the class.
+defined for regression models.  The 'o' quantities are allowed with
+survival models only when the hazard is constant (independent of
+time).  For multi-class models, the 'z' and 'Z' quantities with a
+modifier ('n') refer to the representation of the class as a binary
+vector with the true class indicated by a one; with no modifier, they
+refer to the numeric value of the class.
+
+For censored survival data, the target for the 'A', 'a', 'B', 'b', 'Z',
+and 'z' options is taken to be the censoring time, which is not very 
+meaningful. 
 
 The quantities relating to test cases use the test set specified using
 data-spec by default.  A different test set can be used by including

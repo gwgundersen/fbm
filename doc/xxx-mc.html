@@ -1,0 +1,49 @@
+<html>
+<body>
+<pre>
+
+
+XXX-MC:  Run Markov chain simulation.
+
+There is a version of this program for each 'mc' application (eg,
+net-mc).  The version of this program for a given application runs a
+Markov chain simulation, using the application-specific routines for
+that application, as specified in a previous call of 'mc-spec'.
+
+Usage:
+
+    xxx-mc log-file ["@"]iteration [ save-mod ] [ quantities | "tt[12]" ] 
+                    [ / decay [ temperature ] ]
+ 
+Here 'xxx' is a prefix identifying the particular incarnation of this
+program.
+
+This program performs a Markov chain Monte Carlo simulation starting
+with the last iteration saved in the log file and continuing up to the
+indicated iteration (or if the iteration is immediately preceded by
+"@", until a total of iteration minutes of cpu-time have been used,
+for all iterations).  The log file must contain specifications for how
+to run the simulation, as created by mc-spec; the last such in the log
+file is used.  Results of the simulation are appended to the log file
+for iterations that are divisible by save-mod, which defaults to one
+(every iteration saved).
+
+The 'quantities' parameter specifies what is to be printed on standard
+output when 'plot' specifications are encountered.  The default is
+nothing.  If "tt1" or "tt2" are specified, the progress of tempered
+trajectories and tempered transitions is plotted, the details
+depending on the digit (you'll have to look at the program code to
+learn more).
+
+If a decay parameter is specified, it overrides the decay parameter in
+the specification of any "heatbath" operations.  The temperature
+parameter controls the level of noise added in heatbath operations and
+the acceptance test for metropolis and hybrid updates, and may also
+affect application specific updates.  It defaults to one.  (Note that
+this temperature is not the same as any temperature involved in
+tempering operations.)
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

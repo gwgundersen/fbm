@@ -1,6 +1,6 @@
 /* NET-SPEC.C - Program to specify a new network (and create log file). */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,8 +18,10 @@
 #include <math.h>
 
 #include "misc.h"
-#include "net.h"
 #include "log.h"
+#include "prior.h"
+#include "model.h"
+#include "net.h"
 
 
 static void usage(void);
@@ -40,7 +42,7 @@ void main
 
   char ps[100];
   char **ap;
-  int l;
+  int i, l;
 
   /* Look for log file name. */
 
@@ -57,8 +59,7 @@ void main
     log_file_open(&logf,0);
 
     log_gobble_init(&logg,0);
-    logg.req_size['A'] = sizeof *a;
-    logg.req_size['P'] = sizeof *p;
+    net_record_sizes(&logg);
 
     if (!logf.at_end && logf.header.index==-1)
     { log_gobble(&logf,&logg);
@@ -85,19 +86,7 @@ void main
     }
     printf ("  Size of output layer:   %d\n", a->N_outputs);
   
-    printf("\n  Data model: ");
-  
-    switch (a->data_model)
-    { 
-      case 0:   printf("none");   break;
-      case 'B': printf("binary"); break;
-      case 'C': printf("class");  break;
-      case 'R': printf("real");   break;
-  
-      default:  printf("unknown type: %c",a->data_model); break;
-    }
-  
-    printf("\n\n");
+    printf("\n");
     
     /* Display priors record. */
   
@@ -111,22 +100,22 @@ void main
     printf("Prior Specifications:\n");
   
     if (a->has_ti) 
-    { printf("\n  Input Offsets:          %s\n",net_prior_spec(ps,p->ti));
+    { printf("\n  Input Offsets:          %s\n",prior_show(ps,p->ti));
     }
   
     for (l = 0; l<a->N_layers; l++)
     { printf("\n         Hidden Layer %d\n\n",l);
       if (l>0 && a->has_hh[l-1])
-      { printf("  Hidden-Hidden Weights:  %s\n", net_prior_spec(ps,p->hh[l-1]));
+      { printf("  Hidden-Hidden Weights:  %s\n", prior_show(ps,p->hh[l-1]));
       }
       if (a->has_ih[l]) 
-      { printf("  Input-Hidden Weights:   %s\n", net_prior_spec(ps,p->ih[l]));
+      { printf("  Input-Hidden Weights:   %s\n", prior_show(ps,p->ih[l]));
       }
       if (a->has_bh[l]) 
-      { printf("  Hidden Biases:          %s\n", net_prior_spec(ps,p->bh[l]));
+      { printf("  Hidden Biases:          %s\n", prior_show(ps,p->bh[l]));
       }
       if (a->has_th[l]) 
-      { printf("  Hidden Offsets:         %s\n", net_prior_spec(ps,p->th[l]));
+      { printf("  Hidden Offsets:         %s\n", prior_show(ps,p->th[l]));
       }
     }
 
@@ -134,16 +123,16 @@ void main
 
     for (l = a->N_layers-1; l>=0; l--)
     { if (a->has_ho[l]) 
-      { printf("  Hidden%d-Output Weights: %s\n",l,net_prior_spec(ps,p->ho[l]));
+      { printf("  Hidden%d-Output Weights: %s\n",l,prior_show(ps,p->ho[l]));
       }
     }
 
     if (a->has_io) 
-    { printf("  Input-Output Weights:   %s\n",net_prior_spec(ps,p->io));
+    { printf("  Input-Output Weights:   %s\n",prior_show(ps,p->io));
     }
 
     if (a->has_bo) 
-    { printf("  Output Biases:          %s\n",net_prior_spec(ps,p->bo));
+    { printf("  Output Biases:          %s\n",prior_show(ps,p->bo));
     }
 
     for (l = 0; l<a->N_layers && !a->has_ah[l]; l++) ;
@@ -166,10 +155,6 @@ void main
       printf("\n");
     }
   
-    if (a->data_model=='R')
-    { printf("\n  Noise prior:  %s\n", net_prior_spec(ps,p->noise));
-    }
-  
     printf("\n");
   
     log_file_close(&logf);
@@ -180,7 +165,6 @@ void main
   /* Otherwise, figure out architecture and priors from program arguments. */
 
   a->N_layers = 0;
-  a->data_model = 0;
   
   ap = argv+2;
 
@@ -200,7 +184,7 @@ void main
   if (*ap==0 || strcmp(*ap,"/")!=0) usage();
 
   if (*++ap==0 || (a->has_ti = strcmp(*ap,"-")!=0) 
-                    && !net_prior_parse(&p->ti,*ap)) usage();
+                    && !prior_parse(&p->ti,*ap)) usage();
 
   if (a->N_layers>0)
   { 
@@ -208,17 +192,17 @@ void main
     { 
       if (l>0)
       { if (*++ap==0 || (a->has_hh[l-1] = strcmp(*ap,"-")!=0)
-                          && !net_prior_parse(&p->hh[l-1],*ap)) usage();
+                          && !prior_parse(&p->hh[l-1],*ap)) usage();
       }
 
       if (*++ap==0 || (a->has_ih[l] = strcmp(*ap,"-")!=0)
-                        && !net_prior_parse(&p->ih[l],*ap)) usage();
+                        && !prior_parse(&p->ih[l],*ap)) usage();
 
       if (*++ap==0 || (a->has_bh[l] = strcmp(*ap,"-")!=0)
-                        && !net_prior_parse(&p->bh[l],*ap)) usage();
+                        && !prior_parse(&p->bh[l],*ap)) usage();
 
       if (*++ap==0 || (a->has_th[l] = strcmp(*ap,"-")!=0)
-                        && !net_prior_parse(&p->th[l],*ap)) usage();
+                        && !prior_parse(&p->th[l],*ap)) usage();
 
     }
 
@@ -230,16 +214,16 @@ void main
       }
       else
       { if (*++ap==0 || (a->has_ho[l] = strcmp(*ap,"-")!=0)
-                          && !net_prior_parse(&p->ho[l],*ap)) usage();
+                          && !prior_parse(&p->ho[l],*ap)) usage();
       }
     }
   }
 
   if (*++ap==0 || (a->has_io = strcmp(*ap,"-")!=0)
-                    && !net_prior_parse(&p->io,*ap)) usage();
+                    && !prior_parse(&p->io,*ap)) usage();
 
   if (*++ap==0 || (a->has_bo = strcmp(*ap,"-")!=0)
-                    && !net_prior_parse(&p->bo,*ap)) usage();
+                    && !prior_parse(&p->bo,*ap)) usage();
 
   if (*++ap!=0 && strcmp(*ap,"/")==0 
    && *(ap+1)!=0 && strchr("+-.0123456789",**(ap+1))!=0)
@@ -261,30 +245,6 @@ void main
     ap += 1;
   }
 
-  if (*ap!=0)
-  {
-    if (strcmp(*ap++,"/")!=0) usage();
-
-    if (*ap==0) usage();
-    
-    if (strcmp(*ap,"binary")==0) 
-    { a->data_model = 'B';
-    }
-    else if (strcmp(*ap,"class")==0) 
-    { a->data_model = 'C';
-    }
-    else if (strcmp(*ap,"real")==0)
-    { a->data_model = 'R';
-      if (*++ap==0 || !net_prior_parse(&p->noise,*ap)) usage();
-    }
-    else
-    { fprintf(stderr,"Unknown data model: %s\n",*ap);
-      exit(1);
-    }
-
-    ap += 1;
-  }
-
   if (*ap!=0) usage();
 
   if (p->ti.scale || p->ti.alpha[2]!=0
@@ -299,11 +259,6 @@ void main
     { fprintf(stderr,"Illegal prior for biases or offsets\n");
       exit(1); 
     }
-  }
-
-  if (a->data_model=='R' && (p->noise.scale || p->noise.two_point))
-  { fprintf(stderr,"Illegal prior for noise level\n");
-    exit(1);
   }
 
   /* Create log file and write records. */
@@ -334,16 +289,13 @@ static void usage(void)
    "Usage: net-spec log-file N-inputs { N-hidden } N-outputs \n");
 
   fprintf(stderr,
-   "                  / ti [ ih bh th { hh ih bh th } ] { ho } io bo ]\n");
-
-  fprintf(stderr,
-   "                [ / { ah } ao ] [ / Data-model ]\n");
+   "                / ti [ ih bh th { hh ih bh th } ] { ho } io bo  [ / { ah } ao ]\n");
 
   fprintf(stderr,
    "   or: net-spec log-file (to display stored network specifications)\n");
 
   fprintf(stderr,
-   "Prior: [-]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]]\n");
+   "Prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]]\n");
 
   exit(1);
 }

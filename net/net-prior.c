@@ -1,6 +1,6 @@
 /* NET-PRIOR.C - Routines dealing with priors for networks. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,94 +18,23 @@
 #include <math.h>
 
 #include "misc.h"
+#include "log.h"
+#include "prior.h"
+#include "model.h"
 #include "net.h"
 #include "rand.h"
 
 
 static void pick_unit_params (net_param *, net_sigma *, int, net_sigma *,
-                              net_prior, int, double);
+                              prior_spec, int, double);
 
 static void pick_weights (net_param *, net_sigma *, net_sigma *, 
-                          int, int, net_sigma *, net_prior, int, double);
+                          int, int, net_sigma *, prior_spec, int, double);
 
 static void compute_prior (net_param *, int, double *, net_param *, 
                            net_sigma, double, net_sigma *, int);
 
 static void max_second (net_param *, int, net_sigma, net_sigma *, double);
-
-
-/* PARSE PRIOR SPECIFICATION.  Returns one if successful, zero if not.  
-   Stores the values found in the prior structure supplied. */
-
-int net_prior_parse
-( net_prior *pr,	/* Place to store prior */
-  char *s		/* String to parse */
-)
-{ 
-  int i;
-
-  pr->two_point = *s!=0 && s[strlen(s)-1]=='!';
-
-  pr->scale = 0;
-  if (*s=='x')
-  { pr->scale = 1;
-    s += 1;
-  }
-
-  pr->width = atof(s);
-  if (pr->width<=0) return 0;
-
-  for (i = 0; i<Max_alphas; i++)
-  {
-    s = strchr(s,':')!=0 ? strchr(s,':')+1 : "";
-
-    if (*s==':' || *s==0)
-    { pr->alpha[i] = 0;
-    }
-    else
-    { pr->alpha[i] = atof(s);
-      if (pr->alpha[i]<=0) return 0;
-    }
-  }
-
-  if (strchr(s,':')!=0) return 0;
- 
-  return 1;
-}
-
-
-/* PRODUCE PRIOR SPECIFICATION.  Stores a syntactic representation of the
-   given prior in the string supplied (which had better be big enough to
-   hold it).  Returns a pointer to this string. */
-
-char *net_prior_spec
-( char *s,		/* Place to store string */
-  net_prior pr		/* Prior */
-)
-{
-  char s1[100], s2[100];
-  int i;
-
-  for (i = Max_alphas-1; i>=0 && pr.alpha[i]==0; i--) ;
-
-  strcpy (s2, pr.two_point ? "!" : "");
-
-  for ( ; i>=0; i--)
-  {
-    if (pr.alpha[i]==0)
-    { sprintf(s1,":%s",s2);
-    }
-    else
-    { sprintf(s1,":%.2f%s",pr.alpha[i],s2);
-    }
-
-    strcpy(s2,s1);
-  }
-  
-  sprintf (s, "%s%.3f%s", pr.scale ? "x" : " ", pr.width, s2);
-
-  return s;
-}
 
 
 /* GENERATE VALUES FOR HYPERPARAMETERS AND PARAMETERS.  Values for the 
@@ -118,18 +47,21 @@ char *net_prior_spec
    The last two arguments can be used to set parameters and hyperparameters
    to non-random values.  If 'centre' is non-zero, the weights are set to 
    zero, and the hyperparameters to a "centre" value that is either the
-   "width" part of the prior specification or the 'value' argument passed,
-   if the latter is non-zero and the prior specification is not fixed (no
-   alphas given).  The 'value' given also applies only to hyperparameters
-   controlling weights and biases, not to "adjustments" or the noise sigma. */
+   "width" part of the prior specification or the 'value' argument passed
+   ('out_value' for weights on connections into the output units) if the 
+   latter is non-zero and the prior specification is not fixed (no alphas 
+   given).  The 'value' given also applies only to hyperparameters controlling 
+   weights and biases, not to "adjustments" or the noise sigma. */
 
 void net_prior_generate
 ( net_params *w,	/* Arrays to store weights, biases, and offsets in */
   net_sigmas *s,	/* Arrays to store hyperparameters in */
   net_arch *a,		/* Network architecture */
+  model_specification *m, /* Specification for data model */
   net_priors *p,	/* Network priors */
   int centre,		/* Choose "centre" rather than random value? */
-  double value		/* Use specific value for centre */
+  double value,		/* Use specific value for centre */
+  double out_value	/* Use specific value for centre for output weights */
 )
 { 
   int l, i;
@@ -142,7 +74,7 @@ void net_prior_generate
   {
     if (a->has_ah[l])
     { for (i = 0; i<a->N_hidden[l]; i++)
-      { s->ah[l][i] = centre ? 1.0 : net_pick_sigma(1.0,p->ah[l]);
+      { s->ah[l][i] = centre ? 1.0 : prior_pick_sigma(1.0,p->ah[l]);
       }
     }
 
@@ -164,30 +96,30 @@ void net_prior_generate
 
     if (a->has_ho[l]) pick_weights (w->ho[l], s->ho_cm[l], s->ho[l], 
                                     a->N_hidden[l], a->N_outputs, 
-                                    s->ao, p->ho[l], centre, value);
+                                    s->ao, p->ho[l], centre, out_value);
   }
 
   if (a->has_ao)
   { for (i = 0; i<a->N_outputs; i++)
-    { s->ao[i] = centre ? 1.0 : net_pick_sigma(1.0,p->ao);
+    { s->ao[i] = centre ? 1.0 : prior_pick_sigma(1.0,p->ao);
     }
   }
 
   if (a->has_io) pick_weights (w->io, s->io_cm, s->io,
                                a->N_inputs, a->N_outputs, 
-                               s->ao, p->io, centre, value);
+                               s->ao, p->io, centre, out_value);
 
   if (a->has_bo) pick_unit_params (w->bo, s->bo_cm, a->N_outputs, 
                                    s->ao, p->bo, centre, value);
 
-  if (a->data_model=='R') 
+  if (m!=0 && m->type=='R') 
   {
-    *s->noise_cm = centre ? p->noise.width
-                          : net_pick_sigma (p->noise.width, p->noise.alpha[0]);
+    *s->noise_cm = centre ? m->noise.width
+                         : prior_pick_sigma (m->noise.width, m->noise.alpha[0]);
 
     for (i = 0; i<a->N_outputs; i++)
     { s->noise[i] = centre ? *s->noise_cm
-                           : net_pick_sigma (*s->noise_cm, p->noise.alpha[1]);
+                           : prior_pick_sigma (*s->noise_cm, m->noise.alpha[1]);
     }
   }
 }
@@ -200,7 +132,7 @@ static void pick_unit_params
   net_sigma *sd_cm,	/* Place to store common sigma */
   int n,		/* Number of units */
   net_sigma *adj,	/* Adjustments for destination units, or zero */
-  net_prior pr,		/* Prior to use */
+  prior_spec pr,	/* Prior to use */
   int centre,		/* Choose "centre" rather than random value? */
   double value		/* Use specific value for sigma? */
 )
@@ -211,7 +143,7 @@ static void pick_unit_params
   *sd_cm = centre 
          ? (value==0 || pr.alpha[0]==0 && pr.alpha[1]==0 && pr.alpha[2]==0 
               ? pr.width : value)
-         : net_pick_sigma (pr.width, pr.alpha[0]);
+         : prior_pick_sigma (pr.width, pr.alpha[0]);
 
   for (i = 0; i<n; i++)
   { 
@@ -219,7 +151,7 @@ static void pick_unit_params
     { *wt = 0;
     }
     else
-    { unit_sigma = net_pick_sigma (*sd_cm, pr.alpha[1]);
+    { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
       *wt = unit_sigma * (pr.two_point ? 2*rand_int(2)-1 : rand_gaussian());
       if (adj!=0) 
       { *wt *= adj[i];
@@ -239,7 +171,7 @@ static void pick_weights
   int n,		/* Number of source units */
   int nd,		/* Number of destination units */
   net_sigma *adj,	/* Adjustments for destination units, or zero */
-  net_prior pr,		/* Prior to use */
+  prior_spec pr,	/* Prior to use */
   int centre,		/* Choose "centre" rather than random value? */
   double value		/* Use specific value for sigma? */
 )
@@ -247,16 +179,16 @@ static void pick_weights
   net_sigma width, weight_sigma;
   int i, j;
 
-  width = net_prior_width_scaled(&pr,n);
+  width = prior_width_scaled(&pr,n);
 
   *sd_cm = centre 
          ? (value==0 || pr.alpha[0]==0 && pr.alpha[1]==0 && pr.alpha[2]==0 
               ? width : value)
-         : net_pick_sigma (width, pr.alpha[0]);
+         : prior_pick_sigma (width, pr.alpha[0]);
 
   for (i = 0; i<n; i++)
   { 
-    sd[i] = centre ? *sd_cm : net_pick_sigma (*sd_cm, pr.alpha[1]);
+    sd[i] = centre ? *sd_cm : prior_pick_sigma (*sd_cm, pr.alpha[1]);
 
     for (j = 0; j<nd; j++)
     { 
@@ -264,7 +196,7 @@ static void pick_weights
       { *wt = 0;
       }
       else
-      { weight_sigma = net_pick_sigma (sd[i], pr.alpha[2]);
+      { weight_sigma = prior_pick_sigma (sd[i], pr.alpha[2]);
         *wt = weight_sigma * (pr.two_point ? 2*rand_int(2)-1 : rand_gaussian());
         if (adj!=0) 
         { *wt *= adj[j];
@@ -528,42 +460,5 @@ static void max_second
  
   for (i = 0; i<n; i++) 
   { d[i] = a==0 ? v : v / (a[i] * a[i]);
-  }
-}
-
-
-/* COMPUTE WIDTH OF PRIOR ACCOUNTING FOR AUTOMATIC SCALING.  Computes the 
-   effective width part of the prior after scaling in accord with the number
-   of source units.  (Scaling occurs only if the 'scale' option is set.) */
-
-double net_prior_width_scaled
-( net_prior *pr,	/* Prior to find scaling for */
-  int n			/* Number of source units */
-)
-{
-  double scale, alpha;
-  int i;
-
-  if (!pr->scale)
-  { return pr->width;
-  } 
-  else
-  { 
-    alpha = pr->alpha[2]!=0 ? pr->alpha[2] : pr->alpha[1];
-
-    if (alpha==0) /* Infinite */
-    { scale = n;
-    }
-    else if (alpha>2)
-    { scale = n * (alpha/(alpha-2));
-    }
-    else if (alpha==2)
-    { scale = n < 3 ? n : n * log((double)n);
-    }
-    else
-    { scale = pow ((double)n, 2/alpha);
-    }
-
-    return pr->width / sqrt(scale);
   }
 }

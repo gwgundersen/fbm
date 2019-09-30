@@ -17,8 +17,10 @@ or:
 
     data-spec log-file
 
-The number of "input" and "target" values must be specified.  The user
-can require the targets to be integers by including an 'int-target'
+The number of "input" and "target" values must be specified.  The
+number of inputs may be zero (though other programs may not allow
+this), but the number of targets must be at least one.  The user can
+require the targets to be integers by including an 'int-target'
 argument.  The permitted range of these integer targets is from zero
 to 'int-target' minus one.
 

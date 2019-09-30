@@ -5,7 +5,7 @@ NET-PRED:  Make predictions for test cases.
 Net-pred prints guesses at the target values for a set of test cases.
 Guesses are as defined by a network or set of networks.  If the true
 targets are known, performance of the guesses can also be evaluated.
-Inputs can be printed as well.
+Inputs can be printed as well.  
 
 Usage:
 
@@ -62,13 +62,13 @@ The 'options' argument consists of one or more of the following letters:
 Some of these options are illegal for some data models.  The illegal
 combinations are marked with an 'X' in the following table:
 
-        binary  class  real-valued  no-model
+        binary  class  real-valued  survival  no-model
 
      r    X       X
-     p                                X
-     m                     X          X
-     n            X
-     d    X       X
+     p                                           X
+     m                     X           X         X
+     n            X     
+     d    X       X    
 
 Furthermore, the 'a' and 'b' options are incompatible, and the 't',
 'p', and 'a' options may be used only if the true targets are given.
@@ -82,6 +82,10 @@ index of the network and i is the number of the test case.
 
 Each average performance figure is accompanied by +- its standard
 error (as long as there is more than one test case).
+
+For survival data, if the survival time in a test case is censored,
+the censoring time is used as the time of death for the purpose of
+computing squared or absolute error.  This is not very meaningful.
 
 If only inputs and targets are to be displayed (no predictions), one
 may give just a single log file with no range.  Otherwise, at least

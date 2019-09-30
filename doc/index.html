@@ -1,0 +1,146 @@
+<html>
+<head>
+
+<title>Bayesian Neural Network Software</title>
+
+</head>
+
+<body>
+
+<h1>Bayesian Neural Network Software</h1>
+
+Version of 1996-08-26.  Copyright (c) 1995, 1996 by Radford M. Neal<P>
+
+This is an index to documenation for software implementing Bayesian
+neural network learning using Markov chain Monte Carlo methods.
+
+
+<h2>Introduction, overview, and examples:</h2>
+
+<UL>
+<LI><a href="Copyright.html">Copyright and contact information</a>
+<LI><a href="Facilities.html">Facilities provided by this software</a>
+<LI><a href="Install.html">Installing the software</a>
+<LI><a href="Overview.html">Overview of the software</a>
+<LI><a href="Examples.html">Examples of Bayesian network training</a>
+<LI><a href="Hints.html">Hints and warnings</a>
+<LI><a href="Guide.html">Guide to further documentation</a>
+<LI><a href="Acknowledgements.html">Acknowledgements</a>
+</UL>
+
+
+<h2>Notes on the present release and past releases:</h2>
+
+<UL>
+<LI> <a href="release.1996-08-26.html">Current release of 1996-08-26</a>
+<LI> <a href="release.1995-08-09.html">Release of 1995-08-09</a>
+</UL>
+
+
+<h2>Alphabetical index within directories:</h2>
+<pre>
+       UTIL              MC              NET             BVG
+
+     <a href="data-spec.html">data-spec</a>      <a href="mc.html">mc</a>                <a href="net.html">net</a>              <a href="bvg.html">bvg</a>
+     <a href="extract.html">extract</a>        <a href="mc-quantities.html">mc-quantities</a>     <a href="net-dvar.html">net-dvar</a>         <a href="bvg-plt.html">bvg-plt</a>
+     <a href="grid.html">grid</a>           <a href="mc-spec.html">mc-spec</a>           <a href="net-display.html">net-display</a>      <a href="bvg-mc.html">bvg-mc</a>
+     <a href="log.html">log</a>            <a href="mc-temp-filter.html">mc-temp-filter</a>    <a href="net-eval.html">net-eval</a>         <a href="bvg-spec.html">bvg-spec</a>
+     <a href="log-copy.html">log-copy</a>       <a href="mc-temp-sched.html">mc-temp-sched</a>     <a href="net-gen.html">net-gen</a>
+     <a href="log-last.html">log-last</a>       <a href="xxx-grad-test.html">xxx-grad-test</a>     <a href="net-hist.html">net-hist</a>
+     <a href="log-records.html">log-records</a>    <a href="xxx-mc.html">xxx-mc</a>            <a href="net-mc.html">net-mc</a>
+     <a href="log-types.html">log-types</a>      <a href="xxx-stepsizes.html">xxx-stepsizes</a>     <a href="net-plt.html">net-plt</a>
+     <a href="model-spec.html">model-spec</a>                       <a href="net-pred.html">net-pred</a>
+     <a href="numin.html">numin</a>                            <a href="net-quantities.html">net-quantities</a>
+     <a href="prior.html">prior</a>                            <a href="net-rej.html">net-rej</a>
+     <a href="quantities.html">quantities</a>                       <a href="net-spec.html">net-spec</a>
+     <a href="rand-seed.html">rand-seed</a> 
+     <a href="series.html">series</a>   
+     <a href="xxx-hist.html">xxx-hist</a>
+     <a href="xxx-plt.html">xxx-plt</a>
+</pre>
+
+
+A more detailed index is given below.  Note that documentation on some
+programs used only to test the software is not included in either index.
+The most important documentation files are marked below with an
+asterisk.
+
+
+<h2>Generic utility programs [util]:</h2>
+<pre>
+  * <a href="log.html">log</a>             Facilities for handling log files
+    <a href="log-types.html">log-types</a>       Types of log file records used by various programs
+
+    <a href="log-copy.html">log-copy</a>        Copy part of a log file to a new log file
+    <a href="log-last.html">log-last</a>        Display the index of the last record in a log file
+    <a href="log-records.html">log-records</a>     List all records in a log file
+
+  * <a href="data-spec.html">data-spec</a>       Specify data sets for training and testing
+  * <a href="numin.html">numin</a>           Facilities for input of numeric data
+
+  * <a href="model-spec.html">model-spec</a>      Specify model for targets
+  * <a href="prior.html">prior</a>           Meaning and syntax of prior specifications
+
+    <a href="grid.html">grid</a>            Output a grid of points
+    <a href="extract.html">extract</a>         Extract items at random from a data file
+
+  * <a href="rand-seed.html">rand-seed</a>       Specify a random number seed
+
+  * <a href="quantities.html">quantities</a>      Numeric quantities obtainable from log files
+
+  * <a href="xxx-plt.html">xxx-plt</a>         Write quantities from a log file, suitable for plotting
+    <a href="xxx-hist.html">xxx-hist</a>        Build a histogram for a quantity obtained from a log file
+
+  * <a href="series.html">series</a>          Analyse stationary time series data
+</pre>
+
+
+<h2>Markov chain Monte Carlo facilities [mc]:</h2>
+<pre>
+  * <a href="mc.html">mc</a>              Programs and modules supporting Markov chain Monte Carlo
+  * <a href="mc-spec.html">mc-spec</a>         Specify how to do the Markov chain simulation
+  * <a href="xxx-mc.html">xxx-mc</a>          Run Markov chain simulation
+
+  * <a href="mc-quantities.html">mc-quantities</a>   Quantities from log files relating to Monte Carlo
+
+    <a href="mc-temp-sched.html">mc-temp-sched</a>   Specify temperature schedule for tempering methods
+    <a href="mc-temp-filter.html">mc-temp-filter</a>  Copy only iterations at a given temperature
+
+    <a href="xxx-grad-test.html">xxx-grad-test</a>   Test the correctness of the energy gradient computations
+    <a href="xxx-stepsizes.html">xxx-stepsizes</a>   Display and evaluate stepsizes used for dynamics
+</pre>
+
+
+<h2>Bayesian neural networks [net]:</h2>
+<pre>
+  * <a href="net.html">net</a>             Bayesian inference for neural networks using MCMC
+  * <a href="net-spec.html">net-spec</a>        Create a new network, or display existing specifications
+
+  * <a href="net-mc.html">net-mc</a>          Do Markov chain simulation to sample networks
+  * <a href="net-gen.html">net-gen</a>         Generate networks from the prior, or with fixed values
+
+  * <a href="net-display.html">net-display</a>     Print network parameters and/or hyperparameters
+
+  * <a href="net-quantities.html">net-quantities</a>  Quantities from log files relating to networks
+  * <a href="net-plt.html">net-plt</a>         Get quantities from a net log file, suitable for plotting
+    <a href="net-hist.html">net-hist</a>        Build histogram for quantity obtained from a net log file
+
+  * <a href="net-pred.html">net-pred</a>        Make predictions for test cases
+
+    <a href="net-eval.html">net-eval</a>        Evaluate network functions over a grid
+    <a href="net-dvar.html">net-dvar</a>        Find the variance of a difference in function values
+
+    <a href="net-rej.html">net-rej</a>         Generate networks from the posterior by rejection sampling
+</pre>
+
+
+<h2>Markov chain sampling for a bivariate Gaussian [bvg]:</h2>
+<pre>
+    <a href="bvg.html">bvg</a>             Demo of Markov chain sampling from a bivariate Gaussian
+    <a href="bvg-spec.html">bvg-spec</a>        Specify a bivariate Gaussian distribution to sample from
+    <a href="bvg-mc.html">bvg-mc</a>          Do Markov chain simulation for a bivariate Gaussian
+    <a href="bvg-plt.html">bvg-plt</a>         Get quantities from a bvg log file, suitable to plot
+</pre>
+
+</body>
+</html>

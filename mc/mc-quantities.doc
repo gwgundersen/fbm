@@ -25,6 +25,7 @@ application being used.
     F   Stepsize factor used in this iteration divided by two
     m   Point last moved to (zero is starting point)
     r   Rejection rate for this iteration
+    e   Average number of evaluations per slice sampling update this iteration
     k   Cumulative cpu usage in minutes.
 
     qn  Component n of position

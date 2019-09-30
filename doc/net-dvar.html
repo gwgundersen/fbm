@@ -1,0 +1,37 @@
+<html>
+<body>
+<pre>
+
+
+NET-DVAR:  Find the variance of a difference in function values.
+
+Usage:
+
+    net-dvar log-file range / centre n-pairs [ low ] high [ "hidden" ]
+
+This program evaluates the variance of the difference in the (first)
+outputs of networks at pairs of input points (differing in the first
+input), over the set of networks in the given range, stored in the
+given log file.  The variance of the difference is evaluated for
+n-pairs+1 pairs of points, with the points in each pair being
+equidistant from `centre'.  If only 'high' is present, the separations
+of the pairs form an arithmetic progression from zero to 'high'; if
+'low' is present, they form a geometric progression from 'low' to
+'high'. The separations of the points and the corresponding values of
+the variance are written one per line to standard output.
+
+For networks drawn from a prior distribution, the variance is expected
+to increase as some power, p, of the distance between points.  For a
+prior over smooth functions, we should have p=2.  For a Brownian
+prior, we should have p=1.  Values of p between 1 and 2 correspond to
+"fractional Brownian" priors.
+
+If a final argument of "hidden" is given, the program evaluates the
+variance of the values of hidden units in the final layer, using all
+hidden units in each network.  This is similar to the result using the
+output, but gives better statistics.
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

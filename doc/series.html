@@ -1,0 +1,62 @@
+<html>
+<body>
+<pre>
+
+
+SERIES:  Analyse stationary time series data.
+
+Series reads time series data from standard input and outputs various
+statistics on standard output.
+
+Usage:
+
+    series options [ max-lag [ presumed-mean ] ] &lt;data
+
+The data read from standard input consists of one or more realizations
+of the time series.  Each point from the series is given by a single
+real number, with each number being the first field of a line (with
+any following fields ignored).  The different realizations are
+separated by blank lines.
+
+The options control what statistics are printed, as follows:
+
+   m   Mean, with standard error
+   s   Standard deviation
+   v   Variance 
+
+   a   Autocorrelations up to the given maximum lag
+   c   Cumulative autocorrelations up to the given maximum lag. At lag
+       i, the cumulative autocorrelation is one plus twice the sum of
+       the autocorrelations from 1 to i.
+
+   b   Print only the bare autocorrelations and/or cumulative
+       autocorrelations, labelled by lag, without headings.  Output
+       consists of lines containing the lags, in increasing order 
+       from one, and the autocorrelation and/or the cumulative 
+       autocorrelation, in that order.
+
+   e   Do nothing except echo the data read on standard output. (Meant
+       for use in testing.)
+
+The standard error of the mean is calculated in two ways - from the
+sub-means for the various realizations (if there is more than one, and
+they are all the same length), and from the cumulative
+autocorrelations (if a maximum lag is given).
+
+The default maximum lag is the maximum length of any of the realizations 
+minus one.
+
+If a presumed mean is specified, it is used rather than the estimated
+mean when calculating the autocorrelations, and the displayed
+variance, and the variance used to normalize the autocorrelations.
+The 'm' option makes no sense if a presumed mean is specified.
+
+The autocovariance estimate at lag k is calculated from a series of
+length n using a divisor of n-k, not n (as is sometimes done).  The
+variance is calculated with a divisor of n, but the standard error
+from sub-means uses a divisor of number-of-realizations - 1.
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

@@ -1,6 +1,6 @@
 /* NET-UTIL.C - Various utility procedures for use in neural network code. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,22 +18,56 @@
 #include <math.h>
 
 #include "misc.h"
+#include "log.h"
+#include "data.h"
+#include "prior.h"
+#include "model.h"
 #include "net.h"
 #include "rand.h"
 
 
-/* GENERATE SIGMA VALUE FROM GAMMA DISTRIBUTION.  The value returned is
-   the square root of the inverse of a precision value picked from a
-   Gamma distribution with specified mean and shape. */
+/* SET UP REQUIRED RECORD SIZES.  Doesn't set the sizes of the variable-sized
+   'S' and 'W' records. */
 
-net_sigma net_pick_sigma
-( net_sigma sigma,	/* Square root of inverse of mean precision */
-  double alpha		/* Shape parameter */
+void net_record_sizes
+( log_gobbled *logg	/* Structure to hold gobbled data */
 )
 {
-  double p;
+  logg->req_size['A'] = sizeof (net_arch);
+  logg->req_size['M'] = sizeof (model_specification);
+  logg->req_size['V'] = sizeof (model_survival);
+  logg->req_size['P'] = sizeof (net_priors);
+  logg->req_size['D'] = sizeof (data_specifications);
+}
 
-  p = alpha==0 ? 1 : rand_gamma(alpha/2) / (alpha/2);
-      
-  return sigma/sqrt(p);
+
+/* REPORT ERROR IF SPECS FOR NET ARCHITECTURE, DATA MODEL, ETC. ARE MISSING. */
+
+void net_check_specs_present
+( net_arch *a,			/* Architecture, or null */
+  net_priors *p,		/* Priors, or null */
+  int need_model,		/* Must model be present? */
+  model_specification *m,	/* Model, or null */
+  model_survival *v		/* Survival model parameters, or null */
+)
+{
+  if (a==0)
+  { fprintf(stderr,"No architecture specification in log file\n");
+    exit(1);
+  }
+
+  if (p==0)
+  { fprintf(stderr,"No prior specification in log file\n");
+    exit(1);
+  }
+
+  if (m==0 && need_model)
+  { fprintf(stderr,"No model specification in log file\n");
+    exit(1);
+  }
+
+  if (m!=0 && m->type=='V' && v==0)
+  { fprintf(stderr,"No hazard specification for survival model\n");
+    exit(1);
+  }
 }

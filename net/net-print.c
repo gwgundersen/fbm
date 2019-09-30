@@ -1,6 +1,6 @@
 /* NET-PRINT.C - Procedures to print network parameters and hyperprameters. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,6 +18,9 @@
 #include <math.h>
 
 #include "misc.h"
+#include "log.h"
+#include "prior.h"
+#include "model.h"
 #include "net.h"
 
 
@@ -35,7 +38,8 @@ static void print_sigma_array (net_sigma *, int);
 void net_print_params
 ( net_params *w,	/* Network parameters */
   net_sigmas *s,	/* Network sigmas, null if none to display */
-  net_arch *a 		/* Network architecture */
+  net_arch *a, 		/* Network architecture */
+  model_specification *m /* Data model, may be null */
 )
 {
   int i, l, g;
@@ -133,7 +137,7 @@ void net_print_params
     g += 1;
   }
 
-  if (a->data_model=='R' && s!=0)
+  if (m!=0 && m->type=='R' && s!=0)
   { printf("\nNoise levels\n\n");
     printf("%7.2f - ",*s->noise_cm);
     print_sigma_array(s->noise,a->N_outputs);
@@ -145,7 +149,8 @@ void net_print_params
 
 void net_print_sigmas
 ( net_sigmas *s,
-  net_arch *a
+  net_arch *a,
+  model_specification *m
 )
 {
   int i, l, g;
@@ -213,7 +218,7 @@ void net_print_sigmas
     print_sigma_array(s->ao,a->N_outputs);
   }
 
-  if (a->data_model=='R')
+  if (m!=0 && m->type=='R')
   { printf("\nNoise levels\n\n");
     printf("%7.2f - ",*s->noise_cm);
     print_sigma_array(s->noise,a->N_outputs);

@@ -1,0 +1,56 @@
+<html>
+<body>
+<pre>
+
+
+NUMIN:  Facilities for input of numeric data.
+
+Programs that take numeric data as input can use the 'numin'
+facilities for reading this input from data files.  Such a data file
+must consist of a number of lines, each of which contains a number of
+"items", which are separated by whitespace, commas, or semicolons.
+The number of numeric items to get from each line is fixed by the
+program or user; the indexes of these items within a line are given by
+a specification string, which is usually input by the user.  The
+specification string also gives the file name and a range of lines to
+read.
+  
+A specification string can have two forms:
+
+    [filename][@[-]first[:[last]]]{,index}   or   .
+
+If the range part or the index part is absent, it defaults to values
+determined by the program (as left over from the previous
+specification, if nothing special is done), provided the filename part
+is also missing (it also defaults).  If the filename part is present,
+the defaults are the entire file and indexes starting at one.  The "."
+form leaves everything to default.
+
+The "@" part of the specification gives the range of lines to read,
+with the end of the range defaulting to the end of the file.  (Leaving
+out just 'last' or both 'last' and the preceding colon do the same
+thing.)  The presence of a "-" causes all the lines _except_ those in
+the range to be read.  Line numbers start at one.
+
+If 'filename' starts with "%", it is taken to be the name of a shell
+command to be run to generate the data.  This command may be run
+several times; it must deliver the same data each time.
+
+The index specifications give the positions of items to read within a
+line, with the first item in a line having index one.  An index of
+zero is also allowed, and gives the value zero without any reference
+to the file.  Any excess items in the line are ignored, but the line
+must contain the items that are required.  The indexes of these items
+need not be in increasing order.  It is an error for the specification
+to give more item indexes than the number of items required.  The
+number of indexes may be less than required, however, in which case
+successive indexes following the last one specified are used.  If no
+indexes are specified, they start with a default position, which will
+be just after the last position for the numin specification used
+immediately previously (provided a different default has not been set
+up by the program, and provided no filename is specified this time).
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

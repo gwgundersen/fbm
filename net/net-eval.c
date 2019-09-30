@@ -1,6 +1,6 @@
 /* NET-EVAL.C - Program to evaluate the network function at a grid of points. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,8 +18,10 @@
 #include <math.h>
 
 #include "misc.h"
-#include "net.h"
 #include "log.h"
+#include "prior.h"
+#include "model.h"
+#include "net.h"
 
 
 #define Max_inputs 100		/* Maximum number of input dimensions allowed */
@@ -34,8 +36,9 @@ void main
   char **argv
 )
 {
-  net_arch   *a;
-  net_priors *p;
+  net_arch *a;
+  model_specification *m;
+  model_survival *sv;
 
   net_sigmas sigmas, *s = &sigmas;
   net_params params, *w = &params;
@@ -92,27 +95,53 @@ void main
   ng = 0;
 
   for (ap = argv+3; *ap!=0; ap += 4)
-  { if (strcmp(ap[0],"/")!=0 || (grid_size[ng] = atoi(ap[3]))<=0) usage();
+  { if (strcmp(ap[0],"/")!=0 
+     || (grid_size[ng] = atoi(ap[3]))<=0 && strcmp(ap[3],"0")!=0) usage();
     grid_low[ng] = atof(ap[1]);
     grid_high[ng] = atof(ap[2]);
     ng += 1;
   }
 
-  /* Open log file and read network architecture and priors. */
+  /* Open log file and read network architecture and data model. */
 
   log_file_open (&logf, 0);
 
   log_gobble_init(&logg,0);
-  logg.req_size['A'] = sizeof *a;
-  logg.req_size['P'] = sizeof *p;
+  net_record_sizes(&logg);
 
   if (!logf.at_end && logf.header.index==-1)
   { log_gobble(&logf,&logg);
   }
-  
-  if ((a = logg.data['A'])==0)
+
+  a = logg.data['A'];
+  m = logg.data['M'];
+  sv = logg.data['V'];
+
+  if (a==0)
   { fprintf(stderr,"No architecture specification in log file\n");
     exit(1);
+  }
+
+  if (gen_targets) 
+  { 
+    if (m==0)
+    { fprintf(stderr,"No model specification in log file\n");
+      exit(1);
+    }
+
+    if (m->type=='V' && v==0)
+    { fprintf(stderr,"No hazard specification for survival model\n");
+      exit(1);
+    }
+
+    if (m->type=='V' && sv->hazard_type!='C')
+    { fprintf(stderr,
+ "Can't generate targets randomly for survival model with non-constant hazard\n"
+      );
+      exit(1);
+    }
+
+    N_targets = model_targets(m,a->N_outputs);
   }
 
   if (a->N_inputs!=ng)
@@ -121,21 +150,11 @@ void main
     exit(1);
   }
 
-  s->total_sigmas = net_setup_sigma_count(a);
+  s->total_sigmas = net_setup_sigma_count(a,m);
   w->total_params = net_setup_param_count(a);
 
   logg.req_size['S'] = s->total_sigmas * sizeof(net_sigma);
   logg.req_size['W'] = w->total_params * sizeof(net_param);
-
-  if (gen_targets) 
-  { 
-    N_targets = net_model_targets(a);
-
-    if ((p = logg.data['P'])==0)
-    { fprintf(stderr,"No prior specification in log file\n");
-      exit(1);
-    }
-  }
 
   /* Allocate space for values in network. */
 
@@ -186,7 +205,7 @@ void main
       }
   
       s->sigma_block = logg.data['S'];
-      net_setup_sigma_pointers (s, a);
+      net_setup_sigma_pointers (s, a, m);
     }
   
     /* Print the value of the network function, or targets generated from it, 
@@ -211,7 +230,7 @@ void main
       for (i = 0; i<a->N_inputs; i++) printf(" %8.5f",v->i[i]);
   
       if (gen_targets)
-      { net_model_guess (v, targets, a, p, s, 1);
+      { net_model_guess (v, targets, a, m, sv, w, s, 1);
         for (j = 0; j<N_targets; j++) printf(" %+.6e",targets[j]);
       }
       else

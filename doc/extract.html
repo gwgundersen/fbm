@@ -1,0 +1,27 @@
+<html>
+<body>
+<pre>
+
+
+EXTRACT:  Extract items at random from a data file. 
+
+Extract is called by the command:
+
+  extract frac full-file extract-file remainder-file [ seed ]
+
+It reads a file of items (one per line) from 'full-file', chooses a
+fraction 'fract' of items for extraction, writes the chosen items to
+"extract-file", and writes the items not chosen to remainder-file.  
+A seed for the random number generator may optionally be specified
+(the default is 1).
+
+The total number of items read, the fraction extracted, and the number
+extracted are reported on standard error.  The number actually
+extracted will not be the exact fraction if this is not an integer.
+
+Calls of "extract" may be cascaded to produce useful effects.
+
+            Copyright (c) 1995 by Radford M. Neal
+</pre>
+</body>
+</html>

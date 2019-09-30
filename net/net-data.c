@@ -1,6 +1,6 @@
 /* NET-DATA.C - Procedures for reading data for neural networks. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,7 +18,10 @@
 #include <math.h>
 
 #include "misc.h"
+#include "log.h"
 #include "data.h"
+#include "prior.h"
+#include "model.h"
 #include "net.h"
 #include "net-data.h"
 #include "numin.h"
@@ -41,8 +44,9 @@ double *test_targets;		/* True targets for test cases */
 
 /* PROCEDURES. */
 
-static net_values *read_inputs  (numin_source *, int *, net_arch *);
 static double     *read_targets (numin_source *, int,   net_arch *);
+static net_values *read_inputs  (numin_source *, int *, net_arch *, 
+                                 model_specification *, model_survival *);
 
 
 /* FREE SPACE OCCUPIED BY DATA.  Also useful as a way to reset when the
@@ -77,12 +81,17 @@ void net_data_free (void)
 /* READ TRAINING AND/OR TEST DATA FOR NETWORK.  Either or both of these
    data sets are read, depending on the options passed.  If a data set
    has already been read, it isn't read again.  This procedure also checks
-   that the data specifications are consistent with the network architecture. */
+   that the data specifications are consistent with the network architecture. 
+
+   For survival models with non-constant hazard, the first input in a case, 
+   representing time, is set to zero by this procedure. */
 
 void net_data_read
 ( int want_train,	/* Do we want the training data? */
   int want_test,	/* Do we want the test data? */
-  net_arch *arch	/* Network architecture */
+  net_arch *arch,	/* Network architecture */
+  model_specification *model, /* Data model being used */
+  model_survival *surv	/* Survival model, or zero if irrelevant */
 )
 {
   numin_source ns;
@@ -90,20 +99,21 @@ void net_data_read
   if (train_values!=0) want_train = 0;
   if (test_values!=0)  want_test = 0;
 
-  if (data_spec->N_inputs!=arch->N_inputs 
-   || data_spec->N_targets!=net_model_targets(arch))
+  if (model_targets(model,arch->N_outputs) != data_spec->N_targets
+   || arch->N_inputs != data_spec->N_inputs 
+                         + (model->type=='V' && surv->hazard_type!='C'))
   { fprintf(stderr,
      "Number of inputs/targets in data specification doesn't match network\n");
     exit(1);
   }
 
-  if (arch->data_model=='C' && arch->N_outputs!=data_spec->int_target)
+  if (model->type=='C' && arch->N_outputs!=data_spec->int_target)
   { fprintf(stderr,
 "Integer range for targets does not match number of outputs for class model\n");
     exit(1);
   }
 
-  if (arch->data_model=='B' && data_spec->int_target!=2)
+  if (model->type=='B' && data_spec->int_target!=2)
   { fprintf(stderr,"Data for binary targets must be specified to be binary\n");
     exit(1);
   }
@@ -112,7 +122,7 @@ void net_data_read
   { 
     numin_spec (&ns, "data@1,0",1);
     numin_spec (&ns, data_spec->train_inputs, data_spec->N_inputs);
-    train_values = read_inputs (&ns, &N_train, arch);
+    train_values = read_inputs (&ns, &N_train, arch, model, surv);
 
     numin_spec (&ns, data_spec->train_targets, data_spec->N_targets);
     train_targets = read_targets (&ns, N_train, arch);
@@ -122,7 +132,7 @@ void net_data_read
   {
     numin_spec (&ns, "data@1,0",1);
     numin_spec (&ns, data_spec->test_inputs, data_spec->N_inputs);
-    test_values = read_inputs (&ns, &N_test, arch);
+    test_values = read_inputs (&ns, &N_test, arch, model, surv);
 
     if (data_spec->test_targets[0]!=0)
     { numin_spec (&ns, data_spec->test_targets, data_spec->N_targets);
@@ -137,7 +147,9 @@ void net_data_read
 static net_values *read_inputs
 ( numin_source *ns,
   int *N_cases_ptr,
-  net_arch *arch
+  net_arch *arch,
+  model_specification *model, 
+  model_survival *surv
 )
 {
   double raw_inputs[Max_inputs];
@@ -145,7 +157,7 @@ static net_values *read_inputs
   net_values *values;
   int value_count;
   int N_cases;
-  int i, j;
+  int i, j, j0;
 
   N_cases = numin_start(ns);
 
@@ -159,9 +171,17 @@ static net_values *read_inputs
   }
 
   for (i = 0; i<N_cases; i++) 
-  { numin_read(ns,raw_inputs);
-    for (j = 0; j<arch->N_inputs; j++)
-    { values[i].i[j] = data_trans (raw_inputs[j], data_spec->input_trans[j]);
+  { if (model->type=='V' && surv->hazard_type!='C')
+    { values[i].i[0] = 0;
+      j0 = 1;
+    }
+    else
+    { j0 = 0;
+    }
+    numin_read(ns,raw_inputs);
+    for (j = j0; j<arch->N_inputs; j++)
+    { values[i].i[j] 
+        = data_trans (raw_inputs[j-j0], data_spec->input_trans[j-j0]);
     }
   }
 

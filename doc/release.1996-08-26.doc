@@ -1,0 +1,51 @@
+
+
+NOTES ON THE VERSION OF 1996-08-26:
+
+Major changes in this version:
+
+1) Specification of data models has been separated from specification
+   of networks, in order to facilitate the eventual use of these same
+   models with functions defined in other ways than by networks.  The
+   model specification arguments of net-spec have disappeared; they
+   are instead given to the new model-spec program.
+
+2) Models for survival data have been added.  They should be regarded
+   as experimental, however.
+
+3) Documentatation on data models has been expanded and moved out of 
+   net-spec.doc, to the new model-spec.doc (in util).  Documentation
+   on prior specifications has been moved from net-prior.doc to
+   prior.doc.  Many revisions have been made to other documentation
+   files.
+
+4) A number of new Markov chain Monte Carlo methods have been added.
+   These may or may not be of any use for neural network models.
+
+5) The method for sampling top-level hyperparameters has been changed
+   from the rejection method described in section A.2.2 of the thesis
+   to the adaptive rejection sampling method due to Gilks and Wild.
+   The message, "WARNING: Over 10000 tries in one call of cond_sigma"
+   will now never appear.
+
+6) The 'rand' module is now automatically told to find its file of
+   natural random numbers ('randfile') in the 'util' directory where
+   it is located.  This is done in 'util.make', which should be 
+   changed if some other behaviour is desired.
+
+Note that modification (1) above is not upwardly compatible, though it
+should be very easy to modify command files to use the new scheme.
+Also, log files created with the previous version cannot be read with
+this version.
+
+SPECIAL NOTE:  This is the version of the software that Carl Rasmussen
+used for the tests reported in his thesis.
+
+
+Known bugs.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.

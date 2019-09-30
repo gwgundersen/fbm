@@ -1,6 +1,6 @@
 /* NET-SETUP.C - Procedures for setting up network data structures. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,6 +18,9 @@
 #include <math.h>
 
 #include "misc.h"
+#include "log.h"
+#include "prior.h"
+#include "model.h"
 #include "net.h"
 
 
@@ -39,7 +42,8 @@
    for a network with the given architecture. */
    
 int net_setup_sigma_count
-( net_arch *a		/* Network architecture */
+( net_arch *a,		/* Network architecture */
+  model_specification *m /* Data model */
 )
 { 
   int count;
@@ -64,7 +68,7 @@ int net_setup_sigma_count
   if (a->has_bo) count += 1;
   if (a->has_ao) count += a->N_outputs;
 
-  if (a->data_model=='R') count += 1 + a->N_outputs;
+  if (m!=0 && m->type=='R') count += 1 + a->N_outputs;
   
   return count;
 }
@@ -133,7 +137,8 @@ int net_setup_value_count
 
 void net_setup_sigma_pointers
 ( net_sigmas *s,	/* Structure to set up pointers in */
-  net_arch *a		/* Network architecture */
+  net_arch *a,		/* Network architecture */
+  model_specification *m /* Data model */
 )
 { 
   net_sigma *b;
@@ -196,9 +201,9 @@ void net_setup_sigma_pointers
     b += a->N_outputs;
   }
 
-  s->noise_cm = a->data_model=='R' ? b++ : 0;
+  s->noise_cm = m!=0 && m->type=='R' ? b++ : 0;
   s->noise = 0;
-  if (a->data_model=='R') 
+  if (m!=0 && m->type=='R') 
   { s->noise = b;
     b += a->N_outputs;
   }

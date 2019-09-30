@@ -24,10 +24,12 @@ Class of Programs          Type   Description
 
 
 * Supervised learning        D    Data specifications for training and test sets
+                             M    Model specification
+                             V    Characteristics of model for survival data
 
   Neural network             A    Network architecture
                              P    Specification of priors for network
                              S    Hyperparameters ("sigmas")
                              W    Parameters of network ("weights")
 
-            Copyright (c) 1995 by Radford M. Neal
+            Copyright (c) 1995, 1996 by Radford M. Neal

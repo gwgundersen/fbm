@@ -1,6 +1,6 @@
 /* NET-GEN.C - Program to generate networks (eg, from prior distribution). */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -18,8 +18,10 @@
 #include <math.h>
 
 #include "misc.h"
-#include "net.h"
 #include "log.h"
+#include "prior.h"
+#include "model.h"
+#include "net.h"
 #include "rand.h"
 
 
@@ -33,11 +35,14 @@ void main
   net_arch *a;
   net_priors *p;
 
+  model_specification *m;
+  model_survival *v;
+
   net_sigmas  sigmas, *s = &sigmas;
   net_params  params, *w = &params;
 
   int max_index, index, fix;
-  double value;
+  double value, out_value;
 
   log_file logf;
   log_gobbled logg;
@@ -47,17 +52,18 @@ void main
   /* Look at program arguments. */
 
   max_index = 0;
-  value = 0;
+  value = out_value = 0;
 
   fix = argc>2 && strcmp(argv[2],"fix")==0 ? 2
       : argc>3 && strcmp(argv[3],"fix")==0 ? 3
       : argc;
 
-  if (argc<2 || argc>fix+2
+  if (argc<2 || argc>fix+3
    || fix>2 && (max_index = atoi(argv[2]))<=0 && strcmp(argv[2],"0")!=0
-   || fix+1<argc && (value = atof(argv[fix+1]))<=0)
+   || fix+1<argc && (value = out_value = atof(argv[fix+1]))<=0
+   || fix+2<argc && (out_value = atof(argv[fix+2]))<=0)
   { fprintf(stderr,
-      "Usage: net-gen log-file [ max-index ] [ \"fix\" [ value ] ]\n");
+"Usage: net-gen log-file [ max-index ] [ \"fix\" [ value [ out-value ] ] ]\n");
     exit(1);
   }
 
@@ -68,33 +74,29 @@ void main
   log_file_open (&logf, 1);
 
   log_gobble_init(&logg,0);
-  logg.req_size['A'] = sizeof *a;
-  logg.req_size['P'] = sizeof *p;
+  net_record_sizes(&logg);
   logg.req_size['r'] = sizeof (rand_state);
 
   while (!logf.at_end && logf.header.index<0)
   { log_gobble(&logf,&logg);
   }
-  
-  if ((a = logg.data['A'])==0)
-  { fprintf(stderr,"No architecture specification in log file\n");
-    exit(1);
-  }
 
-  if ((p = logg.data['P'])==0)
-  { fprintf(stderr,"No prior specification in log file\n");
-    exit(1);
-  }
+  a = logg.data['A'];
+  m = logg.data['M'];
+  p = logg.data['P'];
+  v = logg.data['V'];
+
+  net_check_specs_present(a,p,0,m,v);
 
   /* Allocate space for parameters and hyperparameters. */
 
-  s->total_sigmas = net_setup_sigma_count(a);
+  s->total_sigmas = net_setup_sigma_count(a,m);
   w->total_params = net_setup_param_count(a);
 
   s->sigma_block = chk_alloc (s->total_sigmas, sizeof (net_sigma));
   w->param_block = chk_alloc (w->total_params, sizeof (net_param));
 
-  net_setup_sigma_pointers (s, a);
+  net_setup_sigma_pointers (s, a, m);
   net_setup_param_pointers (w, a);
 
   /* Read last records in log file to see where to start, and to get random
@@ -119,7 +121,7 @@ void main
 
   for ( ; index<=max_index; index++)
   {
-    net_prior_generate (w, s, a, p, argv[fix]!=0, value);
+    net_prior_generate (w, s, a, m, p, argv[fix]!=0, value, out_value);
 
     logf.header.type = 'S';
     logf.header.index = index;

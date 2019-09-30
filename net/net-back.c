@@ -18,10 +18,13 @@
 #include <math.h>
 
 #include "misc.h"
+#include "log.h"
+#include "prior.h"
+#include "model.h"
 #include "net.h"
 
 
-/* This module find the derivative of the "error" for a particular case
+/* This module finds the derivative of the "error" for a particular case
    with respect to the values of the hidden and input units, and the with
    respect to the summed input for the hidden units, given the derivative 
    with respect to the output units.  There are facilities for calculating 
