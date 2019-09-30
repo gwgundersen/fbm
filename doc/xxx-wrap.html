@@ -1,0 +1,47 @@
+<html>
+<body>
+<pre>
+
+
+XXX-WRAP:  Create a wrapped-around chain from an existing simulation run.
+
+There is a version of this program for each 'mc' application (eg,
+net-wrap).  Each version uses circular coupling to create a
+wrapped-around chain, given the log file for a standard simulation
+run.  If this succeeds, the iterations in the resulting log file will
+all be usable, without the need to discard a burn-in period.  
+
+Usage:
+
+    xxx-wrap old-log-file new-log-file [ start-index ]
+
+The old-log-file should contain iterations of a Markov chain that was
+simulated using module &lt;xxx&gt; (eg, dist, net, gp, mix).  This
+simulation will be used in creating a wrapped-around chain stored in
+new-log-file (whose previous contents, if any, will be overwritten).
+
+The wrapped-around chain is created by first copying the last
+iteration in old-log-file to new-log-file, storing it at index
+start-index (which defaults to 1).  This is used as the start state in
+a re-running of the simulation, using the random number state and
+Markov chain operations stored at start-index in old-log-file.  If no
+Markov chain operations are stored at start-index, those stored at
+index 0 will be used, but any stored between index 0 and start-index
+will be ignored.
+
+The simulation is rerun using the xxx-mc program, with the -c option
+being used to couple with old-log-file.  This simulation will
+terminate early if the next state generated is the same as the
+corresponding state in old-log-file, with the remaining iterations
+being simply copied from old-log-file.  If such coalescence to the
+same state as before occurs, the xxx-wrap program terminates
+successfully (with exit code 0), and a message giving the number of
+iterations needed to produce coalescence is displayed on standard
+error.  If coalescence does not occur, a message to this effect is
+displayed on standard error, and the xxx-wrap program terminates with
+exit code 1 (indicating failure).
+
+            Copyright (c) 2000 by Radford M. Neal
+</pre>
+</body>
+</html>

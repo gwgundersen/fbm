@@ -18,6 +18,7 @@ application being used.
     K   Kinetic energy at end of iteration
     H   Total energy at end of iteration (sum of E and K)
     D[n] Change in total energy for last state proposed (up to max of n)
+         (for Metropolis, hybrid, and multivariate slice sampling operations)
 
     i   Inverse temperature being used (from the tempering schedule)
     I   Index of current inverse temperature value in schedule
@@ -69,7 +70,7 @@ is accepted, and is otherwise based on just the first half.
 
 Momenta of zero are assumed if none exist.
 
-            Copyright (c) 1995, 1998 by Radford M. Neal
+            Copyright (c) 1995-2000 by Radford M. Neal
 </pre>
 </body>
 </html>

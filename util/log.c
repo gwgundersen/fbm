@@ -1,6 +1,6 @@
 /* LOG.C - Routines for handling log files. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -302,7 +302,16 @@ void log_file_read
 /* APPEND RECORD TO LOG FILE.  The type and index for the record are taken
    from the log file state structure, as is the size of the data block.  
    After the data has been appended, we will be positioned at the end of 
-   the log file. */
+   the log file. 
+
+   If the global variable log_append_compare is not zero, records written
+   are compared with the record of the same type and index (if present) in the
+   "gobble" structure it points to.  If the comparison comes out unequal,
+   log_append_compare is set to zero to signal this (and to disable future
+   comparisons).
+*/
+
+log_gobbled *log_append_compare;
 
 void log_file_append 
 ( log_file *logf,	/* Log file state structure */
@@ -398,6 +407,17 @@ void log_file_append
   }
 
   logf->last_index = logf->header.index;
+
+  if (log_append_compare)
+  { int i;
+    i = logf->header.type;
+    if (log_append_compare->index[i]==logf->header.index)
+    { if (log_append_compare->actual_size[i]!=logf->header.size
+       || memcmp(log_append_compare->data[i],data,logf->header.size)!=0)
+      { log_append_compare = 0;
+      }
+    }
+  }
 }
 
 

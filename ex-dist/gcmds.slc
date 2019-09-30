@@ -1,0 +1,11 @@
+
+# Commands to sample from the "ring" distribution using multivariate
+# slice sampling, with shrinkage in all directions.  The stepsize to use 
+# is given as an argument.  Thirteen slice sampling operation are done per 
+# iteration, which takes about 53 function evaluations when the stepsize 
+# is 5.
+
+dist-spec glog.slc,$1 \
+  "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
+mc-spec glog.slc,$1 repeat 13 slice $1 end
+dist-mc glog.slc,$1 2000

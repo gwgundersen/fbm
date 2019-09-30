@@ -1,0 +1,12 @@
+
+# Do a circularly-coupled simulation with multiple starting points 
+# for the univariate standard normal, expressed as the posterior
+# distribution for a parameter, x, with Normal(0,5^2) prior and
+# Normal(0,x,25/24) likelihood.  This forces the randomly generated
+# initial point to come from the N(0,5^2) distribution.
+#
+# A random seed may be given as an (optional) argument.
+
+dist-spec nlog.circ "x~Normal(0,25)" "Normal(0,x,25/24)"
+mc-spec   nlog.circ rgrid-met 0.5
+dist-circ nlog.circ 10 100 10 $1

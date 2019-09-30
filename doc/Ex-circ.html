@@ -1,0 +1,137 @@
+<html>
+<body>
+<pre>
+
+
+EXAMPLES OF CIRCULARLY-COUPLED MARKOV CHAIN SAMPLING
+
+Circular coupling is a new method for diagnosing covergence and
+discarding "burn-in" iterations, described in my technical report on
+"Circularly-coupled Markov chain sampling".  The examples here
+demonstrate this software's facilities for simple circular coupling,
+using "xxx-wrap" (see <A HREF="xxx-wrap.html">xxx-wrap.doc</A>), and for circular coupling with
+multiple starting points (possibly done in parallel), using "xxx-circ"
+(see <A HREF="xxx-circ.html">xxx-circ.doc</A>).
+
+Note that although these facilities are implemented in a way that is
+designed for general use, not all aspects of the software have been
+adapted to this scheme.  Also, the coupling techniques used are still
+being improved.  Presently, circular coupling cannot be used at all
+with mixture models, and it is probably not yet useful for most neural
+network models.  It can be used for regression models using Gaussian
+processes (if appropriate Markov chain operations are used), but not
+for classification models, or other models requiring latent variables.
+
+More substantial examples will be added in a future release of this
+software, to go with a future revised version of the tech report.
+
+The command files for these examples are in ex-circ.
+
+
+Circularly-coupled sampling for a Cauchy model.
+
+To start, we can look at a simple example of a Bayesian model for data
+that is Cauchy distributed.  There is just one parameter, u, for this
+model, which is the location of the Cauchy distribution (the scale is
+fixed at one).  The prior for u will be Normal(0,20^2), and two data
+points will be assumed to have been observed, with values of 18 and 25.
+
+Here is a specification for the resulting posterior distribution:
+
+    &gt; dist-spec clog "u~Normal(0,20^2)" "Log[1+(u-18)^2] + Log[1+(u-25)^2]"
+
+Here, the two data values have been put into the likelihood expression
+as constants.  There will therefore be no data file for this example.
+The log file is written as "clog" above, but other names will be used
+for the examples below.
+
+One way of using circular coupling is to first simulate a chain in the
+usual way, and then "wrap the chain around" in order to discard an
+appropriate "burn-in" period, which is not from the stationary
+distribution of the chain.  For this to work, however, we have to use
+Markov chain operations that couple appropriately.  For one
+dimensional problems, "random grid" Metropolis updates work well.  We
+can specify such updates (with stepsize of 5) with the following
+command, issued after the dist-spec command:
+
+    &gt; dist-spec clog.forw "u~Normal(0,20^2)" "Log[1+(u-18)^2] + Log[1+(u-25)^2]"
+    &gt; mc-spec clog.forw rgrid-met 5
+
+The log file "clog.forw" will be the normal, "forward" version of the
+chain.  We can run the chain for 500 iterations as follows:
+
+    &gt; dist-mc clog.forw 500
+
+You can now plot the progress of the chain over time, starting from
+its default initial state of u=0, using the following command:
+
+    &gt; dist-plt t u clog.forw | plot
+
+Clearly, the initial portion of the chain is not representative of the
+stationary distribution.  But it's not clear exactly how many
+iterations should be discarded from the beginning.  With traditional
+Markov chain sampling methods, we'd just have to make a somewhat 
+ad hoc decision about this.
+
+As an alternative, we can wrap the chain around - running it again
+with log file clog.wrap, using the last state of clog.forw as the
+start state, with the same random numbers as before.  This is done
+with the following command:
+
+    &gt; dist-wrap clog.forw clog.wrap
+
+The dist-wrap procedure will recognize when (if ever) the new chain
+coalesces with the old chain (ie, reaches the same state).  Once that
+occurs, there is no need to perform any further computation - the
+remaining iterations in clog.wrap can simply be copied from clog.forw.
+
+For this example, coalescence will probably occur within a few dozen
+iterations.  The wrapped around chain can be plotted as follows:
+
+    &gt; dist-plt t u clog.wrap | plot
+
+Provided certain assumptions about rapid coalescence are satisfied,
+all the iterations in clog.wrap will come from approximately the right
+distribution.
+
+For other problems, however, it is possible that the wrapped-around
+chain will not coalese with the original chain.  In this case, the
+procedure must be repeated with a larger number of iterations.  Even
+if coalescence does occur, however, it is possible that it takes too
+long, on average - violating the assumptions needed for the answer to
+be guaranteed to be (approximately) correct.
+
+These assumptions can be tested by running chains from many starting
+points, which this software draws from the prior distribution.  This
+is done as follows:
+
+    &gt; dist-spec clog.circ "u~Normal(0,20^2)" "Log[1+(u-18)^2] + Log[1+(u-25)^2]"
+    &gt; mc-spec clog.circ rgrid-met 5
+    &gt; dist-circ clog.circ 10 50 5
+
+The dist-spec and mc-spec commands are as before.  The dist-circ
+command runs a circularly-coupled simulation from 10 starting points
+(the first numerical argument), equally spaced along a 500-iteration
+span, so that the sections between starting points consist of 50
+iterations (the second numerical argument).  Each section is simulated
+and re-simulated up to 5 times (the third numerical argument), with
+the starting point the first time (called stage 0) being drawn from
+the prior, and the starting points for later stages being set to the
+final point from the last simulation of the previous section (with
+wrap-around from the last section to the first).
+
+A consistent circular chain is obtained if this process reaches a
+state where every section starts at the final state of the previous
+section, and ends at the initial state of the next section.  If this
+happens after a number of stages that's no more than half the total
+number, there is fairly good reason to think that the necessary
+assumptions are met, and the states of the circular chain (which will
+be in clog.circ) all come from a good approximation to the correct
+posterior distribution.
+
+If the -p option is given to dist-circ, the simulation will be done in
+parallel, in so far as this is possible with the number of processors
+your machine has.
+</pre>
+</body>
+</html>

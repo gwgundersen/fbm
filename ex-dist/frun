@@ -1,0 +1,10 @@
+
+# Run the various samplers on the "funnel" distribution
+
+echo " "; echo fcmds.met;   time -p fcmds.met 1
+echo " "; echo fcmds.met1;  time -p fcmds.met1 1
+echo " "; echo fcmds.metv;  time -p fcmds.metv 1
+echo " "; echo fcmds.slc1;  time -p fcmds.slc1 1
+echo " "; echo fcmds.slc;   time -p fcmds.slc 1
+echo " "; echo fcmds.slcG;  time -p fcmds.slcG 1
+echo " "; echo fcmds.slcg;  time -p fcmds.slcg 1

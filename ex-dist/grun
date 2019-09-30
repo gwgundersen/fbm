@@ -1,0 +1,29 @@
+
+# Run the various samplers for the "ring" distribution
+
+echo " "; echo gcmds.met;   time -p gcmds.met 0.2
+echo " "; echo gcmds.met;   time -p gcmds.met 1
+echo " "; echo gcmds.met;   time -p gcmds.met 5
+
+echo " "; echo gcmds.met1;  time -p gcmds.met1 0.2
+echo " "; echo gcmds.met1;  time -p gcmds.met1 1
+echo " "; echo gcmds.met1;  time -p gcmds.met1 5
+
+echo " "; echo gcmds1.slc1; time -p gcmds1.slc1 0.2
+echo " "; echo gcmds2.slc1; time -p gcmds2.slc1 1
+echo " "; echo gcmds2.slc1; time -p gcmds2.slc1 5
+
+echo " "; echo gcmds.slc;   time -p gcmds.slc 5
+echo " "; echo gcmds.slcg;  time -p gcmds.slcg 5
+echo " "; echo gcmds.slcG;  time -p gcmds.slcG 5
+
+echo " "; echo gcmds.sgau;  time -p gcmds.sgau 5
+
+echo " "; echo gcmds.dyn;   time -p gcmds.dyn 0.3
+echo " "; echo gcmds.hmc;   time -p gcmds.hmc 0.3
+echo " "; echo gcmds.phmc;  time -p gcmds.phmc 0.18
+
+echo " "; echo gcmds.slci;  time -p gcmds.slci 0.3
+echo " "; echo gcmds.slco;  time -p gcmds.slco 0.3
+
+echo " "; echo gcmds.slcv;  time -p gcmds.slcv 2

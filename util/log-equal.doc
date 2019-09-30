@@ -1,0 +1,41 @@
+
+
+LOG-EQUAL:  Check if records at given indexes in two log files match.
+
+Log-equal looks at the records at given indexes in two log files
+(perhaps excluding those of some types), and determines whether they
+match exactly, returning the result by exiting with success or
+failure.  It is useful in shell files for doing things like circular
+coupling.
+
+Usage:
+
+    log-equal [ -ignoredtype... ] log-file-1 index-1 log-file-2 index-2
+
+The records in log-file-1 at index-1 are compared to those in
+log-file-2 at index-2, except that records with the types given in the
+optional first argument are ignored.  (See log-types.doc for a listing
+of conventionally-used record types.)  The program silently exits
+successfully (with exit code 0) if the records match.  It silently
+exits unsuccessfully (with exit code 1) if there is a mismatch.  An
+error message is displayed on standard error and the program exits
+with code -1 if either log file has no records (of any type) at the
+specified index.
+
+The records at the two indexes are considered to not match if a record
+of a given type (other than a type being ignored) exists in one log
+file but not the other, if the records of a given type are of
+different lengths in the two log files, or if the records of a given
+type do not have exactly the same contents in the two log files.  If
+more than one record of some type exists at the given index in one of
+the log files, only the last such record is examined.
+
+Example:
+
+   log-equal -rio loga 100 logb 1
+
+Returns successfully (exit code 0) if the set of records at iteration
+100 in loga matches the set of records at iteration 1 of logb,
+excluding records of type "r", "i", or "o".
+
+              Copyright (c) 2000 by Radford M. Neal

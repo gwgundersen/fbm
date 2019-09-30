@@ -61,13 +61,13 @@ Generic utility programs [util]:
     log-append      Append records from one log file to the end of another
     log-last        Display the index of the last record in a log file
     log-records     List all records in a log file  
+    log-equal       Check if records in log files match
 
     formula         Syntax for arithmetic formulas
     calc            Simple calculator program
 
   * data-spec       Specify data sets for training and testing
   * numin           Facilities for input of numeric data
-    numin-test      Test numeric input module
 
   * model-spec      Specify model for targets
   * prior           Meaning and syntax of prior specifications
@@ -78,7 +78,6 @@ Generic utility programs [util]:
     extract         Extract items at random from a data file 
 
   * rand-seed       Specify a random number seed  
-    rand-test       Test random number generators
 
   * quantities      Numeric quantities obtainable from log files
 
@@ -93,7 +92,9 @@ Markov chain Monte Carlo facilities [mc]:
 
   * mc              Programs and modules supporting Markov chain Monte Carlo 
   * mc-spec         Specify how to do the Markov chain simulation
-  * xxx-mc          Run Markov chain simulation
+  * xxx-mc          Run a Markov chain simulation
+  * xxx-circ        Do a circularly-coupled simulation
+  * xxx-wrap        Create wrapped-around chain from existing simulation run
 
   * mc-quantities   Quantities from log files relating to Monte Carlo 
 
@@ -103,6 +104,7 @@ Markov chain Monte Carlo facilities [mc]:
 
     xxx-grad-test   Test the correctness of the energy gradient computations
     xxx-stepsizes   Display and evaluate stepsizes used for dynamics
+    xxx-genp        Generate random momentum variables
 
 
 Markov chain sampling for a specified distribution [dist]:

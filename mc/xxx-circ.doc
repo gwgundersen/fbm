@@ -1,0 +1,59 @@
+
+
+XXX-CIRC:  Do a circularly-coupled Markov chain simulation.
+
+There is a version of this program for each 'mc' application (eg,
+net-circ).  Version "xxx" does a circularly-coupled Markov chain
+simulation with multiple starting points, either sequentially or in
+parallel, using the xxx-gen, xxx-genp, xxx-mc, and xxx-tbl programs.
+
+Usage:
+
+    xxx-circ [ -p ] log-file n-chains n-iters max-stages [ seed ]
+
+Runs and reruns <n-chains> Monte Carlo simulations of type <xxx>
+(eg, dist, net, gp, mix), using the specifications in <log-file>,
+coupling them so as to produce a circular chain if coalesence occurs.
+The (up to) n-chains simulations done in each stage will be run in
+parallel (assuming enough processors) if the -p option is given.
+
+Each chain uses a different random number seed (derived from the
+optional seed argument, which defaults to 1), and is started initially
+from a state generated using the xxx-gen program.  After <n-iters>
+iterations of this first stage simulation, using the xxx-mc program,
+the final state of each simulation is compared to the initial state of
+the next simulation in order (wrapping from last to first), and the
+simulation as a whole is stopped if all these comparisons come out
+equal.  Otherwise, another stage is done, in which simulations are
+rerun (if necessary) with their initial state being the final state of
+the previous simulation, and with the random number seed again set to
+its initial value.  A new run is not done for those chains whose
+initial state would be the same as before, since the new run would be
+indentical to the old run.  This process of rerunning simulations
+continues until all chains have coalesed or until <max-stages>
+simulation runs have been done for each chain (as necessary).  In each
+stage after the first, the runs are done using xxx-mc with the -c
+option (see xxx-mc.doc), so that they will terminate early if
+coalescence occurs in the middle of a run.
+
+Details of which simulations were run, and of how many iterations each
+took (before possible coalescence), are written to standard output.  A
+one-line summary is written to standard error.
+
+The states from runs in the final stage are appended to the original
+<log-file>, to produce the circular chain.  This is the log file that
+should be used when estimating expectations of functions of state.
+
+Separate log files are also produced for every simulaton run of every
+chain, called <log-file>.<stage>.<chain>, where <stage> and <chain>
+are integers from 0 on up.  Some of these files may be links to runs
+from earlier stages, when the initial state did not change, leading to
+the run being the same as the previous one.  Log files tracing the
+simulations from each initial state are also produced, called
+<log-file>:<chain>, where <chain> is an integer from 0 on up
+identifing the chain where the initial state was first used.
+
+The exit value is 1 if <max-stages> was reached without coalescence
+occuring, and is zero (indicating success) if coalescence did occur.
+
+            Copyright (c) 2000 by Radford M. Neal

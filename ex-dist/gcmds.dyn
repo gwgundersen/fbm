@@ -8,4 +8,4 @@
 dist-spec glog.dyn,$1 \
   "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
 mc-spec glog.dyn,$1 repeat 40 heatbath 0.98 dynamic 1 $1 end
-dist-mc glog.dyn,$1 500
+dist-mc glog.dyn,$1 2000

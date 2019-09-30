@@ -1,6 +1,6 @@
 /* MC-SPEC.C - Specify parameters of Markov chain Monte Carlo simulation. */
 
-/* Copyright (c) 1995, 1996, 1998 by Radford M. Neal 
+/* Copyright (c) 1995-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -168,13 +168,89 @@ main
       ap += 1;
     }
 
-    else if (strcmp(*ap,"metropolis")==0)
+    else if (strcmp(*ap,"metropolis")==0 || strcmp(*ap,"met")==0
+          || strcmp(*ap,"rgrid-met")==0)
     {
-      ops->op[o].type = 'M';
+      ops->op[o].type = 
+         strcmp(*ap,"metropolis")==0 || strcmp(*ap,"met")==0 ? 'M' : 'G';
       ops->op[o].stepsize_adjust = 1;
       ops->op[o].stepsize_alpha = 0;
+      ops->op[o].b_accept = 0;
+      ops->op[o].r_update = 0;
 
       ap += 1;
+
+      while (*ap && (*ap)[0]=='-' 
+          && strchr("abcdefghijklmnopqrstuvwxyz",(*ap)[1]))
+      { if (strcmp("-b",*ap)==0)
+        { ops->op[o].b_accept = 1;
+        }
+        else
+        { usage();
+        }
+        ap += 1;
+      }
+
+      if (*ap && strchr("0123456789+-.",**ap))
+      { if ((ops->op[o].stepsize_adjust = atof(*ap))==0) usage();
+        if (strchr(*ap,':')!=0)
+        { if ((ops->op[o].stepsize_alpha = atof(strchr(*ap,':')+1))==0) usage();
+        }
+        ap += 1;
+      }
+    }
+
+    else if (strcmp(*ap,"slice")==0)
+    {
+      ops->op[o].type = 'l';
+      ops->op[o].stepsize_adjust = 1;
+      ops->op[o].stepsize_alpha = 0;
+      ops->op[o].g_shrink = 0;
+
+      ap += 1;
+
+      while (*ap && (*ap)[0]=='-' 
+     && strchr("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",(*ap)[1]))
+      { if (strcmp("-g",*ap)==0)
+        { ops->op[o].g_shrink = 1;
+        }
+        else if (strcmp("-G",*ap)==0)
+        { ops->op[o].g_shrink = 2;
+        }
+        else
+        { usage();
+        }
+        ap += 1;
+      }
+
+      if (*ap && strchr("0123456789+-.",**ap))
+      { if ((ops->op[o].stepsize_adjust = atof(*ap))==0) usage();
+        if (strchr(*ap,':')!=0)
+        { if ((ops->op[o].stepsize_alpha = atof(strchr(*ap,':')+1))==0) usage();
+        }
+        ap += 1;
+      }
+    }
+
+    else if (strcmp(*ap,"slice-gaussian")==0)
+    {
+      ops->op[o].type = 'u';
+      ops->op[o].stepsize_adjust = 1;
+      ops->op[o].stepsize_alpha = 0;
+      ops->op[o].e_shrink = 0;
+
+      ap += 1;
+
+      while (*ap && (*ap)[0]=='-' 
+     && strchr("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",(*ap)[1]))
+      { if (strcmp("-e",*ap)==0)
+        { ops->op[o].e_shrink = 1;
+        }
+        else
+        { usage();
+        }
+        ap += 1;
+      }
 
       if (*ap && strchr("0123456789+-.",**ap))
       { if ((ops->op[o].stepsize_adjust = atof(*ap))==0) usage();
@@ -186,13 +262,17 @@ main
     }
 
     else if (strcmp(*ap,"met-1")==0 
+          || strcmp(*ap,"rgrid-met-1")==0
           || strcmp(*ap,"slice-1")==0
           || strcmp(*ap,"slice-over")==0)
     {
       ops->op[o].type = strcmp(*ap,"met-1")==0 ? 'm'
+                      : strcmp(*ap,"rgrid-met-1")==0 ? 'g'
                       : strcmp(*ap,"slice-1")==0 ? 'S' : 'O';
                       
       ops->op[o].refinements = 0;
+      ops->op[o].b_accept = 0;
+      ops->op[o].r_update = 0;
       ops->op[o].refresh_prob = 0.0;
       ops->op[o].stepsize_adjust = 1;
       ops->op[o].stepsize_alpha = 0;
@@ -200,6 +280,21 @@ main
       ops->op[o].firsti = -1;
 
       ap += 1;
+
+      while (*ap && (*ap)[0]=='-' 
+          && strchr("abcdefghijklmnopqrstuvwxyz",(*ap)[1]))
+      { if (strcmp("-b",*ap)==0 
+             && (ops->op[o].type=='m' || ops->op[o].type=='g'))
+        { ops->op[o].b_accept = 1;
+        }
+        else if (strcmp("-r",*ap)==0)
+        { ops->op[o].r_update = 1;
+        }
+        else
+        { usage();
+        }
+        ap += 1;
+      }
 
       if (ops->op[o].type=='O')
       { 
@@ -501,7 +596,7 @@ main
     { 
       traj->type = '2';
       traj->rev_sym = 0;
-      traj->halfp = 0;
+      traj->halfp = 1;
 
       ap += 1;
 
@@ -530,7 +625,7 @@ main
     { 
       traj->type = 'G';
       traj->rev_sym = 0;
-      traj->halfp = 0;
+      traj->halfp = 1;
 
       ap += 1;
 
@@ -665,8 +760,11 @@ static void display_specs
           break;
         }
   
-        case 'M': 
-        { printf (" metropolis");
+        case 'M': case 'G':
+        { printf (ops->op[o].type=='M' ? " metropolis" : " rgrid-met");
+          if (ops->op[o].b_accept)
+          { printf(" -b");
+          }
           if (ops->op[o].stepsize_alpha!=0)
           { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
                                   ops->op[o].stepsize_alpha);
@@ -678,8 +776,55 @@ static void display_specs
           break;
         }
 
-        case 'm':
-        { printf(" met-1");
+        case 'l':
+        { printf (" slice");
+          if (ops->op[o].g_shrink==1)
+          { printf(" -g");
+          }
+          else if (ops->op[o].g_shrink==2)
+          { printf(" -G");
+          }
+          else if (ops->op[o].g_shrink!=0)
+          { printf(" -???");
+          }
+          if (ops->op[o].stepsize_alpha!=0)
+          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
+                                  ops->op[o].stepsize_alpha);
+          }
+          else if (ops->op[o].stepsize_adjust!=1)
+          { printf(" %.4f",ops->op[o].stepsize_adjust);
+          }
+          printf("\n");
+          break;
+        }
+
+        case 'u':
+        { printf (" slice-gaussian");
+          if (ops->op[o].e_shrink==1)
+          { printf(" -e");
+          }
+          else if (ops->op[o].g_shrink!=0)
+          { printf(" -???");
+          }
+          if (ops->op[o].stepsize_alpha!=0)
+          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
+                                  ops->op[o].stepsize_alpha);
+          }
+          else if (ops->op[o].stepsize_adjust!=1)
+          { printf(" %.4f",ops->op[o].stepsize_adjust);
+          }
+          printf("\n");
+          break;
+        }
+
+        case 'm': case 'g':
+        { printf(ops->op[o].type=='m' ? " met-1" : " rgrid-met-1");
+          if (ops->op[o].b_accept)
+          { printf(" -b");
+          }
+          if (ops->op[o].r_update)
+          { printf(" -r");
+          }
           if (ops->op[o].stepsize_alpha!=0)
           { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
                                   ops->op[o].stepsize_alpha);
@@ -745,6 +890,9 @@ static void display_specs
 
         case 'S':
         { printf(" slice-1");
+          if (ops->op[o].r_update)
+          { printf(" -r");
+          }
           if (ops->op[o].stepsize_alpha!=0)
           { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
                                 ops->op[o].stepsize_alpha);
@@ -769,6 +917,9 @@ static void display_specs
     
         case 'O':
         { printf(" slice-over");
+          if (ops->op[o].r_update)
+          { printf(" -r");
+          }
           if (ops->op[o].refinements!=0
            || ops->op[o].refresh_prob!=0 
            || ops->op[o].stepsize_alpha!=0

@@ -14,11 +14,13 @@
 include ../make.include
 
 programs:	dist-spec dist-mc dist-plt dist-tbl dist-hist dist-grad-test \
-		dist-stepsizes dist-initial dist-display dist-est dist-gen
+		dist-stepsizes dist-initial dist-display dist-est dist-gen \
+		dist-genp
 
 clean:
 	rm -f *.o dist-spec dist-mc dist-plt dist-tbl dist-hist dist-grad-test \
-	          dist-stepsizes dist-initial dist-display dist-est dist-gen
+	          dist-stepsizes dist-initial dist-display dist-est dist-gen \
+		  dist-genp
 
 
 include ../util/util.make
@@ -55,6 +57,21 @@ dist-stepsizes:	dist-stepsizes.o dist-mc.o dist-util.o dist-plt.o digamma.o \
                   mc-metropolis.o mc-hybrid.o mc-slice.o mc-util.o dist-plt.o\
                   mc-quantities.o data-trans.o digamma.o \
 		  -lm -o dist-stepsizes
+
+dist-stepsizes.o: dist-stepsizes.c misc.h log.h mc.h formula.h dist.h
+
+dist-genp:	mc-genp.o       dist-mc.o dist-util.o dist-plt.o digamma.o \
+				dist-quantities.o formula.o misc.o log.o \
+				rand.o quantities.o dist-data.o numin.o \
+				mc-iter.o mc-heatbath.o mc-metropolis.o \
+				mc-hybrid.o mc-slice.o mc-traj.o mc-util.o \
+				mc-quantities.o data-trans.o 
+		$(CC) $(LFLAGS) mc-genp.o dist-mc.o dist-util.o \
+		  dist-quantities.o formula.o misc.o log.o rand.o quantities.o \
+		  dist-data.o numin.o mc-traj.o mc-iter.o mc-heatbath.o \
+                  mc-metropolis.o mc-hybrid.o mc-slice.o mc-util.o dist-plt.o\
+                  mc-quantities.o data-trans.o digamma.o \
+		  -lm -o dist-genp
 
 dist-mc:	mc.o dist-mc.o	dist-plt.o dist-util.o dist-quantities.o \
 				formula.o misc.o log.o rand.o quantities.o \
@@ -137,6 +154,8 @@ dist-gen:	dist-gen.o	dist-util.o dist-data.o misc.o log.o formula.o \
 dist-gen.o:	dist-gen.c	misc.h log.h mc.h dist.h formula.h rand.h
 
 
-dist-utils.o:	dist-utils.c	misc.h log.h mc.h formula.h dist.h \
+dist-util.o:	dist-util.c	misc.h log.h mc.h formula.h dist.h \
 				data.h dist-data.h
+dist-quantities.o: dist-quantities.c misc.h log.h mc.h quantities.h formula.h \
+                                     data.h dist.h dist-data.h
 dist-data.o:	dist-data.c	misc.h log.h data.h numin.h dist-data.h

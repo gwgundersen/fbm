@@ -1,6 +1,6 @@
 # MAKEFILE FOR MARKOV CHAIN MONTE CARLO, FOR INCLUSION IN OTHER MAKEFILES
 
-# Copyright (c) 1995, 1996 by Radford M. Neal 
+# Copyright (c) 1995-2000 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 
@@ -33,6 +33,8 @@ mc-grad-test.c:
 	ln -s ../mc/mc-grad-test.c .
 mc-stepsizes.c:
 	ln -s ../mc/mc-stepsizes.c .
+mc-genp.c:
+	ln -s ../mc/mc-genp.c .
 mc.c:
 	ln -s ../mc/mc.c .
 

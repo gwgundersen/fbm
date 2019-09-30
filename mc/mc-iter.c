@@ -1,6 +1,6 @@
 /* MC-ITER.C - Procedures for performing Markov chain Monte Carlo iterations. */
 
-/* Copyright (c) 1995, 1996, 1998 by Radford M. Neal 
+/* Copyright (c) 1995-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -52,6 +52,13 @@ static int need_save;	/* Do we need space to save q and (maybe) p? */
 static mc_value *q_save;/* Place to save q */
 static mc_value *p_save;/* Place to save p */
 
+static int need_lowhigh;/* Do we need space for low and high bounds? */
+static mc_value *lowb;	/* Place to store low bound (for "slice") */
+static mc_value *highb;	/* Place to store high bound (for "slice") */
+
+static int need_wsum;	/* Do we need space to save weighted sum of crumbs? */
+static mc_value *wsum;	/* Place to store wsum (for "slice-gaussian") */
+
 static int need_savet;	/* Do we need space to save for tempered transitions? */
 static mc_value *q_savet;/* Place to save q for tempered transitions */
 static mc_value *p_savet;/* Place to save p for tempered transitions */
@@ -64,24 +71,6 @@ static mc_value *q_rsv;	/* Place to save q values for reject state */
 static mc_value *p_rsv;	/* Place to save p values for reject state */
 
 static int print_index;	/* Index used to label printed quantities */
-
-
-/* EXTERNAL PROCEDURES IMPLEMENTING OPERATIONS. */
-
-void mc_metropolis (mc_dynamic_state *, mc_iter *, mc_value *);
-void mc_met_1 (mc_dynamic_state *, mc_iter *, int, int);
-void mc_slice_1 (mc_dynamic_state *, mc_iter *, int, int, int);
-void mc_slice_over (mc_dynamic_state *, mc_iter *, int, float, int, int, int);
-void mc_slice_inside (mc_dynamic_state *, mc_iter *, int, 
-                      mc_value *, mc_value *);
-void mc_slice_outside (mc_dynamic_state *, mc_iter *, int, int,
-                       mc_value *, mc_value *);
-void mc_hybrid (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int, double,
-  int, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *);
-void mc_hybrid2 (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int, 
-                 mc_value *, mc_value *);
-void mc_spiral (mc_dynamic_state *, mc_iter *, mc_traj *, int, double, int,
-                mc_value *, mc_value *, mc_value *, mc_value *);
 
 
 /* LOCAL PROCEDURES.  Tempering procedures are included in this module
@@ -125,7 +114,9 @@ void mc_iter_init
   tj = tj0;
   sch = sch0;
 
-  need_p = need_grad = need_save = need_savet = need_arsv = 0;
+  need_p = need_grad = need_save = need_lowhigh = need_wsum =
+           need_savet = need_arsv = 0;
+
   does_print = 0;
 
   depth = 0;
@@ -151,19 +142,16 @@ void mc_iter_init
       endp[i] = stack[depth];
     }
 
-    if (type=='B' || type=='N' || type=='D' || type=='P' || type=='h'
-     || type=='H' || type=='T' || type=='@' || type=='^' || type=='i' 
-     || type=='o' || type=='r' || type=='*' || type=='=')
+    if (strchr(MC_needs_p,type)!=0)
     { need_p = 1;
     }
 
-    if (type=='D' || type=='P' || type=='H' || type=='T' || type=='@'
-     || type=='^' || type=='h' || type=='i' || type=='o')
+    if (strchr(MC_needs_grad,type)!=0 && (type!='l' || ops->op[i].g_shrink!=0))
     { need_grad = 1;
     }
 
     if (type=='M' || type=='H' || type=='T' || type=='@' || type=='^'
-     || type=='i' || type=='o')
+     || type=='i' || type=='o' || type=='G' || type=='l' || type=='u')
     { need_save = 1;
     }
 
@@ -173,6 +161,14 @@ void mc_iter_init
 
     if (type=='t')
     { need_savet = 1;
+    }
+
+    if (type=='l')
+    { need_lowhigh = 1;
+    }
+
+    if (type=='u')
+    { need_wsum = 1;
     }
 
     if (type=='p') 
@@ -192,6 +188,15 @@ void mc_iter_init
   if (need_save)
   { q_save = chk_alloc (ds->dim, sizeof *q_save);
     p_save = chk_alloc (ds->dim, sizeof *p_save);
+  }
+
+  if (need_lowhigh)
+  { lowb  = chk_alloc (ds->dim, sizeof *lowb);
+    highb = chk_alloc (ds->dim, sizeof *highb);
+  }
+
+  if (need_wsum)
+  { wsum = chk_alloc (ds->dim, sizeof *lowb);
   }
 
   if (need_savet)
@@ -316,7 +321,9 @@ static void do_group
 
     if (type=='M' || type=='m' || type=='S' || type=='O' 
      || type=='D' || type=='P' || type=='H' || type=='T'
-     || type=='@' || type=='^' || type=='i' || type=='o' || type=='h')
+     || type=='@' || type=='^' || type=='i' || type=='o' 
+     || type=='h' || type=='G' || type=='g' || type=='l'
+     || type=='u')
     { 
       stepsize_adjust = ops->op[i].stepsize_adjust;
       alpha = ops->op[i].stepsize_alpha;
@@ -376,12 +383,24 @@ static void do_group
       }
 
       case 'M': 
-      { mc_metropolis(ds,it,q_save);
+      { mc_metropolis(ds,it,q_save,ops->op[i].b_accept);
+        break;
+      }
+
+      case 'G': 
+      { mc_rgrid_met(ds,it,q_save,ops->op[i].b_accept);
         break;
       }
 
       case 'm':
-      { mc_met_1(ds,it,ops->op[i].firsti,ops->op[i].lasti);
+      { mc_met_1(ds,it,ops->op[i].firsti,ops->op[i].lasti,
+                 ops->op[i].b_accept, ops->op[i].r_update);
+        break;
+      }
+
+      case 'g':
+      { mc_rgrid_met_1(ds,it,ops->op[i].firsti,ops->op[i].lasti,
+                       ops->op[i].b_accept, ops->op[i].r_update);
         break;
       }
 
@@ -426,13 +445,24 @@ static void do_group
 
       case 'S':
       { mc_slice_1 (ds, it, ops->op[i].firsti, ops->op[i].lasti, 
-                    ops->op[i].steps);
+                    ops->op[i].steps, ops->op[i].r_update);
+        break;
+      }
+
+      case 'l':
+      { mc_slice (ds, it, q_save, lowb, highb, ops->op[i].g_shrink);
+        break;
+      }
+
+      case 'u':
+      { mc_slice_gaussian (ds, it, q_save, wsum, ops->op[i].e_shrink);
         break;
       }
 
       case 'O':
       { mc_slice_over (ds, it, ops->op[i].refinements, ops->op[i].refresh_prob,
-                       ops->op[i].firsti, ops->op[i].lasti, ops->op[i].steps);
+                       ops->op[i].firsti, ops->op[i].lasti, ops->op[i].steps,
+                       ops->op[i].r_update);
         break;
       }
 
@@ -591,7 +621,7 @@ void mc_simulated_tempering
   mc_iter *it		/* Description of this iteration */
 )
 {
-  double old_energy, olde, newe;
+  double old_energy, olde, newe, U;
 
   mc_temp_present(ds,sch);
 
@@ -627,7 +657,9 @@ void mc_simulated_tempering
   it->proposals += 1;
   it->delta = newe - olde;
 
-  if (it->delta<=0 || rand_uniform() < exp(-it->delta/it->temperature))
+  U = rand_uniform(); /* Do every time to keep in sync for coupling purposes */
+
+  if (it->delta<=0 || U<exp(-it->delta/it->temperature))
   { 
     it->move_point = 1;
     ds->temp_state->temp_dir = -ds->temp_state->temp_dir;
@@ -660,7 +692,7 @@ void mc_tempered_transition
 {
   double down[Max_temps];
   mc_temp_state ts;
-  double delta, ed, b1, b2;
+  double delta, ed, b1, b2, U;
   int quad0, quad1;
   int i1, i2;
 
@@ -772,7 +804,9 @@ void mc_tempered_transition
   it->proposals += 1;
   it->delta = delta;
 
-  if (delta<=0 || rand_uniform() < exp(-delta/it->temperature))
+  U = rand_uniform(); /* Do every time to keep in sync for coupling purposes */
+
+  if (delta<=0 || U<exp(-delta/it->temperature))
   { 
     it->move_point = 1;
 

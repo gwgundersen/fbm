@@ -46,22 +46,25 @@ posterior density for a Bayesian model, whose parameters are a subset
 of the state variables (of the same form as described above).  The
 model is specified by giving formulas for minus the log of the prior
 density and for minus the log likelihood for a single observation.
-Observations are assumed to be independent.  The inputs for an
-observation are referred to by the names i0, i1, etc., with i being a
-synonym for i0.  The targets are referred to by t0, t1, etc., with t
-being a synonym for t0.  There can be at most ten inputs or targets
-(ie, up to i9 and t9).  These variables are rebound to the inputs and
-targets for each observation in turn, and the formula for minus the
-log likelihood is re-evaluated for each observation.  Note that, by
-convention, the model describes the conditional distribution of the
-targets (aka the response variables), given values for the inputs (aka
-the predictor variables, or covariates), if any.
 
-When the distribution is a Bayesian posterior, a data specification
-will normally be provided (see <A HREF="data-spec.html">data-spec.doc</A>), giving the source of
-the observations.  If none is specified, it is assumed that there are
-no observations, in which case the posterior distribution is the same
-as the prior.
+The likelihood may be given as a single formula, in which any data
+values are written explicitly, as constants.  In this case, no
+data-spec command should be given later.  More typically, the formula
+given for the likelihood is for one of a set of independent
+observations, which are read from the files specified by a later
+data-spec command (see <A HREF="data-spec.html">data-spec.doc</A>).  The inputs for an observation
+are referred to by the names i0, i1, etc., with i being a synonym for
+i0.  The targets are referred to by t0, t1, etc., with t being a
+synonym for t0.  There can be at most ten inputs or targets (ie, up to
+i9 and t9).  These variables are rebound to the inputs and targets for
+each observation in turn, and the formula for minus the log likelihood
+is re-evaluated for each observation.  Note that, by convention, the
+model describes the conditional distribution of the targets (aka the
+response variables), given values for the inputs (aka the predictor
+variables, or covariates), if any.  If no data-spec command is given
+when the likelihood refers to "i" or "t" variables, it is assumed that
+there are no observations, in which case the posterior distribution is
+the same as the prior.
 
 For the syntax of formulas, see <A HREF="formula.html">formula.doc</A>.  Although all state
 variables are unbounded real values, the effect of a non-negative
@@ -101,17 +104,17 @@ only when it is specified as a sum of terms of the form v~D(...),
 where D is one of the parameterized distributions as described in
 <A HREF="formula.html">formula.doc</A>, and where the parameters of the distribution refer only
 to variables whose distributions are given in earlier terms.  Sampling
-from the prior is needed to perform Annealed Importance Sampling.
-Sampling from the prior can also be done just for its own interest, or
-to initialize Markov chain sampling.  See <A HREF="dist-gen.html">dist-gen.doc</A> for how to do
-this.  If the prior does not have the form that allows automatic
-sampling, prior generation can be done only if the -read-prior option
-is given, in which case points from the prior are obtained by reading
-from standard input, which must be a file of points, or a pipe from a
-separate program for sampling from the prior.  See <A HREF="dist-mc.html">dist-mc.doc</A> for
-details.
+from the prior is needed to perform Annealed Importance Sampling, and
+for sampling initial states in xxx-circ.  Sampling from the prior can
+also be done just for its own interest, or to initialize an ordinary
+Markov chain sampling run.  See <A HREF="dist-gen.html">dist-gen.doc</A> for how to do this.  If
+the prior does not have the form that allows automatic sampling, prior
+generation can be done only if the -read-prior option is given, in
+which case points from the prior are obtained by reading from standard
+input, which must be a file of points, or a pipe from a separate
+program for sampling from the prior.  See <A HREF="dist-mc.html">dist-mc.doc</A> for details.
 
-            Copyright (c) 1998 by Radford M. Neal
+            Copyright (c) 1998-2000 by Radford M. Neal
 </pre>
 </body>
 </html>

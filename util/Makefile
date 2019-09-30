@@ -1,6 +1,6 @@
 # MAKEFILE FOR UTILITY PROGRAMS AND MODULES.
 
-# Copyright (c) 1995, 1996, 1997, 1998 by Radford M. Neal 
+# Copyright (c) 1995, 1996, 1997, 1998, 2000 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 
@@ -16,14 +16,14 @@ include ../make.include
 all:		programs modules
 
 programs:	data-spec model-spec log-records log-copy log-append log-last \
-		rand-seed grid series extract combine find-min calc
+		log-equal rand-seed grid series extract combine find-min calc
 
 modules:	misc.o matrix.o log.o quantities.o plt.o hist.o rand.o numin.o \
 		data-trans.o model.o prior.o ars.o digamma.o
 
 clean:
 	rm -f *.o data-spec model-spec log-records log-copy log-append log-last\
-	          rand-seed grid series extract combine find-min calc
+	          log-equal rand-seed grid series extract combine find-min calc
 
 
 include util.make
@@ -83,6 +83,12 @@ log-append:	log-append.o	log.o misc.o
 		$(CC) $(LFLAGS) log-append.o log.o misc.o -lm -o log-append
 
 log-append.o:	log-append.c	misc.h log.h
+
+
+log-equal:	log-equal.o	log.o
+		$(CC) $(LFLAGS) log-equal.o log.o -lm -o log-equal
+
+log-equal.o:	log-equal.c	log.h
 
 
 rand-seed:	rand-seed.o	log.o rand.o

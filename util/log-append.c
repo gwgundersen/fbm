@@ -1,6 +1,6 @@
 /* LOG-APPEND.C - Append records from one log file to another log file. */
 
-/* Copyright (c) 1997 by Radford M. Neal 
+/* Copyright (c) 1997-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -33,8 +33,29 @@ main
 {
   log_file logf_in, logf_out;
   int low, high, modulus;
-  int last, index;
+  int last, index, position;
+  char junk;
   void *data;
+  char *ignore;
+
+  ignore = "";
+  if (argc>1 && *argv[1]=='-')
+  { ignore = argv[1]+1;
+    argc -= 1;
+    argv += 1;
+  }
+
+  position = -1;
+
+  if (strcmp(argv[argc-1],"-")==0 
+   || sscanf(argv[argc-1],"%d%c",&position,&junk)==1)
+  { 
+    if (strcmp(argv[argc-1],"-")==0)
+    { position = -2;
+    }
+
+    argc -=1 ;
+  }
 
   if (argc!=3 && argc!=4) usage();
 
@@ -69,8 +90,9 @@ main
   log_file_open(&logf_out,1);
   log_file_last(&logf_out);
 
-  index = logf_out.at_end || logf_out.header.index<0 ? -1 
-        : logf_out.header.index; 
+  index = position>=0 ? position-1
+        : logf_out.at_end || logf_out.header.index<0 ? -1 
+        : position==-2 ? logf_out.header.index-1 : logf_out.header.index; 
 
   last = -1;
 
@@ -80,7 +102,8 @@ main
   {
     data = 0;
 
-    if (logf_in.header.index>=low && logf_in.header.index%modulus==0)
+    if (!strchr(ignore,logf_in.header.type) &&
+        logf_in.header.index>=low && logf_in.header.index%modulus==0)
     { 
       data = malloc(logf_in.header.size);
       if (data==0)
@@ -122,6 +145,6 @@ main
 void usage(void)
 { 
   fprintf(stderr,
-    "Usage: log-append input-log-file [ range ] output-log-file\n");
+  "Usage: log-append [ -ignoredtype... ] logfile-in [ range ] logfile-out [ index ]\n");
   exit(1);
 }

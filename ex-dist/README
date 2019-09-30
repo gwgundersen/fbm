@@ -1,6 +1,5 @@
 This directory contains command files for the examples of Markov
 sampling from simple distributions.  The command files match the
-commands given in the documentation, except that for all but 'ncmds',
-the stepsize to use is given as an argument to the command file.  Note
-that the log files (other than 'nlog') also include the stepsize as
-part of the name.
+commands given in the documentation, except that the stepsize to use
+is given as an argument to the command file, and the log files include
+the stepsize as part of the name.

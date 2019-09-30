@@ -1,6 +1,6 @@
 /* DIST-UTIL.C - Utilities for programs that sample a specified distribution. */
 
-/* Copyright (c) 1998 by Radford M. Neal 
+/* Copyright (c) 1998-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -131,7 +131,6 @@ double dist_prior
 double dist_likelihood
 ( dist_spec *dst,	/* Specification of the distribution */
   int c,		/* Number of training case (from 0) */
-
   double inv_temp,	/* Factor to multiply log likelihood by */
   double *grad		/* Place to add gradient to, null if not wanted */
 )

@@ -1,6 +1,6 @@
 /* DIST-EST.C - Program to estimate the expectation of a function of state. */
 
-/* Copyright (c) 1998 by Radford M. Neal 
+/* Copyright (c) 1998-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -293,7 +293,7 @@ main
   }
 
   v_var /= n_points;
-  var_est_std /= n_points*n_points;
+  var_est_std /= (double)n_points*n_points;
 
   if (n_points>1)
   { 

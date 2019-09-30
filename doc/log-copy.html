@@ -12,14 +12,16 @@ middle of writing a record.
 
 Usage:
 
-   log-copy input-log-file range output-log-file [ low[%mod] ]
+   log-copy [ -ignoredtype... ] logfile-in range logfile-out [ low[%mod] ]
 
 Records with negative indexes or with indexes in the indicated range
-are copied from input-log-file to a newly-created output-log-file.
-The range has the usual form of [low][:[high]][%modulus], as described
-in parse_range in misc.c.  If high and the colon are omitted, high
-defaults to low.  If high is omitted but the colon is present, the
-range extends to the end of the file.
+are copied from logfile-in to a newly-created logfile-out, except that
+records with the types given in the optional first argument are
+ignored.  (See <A HREF="log-types.html">log-types.doc</A> for a listing of conventionally-used
+record types.).  The range has the usual [low][:[high]][%modulus]
+form, as described in parse_range in misc.c.  If high and the colon
+are omitted, high defaults to low.  If high is omitted but the colon
+is present, the range extends to the end of the file.
 
 If the optional trailing argument is present, the indexes of the
 records written (other than those with negative indexes) are changed
@@ -30,7 +32,7 @@ range.
 As a special fudge, an input file range of "-" causes only records
 with negative indexes to be copied.
 
-            Copyright (c) 1995 by Radford M. Neal
+            Copyright (c) 1995-2000 by Radford M. Neal
 </pre>
 </body>
 </html>

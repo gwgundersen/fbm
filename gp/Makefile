@@ -13,12 +13,14 @@
 
 include ../make.include
 
-programs:	gp-spec gp-gen gp-display gp-eval gp-plt gp-hist gp-mc gp-pred \
-		gp-cov gp-eigen gp-stepsizes gp-grad-test gp-tbl
+programs:	gp-spec gp-gen gp-display gp-eval gp-plt gp-hist gp-mc \
+		gp-pred gp-cov gp-eigen gp-stepsizes gp-grad-test gp-tbl \
+		gp-genp
 
 clean:
 	rm -f *.o gp-spec gp-gen gp-display gp-eval gp-plt gp-hist gp-mc \
-	          gp-pred gp-cov gp-eigen gp-stepsizes gp-grad-test gp-tbl
+	          gp-pred gp-cov gp-eigen gp-stepsizes gp-grad-test gp-tbl \
+		  gp-genp
 
 
 include ../util/util.make
@@ -131,6 +133,20 @@ gp-stepsizes:	mc-stepsizes.o	gp-mc.o gp-plt.o misc.o log.o rand.o \
 		  prior.o gp-prior.o gp-data.o model.o gp-util.o gp-like.o \
 		  gp-plt.o gp-quantities.o mc-quantities.o quantities.o \
 		  matrix.o ars.o gp-covm.o -lm -o gp-stepsizes
+
+gp-genp:	mc-genp.o	gp-mc.o gp-plt.o misc.o log.o rand.o \
+				numin.o data-trans.o mc-iter.o mc-traj.o \
+				mc-util.o mc-heatbath.o matrix.o ars.o \
+				mc-metropolis.o mc-hybrid.o mc-slice.o \
+				prior.o gp-prior.o gp-data.o gp-covm.o \
+				model.o gp-util.o gp-quantities.o gp-like.o \
+				mc-quantities.o quantities.o
+		$(CC) $(LFLAGS) mc-genp.o gp-mc.o misc.o log.o \
+		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
+		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
+		  prior.o gp-prior.o gp-data.o model.o gp-util.o gp-like.o \
+		  gp-plt.o gp-quantities.o mc-quantities.o quantities.o \
+		  matrix.o ars.o gp-covm.o -lm -o gp-genp
 
 gp-grad-test:	mc-grad-test.o	gp-mc.o gp-plt.o misc.o log.o rand.o \
 				numin.o data-trans.o mc-iter.o mc-traj.o \

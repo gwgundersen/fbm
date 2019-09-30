@@ -10,7 +10,8 @@ may be constant through time (for each case), or it may change over
 time.  The data may be censored - ie, for some cases, it may be known
 only that the individual survived for at least a certain time.
 
-The details of these models are described in model-spec.doc.
+The details of these models are described in model-spec.doc.  Command
+files for the examples below are found in the ex-surv directory.
 
 Please note that this part of the software is somewhat experimental,
 and may have more bugs than the other parts.

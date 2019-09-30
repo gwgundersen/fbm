@@ -1,6 +1,6 @@
 /* FORMULA.C - Parse and evaluate a mathematical formula. */
 
-/* Copyright (c) 1998 by Radford M. Neal 
+/* Copyright (c) 1998-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -227,7 +227,7 @@ static double term
   double gr2[26][11];
   double v, v2;
   char op;
-  int k;
+  int grnz, k;
 
   v = factor(gr);
 
@@ -236,8 +236,17 @@ static double term
   { 
     op = *nch;
     if (op=='*' || op=='/') next();
+ 
+    if (v==0 && gradvars)
+    { grnz = 0;
+      for (k = 0; k<n_gv && !grnz; k++)
+      { if (gr [c_gv[k]] [i_gv[k]] != 0)
+        { grnz = 1;
+        }
+      }
+    }
 
-    if (v!=0 || gradvars) 
+    if (v!=0 || gradvars && grnz) 
     { v2 = factor(gr2);
     }
     else
@@ -248,7 +257,7 @@ static double term
     }
 
     if (op=='/')
-    { if (gradvars)
+    { if (gradvars && (v!=0 || grnz))
       { for (k = 0; k<n_gv; k++)
         { gr [c_gv[k]] [i_gv[k]] = gr [c_gv[k]] [i_gv[k]] / v2
                                  - v * gr2 [c_gv[k]] [i_gv[k]] / (v2*v2);
@@ -259,7 +268,7 @@ static double term
       }
     }
     else 
-    { if (gradvars)
+    { if (gradvars && (v!=0 || grnz))
       { for (k = 0; k<n_gv; k++)
         { gr [c_gv[k]] [i_gv[k]] = gr [c_gv[k]] [i_gv[k]] * v2
                                  + v * gr2 [c_gv[k]] [i_gv[k]];

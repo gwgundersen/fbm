@@ -1,0 +1,9 @@
+
+# Example of circularly-coupled simulation for the Cauchy model, using
+# many starting points.  A random number seed may be specified as an
+# (optional) argument.
+
+dist-spec clog.circ "u~Normal(0,20^2)" "Log[1+(u-18)^2] + Log[1+(u-25)^2]"
+mc-spec   clog.circ rgrid-met 5
+dist-circ clog.circ 10 50 5 $1
+

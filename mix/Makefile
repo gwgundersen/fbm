@@ -14,16 +14,18 @@
 include ../make.include
 
 programs:	mix-spec mix-gen mix-display mix-cases mix-mc \
-		mix-plt mix-tbl mix-hist 
+		mix-plt mix-tbl mix-hist mix-genp
 
 clean:
 	rm -f *.o mix-spec mix-gen mix-display mix-cases mix-mc \
-	          mix-plt mix-tbl mix-hist 
+	          mix-plt mix-tbl mix-hist mix-genp
 
 
 include ../util/util.make
 include ../mc/mc.make
 
+mix-genp: 	# Just a stub, since standard mc methods aren't currently used
+		echo >mix-genp; chmod 755 mix-genp
 
 mix-spec:	mix-spec.o	mix-util.o prior.o misc.o log.o rand.o
 		$(CC) $(LFLAGS) mix-spec.o mix-util.o \

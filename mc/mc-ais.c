@@ -1,6 +1,6 @@
 /* MC-AIS.C - Program to show how well Annealed Importance Sampling worked. */
 
-/* Copyright (c) 1998 by Radford M. Neal 
+/* Copyright (c) 1998-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -39,7 +39,7 @@ static void usage(void)
   fprintf(stderr,
    "Values: i=inv-temp T=temp I=temp-index m=mean-weight M=log(m) F=-log(m)\n");
   fprintf(stderr,
-   "  v=variance-of-norm-weights V=variance-of-log-weights a=adjusted-sample-size\n");
+   "  v=var(norm-wts) V=var(log-wts) W=log(1+var(norm-wts)) a=adj-sample-size\n");
   exit(1);
 }
 

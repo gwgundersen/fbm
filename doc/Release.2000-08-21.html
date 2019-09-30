@@ -1,0 +1,161 @@
+<html>
+<body>
+<pre>
+
+
+NOTES ON THE VERSION OF 2000-08-21
+
+Major features of this release:
+
+  o Simulations can (sometimes) be done using "circular coupling", as
+    described in my technical report on "Circularly-coupled Markov chain 
+    sampling".  Implementing this required a number of changes and additions
+    to the software.
+
+  o New multivariate slice sampling procedures have been implemented, 
+    described in my technical report on "Slice sampling" (a revision of
+    the earlier report on "Markov chain Monte Carlo methods based on 
+    `slicing' the density function").
+
+  o A new example has been added of sampling from a "funnel" distribution,
+    which demonstrates some problems with MCMC, and how slice sampling
+    can help overcome these problems.
+
+Various other less major changes have also been made.
+
+
+Changes in this version:
+
+1) A new xxx-circ command has been added (see <A HREF="xxx-circ.html">xxx-circ.doc</A>), which does a 
+   circularly-coupled simulation to produce a wrapped-around chain.  Multiple 
+   starting points are used in order to diagnose convergence problems.  The 
+   simulation can be done sequentially or in parallel. 
+
+2) A new xxx-wrap command has been added (see <A HREF="xxx-wrap.html">xxx-wrap.doc</A>), which does simple
+   simple circularly-coupled simulations with just one starting point.  It 
+   produces a wrapped-around chain starting from an existing log file for a 
+   standard simulation.
+
+3) Simple examples of circular coupling done using dist-wrap and dist-circ 
+   have been added.  See <A HREF="Ex-circ.html">Ex-circ.doc</A>.
+
+4) When acceptance decisions for Metropolis, hybrid Monte Carlo, and other
+   Markov chain operations are made, the random number sometimes required
+   is now ALWAYS generated, so as to keep the random number stream 
+   synchronized for two runs with the same random seed but different 
+   starting points.  Previously, this random number was not generated if
+   the energy change was negative, since acceptance was then guaranteed
+   regardless of the random number chosen, but this undermines coupling.
+
+   Note that some Markov chain operations are still not appropriate for
+   use in circularly-coupled simulations, including slice sampling operations
+   and updates for second-level neural network hyperparameters.
+
+   As a result of this change, redoing previous runs with the new version
+   will typically produce different results, but the distribution sampled
+   should be the same.
+
+5) New "rgrid-met" and "rgrid-met-1" operations have been added, designed to 
+   produce coalescence of coupled chains once they are close together.  
+   See <A HREF="mc-spec.html">mc-spec.doc</A> for details.
+
+6) A new xxx-genp program has been written that generates random momentum
+   variables (see <A HREF="xxx-genp.html">xxx-genp.doc</A>).  Such a program is not normally required, 
+   since momentum variables are generated automatically by xxx-mc if they 
+   don't exist and are needed, but explicit generation is needed to ensure
+   random number synchronization in xxx-circ. 
+
+7) A new log-equal program has been added that tests whether or not the
+   records stored at given indexes in given log files match exactly.  
+   This was needed to write xxx-circ.  See <A HREF="log-equal.html">log-equal.doc</A> for details.
+
+8) An option has been added to allow the indexes of records appended with
+   log-append to start with a specified index or the last existing index, 
+   rather than one past the last index.  This was needed to write xxx-circ.  
+   See <A HREF="log-append.html">log-append.doc</A> for details.
+
+9) Options have been added to log-copy and log-append to allow them to
+   ignore records of certain types.  This is for consistency with the new
+   log-equal command, and because it's needed for xxx-wrap.  For details,
+   see <A HREF="log-append.html">log-append.doc</A> and <A HREF="log-copy.html">log-copy.doc</A>.
+
+10) A "-b" option has been implemented for all the Metropolis updates, which
+    causes acceptance decisions to be made with the "Barker" / "Boltzmann"
+    function, rather than the usual Metropolis function.  This is so I could
+    see if this makes a difference to coalescence speed when coupling.  See
+    <A HREF="mc-spec.html">mc-spec.doc</A> for details.
+
+11) A "-r" option has been implemented for all single-variable Metropolis
+    and slice sampling updates, which causes just one randomly-chosen
+    variable to be updated each iteration, rather than all of them.  See
+    <A HREF="mc-spec.html">mc-spec.doc</A> for details.
+
+12) When doing single-variable slice sampling with slice-1 or slice-over
+    with max-steps set to 1, the random number for allocating steps to
+    the left or right is no longer generated, as it has no effect when 
+    max-steps is 1.  This will cause results of runs to differ in detail from 
+    before, due to the subsequent random number sequence differing.
+
+13) A "slice" and "slice-gaussian" operations that do multidimensional 
+    slice sampling have been added.  See <A HREF="mc-spec.html">mc-spec.doc</A> and my new tech
+    report on "Slice sampling".
+
+14) A new example of sampling from a "funnel" distribute has been added,
+    showing an interesting/disturbing problem, and how slice sampling can
+    help avoid it.
+
+15) The 'dist' module now allows specification of Bayesian models in which
+    the entire likelihood function is given as a formula, with the data
+    appearing in the formula as constants.  This is an alternative to
+    the normal method of giving a formula for the likelihood due to one
+    case, with the data for that case filled in from a data file.  See
+    <A HREF="dist-spec.html">dist-spec.doc</A> for details.
+
+16) The defaults for the get2 and opt2 trajectory computation methods 
+    have been changed to "firstp" - ie, update the momentum first.  This
+    is for consistence with the leapfrog method, and because this is
+    sometimes better than "firstq".  
+
+17) The number of iterations in the examples of sampling from the "ring"
+    distribution in <A HREF="Ex-dist-g.html">Ex-dist-g.doc</A> has been increased to 2000, so that
+    autocorrelations will be better estimated.  The new multivariate
+    slice sampling operations are now included.
+
+
+Bug fixes.
+
+1) Fixed a bug in dist-est that caused the estimate for the standard error 
+   of the mean to be wrong if the number of data points exceeded 46340.
+
+2) Fixed a bug that affected use of trajectory computation methods other
+   than the standard "leapfrog" for neural network models.
+
+3) The 'formula' module, used by the 'dist' module, has been altered to
+   allow it to compute the gradient of a*b and a/b when b is undefined
+   but a and its gradient are both zero.
+
+
+Known bugs and other deficiencies.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The latent value update operations for Gaussian processes may recompute 
+   the inverse covariance matrix even when an up-to-date version was 
+   computed for the previous Monte Carlo operation.
+
+4) Covariance matrices are stored in full, even though they are symmetric,
+   which sometimes costs a factor of two in memory usage.
+
+5) The "p" option of net-pred isn't allowed for survival models with
+   piecewise-constant hazard.  There's no big reason for this - I just
+   haven't gotten around to it.
+</pre>
+</body>
+</html>

@@ -1,0 +1,10 @@
+
+# Commands to sample from the "ring" distribution using multivariate
+# slice sampling with Gaussian crumbs.  The stepsize to use is given as 
+# an argument.  Thirteen slice sampling operation are done per iteration, 
+# which takes about 41 function evaluations when the stepsize is 5.
+
+dist-spec glog.sgau,$1 \
+  "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
+mc-spec glog.sgau,$1 repeat 13 slice-gaussian -e $1 end
+dist-mc glog.sgau,$1 2000

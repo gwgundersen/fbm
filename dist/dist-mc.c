@@ -1,6 +1,6 @@
 /* DIST-MC.C - Markov chain Monte Carlo for a specified distribution. */
 
-/* Copyright (c) 1998 by Radford M. Neal 
+/* Copyright (c) 1998-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -38,6 +38,7 @@
 
 static dist_spec *dst;	/* Specification of distribution */
 static double *ss;	/* Stepsizes selected, or zero. */
+static int uses_data;	/* Does likelihood refer to data vars ("i" or "t")? */
 
 
 /* SET UP REQUIRED RECORD SIZES PRIOR TO GOBBLING RECORDS. */
@@ -58,7 +59,7 @@ void mc_app_initialize
   mc_dynamic_state *ds	/* Structure holding pointers to dynamical state */
 )
 { 
-  char *a, *f;
+  char *a, *f, *p;
   int c, i;
 
   if ((dst = logg->data['d'])==0)
@@ -77,8 +78,21 @@ void mc_app_initialize
   }
 
   (void) formula (dst->energy, 1, 0, 0);
+
   if (dst->Bayesian)
-  { (void) formula (dst->energy + strlen(dst->energy) + 1, 1, 0, 0);
+  { 
+    (void) formula (dst->energy + strlen(dst->energy) + 1, 1, 0, 0);
+
+    uses_data = 0;
+
+    for (p = "it"; *p; p++)
+    { for (i = 0; i<=10; i++)
+      { if (formula_var_exists[*p-'a'][i])
+        { uses_data = 1;
+          break;
+        }
+      }
+    }
   }
 
   ds->dim = dist_count_vars();
@@ -119,11 +133,16 @@ void mc_app_initialize
 
   mc_app_stepsizes(ds);
 
-  if (dst->Bayesian)
-  {
-    data_spec = logg->data['D'];
+  data_spec = logg->data['D'];
 
-    if (data_spec!=0)
+  if (data_spec!=0)
+  { 
+    if (!dst->Bayesian || !uses_data)
+    { 
+      fprintf (stderr,
+       "Warning: A data specification is inappropriate, and will be ignored\n");
+    }
+    else
     {
       dist_data_free();   
       dist_data_read();
@@ -172,8 +191,9 @@ void mc_app_energy
   mc_value *grad	/* Place to store gradient, null if not required */
 )
 {
-  double sumsq, inv_temp;
-  double e;
+  double sumsq, inv_temp, e;
+  double *g;
+  char *p;
   int i;
 
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
@@ -184,8 +204,30 @@ void mc_app_energy
 
     e = dist_prior (dst, grad);
 
-    if (N_train>0 && inv_temp!=0)
-    { e += dist_total_likelihood (dst, inv_temp, grad);
+    if (!uses_data) /* Bayesian model with data in likelihood formula itself */
+    { 
+      if (inv_temp!=0) 
+      {
+        e += inv_temp * formula (dst->energy, 0, 1, grad ? STATE_VARS : 0);
+
+        if (grad)
+        {
+          g = grad;
+
+          for (p = STATE_VARS; *p; p++)
+          { for (i = 0; i<=10; i++)
+            { if (formula_var_exists[*p-'a'][i])
+              { *g++ += inv_temp * formula_gradient[*p-'a'][i]; 
+              }
+            }
+          }
+        }
+      }
+    }
+
+    else if (N_train>0) /* Bayesian model with data in file */
+    { 
+      if (inv_temp!=0) e += dist_total_likelihood (dst, inv_temp, grad);
     }
 
     if (e>1e100)

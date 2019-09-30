@@ -1,6 +1,6 @@
 /* MC.H - Interface to Markov chain Monte Carlo module. */
 
-/* Copyright (c) 1995, 1996, 1998, 1999 by Radford M. Neal 
+/* Copyright (c) 1995-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -11,6 +11,14 @@
  * tested to the degree that would be advisable in any important application.
  * All use of this program is entirely at the user's own risk.
  */
+
+
+/* WHICH MONTE CARLO OPERATIONS NEED VARIOUS THINGS.  The strings below
+   give the one-character ids of operations needing various things to 
+   operate. */
+
+#define MC_needs_p	"BNDPhHT@^ior*="	/* Need momentum variables */
+#define MC_needs_grad	"DPHT@^hiol"		/* Need gradient computed  */
 
 
 /* OPERATIONS TO PERFORM EACH ITERATION.  This array of structures lists
@@ -44,8 +52,8 @@ typedef struct
     int jump;	  	  /* Steps in each jump for hybrid Monte Carlo */
 
     float heatbath_decay; /* Momentum decay for heatbath step, also factor
-                             for multiply-momentum operation minus 1, and
-			     value for set-momentum operation. */
+                             for multiply-momentum operation minus 1, and value
+			     for set-momentum operation. */
 
     float temper_factor;  /* Tempering factor for tempered hybrid Monte Carlo */
     float app_param;	  /* Parameter for application-specific procedure */
@@ -57,8 +65,21 @@ typedef struct
 
     int refinements;	  /* Number of refinement steps */
 
+#   define b_accept refinements /* Overlaps above.  0 for Metropolis acceptance
+			           function, 1 for Barker/Boltzmann acceptance*/
+
     int in_steps;	  /* Maximum number of inside steps in trajectory,
 			     zero if this feature is not being used */
+
+#   define r_update in_steps    /* Overlaps above.  0 if all components are to
+                                   be updated by single-variable operations,
+                                   1 for updating just one, chosen at random */
+
+#   define g_shrink in_steps    /* Overlaps above.  Shrinkage option for "slice"
+                                   0=shrink all, 1=shrink one (-g), 2=more(-G)*/
+
+#   define e_shrink in_steps    /* Overlaps above.  Shrinkage option for 
+				   "slice-gaussian" */
 
     float app_param2;	  /* Second application-specific parameter */
 
@@ -181,14 +202,14 @@ typedef struct
   int proposals;	/* Number of proposals in this iteration */
   int slice_calls;	/* Number of calls of slice sampling procedures */
   int slice_evals;	/* Number of energy evaluations in slice calls */
-  int time;             /* Cumulative cpu-usage in ms */
+  int time;             /* Cumulative cpu-usage in ms, -1000 if copied */
 
   float log_weight;	/* Log of weight for importance sampling */
   float log_tt_weight;	/* Log of weight from last tempered transition */
   float log_tt_weight2;	/* Log of combined weight from last tempered trans. */
 
-  unsigned short spiral_offset; /* Offset of initial state for last [dbl]spiral*/
-  unsigned short spiral_switch; /* Switch point for last double-spiral */
+  unsigned short spiral_offset;/* Offset of initial state for last [dbl]spiral*/
+  unsigned short spiral_switch;/* Switch point for last double-spiral */
 
 } mc_iter;
 
@@ -255,12 +276,40 @@ void mc_trajectory   (mc_dynamic_state *, int, int);
 void mc_therm_trajectory (mc_dynamic_state *, int, int);
 
 void mc_record_sizes     (log_gobbled *);
-void mc_heatbath         (mc_dynamic_state *, float, float);
-void mc_radial_heatbath  (mc_dynamic_state *, float);
 double mc_kinetic_energy (mc_dynamic_state *);
 void mc_therm_present    (mc_dynamic_state *);
 void mc_temp_present     (mc_dynamic_state *, mc_temp_sched *);
 int mc_temp_index        (mc_temp_sched *, float);
 double mc_energy_diff    (mc_dynamic_state *, mc_temp_sched *, int);
+
+void mc_heatbath         (mc_dynamic_state *, float, float);
+void mc_radial_heatbath  (mc_dynamic_state *, float);
+
+void mc_metropolis       (mc_dynamic_state *, mc_iter *, mc_value *, int);
+void mc_rgrid_met        (mc_dynamic_state *, mc_iter *, mc_value *, int);
+void mc_met_1            (mc_dynamic_state *, mc_iter *, int, int, int, int);
+void mc_rgrid_met_1      (mc_dynamic_state *, mc_iter *, int, int, int, int);
+
+void mc_hybrid (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int, double,
+  int, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *);
+
+void mc_hybrid2 (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int,
+                 mc_value *, mc_value *);
+
+void mc_spiral (mc_dynamic_state *, mc_iter *, mc_traj *, int, double, int,
+                mc_value *, mc_value *, mc_value *, mc_value *);
+
+void mc_slice_1      (mc_dynamic_state *, mc_iter *, int, int, int, int);
+void mc_slice        (mc_dynamic_state *, mc_iter *, 
+                      mc_value *, mc_value *, mc_value *, int);
+void mc_slice_gaussian (mc_dynamic_state *, mc_iter *, 
+                      mc_value *, mc_value *, int);
+void mc_slice_over   (mc_dynamic_state *, mc_iter *, int, float, 
+                      int, int, int, int);
+
+void mc_slice_inside  (mc_dynamic_state *, mc_iter *, int, 
+                       mc_value *, mc_value *);
+void mc_slice_outside (mc_dynamic_state *, mc_iter *, int, int,
+                       mc_value *, mc_value *);
 
 void mc_value_copy (mc_value *, mc_value *, int);

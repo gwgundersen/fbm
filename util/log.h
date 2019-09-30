@@ -1,6 +1,6 @@
 /* LOG.H - Interface to routines for reading and writing log files. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -56,6 +56,13 @@ typedef struct
   int index[128];	/* Index of current record stored for each type */
   void *data[128];	/* Data for last record of each type, 0 if none */
 } log_gobbled;
+
+
+/* Pointer to gobble structure containing records to compare against when
+   records are written with log_append.  Set to zero when a comparison
+   comes out unequal. */
+
+extern log_gobbled *log_append_compare;
 
 
 /* PROCEDURES. */

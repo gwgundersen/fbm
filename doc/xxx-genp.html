@@ -1,0 +1,35 @@
+<html>
+<body>
+<pre>
+
+
+XXX-GENP:  Generate random momentum variables.
+
+There is a version of this program for each 'mc' application (eg,
+net-genp).  It is not usually necessary to run this program, since
+xxx-mc generates momentum variables automatically if they don't
+already exist but are needed for the current Markov chain operations.
+However, xxx-genp is needed to implement xxx-circ, since the automatic
+generation disturbs random number synchronization.
+
+Usage:
+
+    xxx-genp log-file 
+
+Here, 'xxx' is a prefix identifying the particular incarnaton of this
+program (eg, 'dist' or 'net').
+
+If the last mc-spec command (see <A HREF="mc-spec.html">mc-spec.doc</A>) uses operations that
+require momentum variables, this program generates random values for
+the momenta, and appends these values to the log file, with index the
+same as the index of the last record currently in the log file.
+
+If no mc-spec command has been done, or the last such command involved
+only operations that don't require momentum, the xxx-genp command
+silently does nothing.  This is the behaviour needed to implement
+xxx-circ (see <A HREF="xxx-circ.html">xxx-circ.doc</A>).
+
+            Copyright (c) 2000 by Radford M. Neal
+</pre>
+</body>
+</html>

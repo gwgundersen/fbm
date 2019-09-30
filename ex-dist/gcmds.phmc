@@ -8,4 +8,4 @@ dist-spec glog.phmc,$1 \
 mc-spec glog.phmc,$1 repeat 50 metropolis 1
 dist-mc glog.phmc,$1 1
 mc-spec glog.phmc,$1 repeat 35 heatbath 0.99 hybrid 1 $1 negate end
-dist-mc glog.phmc,$1 500
+dist-mc glog.phmc,$1 2000

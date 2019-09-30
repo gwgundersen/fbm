@@ -1,6 +1,6 @@
 /* MC-TRAJ.C - Procedures for computing dynamical trajectories. */
 
-/* Copyright (c) 1995, 1999 by Radford M. Neal 
+/* Copyright (c) 1995-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -149,7 +149,7 @@ void mc_trajectory
           if (tj->rev_sym!=-1)
           { 
             if (ds->know_grad!=1)
-            { mc_app_energy(ds,1,0,0,ds->grad);
+            { mc_app_energy(ds,1,1,0,ds->grad);
             }
   
             for (k = 0; k<ds->dim; k++)
@@ -157,7 +157,7 @@ void mc_trajectory
               ds->q[k] += a1 * ds->stepsize[k] * ds->p[k];
             }
   
-            mc_app_energy(ds,1,0,0,ds->grad);
+            mc_app_energy(ds,1,1,0,ds->grad);
   
             for (k = 0; k<ds->dim; k++)
             { ds->p[k] -= b2 * ds->stepsize[k] * ds->grad[k];
@@ -174,14 +174,14 @@ void mc_trajectory
             { ds->q[k] += a2 * ds->stepsize[k] * ds->p[k];
             }
 
-            mc_app_energy(ds,1,0,0,ds->grad);
+            mc_app_energy(ds,1,1,0,ds->grad);
 
             for (k = 0; k<ds->dim; k++)
             { ds->p[k] -= b2 * ds->stepsize[k] * ds->grad[k];
               ds->q[k] += a1 * ds->stepsize[k] * ds->p[k];
             }
 
-            mc_app_energy (ds, 1, 0, 
+            mc_app_energy (ds, 1, 1, 
                            need_pot && n==1 ? &ds->pot_energy : 0,
                            ds->grad);
 
@@ -209,16 +209,16 @@ void mc_trajectory
             { ds->q[k] += b1 * ds->stepsize[k] * ds->p[k];
             }
     
-            mc_app_energy(ds,1,0,0,ds->grad);
+            mc_app_energy(ds,1,1,0,ds->grad);
   
             for (k = 0; k<ds->dim; k++)
             { ds->p[k] -= a1 * ds->stepsize[k] * ds->grad[k];
               ds->q[k] += b2 * ds->stepsize[k] * ds->p[k];
             }
     
-            mc_app_energy (ds, 1, 0, 
-                        need_pot && n==1 && tj->rev_sym==0? &ds->pot_energy : 0,
-                        ds->grad);
+            mc_app_energy (ds, 1, 1, 
+                       need_pot && n==1 && tj->rev_sym==0 ? &ds->pot_energy : 0,
+                       ds->grad);
   
             for (k = 0; k<ds->dim; k++)
             { ds->p[k] -= a2 * ds->stepsize[k] * ds->grad[k];
@@ -231,7 +231,7 @@ void mc_trajectory
           if (tj->rev_sym!=0)
           {
             if (ds->know_grad!=1)
-            { mc_app_energy(ds,1,0,0,ds->grad);
+            { mc_app_energy(ds,1,1,0,ds->grad);
             }
 
             for (k = 0; k<ds->dim; k++)
@@ -239,7 +239,7 @@ void mc_trajectory
               ds->q[k] += b2 * ds->stepsize[k] * ds->p[k];
             }
 
-            mc_app_energy(ds,1,0,0,ds->grad);
+            mc_app_energy(ds,1,1,0,ds->grad);
   
             for (k = 0; k<ds->dim; k++)
             { ds->p[k] -= a1 * ds->stepsize[k] * ds->grad[k];
@@ -280,7 +280,7 @@ void mc_trajectory
         if (tj->rev_sym!=-1)
         {
           if (ds->know_grad!=1)
-          { mc_app_energy(ds,1,0,0,ds->grad);
+          { mc_app_energy(ds,1,1,0,ds->grad);
           }
 
           for (k = 0; k<ds->dim; k++)
@@ -288,21 +288,21 @@ void mc_trajectory
             ds->q[k] += sf * a[0] * ds->stepsize[k] * ds->p[k];
           }
   
-          mc_app_energy(ds,1,0,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds->grad);
   
           for (k = 0; k<ds->dim; k++)
           { ds->p[k] -= sf * b[1] * ds->stepsize[k] * ds->grad[k];
             ds->q[k] += sf * a[1] * ds->stepsize[k] * ds->p[k];
           }
   
-          mc_app_energy(ds,1,0,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds->grad);
   
           for (k = 0; k<ds->dim; k++)
           { ds->p[k] -= sf * b[2] * ds->stepsize[k] * ds->grad[k];
             ds->q[k] += sf * a[2] * ds->stepsize[k] * ds->p[k];
           }
   
-          mc_app_energy(ds,1,0,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds->grad);
   
           for (k = 0; k<ds->dim; k++)
           { ds->p[k] -= sf * b[3] * ds->stepsize[k] * ds->grad[k];
@@ -319,28 +319,28 @@ void mc_trajectory
           { ds->q[k] += sf * a[3] * ds->stepsize[k] * ds->p[k]; 
           }
 
-          mc_app_energy(ds,1,0,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds->grad);
 
           for (k = 0; k<ds->dim; k++)
           { ds->p[k] -= sf * b[3] * ds->stepsize[k] * ds->grad[k];
             ds->q[k] += sf * a[2] * ds->stepsize[k] * ds->p[k];
           }
 
-          mc_app_energy(ds,1,0,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds->grad);
 
           for (k = 0; k<ds->dim; k++)
           { ds->p[k] -= sf * b[2] * ds->stepsize[k] * ds->grad[k];
             ds->q[k] += sf * a[1] * ds->stepsize[k] * ds->p[k];
           }
 
-          mc_app_energy(ds,1,0,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds->grad);
 
           for (k = 0; k<ds->dim; k++)
           { ds->p[k] -= sf * b[1] * ds->stepsize[k] * ds->grad[k];
             ds->q[k] += sf * a[0] * ds->stepsize[k] * ds->p[k];
           }
 
-          mc_app_energy (ds, 1, 0, 
+          mc_app_energy (ds, 1, 1, 
                          need_pot && n==1 ? &ds->pot_energy : 0,
                          ds->grad);
 
@@ -535,7 +535,7 @@ void mc_therm_trajectory
       if (tj->halfp)
       {
         if (ds->know_grad!=1)
-        { mc_app_energy (ds, 1, 0, 0, ds->grad);
+        { mc_app_energy (ds, 1, 1, 0, ds->grad);
         }
 
         for ( ; n>0; n--)
@@ -548,7 +548,7 @@ void mc_therm_trajectory
           { ds->q[k] += sf * ds->stepsize[k] * ds->p[k];
           }
 
-          mc_app_energy (ds, 1, 0, 0, ds->grad);
+          mc_app_energy (ds, 1, 1, 0, ds->grad);
 
           for (i = 0; i<K; i++)
           {

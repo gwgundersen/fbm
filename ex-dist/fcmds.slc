@@ -1,0 +1,14 @@
+
+# Commands to sample from the "funnel" distribution using multivariate slice 
+# sampling, with shrinkage in all direction.  The stepsize to use is given 
+# as an argument.
+
+dist-spec flog.slc,$1 \
+  "v~Normal(0,3^2)     + x1~Normal(0,Exp(v)) \
+ + x2~Normal(0,Exp(v)) + x3~Normal(0,Exp(v)) \
+ + x4~Normal(0,Exp(v)) + x5~Normal(0,Exp(v)) \
+ + x6~Normal(0,Exp(v)) + x7~Normal(0,Exp(v)) \
+ + x8~Normal(0,Exp(v)) + x9~Normal(0,Exp(v))"
+dist-initial flog.slc,$1 v=0 x1=1 x2=1 x3=1 x4=1 x5=1 x6=1 x7=1 x8=1 x9=1
+mc-spec flog.slc,$1 repeat 4000 slice $1
+dist-mc flog.slc,$1 2000

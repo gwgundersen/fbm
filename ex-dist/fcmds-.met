@@ -1,0 +1,17 @@
+
+# Commands to sample from the "funnel" distribution using the Metropolis
+# algorithm with updates to all components at once.  The stepsize to
+# use is given as an argument.
+#
+# This version uses an initial state with v=-9 and the xi=0.01.
+
+dist-spec flog-.met,$1 \
+  "v~Normal(0,3^2)     + x1~Normal(0,Exp(v)) \
+ + x2~Normal(0,Exp(v)) + x3~Normal(0,Exp(v)) \
+ + x4~Normal(0,Exp(v)) + x5~Normal(0,Exp(v)) \
+ + x6~Normal(0,Exp(v)) + x7~Normal(0,Exp(v)) \
+ + x8~Normal(0,Exp(v)) + x9~Normal(0,Exp(v))"
+dist-initial flog-.met,$1 v=-9 \
+ x1=0.01 x2=0.01 x3=0.01 x4=0.01 x5=0.01 x6=0.01 x7=0.01 x8=0.01 x9=0.01
+mc-spec flog-.met,$1 repeat 10000 metropolis $1
+dist-mc flog-.met,$1 2000

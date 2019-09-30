@@ -1,6 +1,6 @@
 /* DIST-SPEC.C - Specify distribution to sample from. */
 
-/* Copyright (c) 1998 by Radford M. Neal 
+/* Copyright (c) 1998-1999 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 

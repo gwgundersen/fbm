@@ -9,14 +9,14 @@ that application, as specified in a previous call of 'mc-spec'.
 
 Usage:
 
-    xxx-mc log-file ["@"]iteration [ save-mod ] [ quantities | "tt[12]" ] 
-                    [ / decay [ temperature ] ]
+    xxx-mc [ -c coupled-log-file ] log-file ["@"]iteration [ save-mod ] 
+           [ quantities | "tt[12]" ] [ / decay [ temperature ] ]
  
 Here 'xxx' is a prefix identifying the particular incarnation of this
 program.
 
 This program performs a Markov chain Monte Carlo simulation starting
-with the last iteration saved in the log file and continuing up to the
+with the last iteration saved in log-file and continuing up to the
 indicated iteration (or if the iteration is immediately preceded by
 "@", until a total of iteration minutes of cpu-time have been used,
 for all iterations).  The log file must contain specifications for how
@@ -40,4 +40,16 @@ affect application specific updates.  It defaults to one.  (Note that
 this temperature is not the same as any temperature involved in
 tempering operations.)
 
-            Copyright (c) 1995 by Radford M. Neal
+The -c option is used when the simulation is "coupled" to a previously
+performed simulation, whose results are stored in coupled-log-file.
+It causes the simulation to be terminated if and when the iteration
+written to log-file exactly matches the corresponding iteration in
+coupled-log-file, ignoring the records of type "i" that record the
+iteration statistics.  When this situation is detected, the remaining
+iterations to be performed are simply copied from coupled-log-file to
+log-file.  The "k" quantity (normally cumulative compute time) will be
+set to -1e-4 for such copied iterations.  Coupling is not allowed if
+the number of iterations to do is specified by a time limit rather
+than a maximum iteration number.
+
+            Copyright (c) 1995-2000 by Radford M. Neal

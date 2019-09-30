@@ -13,26 +13,34 @@ whether the records appended make sense in the new context.
 
 Usage:
 
-   log-append input-log-file [ range ] output-log-file 
+   log-append [ -ignoredtype...] logfile-in [ range ] logfile-out [ index ]
 
 The records with indexes in the indicated range are read from
-input-log-file and appended to the end of output-log-file.  The range
-has the usual form of [low][:[high]][%modulus], as described in
+logfile-in and appended to the end of logfile-out, except that records
+with the types given in the optional first argument are ignored.  (See
+<A HREF="log-types.html">log-types.doc</A> for a listing of conventionally-used record types.)  The
+range has the usual form of [low][:[high]][%modulus], as described in
 parse_range in misc.c.  If high and the colon are omitted, high
 defaults to low.  If high is omitted but the colon is present, the
 range extends to the end of the file.  If no range is specified, it
 defaults to the last index for which any records are stored.  Records
 with negative indexes are never copied.
 
-The records copied are appended to output-log-file, with consecutive
-indexes starting after the index of the last existing record, at index
-0 if only records with negative indexes are present.  In typical
-usage, output-log-file will contain only specifications, with indexes
-of -1, and the range to copy will consist of a single index.  In this
-case, the records appended will have index 0, which is suitable for
-initialization of an iterative program.
+The records copied are appended to logfile-out, with consecutive
+indexes.  If no final argument is given, these indexes start after the
+index of the last existing record; if the final argument is "-", they
+start at the index of the last existing record.  In either case, the
+indexes start at 0 if only records with negative indexes are present.
+If a number is given as the final index argument, the indexes of
+records start at that number, which must be no smaller than the index
+of the last existing record in the file.
 
-            Copyright (c) 1997 by Radford M. Neal
+In the most typical usage, logfile-out contains only specifications,
+with indexes of -1, and the range to copy consists of a single index.
+In this case, the records appended will have index 0, which is
+suitable for initialization of an iterative program.
+
+            Copyright (c) 1997-2000 by Radford M. Neal
 </pre>
 </body>
 </html>

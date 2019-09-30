@@ -9,8 +9,7 @@
 
 <h1>Software for Flexible Bayesian Modeling</h1>
 
-Version of 1999-12-06.  Copyright (c) 1995, 1996, 1997, 1998, 1999 by
-Radford M. Neal<P>
+Version of 2000-08-21.  Copyright (c) 1995-2000 by Radford M. Neal<P>
 
 Index to documentation for software that implements flexible Bayesian
 models based on neural networks, Gaussian processes, and mixtures, and
@@ -32,7 +31,11 @@ that demonstrates various Markov chain Monte Carlo methods.
             distribution</a>
         <LI><a href="Ex-dist-g.html">Sampling from a ring distribution in
             three dimensions</a>
+        <LI><a href="Ex-dist-f.html">Sampling from a funnel distribution in
+            ten dimensions</a>
     </UL>
+<LI><a href="Ex-circ.html">Examples of circularly-coupled Markov chain 
+    sampling</a>
 <LI><a href="Ex-bayes.html">Examples of Markov chain sampling for simple 
     Bayesian models</a>
     <UL>
@@ -70,6 +73,7 @@ that demonstrates various Markov chain Monte Carlo methods.
 <h2>Notes on the present release and past releases:</h2>
 
 <UL>
+<LI> <a href="Release.2000-08-21.html">Release of 2000-08-21</a>
 <LI> <a href="Release.1999-12-06.html">Release of 1999-12-06</a>
 <LI> <a href="Release.1999-03-13.html">Release of 1999-03-13</a>
 <LI> <a href="Release.1998-09-01.html">Release of 1998-09-01</a>
@@ -91,11 +95,12 @@ that demonstrates various Markov chain Monte Carlo methods.
    <a href="find-min.html">find-min</a>     <a href="quantities.html">quantities</a>     <a href="mc-spec.html">mc-spec</a>           <a href="dist-gen.html">dist-gen</a>          <a href="bvg-plt.html">bvg-plt</a>
    <a href="formula.html">formula</a>      <a href="rand-seed.html">rand-seed</a>      <a href="mc-temp-filter.html">mc-temp-filter</a>    <a href="dist-initial.html">dist-initial</a>      <a href="bvg-spec.html">bvg-spec</a>
    <a href="grid.html">grid</a>         <a href="series.html">series</a>         <a href="mc-temp-sched.html">mc-temp-sched</a>     <a href="dist-mc.html">dist-mc</a>
-   <a href="log.html">log</a>          <a href="xxx-hist.html">xxx-hist</a>       <a href="xxx-grad-test.html">xxx-grad-test</a>     <a href="dist-quantities.html">dist-quantities</a>
-   <a href="log-append.html">log-append</a>   <a href="xxx-plt.html">xxx-plt</a>        <a href="xxx-mc.html">xxx-mc</a>            <a href="dist-spec.html">dist-spec</a>
-   <a href="log-copy.html">log-copy</a>     <a href="xxx-tbl.html">xxx-tbl</a>        <a href="xxx-stepsizes.html">xxx-stepsizes</a>     <a href="dist-stepsizes.html">dist-stepsizes</a>
-   <a href="log-last.html">log-last</a>                        
-   <a href="log-records.html">log-records</a>                      
+   <a href="log.html">log</a>          <a href="xxx-hist.html">xxx-hist</a>       <a href="xxx-circ.html">xxx-circ</a>          <a href="dist-quantities.html">dist-quantities</a>
+   <a href="log-append.html">log-append</a>   <a href="xxx-plt.html">xxx-plt</a>        <a href="xxx-genp.html">xxx-genp</a>          <a href="dist-spec.html">dist-spec</a>
+   <a href="log-copy.html">log-copy</a>     <a href="xxx-tbl.html">xxx-tbl</a>        <a href="xxx-grad-test.html">xxx-grad-test</a>     <a href="dist-stepsizes.html">dist-stepsizes</a>
+   <a href="log-equal.html">log-equal</a>                   <a href="xxx-mc.html">xxx-mc</a>  
+   <a href="log-last.html">log-last</a>                    <a href="xxx-stepsizes.html">xxx-stepsizes</a>  
+   <a href="log-records.html">log-records</a>                 <a href="xxx-wrap.html">xxx-wrap</a>  
    <a href="log-types.html">log-types</a>                        
 
 
@@ -130,6 +135,7 @@ documentation files marked with an asterisk.<P>
     <a href="log-append.html">log-append</a>      Append records from one log file to the end of another
     <a href="log-last.html">log-last</a>        Display the index of the last record in a log file
     <a href="log-records.html">log-records</a>     List all records in a log file
+    <a href="log-equal.html">log-equal</a>       Check if records in log files match
 
     <a href="formula.html">formula</a>         Syntax for arithmetic formulas
     <a href="calc.html">calc</a>            Simple calculator program
@@ -161,7 +167,9 @@ documentation files marked with an asterisk.<P>
 <pre>
   * <a href="mc.html">mc</a>              Programs and modules supporting Markov chain Monte Carlo
   * <a href="mc-spec.html">mc-spec</a>         Specify how to do the Markov chain simulation
-  * <a href="xxx-mc.html">xxx-mc</a>          Run Markov chain simulation
+  * <a href="xxx-mc.html">xxx-mc</a>          Run a Markov chain simulation
+  * <a href="xxx-circ.html">xxx-circ</a>        Do a circularly-coupled simulation
+  * <a href="xxx-wrap.html">xxx-wrap</a>        Create wrapped-around chain from existing simulation run
 
   * <a href="mc-quantities.html">mc-quantities</a>   Quantities from log files relating to Monte Carlo
 
@@ -171,6 +179,7 @@ documentation files marked with an asterisk.<P>
 
     <a href="xxx-grad-test.html">xxx-grad-test</a>   Test the correctness of the energy gradient computations
     <a href="xxx-stepsizes.html">xxx-stepsizes</a>   Display and evaluate stepsizes used for dynamics
+    <a href="xxx-genp.html">xxx-genp</a>        Generate random momentum variables
 </pre>
 
 <h2>Markov chain sampling for a specified distribution [dist]:</h2>

@@ -1,6 +1,6 @@
 # MAKEFILE FOR MARKOV CHAIN MONTE CARLO MODULES.
 
-# Copyright (c) 1995, 1996 by Radford M. Neal 
+# Copyright (c) 1995, 1996, 2000 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, or modify this program 
 # for purposes of research or education, provided this copyright notice 

@@ -38,7 +38,7 @@ the above form, except that "glog" is replaced with the name of the
 log file used for the method being demonstrated.
 
 
-Simultaneous Metropolis updates.
+Multivariate Metropolis updates.
 
 We will first see how to sample from this distribution using a
 variation of the Metropolis algorithm in which all three state
@@ -63,15 +63,16 @@ can be obtained using an extra argument to 'dist-mc' (see <A HREF="xxx-mc.html">
 but using "repeat" has the advantage that one can also easily look at
 the rejection rate over the 50 repetitions.
 
-We can now sample for 500 Markov chain iterations (a total of 25,000
+We can now sample for 2000 Markov chain iterations (a total of 100000
 metropolis updates) with the following command:
 
-    &gt; dist-mc glog.met,1 500
+    &gt; dist-mc glog.met,1 2000
 
-This takes less than a second on our 550MHz Pentium III.
+This takes about three seconds on our 550MHz Pentium III, as will all
+the other sampling commands in this section.
 
 We can look at what happened to the three state variables during these
-500 iterations with a command such as
+2000 iterations with a command such as
 
     &gt; dist-plt t xyz glog.met,1 | plot
 
@@ -92,7 +93,7 @@ sure, however, let's discard the first 10 iterations as "burn-in".
 
 We can now take a look at the "ring" distribution with commands like
 
-    &gt; dist-plt x y glog.met,1 10: | plot-points
+    &gt; dist-plt x y glog.met,1 11: | plot-points
 
 If "plot-points" plots points rather than lines, this will produce a
 scatterplot of the distribution for "x" and "y" (with "z" ignored),
@@ -102,7 +103,7 @@ as a circle only if you have a three-dimensional plotting program.
 
 However, the plot above will probably not show points distributed
 perfectly uniformly around the ring.  Instead, there will be clumps
-here or there, which result from inadequate sampling.  The 591 points
+here or there, which result from inadequate sampling.  The 1990 points
 plotted are not independent, as can also be seen from the plots of
 "x", "y", and "z" versus "t".  To get a sample of points that are a
 good representation of the distribution using this chain, it would
@@ -111,58 +112,80 @@ need to be run for more iterations.
 We can get a quantitative idea of how poor the sampling is with the
 following command:
 
-    &gt; dist-tbl x glog.met,1 10: | series mac 30
-    
-    Number of realizations: 1  Total points: 491
-    
-    Mean: -1.069628  S.E. from correlations: 1.343061
+    &gt; dist-tbl x glog.met,1 11: | series mac 30
+
+    Number of realizations: 1  Total points: 1990
+
+    Mean: 1.917904  S.E. from correlations: 0.835186
     
       Lag  Autocorr.  Cum. Corr.
     
-        1   0.930028    2.860055
-        2   0.875426    4.610908
-        3   0.817085    6.245078
-        4   0.765703    7.776485
-        5   0.723927    9.224339
-        6   0.686476   10.597291
-        7   0.655353   11.907996
-        8   0.625940   13.159877
-        9   0.590206   14.340288
-       10   0.554448   15.449185
-       11   0.517685   16.484555
-       12   0.481981   17.448517
-       13   0.440608   18.329732
-       14   0.391103   19.111937
-       15   0.342534   19.797005
-       16   0.305640   20.408286
-       17   0.258187   20.924660
-       18   0.220043   21.364747
-       19   0.186663   21.738073
-       20   0.160253   22.058580
-       21   0.130252   22.319085
-       22   0.104981   22.529047
-       23   0.084475   22.697997
-       24   0.065285   22.828567
-       25   0.052381   22.933329
-       26   0.045782   23.024892
-       27   0.033173   23.091238
-       28   0.022730   23.136698
-       29   0.015462   23.167623
-       30   0.005316   23.178255
+        1   0.947969    2.895939
+        2   0.903250    4.702439
+        3   0.856662    6.415764
+        4   0.815864    8.047491
+        5   0.779712    9.606916
+        6   0.743362   11.093639
+        7   0.709530   12.512700
+        8   0.673265   13.859229
+        9   0.637696   15.134622
+       10   0.601621   16.337865
+       11   0.570915   17.479695
+       12   0.540031   18.559758
+       13   0.510186   19.580130
+       14   0.482173   20.544476
+       15   0.453319   21.451113
+       16   0.425552   22.302216
+       17   0.403801   23.109819
+       18   0.383645   23.877109
+       19   0.360901   24.598911
+       20   0.346566   25.292043
+       21   0.331396   25.954835
+       22   0.318166   26.591167
+       23   0.301436   27.194038
+       24   0.283314   27.760666
+       25   0.269474   28.299614
+       26   0.254748   28.809109
+       27   0.238075   29.285260
+       28   0.221027   29.727313
+       29   0.204618   30.136549
+       30   0.190573   30.517694
+       31   0.178569   30.874831
+       32   0.166869   31.208569
+       33   0.154004   31.516577
+       34   0.139692   31.795961
+       35   0.123347   32.042654
+       36   0.106315   32.255285
+       37   0.090566   32.436417
+       38   0.077699   32.591815
+       39   0.067531   32.726877
+       40   0.056948   32.840774
+       41   0.050116   32.941005
+       42   0.042926   33.026856
+       43   0.037561   33.101978
+       44   0.030714   33.163407
+       45   0.020496   33.204398
+       46   0.010639   33.225675
+       47   0.002995   33.231666
+       48  -0.004550   33.222567
+       49  -0.005873   33.210820
+       50  -0.010653   33.189514
 
 The 'dist-tbl' command above outputs a list of values for "x" for
-iterations from 10 on.  The 'series' command with options "mac" finds
-the mean of these numbers, their autocorrelations (out to lag 30
+iterations from 11 on.  The 'series' command with options "mac" finds
+the mean of these numbers, their autocorrelations (out to lag 50
 here), and the cumulative correlations.  The cumulative correlation at
 the earliest lag past which the autocorrelations are about zero
 indicates the factor by which sampling is made inefficient by the
-correlations (here, about 23); see <A HREF="Ex-dist-n.html">Ex-dist-n.doc</A> for more details.
+correlations (here, about 33); see <A HREF="Ex-dist-n.html">Ex-dist-n.doc</A> for more details.
 
 From symmetry, we know that the true mean for "x" is zero.  The
-estimate of -1.069628 above is consistent with this, in view of the
-estimated standard error of +-1.343061.  We can also get estimates
-using 'dist-est', but as discussed in <A HREF="Ex-dist-n.html">Ex-dist-n.doc</A>, the standard
-errors it produces do not account for autocorrelation.
+estimate of 1.917904 above is consistent with this, in view of the
+estimated standard error of +-0.835186.  (Note that differences from
+the true value of up to about twice the standard error are plausible.)
+We can also get estimates using 'dist-est', but as discussed in
+<A HREF="Ex-dist-n.html">Ex-dist-n.doc</A>, the standard errors it produces do not account for
+autocorrelation.
 
 We might try to improve the efficiency of sampling by changing the
 standard deviation of the Metropolis proposal distribution - which is
@@ -172,7 +195,7 @@ Metropolis operations, which can be viewed with a command such as
 
     &gt; dist-plt t r glog.met,1 | plot
 
-Here, the rejection rate is about 0.7, which is acceptable.  Very low
+Here, the rejection rate is about 0.75, which is acceptable.  Very low
 or very high rejection rates are usually an indication that sampling
 would work better with a different stepsize.
 
@@ -181,19 +204,19 @@ could try a smaller stepsize with the following commands (following a
 'dist-spec' command):
 
     &gt; mc-spec glog.met,0.2 repeat 50 metropolis 0.2 end
-    &gt; dist-mc glob.met,0.2 500
+    &gt; dist-mc glob.met,0.2 2000
 
 Or we might try a larger stepsize:
 
     &gt; mc-spec glog.met,5 repeat 50 metropolis 5 end
-    &gt; dist-mc glob.met,5 500
+    &gt; dist-mc glob.met,5 2000
 
 If enough iterations are done, the same estimates should be obtained
 all these chains, but some stepsizes will produce a more efficient
 chain than others.  By examining plots of how the state variables
 change, and looking at the autocorrelations with 'series', one can
 conclude that sampling is much less efficient with a stepsize of 0.2
-than with a stepsize of 1 (about five times less efficient, based on
+than with a stepsize of 1 (about four times less efficient, based on
 cumulative correlations).  With a stepsize of 5, the sampling is about
 as good as with a stepsize of 1, even though the rejection rate is
 quite high.  This is a phenomenon that occurs only in problems with an
@@ -221,25 +244,21 @@ takes about three times as long as a "metropolis" operation.  To
 facilitate comparisons, the repeat count is corresponding less in this
 specification.
 
-As before, can now sample for 500 iterations using a 'dist-mc' command:
+As before, can now sample for 2000 iterations using a 'dist-mc' command:
 
-    &gt; dist-mc glog.met1,1 500
-
-On our 550MHz Pentium III, this also takes less than a second (as will
-all the dist-mc commands in this section).
+    &gt; dist-mc glog.met1,1 2000
 
 You can see how well this method samples in the same ways as discussed
 above.  You could also try sampling using "met-1" with a stepsize of
 0.2 and 5.  You should see that the rejection rate with "met-1" is
 lower than with "metropolis" operations using the same stepsize.
 Nevertheless, sampling from this distribution seems to be less
-efficient with "met-1" than with "metropolis", drastically so when the
-stepsize is 0.2 or 5.  This is not always so, however.  For
-distributions where at least some of the variables are close to being
-independent, updating one variable at a time can be more efficient.
-It is also sometimes possible to save computation time when
-recomputing the energy after a change to just one variable, though
-that possibility is not presently exploited by this software.
+efficient with "met-1" than with "metropolis".  This is not always so,
+however.  For distributions where at least some of the variables are
+close to being independent, updating one variable at a time can be
+more efficient.  It is also sometimes possible to save computation
+time when recomputing the energy after a change to just one variable,
+though that possibility is not presently exploited by this software.
 
 
 Single-variable slice sampling.
@@ -247,12 +266,13 @@ Single-variable slice sampling.
 Variables can also be updated one at a time is using single-variable
 slice sampling, which is described in my tech report on "Markov chain
 Monte Carlo methods based on `slicing' the distribution" (available
-from my web page).  Several variations on this procedure are
-implemented in this software.  The method in which the slice is found
-by "stepping out" can be done as follows:
+from my web page), or the newer version, called "Slice sampling".
+Several variations on this procedure are implemented in this software.
+The method in which the slice is found by "stepping out" can be done
+as follows:
 
     &gt; mc-spec glog.slc1,1 repeat 4 slice-1 1 end
-    &gt; dist-mc glog.slc1,1 500
+    &gt; dist-mc glog.slc1,1 2000
 
 This does single-variable slice sampling using an initial interval of
 size 1, which is extended in steps of the same size until both ends
@@ -266,17 +286,55 @@ a command such as
 
     &gt; dist-tbl e glog.slc1,1 | series m
 
-    Number of realizations: 1  Total points: 500
+    Number of realizations: 1  Total points: 2000
 
-    Mean: 5.473667  
+    Mean: 5.390583
 
-Note that 5.47 is the average number of evaluations for updating one
-variable, not for updating all three of them.
+Note that 5.390583 is the average number of evaluations for updating
+one variable, not for updating all three of them.
 
 As with the Metropolis methods, performance varies with the stepsize
 chosen.  However, one advantage of single-variable slice sampling is
 that it is a bit less sensitive to the choice of stepsize than the
 single-variable Metropolis algorithm.
+
+
+Multivariate slice sampling.
+
+We can also use variations of slice sampling in which all variables
+are updated simultaneously, described in my new technical report on
+"Slice sampling".  The simplest such scheme randomly places a
+hyperrectangle containing the current point, picks points randomly
+from it, and shrinks it when the point chosen is outside the slice,
+until a point inside the slice is finally found.  This can be done
+with an mc-spec command such as the following:
+
+    &gt; mc-spec glog.slc,5 repeat 13 slice 5 end
+
+This works almost as well as multivariate Metropolis with a stepsize
+of 1 or 5.
+
+One can also specify that shrinkage is to occur only in the coordinate
+direction where the product of the energy gradient and the dimension
+of the hyperrectangle is greatest in magnitude.  The following command
+does this, with the number of repetitions set so that the time per
+iteration is about the same:
+
+    &gt; mc-spec glog.slcg,5 repeat 6 slice -g 5 end
+
+For this problem, using the gradient information with -g (or -G,
+another variant) gives little or no advantage, after accounting for
+the extra time needed to compute the gradient.  However, for problems
+where variables have greatly differing scales (not compensated for by
+differing stepsizes), the -g and -G options can be very beneficial.
+
+One can also try multivariate slice sampling with Gaussian "crumbs"
+rather than hyperrectangles:
+
+    &gt; mc-spec glog.sgau,5 repeat 13 slice-gaussian -e 5 end
+
+The -e option results in the Gaussian distribution being shrunk on the
+basis of the energy of the rejected trial point.
 
 
 Sampling with Hamiltonian dynamics.
@@ -299,7 +357,7 @@ Markov Chain Monte Carlo Methods.
 We can try out this dynamical method as follows:
 
     &gt; mc-spec glog.dyn,0.3 repeat 40 heatbath 0.98 dynamic 1 0.3 end
-    &gt; dist-mc glog.dyn,0.3 500
+    &gt; dist-mc glog.dyn,0.3 2000
 
 The argument of "heatbath" is the factor by which to multiply the old
 momentum variables (after which noise is added).  A value of 1-d
@@ -348,7 +406,7 @@ updates are done at the beginning.
     &gt; mc-spec glog.hmc,0.3 repeat 50 metropolis 1
     &gt; dist-mc glog.hmc,0.3 1
     &gt; mc-spec glog.hmc,0.3 heatbath hybrid 45 0.3
-    &gt; dist-mc glog.hmc,0.3 500
+    &gt; dist-mc glog.hmc,0.3 2000
 
 The length of the trajectory should be chosen based on the number of
 steps for which we want to suppress random walks - longer for more
@@ -361,9 +419,9 @@ which consisted of Metropolis updates, to be excluded):
 
     &gt; dist-tbl r glog.hmc,0.3 2: | series m
 
-    Number of realizations: 1  Total points: 500
+    Number of realizations: 1  Total points: 2000
 
-    Mean: 0.042084
+    Mean: 0.035518
 
 It is also useful to look at the changes in energy on which the
 decisions to accept or reject were made:
@@ -382,26 +440,26 @@ with a command such as:
 
     &gt; dist-tbl x glog.hmc,0.3 10: | series mac 10
 
-    Number of realizations: 1  Total points: 491
+    Number of realizations: 1  Total points: 1991
     
-    Mean: 0.588512  S.E. from correlations: 0.437857
+    Mean: 0.476539  S.E. from correlations: 0.283180
     
       Lag  Autocorr.  Cum. Corr.
     
-        1   0.406767    1.813534
-        2   0.141586    2.096707
-        3   0.036505    2.169716
-        4   0.002760    2.175236
-        5  -0.001138    2.172961
-        6   0.031450    2.235860
-        7  -0.005979    2.223903
-        8  -0.006971    2.209960
-        9  -0.022040    2.165880
-       10  -0.064142    2.037595
+        1   0.519048    2.038096
+        2   0.256602    2.551300
+        3   0.129376    2.810052
+        4   0.064013    2.938078
+        5   0.042513    3.023104
+        6   0.052457    3.128018
+        7   0.026001    3.180021
+        8   0.030900    3.241821
+        9   0.025965    3.293750
+       10  -0.004491    3.284769
 
 From the cumulative correlations, we can estimate that estimating the
 expectation of "x" using points from this chain is a factor of only
-about 2.2 less efficient than using independent points.  This is about
+about 3.3 less efficient than using independent points.  This is about
 ten times better than the best of the chains described above.
 
 On the other hand, we have seen that some care is needed to pick an
@@ -416,7 +474,7 @@ appropriate commands:
     &gt; mc-spec glog.phmc,0.18 repeat 50 metropolis 1
     &gt; dist-mc glog.phmc,0.18 1
     &gt; mc-spec glog.phmc,0.18 repeat 35 heatbath 0.99 hybrid 1 0.18 negate end
-    &gt; dist-mc glog.phmc,0.18 500
+    &gt; dist-mc glog.phmc,0.18 2000
 
 The use of a "heatbath" operation with a non-zero "decay" causes the
 momentum to change only slowly.  Because of this, even though only a
@@ -445,7 +503,7 @@ Slice sampling with reflection from the last inside point is done as
 follows:
 
     &gt; mc-spec glog.slci,0.3 heatbath slice-inside 35 0.3
-    &gt; dist-mc glog.slci,0.3 500
+    &gt; dist-mc glog.slci,0.3 2000
 
 The "heatbath" operation picks a random momentum vector, which sets
 the speed of motion and the initial direction.  We then find the slice
@@ -462,7 +520,7 @@ small.
 Slice sampling with outside reflection is done as follows:
 
     &gt; mc-spec glog.slco,0.3 heatbath slice-outside 45 0.3 
-    &gt; dist-mc glog.slco,0.3 500
+    &gt; dist-mc glog.slco,0.3 2000
 
 This method operates as described for inside reflection, except that
 when a step ends at a point outside the slice, we stay there, but
@@ -484,7 +542,7 @@ point on the "other side" of their conditional distribution.  This can
 be done with the following commands:
 
     &gt; mc-spec glog.slcv,0.3 slice-over 8 0.1 0.3 
-    &gt; dist-mc glog.slcv,0.3 500
+    &gt; dist-mc glog.slcv,0.3 2000
 
 The first argument of "slice-over" is the number of "refinements" used
 to more accurately pin down the end-points of the slice (using
@@ -510,34 +568,40 @@ the expectation of the "x" variable using the various methods (the
 autocorrelation time), determined from estimates of the cumulative
 correlations up to when the autocorrelations are near zero.  The
 repetition counts for the methods were set so that they all required
-about 0.8 seconds of computation time for 500 iterations.
+about 3 seconds of computation time for 2000 iterations.
 
   METHOD      STEPSIZE   AUTOCORR.  NOTES
                            TIME
 
-  metropolis     0.2        122
-                  1          23
-                  5          20
+  metropolis     0.2        130
+                  1          33
+                  5          21
 
-  met-1          0.2        460      Autocorr. time found using 2000 iterations
-                  1          55
-                  5         118
+  met-1          0.2        460  
+                  1         140
+                  5         170
 
-  slice-1        0.2         77      Computation times had to be a bit greater 
-                  1          32       than 2s for the slice sampling methods, as
-                  5          62       the repetition count has to be an integer
+  slice-1        0.2         77     Computation time was a bit over 3 seconds
+                  1          59
+                  5          65      
 
-  dynamic        0.3        3.3      This method is not exact
+  slice           5          40
+  slice -g        5          58
+  slice -G        5          35
 
-  hybrid (HMC)   0.3        2.2
+  slice-gaussian  5          68
 
-  persistent HMC 0.18         9
+  dynamic        0.3        2.0     This method is not exact
+
+  hybrid (HMC)   0.3        3.3
+
+  persistent HMC 0.18       8.9
 
   slice-inside   0.3         11
   
-  slice-outside  0.3          4
+  slice-outside  0.3        5.6
 
-  slice-over      2          28
+  slice-over      2          35
 
 The relative performance of the different methods will of course be
 somewhat different for different distributions, but large gains from

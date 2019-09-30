@@ -1,6 +1,6 @@
 /* GP-COVM.C - Procedures to compute covariances and their derivatives. */
 
-/* Copyright (c) 1996, 1997, 1998, 1999 by Radford M. Neal 
+/* Copyright (c) 1996-1999 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 

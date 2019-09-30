@@ -160,7 +160,8 @@ by the specific procedures described in mix-mc.doc.
 
 Tempering methods and Annealed Importance Sampling are currently
 supported for neural network models, but not for Gaussian processes
-and mixture models.
+and mixture models.  Circular coupling is now supported, but it 
+currently works for only a limited number of Markov chain operations.
 
 
 Sampling from a specified distribution.

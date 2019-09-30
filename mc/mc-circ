@@ -1,0 +1,246 @@
+#!/bin/sh
+
+# DO A CIRCULARLY-COUPLED MARKOV CHAIN SIMULATION.  Linked to under names
+# like dist-circ, net-circ, etc. to get versions for each module.
+
+# Copyright (c) 2000 by Radford M. Neal 
+#
+# Permission is granted for anyone to copy, use, or modify this program 
+# for purposes of research or education, provided this copyright notice 
+# is retained, and note is made of any changes that have been made. 
+#
+# This program is distributed without any warranty, express or implied.
+# As this program was written for research purposes only, it has not been
+# tested to the degree that would be advisable in any important application.
+# All use of this program is entirely at the user's own risk.
+
+set -e  # Exit on error.  Note that the let commands below end with an argument
+        # of 1 to avoid a zero value causing an error exit.
+
+# Check arguments.
+
+prog=`echo $0 | sed "s/.*\///"`
+module=`echo $prog | sed "s/-.*//"`
+
+parallel=0
+if [ x$1 = x-p ]; then 
+  parallel=1
+  shift
+fi
+
+if [ $# != 4 -a $# != 5 ]; then
+  echo >&2 \
+    "Usage: $prog [ -p ] log-file n-chains n-iters max-stages [ seed ]"
+  exit -1
+fi
+
+logfile=$1
+nchains=$2
+niters=$3
+maxstages=$4
+seed=$5
+
+if [ ${nchains} -lt 2 ]; then
+  echo >&2 \
+    "The number of chains must be at least two"
+  exit -1
+fi
+
+if [ ${niters} -lt 1 ]; then
+  echo >&2 \
+    "The number of iterations must be at least one"
+  exit -1
+fi
+
+if [ ${maxstages} -lt 2 ]; then
+  echo >&2 \
+    "The maximum number of stages must be at least two"
+  exit -1
+fi
+
+if [ ${maxstages} -gt ${nchains} ]; then
+  echo >&2 \
+    "The maximum number of stages can't be greater than the number of chains"
+  exit -1
+fi
+
+echo Running ${nchains} chains, with ${niters} iterations per stage, \
+     for ${maxstages} stages maximum
+echo " "
+
+# Set up some variables used for looping.
+
+let lastchain=${nchains}-1 1
+let laststage=${maxstages}-1 1
+
+chainseq=`seq 0 ${lastchain}`
+
+# Remove old files matching the ones to be created here.
+
+rm -f ${logfile}.[0-9]*.[0-9]* ${logfile}:[0-9]*
+
+# Set up the first stage, by copying from logfile and generating initial states,
+# and do the initial run for each chain.
+
+for ix in ${chainseq}; do
+
+  log-copy ${logfile} - ${logfile}.0.${ix}
+  rand-seed ${logfile}.0.${ix} ${ix}1${seed:=1}
+  ${module}-gen ${logfile}.0.${ix}
+  ${module}-genp ${logfile}.0.${ix}
+  log-append ${logfile} 0 ${logfile}.0.${ix} -
+  rand-seed ${logfile}.0.${ix} ${ix}2${seed:=1}
+
+  if [ ${parallel} -eq 1 ]; then
+    ${module}-mc ${logfile}.0.${ix} ${niters} &
+  else
+    ${module}-mc ${logfile}.0.${ix} ${niters}
+  fi
+
+done
+
+if [ ${parallel} -eq 1 ]; then
+  wait
+fi
+
+totalruns=${nchains}
+finalstage=0
+let perf="${nchains}*${niters}" 1
+
+echo "Finished stage 0"
+echo " "
+
+# Do additional stages until coalescence, or until the maximum is reached.
+
+for stage in `seq 1 ${laststage}`; do
+
+  let prevstage=${stage}-1 1
+
+  # Check for coalescence, and do additional runs when it hasn't happened.
+
+  nocoalescence=0
+
+  for ix in ${chainseq}; do
+
+    let previx="(${ix}+${nchains}-1)%${nchains}" 1
+
+    if log-equal -riot ${logfile}.${prevstage}.${previx} ${niters} \
+                       ${logfile}.${prevstage}.${ix} 0; then
+      true
+    else
+      log-copy ${logfile}.${prevstage}.${previx} ${niters} \
+               ${logfile}.${stage}.${ix} 0
+      log-append ${logfile} 0 ${logfile}.${stage}.${ix} -
+      rand-seed ${logfile}.${stage}.${ix} ${ix}2${seed:=1}
+
+      if [ ${parallel} -eq 1 ]; then
+        ${module}-mc -c ${logfile}.${prevstage}.${ix} \
+          ${logfile}.${stage}.${ix} ${niters} &
+      else
+        ${module}-mc -c ${logfile}.${prevstage}.${ix} \
+          ${logfile}.${stage}.${ix} ${niters}
+      fi
+
+      let totalruns=${totalruns}+1 1
+
+      nocoalescence=1
+    fi
+
+  done
+
+  # We're finished if all chains have coalesced.
+
+  if [ ${nocoalescence} -eq 0 ]; then
+    break;
+  fi
+
+  # Otherwise, wait for runs to finish.
+
+  if [ ${parallel} -eq 1 ]; then
+    wait
+  fi
+
+  # Count number of iterations actually performed, and link to old files 
+  # for chains where a new run wasn't needed.  Write info to standard output.
+
+  for ix in ${chainseq}; do
+    if [ -e ${logfile}.${stage}.${ix} ]; then
+      let iters="`${module}-tbl k ${logfile}.${stage}.${ix} \
+                   | grep -v '^ *-' | wc -l`" 1
+      let perf=${perf}+${iters} 1
+      echo Stage ${stage}, chain ${ix}: Iterations done: ${iters}
+    else
+      ln ${logfile}.${prevstage}.${ix} ${logfile}.${stage}.${ix}
+      echo Stage ${stage}, chain ${ix}: Linked to previous log file
+    fi
+  done
+  
+  echo Finished stage ${stage}
+  echo " "
+
+  finalstage=${stage}
+
+done
+
+# Check for coalescence when the maximum number of stages was done.
+
+if [ ${finalstage} -eq ${laststage} ]; then
+
+  nocoalescence=0
+
+  for ix in ${chainseq}; do
+
+    let previx="(${ix}+${nchains}-1)%${nchains}" 1
+
+    if log-equal -riot ${logfile}.${laststage}.${previx} ${niters} \
+                       ${logfile}.${laststage}.${ix} 0; then
+      true
+    else
+      nocoalescence=1
+    fi
+
+  done
+
+fi
+
+# Put the results of the final stage in the original log file.
+
+for ix in ${chainseq}; do
+  log-append ${logfile}.${finalstage}.${ix} 1:${niters} ${logfile}
+done
+
+# Create trace files for each chain.
+
+for ix in ${chainseq}; do
+
+  log-copy ${logfile} 0 ${logfile}:${ix}
+
+  for stix in ${chainseq}; do
+    let stage="(${stix}-${ix}+${nchains})%${nchains}" 1
+    if [ ${stage} -eq 0 ]; then
+      let pos="${stix}*${niters}" 1
+      log-append ${logfile}.${stage}.${stix} 0:${niters} \
+                 ${logfile}:${ix} ${pos}
+    elif [ ${stage} -le ${finalstage} ]; then
+      let pos="${stix}*${niters}+1" 1
+      log-append ${logfile}.${stage}.${stix} 1:${niters} \
+                 ${logfile}:${ix} ${pos}
+    fi
+  done
+
+done
+
+# Exit sucessfully if coalescence occurred, unsuccessfully if it did not.
+# In either case, display a message giving the number of stages, runs, and
+# iterations done.
+
+if [ ${nocoalescence} -eq 1 ]; then
+  echo >&2 \
+    No coalescence in ${maxstages} stages, ${totalruns} runs, ${perf} iterations
+else
+  let nstages=${finalstage}+1 1
+  echo >&2 \
+    Coalescence in ${nstages} stages, ${totalruns} runs, ${perf} iterations
+fi
+
+exit ${nocoalescence}

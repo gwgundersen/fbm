@@ -30,7 +30,10 @@ displayed.  If the string "all" (no quotes) is given after the log
 file, specifications at all indexes are displayed.
 
 The allowed operations can be grouped in the categories general,
-metropolis, dynamical, tempering, and slicing:
+metropolis, dynamical, tempering, and slicing.  Note that the slicing
+operations should not be used when coupling chains, since they can
+cause the random number sequence for different chains to get out of
+synchronization.
 
 General operations:
 
@@ -56,18 +59,47 @@ General operations:
         name of the operation, and the numerical parameters following 
         it, which default to zero.
 
+        These operations may or may not be allowed when coupling.
+
 Metropolis operations:
 
-    metropolis [ stepsize-adjust[:stepsize-alpha] ]  
+For descriptionsof the stepsize and the "-b" argument, see below.
+
+    metropolis [ -b ] [ stepsize-adjust[:stepsize-alpha] ]
 
         Do a simple Metropolis update, to all components at once, using
         a Gaussian proposal distribution.
 
-    met-1 [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ]
+    met [ -b ]  [ stepsize-adjust[:stepsize-alpha] ]
+
+        Same as "metropolis".
+
+    met-1 [ -b ] [ -r ] [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ]
 
         Do single-component Metropolis updates, for the range of components 
         given.  The default if no components are given is all components. 
-        The default for last if first alone is given is last=first.
+        The default for last if first alone is given is last=first.  If no
+        -r argument is given, the components are all updated in order; with
+        the -r option, just one randomly-chosen component is updated.
+
+    rgrid-met [ -b ] [ stepsize-adjust[:stepsize-alpha] ]
+
+        Do a random-grid Metropolis update, to all components at once, using
+        a uniform proposal distribution centred on the current state and
+        extending to plus and minus the stepsize specified.  This uniform 
+        proposal is found by randomly positioning a grid of hypercubes and 
+        then proposing a move to the centre of the hypercube containing the 
+        current state.  This leads to exact coalescence of coupled chains 
+        whenever both chains' states are in the same hypercube.
+
+    rgrid-met-1 [ -b ] [ -r ] [ stepsize-adjust[:stepsize-alpha] 
+                                [ first[:last] ] ]
+
+        Do single-component random-grid Metropolis updates, for the range 
+        of components given.  The default if no components are given is all 
+        components. The default for last if first alone is given is last=first.
+        If no -r argument is given, the components are all updated in order;
+        with the -r option, just one randomly-chosen component is updated.
 
 Dynamical operations:
 
@@ -138,16 +170,28 @@ Dynamical operations:
 
     spiral temper-factor steps [ stepsize-adjust[:stepsize-alpha] ] 
 
+        Performs spiral dynamics, in which steps of Hamiltonian dynamics
+        alternate with multiplication/division of the momentum by the
+        specified tempering factor.  The specified number of steps are
+        randomly divided into steps "before" and "after" the current
+        state.
+
     double-spiral temper-factor steps [ stepsize-adjust[:stepsize-alpha] ] 
+
+        Like spiral, but with a reversal of direction at a randomly 
+        chosen point, producing a double spiral.
 
 Slicing operations:
 
-    slice-1 [ stepsize-adjust[:stepsize-alpha] [ max-steps [ first[:last] ] ] ]
+    slice-1 [ -r ] [ stepsize-adjust[:stepsize-alpha] 
+                     [ max-steps [ first[:last] ] ] ]
 
         Do single-component slice sampling, for the range of components 
         given.  The default for the range of components (first:last) is 
         all components.  The default for last if first alone is given is 
-        last=first.  Components are numbered starting with zero.
+        last=first.  Components are numbered starting with zero.  If no -r 
+        argument is given, the components are all updated in order; with 
+        the -r option, just one randomly-chosen component is updated.
 
         If the max-steps argument is positive, it gives the maximum number 
         of intervals to create when using the stepping out procedure to
@@ -160,10 +204,38 @@ Slicing operations:
         limit, but setting max-steps to -1000 is the same for all practical
         purposes.)
 
-    slice-over [ refinements [ refresh-prob [ stepsize-adjust[:stepsize-alpha] 
-                 [ max-steps [ first[:last] ] ] ] ] ]
+    slice [ -g | -G ] [ stepsize-adjust[:stepsize-alpha] ] 
 
-        Do overrelaxed slice sampling, for the range of components given.
+        Do multi-dimensional slice sampling with the given stepsize.  At
+        present, the initial hyperrectangle found cannot be expanded (either
+        by stepping out or by doubling).  After a point is randomly chosen
+        from the hyperrectangle, it is shrunk in certain directions if the
+        chosen point is not in the slice, and another random point chosen,
+        until eventually a point in the slice is found.  If neither the -g 
+        nor the -G option is specified, all coordinate directions are shrunk. 
+        If -g is specified, only one coordinate direction is shrunk - that
+        for which the product of the absolute value of the energy gradient 
+        and the current dimension of the hyperrectange in that coordinate 
+        is the maximum.  If -G is specified, this coordinate direction 
+        is shrunk (as for -g), along with all other coordinate directions 
+        for which the corresponding product is at least half this maximum.
+
+    slice-gaussian [ -e ] [ stepsize-adjust[:stepsize-alpha] ] 
+
+        Do multi-dimensional slice sampling with Gaussian-distributed
+        "crumbs".  The distribution of the first crumb has diagonal 
+        covariance, with standard deviations given by the stepsizes.
+        If no option is given, this is also the distribution of later
+        crumbs.  When -e is specified, later crumbs have their standard
+        deviations rescaled based on the energy of the most recent trial 
+        point, so as to (hopefully) lead to a good chance of the next 
+        trial point lying in the slice.
+
+    slice-over [ -r ] [ refinements [ refresh-prob 
+      [ stepsize-adjust[:stepsize-alpha] [ max-steps [ first[:last] ] ] ] ] ]
+
+        Do overrelaxed slice sampling, for the range of components given,
+        or for one such component chosen randomly, if the -r option is given.
         The endpoints are computed using the given number of refinements
         (default zero).  The refresh probability is the probability of doing 
         an ordinary slice sampling update rather than an overrelaxed one; 
@@ -267,6 +339,12 @@ distribution for stepsizes, a distribution over 'alpha' orders of
 magnitude, uniform in the log domain, centred at the value found using
 stepsize-adjust, is used.
 
+The "-b" option for Metropolis operations causes the "Barker" or
+"Boltzmann" acceptance probability to be used, rather than the usual
+"Metropolis" form.  If R is the ratio of probability densities for the
+new and old states, the "-b" option acceptance probability is R/(1+R),
+whereas the Metropolis form is min(1,R).
+
 The trajectory specification can have one of the following forms:
 
     leapfrog [ halfp | halfq ] [ N-approx ]
@@ -282,7 +360,7 @@ The trajectory specification can have one of the following forms:
 
         Apply McLachlan and Atela's "optimal" two stage method, with the
         first step being done for the position (firstq) or momentum
-        (firstp) variables.  The default is "firstq".  This method is
+        (firstp) variables.  The default is "firstp".  This method is
         not symmetrical.  The "rev" option gives the reversed version.
         The "sym" option gives the ordinary followed by the reversed
         version, with half the stepsize for each, thereby producing 
@@ -297,7 +375,7 @@ The trajectory specification can have one of the following forms:
         most useful values for a2 are covered by "leapfrog" and "opt2".
         The "rev" and "sym" options are as for opt2.
 
-    opt4 
+    opt4 [ rev | sym ]
 
         Apply McLachlan and Atela's "optimal" four stage method for
         quadratic kinetic energy. The "rev" and "sym" options are as for opt2.
@@ -311,4 +389,4 @@ their description of opt2 in table 2. b1=1-b2 should be 1-1/sqrt(2).)
 The list of operations is stored in a record of type 'o'; the
 trajectory specification in a record of type 't'.
 
-            Copyright (c) 1995, 1998, 1999 by Radford M. Neal
+            Copyright (c) 1995-2000 by Radford M. Neal

@@ -1,0 +1,14 @@
+
+# These commands sample from the posterior distribution for the linear
+# regression problem.
+
+dist-spec rlog.circ \
+  "u ~ Normal(0,10^2) + w0 ~ Normal(0,10^2) + w1 ~ Normal(0,10^2) \
+      + v ~ ExpGamma(1,0.2)" \
+  "t ~ Normal (u + w0i0 + w1i1, Exp(-v))"
+
+data-spec rlog.circ 2 1 / rdata .
+
+mc-spec rlog.circ repeat 5 heatbath hybrid 50 0.005 end metu 0.01
+
+mc-circ dist rlog.circ 10 50 10

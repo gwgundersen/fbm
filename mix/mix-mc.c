@@ -1,6 +1,6 @@
 /* MIX-MC.C - Interface between mixture model and Markov chain modules. */
 
-/* Copyright (c) 1997, 1998 by Radford M. Neal 
+/* Copyright (c) 1997-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -1008,7 +1008,7 @@ static void met_indicators
 )
 { 
   int Di, singleton, E, N;
-  double c, lp, np, dp;
+  double c, lp, np, dp, U;
   int i, x, t, u;
 
   N = mx->N_components;
@@ -1105,7 +1105,9 @@ static void met_indicators
       it->proposals += 1;
       if (i==Di) it->delta = dp;
 
-      if (dp<0 || rand_uniform()<exp(-dp))
+      U = rand_uniform();
+
+      if (dp<0 || U<exp(-dp))
       { 
         if (x==N_active)
         { N_active += 1;

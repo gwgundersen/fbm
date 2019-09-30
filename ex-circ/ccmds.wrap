@@ -1,0 +1,7 @@
+
+# Example of wrapped-around simulation for the Cauchy model.
+
+dist-spec clog.forw "u~Normal(0,20^2)" "Log[1+(u-18)^2] + Log[1+(u-25)^2]"
+mc-spec   clog.forw rgrid-met 5
+dist-mc   clog.forw 500
+dist-wrap clog.forw clog.wrap

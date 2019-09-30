@@ -1,5 +1,5 @@
 
-  FLEXIBLE BAYESIAN MODELLING SOFTWARE, VERSION OF 1999-12-06
+  FLEXIBLE BAYESIAN MODELLING SOFTWARE, VERSION OF 2000-08-21.
 
   This directory and its subdirectories contain software for flexible
   Bayesian learning of regression, classification, density, and other
@@ -14,13 +14,13 @@
   'manual' has all the introductory documentation as one long ASCII
   text file.  If you have a Web browser, you're better off viewing 
   'index.html' in 'doc', which has links to all the documentation.
-  (Note: You must access 'index.html' in this directory, not copy it
-  somewhere else, since the links are relative.)
+  (Note: You must access 'index.html' in the 'doc' directory, not copy 
+  it somewhere else, since the links are relative.)
 
   -----------------------------------------------------------------------
 
   The contents of this directory and its sub-directories are 
-  Copyright (c) 1995, 1996, 1997, 1998, 1999 by Radford M. Neal
+  Copyright (c) 1995-2000 by Radford M. Neal
   
   Permission is granted for anyone to copy, use, or modify these
   programs and accompanying documents for purposes of research or

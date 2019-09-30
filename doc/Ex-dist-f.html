@@ -1,0 +1,313 @@
+<html>
+<body>
+<pre>
+
+
+SAMPLING FROM A FUNNEL DISTRIBUTION IN TEN DIMENSIONS
+
+Here I will illustrate some of the dangers of Markov chain sampling by
+showing how even a rather simple distribution can pose problems, which
+may not be obvious from simple plots.  This example also illustrates
+how the adaptive nature of slice sampling can help prevent disaster.
+
+
+Specifying a "funnel" distribution.
+
+Here is the specification for the distribution in this example:
+
+    &gt; dist-spec flog \
+        "v~Normal(0,3^2)     + x1~Normal(0,Exp(v)) \
+       + x2~Normal(0,Exp(v)) + x3~Normal(0,Exp(v)) \
+       + x4~Normal(0,Exp(v)) + x5~Normal(0,Exp(v)) \
+       + x6~Normal(0,Exp(v)) + x7~Normal(0,Exp(v)) \
+       + x8~Normal(0,Exp(v)) + x9~Normal(0,Exp(v))"
+
+(A "\" just indicates that the command is continued on the next line.)
+
+There are ten variables above: "v" and "x1" to "x9".  The distribution
+of v is normal with mean zero and standard deviation 3.  Given v, the
+other variables are independent, and each has mean zero and variance
+of Exp(v).  This can be pictured as a funnel - with v large at the
+mouth of the funnel, getting smaller as the funnel narrows - except
+that a cross section of the funnel has nine dimensions rather than the
+two of the funnels found in kitchens.
+
+It is of course possible to sample from this distribution directly, by
+simply sampling for v, and then sampling for each of x1 to x9 given
+this value for v, obtaining independent points from exactly the
+correct distribution.  And even without doing this, we know what the
+marginal distribution of v should be - just Normal(0,3^2), since the
+dependency of x1 to x9 on v doesn't influence the distribution of v
+itself.  It's precisely this ease of finding the right answer that
+makes this an interesting test problem for the Markov chain methods.
+The idea is to pretend that we don't already know the answer, and then
+compare what we would conclude using the Markov chain method to what
+we know is actually correct.
+
+The dist-spec command above will be assumed to have been issued before
+the commands discussed below, except that various log file names other
+than "flog" will be used.
+
+
+Specifying an initial state.
+
+We'll have to start sampling in some initial state.  By default, the
+state where all variables have the value zero is used, but we'll
+assume here that a different initial state was specified using the
+following command:
+
+    &gt; dist-initial flog v=0 x1=1 x2=1 x3=1 x4=1 x5=1 x6=1 x7=1 x8=1 x9=1
+
+The point specified is typical of the distribution, since zero is the
+median value for v, and v=0 corresponds to the variances of x1 to x9
+being one, so that values of 1 for these variables are of typical
+magnitude given this value for v.
+
+
+Multivariate Metropolis updates.
+
+As we did for the "ring" distribution (see <A HREF="Ex-dist-g.html">Ex-dist-g.doc</A>), we'll start
+by trying to sample from this distribution using the Metropolis
+algorithm, with proposals that change all variables simultaneously.
+Using normally-distributed proposals centred on the current state,
+with standard deviation of 1, seems like a plausible approach.  We can
+specify this sampling method with mc-spec as follows:
+
+    &gt; mc-spec flog.met,1 repeat 10000 metropolis 1
+
+The "repeat" above specifies that each iteration will consist of 10000
+Metropolis updates.  The following command does 2000 such iterations,
+for a total of 20 million Metropolis updates altogether:
+
+    &gt; dist-mc flog.met,1 2000
+
+The state at the end of each iteration (ie, after each group of 10000
+Metropolis updates) is saved in the log file.
+
+Once this command has finished (which takes 16 minutes on our 550 MHz
+Pentium III machine), we can produce a scatterplot from the points
+obtained in order to see the relationship of x1 to v:
+
+    &gt; dist-plt x1 v flog.met,1 | plot-points
+
+Here, plot-points is assumed to be a suitable plotting program.  The
+"funnel" or "fan" shape should be visible in this plot.
+
+We can look at how v varies from iteration to iteration with a plot
+such as:
+
+    &gt; dist-plt t v flog.met,1 | plot-points
+
+Exactly what you will see in this plot may depend on the machine you
+run the programs on, due to possible differences in the random number
+generator or in the details of floating-point arithmetic.  You can try
+different random number seeds if you want to investigate the
+possibilities (see <A HREF="rand-seed.html">rand-seed.doc</A>).  However, it is likely that you
+will see a plot in which the values of v at different times appear to
+be almost independent, from which you might well conclude that the
+Metropolis updates had converged to the right distribution, and moved
+around it quite well.
+
+But in fact, the answer obtained is very wrong.  You will probably see
+few or no values for v less than -4, even though over 9% of the points
+from a normal distribution with mean 0 and standard deviation 3 should
+be less than this.  You're even less likely to see any values for v
+less than -6, even though 2.3% of the points should be below this
+value.
+
+What you're probably seeing is therefore a "nightmare scenario" for
+MCMC methods - a seriously wrong answer, with no apparent indication
+that anything is amiss.  However, there is a chance that you will see
+something that might warn you of the problem.  Now and then, the
+Markov chain simulated above will "stick" at a low value of v (near
+-4), due to rejections, and this sometimes lasts long enough for it to
+be obvious in the plot.  Even if it's not obvious, if you are
+suspicious enough to look closely, it's quite likely that you'll be
+able to see such consecutive iterations where "v" has not changed.
+The following plot is also revealing:
+
+    &gt; dist-plt t r flog.met,1 | plot-points
+
+This shows that even though the average rejection rate for the
+Metropolis updates is a fairly reasonable 80% (ie, 20% are accepted),
+there are extended periods of time when the rejection rate is very
+close to 100%.  A final confirmation of what's going on can be
+obtained by looking at the relationship of the rejection rate over the
+10000 Metropolis updates in an iteration with the value of v at the
+end of the iteration:
+
+    &gt; dist-plt v r flog.met,1 | plot-points
+
+This will show that the rejection rate tends to be high when v is
+small.  
+
+This is not surprising, at least in hindsight.  When v is -4, the
+standard deviation of each of x1 to x9 (given this value of v) is
+Exp(-4/2) = 0.135.  The chances that a Metropolis proposal with a
+standard deviation of one for x1 to x9 will lie in the region of high
+probability for x1 to x9 given v=-4 is very low (on the order of
+0.135^9, which is about 1.5e-8).  The value of v also changes in a
+Metropolis proposal, so this doesn't give the exact acceptance rate,
+but it is nevertheless clear that the acceptance rate will be very low
+when v is -4 or less, since the stepsize of one is too large for this
+region.  Since the Metropolis updates leave the right distribution
+invariant, it follows that the chain must only rarely move to points
+were v is this small - since otherwise it would spend too much time
+there.
+
+
+Single-variable Metropolis updates.
+
+Perhaps Metropolis updates that change only one variable at a time
+will work better, since such updates will not suffer from the
+extremely small acceptance probabilities that can result when the
+proposals are too wide in many dimensions.
+
+We can try this out using commands similar to those above, but with
+the mc-spec command changed as follows:
+
+    &gt; mc-spec flog.met1,1 repeat 1300 met-1 1
+
+The "met-1" operation does a single-variable Metropolis update for
+each variable in turn (v and x1 to x9).  To make the comparison fair,
+the number of repetitions has been reduced from 10000 to 1300, so that
+the computation time per iteration is about the same as before.
+
+As before, we can check how well the chain is moving around by
+examining plots such as the following:
+
+    &gt; dist-plt t v flog.met1,1 | plot-points
+
+Exactly what you will see may once again depend on what machine you
+run the programs on, but you should see values for v that extend
+downward much further than before, perhaps down to about -10.  The
+single-variable updates do seem to avoid the problem encountered
+before.
+
+Unfortunately, the answer may still be wrong.  You will probably see
+that for long stretches of time (many hundreds of iterations, perhaps
+the entire run), the chain does not produce any values for v that are
+greater than 7.  But almost 1% of points from a normal distribution
+with mean zero and standard deviation 3 ought to be greater than 7,
+about 20 points in the run of 2000 iterations.  Indeed, you'll
+probably see about that many values for v less than -7 in the opposite
+(symmetrical) tail of the distribution.
+
+However, if you are lucky, you may see about the right number of
+values for v greater than 7.  Once in a while, the chain enters the
+region where v is this large, and then stays there for dozens of
+iterations (ie, for tens of thousands of Metropolis updates).  As in
+the explanation of the previous problem, since the chain stays a long
+time in this region once it gets there, it must enter this region only
+rarely, if it is to produce the right answer asymptotically.  In any
+particular run, even one this long (2000 iterations, 2.6 million
+"met-1" operations, 26 million single-variable updates), there is a
+fairly large chance that this region will never be entered, in which
+case the answer will be wrong without the plot showing any signs of
+trouble.
+
+Why does the chain stay a long time in the region where v is large
+once it gets there?  The problem is the opposite version of that seen
+before - the stepsize of one is too small.  When v is 7 or more, the
+standard deviation of each of x1 to x9 is Exp(7/2) = 33 or larger.
+Exploring the distribution of x1 to x9 given such a value for v by a
+random walk with stepsize one is inefficient, and in particular, for a
+long time, x1 to x9 can remain set to values that are incompatible
+with a smaller value for v.  The problem is less noticeable for the
+multivariate proposals above, since then all of x1 to x9 are changed
+simultaneously, and the typical distance moved is Sqrt(9) = 3, which
+leads to exploration that is 9 times faster.
+
+
+Metropolis with random randomly-chosen stepsizes.
+
+Since the problems above are due to the stepsize chosen being either
+too big or too small given the current value of v, we might hope to do
+better by not chosing a single stepsize, but instead picking a
+stepsize randomly for each update, from some distribution.  
+
+The following command does this, for multivariate Metropolis updates:
+
+    &gt; mc-spec flog.metv,1 repeat 10000 metropolis 1:-6
+
+The the stepsize specification of 1:-6 means that the stepsize is
+chosen randomly, with a median of 1, spread out uniformly over 6
+orders of magnitude.  That is, the log base 10 of the stepsize is
+uniformly distributed from -3 to +3.
+
+After running this chain for 2000 iterations, we can look at how well
+v is being sampled:
+
+    &gt; dist-plt t v flog.met1,1 | plot-points
+
+The results are better than for multivariate Metropolis with a fixed
+stepsize of one.  Values for v down to about -6 are sampled reasonably
+well.  However, values smaller than -6 are sampled inefficiently, and
+might not appear at all in a run of this length if you are unlucky.
+
+Although random stepsize selection helps somewhat when the necessary
+stepsize varies, it's hard to be sure that the range of stepsizes is
+large enough to cover the necessary values without making the range so
+large that the sampling becomes very inefficient simply because most
+stepsizes chosen are ridiculously large or small.
+
+
+Single-variable slice sampling.
+
+One advantage of single-variable slice sampling is that the initial
+interval can be expanded until it contains the entire slice using the
+"stepping-out" or "doubling" procedures, and conversely, the interval
+can be shrunk when the point selected from it is found to be outside
+the slice.  The result is that the interval size adapts to the current
+situation, without the inefficiency of randomly selecting stepsizes as
+in the example of the previous section.
+
+Single-variable slice sampling (with an initial interval size of one)
+can be specified as follows:
+
+    &gt; mc-spec flog.slc1,1 repeat 120 slice-1 1
+
+The repetition count of 120 is set much lower than for the Metropolis
+updates so that the computation time per iteration will be roughly the
+same.  (Slice sampling may require evaluating the energy function at
+many points in order to expand and contract the interval.)
+
+After running the slice sampling chain for 2000 iterations, we can see
+how well it did with a plot of v over time, as before:
+
+    &gt; dist-plt t v flog.slc1,1 | plot-points
+
+The results this time appear good, with both tails being sampled well.
+Points where v is greater than 9 and where v is less than -9 are
+probably visible.  Out of 2000 points from a normal distribution with
+mean zero and standard deviation 3, an average of 2.7 should be above
+9, and similarly for the lower tail.
+
+
+Multivariate slice sampling.
+
+We can also try sampling using multivariate slice sampling, in which a
+hyperrectangle containing the slice replaces the interval used in
+single-variable slice sampling.  The simplest scheme such scheme, in
+which the hyperrectangle is shrunk in all directions when the point
+found is outside the slice, can be specified as follows:
+
+    &gt; mc-spec flog.slc,1 repeat 4000 slice 1
+
+As before, the repetition count is chosen to make the computation time
+per iteration approximately the same as for the other methods.  Note
+that the software currently does not support expansion of the initial
+hyperrectangle, so the hypercube of length one per side that is
+created initially with this specification can only shrink, not expand.
+
+This method does much better than the multivariate Metropolis method
+at sampling small values of v (though it perhaps still has problems
+for v less than -8), but it does not sample well for v greater than 6.
+This is not surprising, since variables can change by no more than one
+in each update, which will be inefficient when v is large.  This
+problem can be reduced by making the stepsize larger (eg, "slice 10"),
+but at the cost of somewhat greater computation time per update. It
+seems that for this problem single-variable updates work better.
+</pre>
+</body>
+</html>

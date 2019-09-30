@@ -1,6 +1,6 @@
 /* MC-SLICE.C - Procedures for performing slice sampling updates. */
 
-/* Copyright (c) 1996, 1997 by Radford M. Neal 
+/* Copyright (c) 1996-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -45,8 +45,9 @@ void mc_slice_1
   mc_iter *it,		/* Description of this iteration */
   int firsti,		/* Index of first component to update (-1 for all) */
   int lasti,		/* Index of last component to update */
-  int max_steps		/* Maximum number of intervals, zero for unlimited;
+  int max_steps,	/* Maximum number of intervals, zero for unlimited;
 			   if negative, intervals are found by doubling */
+  int r_update		/* Update just one component at random? */
 )
 {
   double curr_q, slice_point, low_bnd, high_bnd;
@@ -59,6 +60,10 @@ void mc_slice_1
 
   if (lasti>=ds->dim-1) lasti = ds->dim-1;
   if (firsti>lasti) firsti = lasti;
+
+  if (r_update)
+  { firsti = lasti = firsti + (int)(rand_uniform()*(lasti-firsti+1));
+  }
   
   for (k = firsti; k<=lasti; k++)
   {
@@ -86,6 +91,158 @@ void mc_slice_1
 }
 
 
+/* PERFORM MULTIVARIATE SLICE SAMPLING WITH HYPERRECTANGLES. */
+
+void mc_slice
+( mc_dynamic_state *ds,	/* State to update */
+  mc_iter *it,		/* Description of this iteration */
+  mc_value *save,	/* Place to save current state */
+  mc_value *lowb,	/* Storage for low bounds of hyperrectangle */
+  mc_value *highb,	/* Storage for high bounds of hyperrectangle */
+  int g_shrink		/* Shrink based on gradient? */
+)
+{
+  double init_energy, slice_point, sf, maxp, pr;
+  int k, maxk;
+
+  it->slice_calls += 1;
+
+  if (!ds->know_pot)
+  { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
+    ds->know_pot = 1;
+    it->slice_evals += 1;
+  }
+
+  slice_point = ds->pot_energy + rand_exp();
+  init_energy = ds->pot_energy;
+
+  mc_value_copy (save, ds->q, ds->dim);
+
+  sf = it->stepsize_factor;
+
+  for (k = 0; k<ds->dim; k++) 
+  { lowb[k]  = ds->q[k] - sf * ds->stepsize[k] * rand_uniopen();
+    highb[k] = lowb[k] + sf * ds->stepsize[k];
+  }
+ 
+  for (;;)
+  { 
+    for (k = 0; k<ds->dim; k++) 
+    { ds->q[k]  = lowb[k] + rand_uniopen() * (highb[k]-lowb[k]);
+    }
+
+    mc_app_energy (ds, 1, 1, &ds->pot_energy, g_shrink ? ds->grad : 0);
+    ds->know_pot = 1;
+    ds->know_grad = g_shrink;
+    it->slice_evals += 1;
+
+    if (ds->pot_energy<=slice_point)
+    { it->delta = ds->pot_energy - init_energy;
+      return;
+    }
+
+    if (g_shrink!=0)
+    { 
+      maxp = -1;
+
+      for (k = 0; k<ds->dim; k++) 
+      { 
+        pr = ds->grad[k] * (highb[k]-lowb[k]);
+        if (pr<0) pr = -pr;
+
+        if (pr>maxp)
+        { maxp = pr;
+          maxk = k;
+        }
+      }
+    }
+
+    for (k = 0; k<ds->dim; k++) 
+    { 
+      if (g_shrink==2) 
+      { pr = ds->grad[k] * (highb[k]-lowb[k]);
+        if (pr<0) pr = -pr;
+      }
+
+      if (g_shrink==0 || k==maxk || g_shrink==2 && pr>=maxp/2)
+      { if (ds->q[k]>save[k])
+        { highb[k] = ds->q[k];
+        }
+        else
+        { lowb[k] = ds->q[k];
+        }
+      }
+    }
+  }
+}
+
+
+/* PERFORM MULTIVARIATE GAUSSIAN SLICE SAMPLING. */
+
+void mc_slice_gaussian
+( mc_dynamic_state *ds,	/* State to update */
+  mc_iter *it,		/* Description of this iteration */
+  mc_value *save,	/* Place to save current state */
+  mc_value *wsum,	/* Place to store weighted sum of crumbs */
+  int e_shrink		/* Shrink dist. based on energy of trial points? */
+)
+{
+  double init_energy, slice_point, sf, w, wo, totw;
+  int k;
+
+  it->slice_calls += 1;
+
+  if (!ds->know_pot)
+  { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
+    ds->know_pot = 1;
+    it->slice_evals += 1;
+  }
+
+  slice_point = ds->pot_energy + rand_exp();  
+  init_energy = ds->pot_energy;
+
+  mc_value_copy (save, ds->q, ds->dim);
+
+  sf = it->stepsize_factor;
+  w = 1/(sf*sf);
+
+  for (k = 0; k<ds->dim; k++)
+  { wsum[k] = w * (save[k] + rand_gaussian() * ds->stepsize[k] / sqrt(w));
+  }
+
+  totw = w;
+
+  for (;;)
+  { 
+    for (k = 0; k<ds->dim; k++) 
+    { ds->q[k]  = wsum[k]/totw + rand_gaussian() * ds->stepsize[k] / sqrt(totw);
+    }
+
+    mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
+    ds->know_pot = 1;
+    ds->know_grad = 0;
+    it->slice_evals += 1;
+
+    if (ds->pot_energy<=slice_point)
+    { it->delta = ds->pot_energy - init_energy;
+      return;
+    }
+  
+    if (e_shrink)
+    { wo = w;
+      w = totw * (ds->pot_energy - slice_point - 1);
+      if (w<wo) w = wo;
+    }
+
+    for (k = 0; k<ds->dim; k++) 
+    { wsum[k] += w * (save[k] + rand_gaussian() * ds->stepsize[k] / sqrt(w));
+    }
+
+    totw += w;
+  }
+}
+
+
 /* PERFORM OVERRELAXED SLICE SAMPLING UPDATES FOR COORDINATES IN SOME RANGE. */
 
 void mc_slice_over
@@ -95,7 +252,8 @@ void mc_slice_over
   float refresh_prob,	/* Probability of doing a refresh update */
   int firsti,		/* Index of first component to update (-1 for all) */
   int lasti,		/* Index of last component to update */
-  int max_steps		/* Maximum number of intervals, zero for unlimited */
+  int max_steps,	/* Maximum number of intervals, zero for unlimited */
+  int r_update		/* Update just one component at random? */
 )
 {
   double low_bnd, high_bnd, olow_bnd, ohigh_bnd, dlow_bnd, dhigh_bnd;
@@ -111,6 +269,10 @@ void mc_slice_over
 
   if (lasti>=ds->dim-1) lasti = ds->dim-1;
   if (firsti>lasti) firsti = lasti;
+
+  if (r_update)
+  { firsti = lasti = firsti + (int)(rand_uniform()*(lasti-firsti+1));
+  }
   
   for (k = firsti; k<=lasti; k++)
   {
@@ -234,8 +396,11 @@ static void step_out
 
   width = it->stepsize_factor * ds->stepsize[k];
 
-  low_steps  = max_steps==0 ? 1000000000 : rand_int(max_steps);
-  high_steps = max_steps==0 ? 1000000000 : (max_steps-1) - low_steps;
+  low_steps  = max_steps==0 ? 1000000000 
+             : max_steps==1 ? 0
+             : rand_int(max_steps);
+  high_steps = max_steps==0 ? 1000000000 
+             : (max_steps-1) - low_steps;
 
   *low_bnd  = curr_q - rand_uniopen() * width;
   *high_bnd = *low_bnd + width;

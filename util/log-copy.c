@@ -1,6 +1,6 @@
 /* LOG-COPY.C - Program to copy part of a log file. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -35,7 +35,15 @@ main
   int low, high, modulus, neg_only;
   int olow, omod, lasti, lasto;
   void *data;
+  char *ignore;
   char *p;
+
+  ignore = "";
+  if (argc>1 && *argv[1]=='-')
+  { ignore = argv[1]+1;
+    argc -= 1;
+    argv += 1;
+  }
 
   if (argc!=4 && argc!=5) usage();
 
@@ -77,8 +85,8 @@ main
   {
     data = 0;
 
-    if (logf_in.header.index<0 
-     || logf_in.header.index>=low && logf_in.header.index%modulus==0)
+    if (!strchr(ignore,logf_in.header.type) && (logf_in.header.index<0 
+     || logf_in.header.index>=low && logf_in.header.index%modulus==0))
     { 
       data = malloc(logf_in.header.size);
       if (data==0)
@@ -125,6 +133,6 @@ main
 void usage(void)
 { 
   fprintf(stderr,
-    "Usage: log-copy input-log-file range output-log-file [ low[%%mod] ]\n");
+"Usage: log-copy [ -ignoredtype... ] logfile-in range logfile-out [ low[%%mod] ]\n");
   exit(1);
 }

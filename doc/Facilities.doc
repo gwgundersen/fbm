@@ -21,15 +21,15 @@ permission to use the software for free is granted only for purposes
 of research and education.
 
 The complete source code (in C) is provided, allowing researchers to
-modify the program to test new ideas.  It is not necessary to known C
+modify the program to test new ideas.  It is not necessary to know C
 to use the programs (assuming you manage to install them correctly).
 
-This software is designed for use on a Unix system, using commands
-issued to the Unix command interpreter (shell).  No particular window
-system or other GUI is required, but a plotting program will be very
-useful.  I use the xgraph plot program, written by David Harrison,
-which allows plots to be produced by just piping data from one of the
-commands; it can be obtained from my web page.
+This software is designed for use on a Unix or Linux system, using
+commands issued to the command interpreter (shell).  No particular
+window system or other GUI is required, but a plotting program will be
+very useful.  I use the xgraph plot program, written by David
+Harrison, which allows plots to be produced by just piping data from
+one of the commands; it can be obtained from my web page.
 
 
 Markov chain Monte Carlo facilities.
@@ -57,8 +57,9 @@ review discusses methods based on Hamiltonian dynamics, including the
 "hybrid Monte Carlo" method.  These methods are also discussed in my
 book on "Bayesian Learning for Neural Networks".  My web page also has
 papers on slice sampling ("Markov chain Monte Carlo methods based on
-`slicing' the density function") and on Annealed Importance Sampling,
-both of which are implemented in this software.
+`slicing' the density function" and "Slice sampling"), Annealed
+Importance Sampling, and circularly-coupled Markov chain sampling, all
+of which are implemented in this software.
 
 
 Neural network and Gaussian process models.
@@ -71,20 +72,21 @@ The Gaussian process models are in many ways analogous to the network
 models.  The Gaussian process models implemented in this software, and
 computational methods that used, are described in my technical report
 entitled "Monte Carlo implementation of Gaussian process models for
-Bayesian regression and classification", available in compressed
-Postscript at URL ftp://ftp.cs.utoronto.ca/pub/radford/mc-gp.ps.Z.
-The Gaussian process models for regression are similar to those
-evaluated by Carl Rasmussen in his thesis, "Evaluation of Gaussian
-Processes and other Methods for Non-Linear Regression", available from
-his web page, at the URL http://www.cs.utoronto.ca/~carl/; he also
-talks about neural network models.  To understand how to use the
-software implementing these models, it is essential for you to have
-read at least one of these references.
+Bayesian regression and classification", available from my web page,
+and in my Valencia conference paper on "Regression and classification
+using Gaussian process priors", in Bayesian Statistics 6.  The
+Gaussian process models for regression are similar to those evaluated
+by Carl Rasmussen in his thesis, "Evaluation of Gaussian Processes and
+other Methods for Non-Linear Regression", available from his web page,
+at the URL http://www.cs.utoronto.ca/~carl/; he also talks about
+neural network models.  To understand how to use the software
+implementing these models, it is essential for you to have read at
+least one of these references.
 
 The neural network software supports Bayesian learning for regression
-problems, classification problems, and survival analysis (experimental), 
-using models based on networks with any number of hidden layers, with
-a wide variety of prior distributions for network parameters and
+problems, classification problems, and survival analysis, using models
+based on networks with any number of hidden layers, with a wide
+variety of prior distributions for network parameters and
 hyperparameters.  The Gaussian process software supports regression
 and classification models that are similar to neural network models
 with an infinite number of hidden units, using Gaussian priors.
@@ -100,34 +102,33 @@ be irrelevant (developed with David MacKay).
 For problems and networks of moderate size (eg, 200 training cases, 10
 inputs, 20 hidden units), fully training a neural network model (to
 the point where one can be reasonably sure that the correct Bayesian
-answer has been found) typically takes several hours to a day on a
-modern personal computer.  However, quite good results, competitive
-with other methods, are often obtained after training for under an
-hour.  The time required to train the Gaussian process models depends
-a lot on the number of training cases.  For 100 cases, these models
-may take only a few minutes to train (again, to the point where one
-can be reasonably sure that convergence to the correct answer has
-occurred).  For 1000 cases, however, training might well take a day.
+answer has been found) typically takes up to several hours on a modern
+personal computer.  However, quite good results, competitive with
+other methods, are often obtained after training for under an hour.
+The time required to train the Gaussian process models depends a lot
+on the number of training cases.  For 100 cases, these models may take
+only a few minutes to train (again, to the point where one can be
+reasonably sure that convergence to the correct answer has occurred).
+For 1000 cases, however, training might well take a day.
 
 The software also implements neural network training using early
 stopping, as described in my paper on "Assessing relevance
-determination methods using DELVE" (in Neural Networks and Machine
-Learning, C. M. Bishop, editor, Springer-Verlag, 1998).  A similar
+determination methods using DELVE", in Neural Networks and Machine
+Learning, C. M. Bishop, editor, Springer-Verlag, 1998.  A similar
 early stopping method is also described in Carl Rasmussen's thesis
 (see above).
 
 
 Bayesian mixture models.
 
-The software Bayesian mixture models for multivariate real or binary
-data, with both finite and countably infinite numbers of components.
-The countably infinite mixture models are equivalent to Dirichlet
-process mixture models.  The sampling methods that I have implemented
-for these models are described in my technical report on "Markov chain
-sampling methods for Dirichlet process mixture models", which can be
-obtained from ftp://ftp.cs.utoronto.ca/pub/radford/mixmc.ps.Z.  See
-also my technical report on "Bayesian mixture modeling by Monte Carlo
-simulation", at ftp://ftp.cs.utoronto.ca/pub/radford/bmm.ps.Z.  
+The software implements Bayesian mixture models for multivariate real
+or binary data, with both finite and countably infinite numbers of
+components.  The countably infinite mixture models are equivalent to
+Dirichlet process mixture models.  The sampling methods that I have
+implemented for these models are described in my technical report on
+"Markov chain sampling methods for Dirichlet process mixture models",
+which can be obtained from web page; see also my technical report on
+"Bayesian mixture modeling by Monte Carlo simulation".
 
 The software implements the basic sampling operations for these
 models, but is rather preliminary in some respects, lacking many
@@ -193,6 +194,12 @@ be used, many of which are discussed in the documentation:
     ex-ais    Contains command and data files used for the tests in
               my paper on "Annealed importance sampling".
 
+One should note, however, that these examples do not constitute
+"recipes" that can be used unchanged for new problems.  They are
+intended to help you understand the models, priors, and computational
+methods, so that you can devise an appropriate way of handling
+whatever problem you are interested in.
+
 The 'bin' directory contains links to all the programs.  The 'doc'
 directory contains all the documentation.
 
@@ -200,16 +207,17 @@ directory contains all the documentation.
 Portability of the software.
 
 The software is written in ANSI C, and is meant to be run in a UNIX
-environment.  It is known to work on a Linux system (Redhat 6.0) with
-a Pentium processor, and on an SGI machine running IRIX Release 6.5.
-It also seems to run OK on a SPARC machine running SunOS 5, using the
-'gcc' C compiler, and on DEC Alpha machines, provided that the -ieee
-and -std options are given to the DEC C compiler.  As far as I know,
-the software does not depend on any peculiarities of these
-environments (except perhaps for the use of the drand48 pseudo-random
-number generator, and the lgamma function), but you may nevertheless
-have problems getting it to work in substantially different
-environments, and I can offer little or no assistance in this regard.
+environment.  It is known to work on a Linux system (Redhat 6.0 and
+6.2) with a Pentium processor, and on an SGI machine running IRIX
+Release 6.5.  It also seems to run OK on a SPARC machine running SunOS
+5, using the 'gcc' C compiler, and on DEC Alpha machines, provided
+that the -ieee and -std options are given to the DEC C compiler.  As
+far as I know, the software does not depend on any peculiarities of
+these environments (except perhaps for the use of the drand48
+pseudo-random number generator, and the lgamma function), but you may
+nevertheless have problems getting it to work in substantially
+different environments, and I can offer little or no assistance in
+this regard.
 
 There is no dependence on any particular graphics package or graphical
 user interface.  The 'xxx-plt' programs are designed to allow their
@@ -217,5 +225,5 @@ output to be piped directly into the 'xgraph' plotting program, but
 other plotting programs can be used instead, or the numbers can be
 examined directly.  The 'xxx-tbl' programs output the same information
 in a different format, which is useful when plotting or analysing data
-wiht S-Plus, since this format is convenient for the S-Plus read.table
-command.
+with S-Plus or R, since this format is convenient for the S-Plus or R
+read.table command.

@@ -1,6 +1,6 @@
 /* MC-HYBRID.C - Procedure for performing Hybrid Monte Carlo updates. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995-2000 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -50,7 +50,7 @@ void mc_hybrid
   int have_acc, acc_point;
 
   int n, k, dir, jmps;
-  double H;
+  double H, U;
 
   if (steps%jump!=0) abort();
 
@@ -223,7 +223,9 @@ void mc_hybrid
   it->proposals += 1;
   it->delta = acc_free_energy - rej_free_energy;
 
-  if (it->delta<=0 || rand_uniform() < exp(-it->delta/it->temperature))
+  U = rand_uniform(); /* Do every time to keep in sync for coupling purposes */
+
+  if (it->delta<=0 || U<exp(-it->delta/it->temperature))
   { 
     it->move_point = jump * (acc_point - it->window_offset);
 

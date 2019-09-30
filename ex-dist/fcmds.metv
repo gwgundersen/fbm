@@ -1,0 +1,16 @@
+
+# Commands to sample from the "funnel" distribution using the Metropolis
+# algorithm with updates to all components at once.  The median stepsize to
+# use is given as an argument; the actual stepsizes are randomly chosen
+# over four orders of magnitude centred around this median, uniformly in the 
+# log scale.
+
+dist-spec flog.metv,$1 \
+  "v~Normal(0,3^2)     + x1~Normal(0,Exp(v)) \
+ + x2~Normal(0,Exp(v)) + x3~Normal(0,Exp(v)) \
+ + x4~Normal(0,Exp(v)) + x5~Normal(0,Exp(v)) \
+ + x6~Normal(0,Exp(v)) + x7~Normal(0,Exp(v)) \
+ + x8~Normal(0,Exp(v)) + x9~Normal(0,Exp(v))"
+dist-initial flog.metv,$1 v=0 x1=1 x2=1 x3=1 x4=1 x5=1 x6=1 x7=1 x8=1 x9=1
+mc-spec flog.metv,$1 repeat 10000 metropolis $1:-6
+dist-mc flog.metv,$1 2000

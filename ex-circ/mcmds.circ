@@ -1,0 +1,12 @@
+
+# Do a circularly-coupled simulation with multiple starting points 
+# for the univariate normal mixture distribution (3/4)Normal(-1,1) 
+# + (1/4)Normal(1.5,0.1^2), with starting points drawn from the
+# Normal(0,5^2) distribution.
+#
+# A random seed may be given as an (optional) argument.
+
+dist-spec mlog.circ "x~Normal(0,5^2)" "-x~Normal(0,5^2) \
+ - LogSumExp( Log(0.75) - x~Normal(-1,1), Log(0.25) - x~Normal(1.5,0.1^2) )"
+mc-spec   mlog.circ rgrid-met 0.5
+dist-circ mlog.circ 10 100 10 $1

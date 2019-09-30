@@ -1,6 +1,6 @@
 /* BVG-PLT.C - Procedures used to plot data on bivariate Gaussian simulation. */
 
-/* Copyright (c) 1995, 1998 by Radford M. Neal 
+/* Copyright (c) 1995-1998 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
