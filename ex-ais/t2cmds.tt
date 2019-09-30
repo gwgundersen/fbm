@@ -1,0 +1,18 @@
+
+# Estimate the normalizing constant for a mixture of Gaussians using tempered 
+# transitions.  Two estimates are produced, based on just the first half
+# of each trajectory, or on both halves (unless the trajectory is rejected).
+# Note that the estimates are actually for the reciprocal of the normalizing
+# constant, whose true value is 1343.8.  Note that the tempering schedule
+# must start with 0.
+
+t2spec t2log.tt
+mc-temp-sched t2log.tt 0:+79 0.01:320
+rand-seed t2log.tt 1
+mc-spec t2log.tt repeat 10 metropolis 0.05 end temp-trans \
+                    repeat 10 metropolis 0.05 metropolis 0.15 metropolis 0.5
+
+dist-mc t2log.tt 2000
+
+dist-tbl F1 t2log.tt 20: | series m 100
+dist-tbl F2 t2log.tt 20: | series m 100

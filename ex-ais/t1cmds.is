@@ -1,0 +1,9 @@
+
+# Test simple importance sampling on the Gaussian distribution.  It doesn't
+# work very well.
+
+t1spec t1log.is
+mc-temp-sched t1log.is -
+rand-seed t1log.is 1
+mc-spec t1log.is AIS
+dist-mc t1log.is 100000

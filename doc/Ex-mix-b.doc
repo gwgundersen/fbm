@@ -281,8 +281,10 @@ with a training case is proposed with probability determined by the
 frequencies with which components are associated with other training
 cases.  The proposal is accepted or rejected based on the resulting
 change in likelihood.  The process can then be repeated any desired
-number of times, to produce an approximation to Gibbs sampling.  With
-this change, we can use the following 'mc-spec' command for this model:
+number of times, to produce an approximation to Gibbs sampling (the
+"approximation" is only with respect to convergence speed, the answer
+is exact, asymptotically).  With this change, we can use the following
+'mc-spec' command for this model:
 
     > mc-spec blog.inf repeat 20 met-indicators 10 gibbs-params gibbs-hypers
 
@@ -349,3 +351,16 @@ be expected when the true distribution can be expressed using only
 four components.  The number of such low-frequency components will
 vary from iteration to iteration, as will other aspects of the state,
 in accordance with the variability in the posterior distribution.
+
+A number of other ways of sampling for the indicators for countably
+infinite mixture models are also available.  Here are two:
+
+    > mc-spec blog.inf2 repeat 20 \
+                gibbs-ext-indicators 2 gibbs-params gibbs-hypers
+
+    > mc-spec blog.inf3 repeat 20 \
+                met1-indicators gibbs1-indicators gibbs-params gibbs-hypers
+
+These methods may be more efficient than using the "met-indicators"
+operation for some models.  See mix-mc.doc for descriptions of these
+and other Markov chain operations for mixture models.

@@ -100,7 +100,7 @@ typedef struct
    though this would perhaps be a bit silly; normally at least one of these
    temperatures would be fixed at one. */
 
-#define Max_temps 1001	/* Maximum number of temperatures in a schedule */
+#define Max_temps 2001	/* Maximum number of temperatures in a schedule */
 
 typedef struct
 {

@@ -1,0 +1,71 @@
+
+
+NOTES ON THE VERSION OF 1998-09-01
+
+Changes in this version:
+
+1) A new gibbs-ext-indicators operation has been added for mixture
+   models.  This is an alternative to the met-indicators operation
+   for infinite models.  The "no gaps" method of MacEachern and
+   Mueller is also implemented as a special fudge on this.
+
+2) Added 't', 'o', and 'h' quantities for mixture models.  For details,
+   see mix-quantities.doc.
+
+3) The mean-prior argument for mix-spec is now optional.  When absent,
+   it is effectively zero.  See mix-spec.doc for details.
+
+4) Reference is now made to my tech report on "Markov chain sampling
+   methods for Dirichlet proces mixture models", which describes the
+   sampling methods for mixture models used in this software.  The
+   'ex-mix' directory contains the command files for the tests done 
+   in that paper.
+
+5) Added an example of implementing a random effects model using the
+   facilities of the 'dist' module (see Ex-bayes-e.doc).
+
+6) The 'ex-ais' directory contains command and data files used for the
+   tests in my paper on "Annealed Importance Sampling" (revised version
+   of 31 August 1998).
+
+7) Added a "W" quantity to what can be displayed by mc-ais.  This 
+   is more useful than "V" when there are a few very bad runs.  See
+   mc-ais.doc for details.
+
+8) The maximum number of temperatures in a tempering schedule really
+   has been increased to 2001 from 1001.  (This was claimed to be so
+   for the last release, but wasn't actually.)  Old log files that 
+   used the mc-temp-sched command won't be readable by this release.
+
+9) Various improvements were made to the documentation.
+
+10)Changed the way the tar file is built so that untarring puts all
+   the files and directories inside one directory with a name like
+   fbm.YYYY-MM-DD.
+
+
+Bug fixes.
+
+Fixed a bug in the met1-indicators operation when applied to mixture
+models with a finite number of components.  Fixed a bug that prevented
+ExpGamma and ExpGamma2 from being used with function rather than
+distribution syntax.  Fixed some minor problems with error checks.
+
+
+Known bugs and other deficiencies.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The latent value update operations for Gaussian processes may recompute 
+   the inverse covariance matrix even when an up-to-date version was 
+   computed for the previous Monte Carlo operation.
+
+4) Covariance matrices are stored in full, even though they are symmetric,
+   which sometimes costs a factor of two in memory usage.

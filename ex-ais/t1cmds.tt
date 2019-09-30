@@ -1,0 +1,18 @@
+
+# Estimate the normalizing constant for a Gaussian distribution using tempered 
+# transitions.  Two estimates are produced, based on just the first half
+# of each trajectory, or on both halves (unless the trajectory is rejected).
+# Note that the estimates are actually for the reciprocal of the normalizing
+# constant, whose true value is 4031.4.  Note that the tempering schedule
+# must start with 0.
+
+t1spec t1log.tt
+mc-temp-sched t1log.tt 0:+79 0.01:320
+rand-seed t1log.tt 1
+mc-spec t1log.tt repeat 10 metropolis 0.05 end temp-trans \
+                    repeat 10 metropolis 0.05 metropolis 0.15 metropolis 0.5
+
+dist-mc t1log.tt 500
+
+dist-tbl F1 t1log.tt 20: | series m 5
+dist-tbl F2 t1log.tt 20: | series m 5

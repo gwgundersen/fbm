@@ -10,4 +10,6 @@ given here of how this can be done for binary and for real-valued
 data.
 
 The data and command files for these examples are in the "ex-mix"
-directory.
+directory.  This directory also contains the data and command files
+used for the example in my tech report on "Markov chain sampling
+methods for Dirichlet process mixture models".

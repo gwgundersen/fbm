@@ -119,25 +119,19 @@ in Carl Rasmussen's thesis (see above).
 
 Bayesian mixture models.
 
-The software includes a preliminary implementation of Bayesian mixture
-models for multivariate real or binary data.  The finite mixture
-models are similar to those which have been used by many people.  For
-example, Lavine and West (Canadian Journal of Statistics, vol. 20,
-pp. 451-461, 1992) fit similar models using similar Markov chain Monte
-Carlo methods.  The countably infinite mixture models are equivalent
-to Dirichlet process mixtures.  Markov chain sampling for these models
-is described by Escobar and West (Journal of the American Statistical
-Association, vol. 90, pp. 577-588, 1995).  Both finite and infinite
-mixture models (for binary data) are described in my technical report,
-"Bayesian mixture modeling by Monte Carlo simulation", available at
-ftp://ftp.cs.utoronto.ca/pub/radford/bmm.ps.Z.  The models and Markov
-chain methods used in the software are not identical to those
-described in any of these references, however.  The details can be
-found only in the software documentation.  For this reason, the
-mixture model software may be a bit difficult to figure out until such
-time as I get around to writing up a paper describing this
-implementation.  This part of the software is rather preliminary in
-other respects as well.
+The software Bayesian mixture models for multivariate real or binary
+data, with both finite and countably infinite numbers of components.
+The countably infinite mixture models are equivalent to Dirichlet
+process mixture models.  The sampling methods that I have implemented
+for these models are described in my technical report on "Markov chain
+sampling methods for Dirichlet process mixture models", which can be
+obtained from ftp://ftp.cs.utoronto.ca/pub/radford/mixmc.ps.Z.  See
+also my technical report on "Bayesian mixture modeling by Monte Carlo
+simulation", at ftp://ftp.cs.utoronto.ca/pub/radford/bmm.ps.Z.  
+
+The software implements the basic sampling operations for these
+models, but is rather preliminary in some respects, lacking many
+facilities that would be useful in practical applications.
 
 
 Software components.
@@ -181,7 +175,9 @@ be used, many of which are discussed in the documentation:
     ex-netgp  Examples of Bayesian regression and classification 
               models based on neural networks and Gaussian processes.
 
-    ex-mix    Examples of Bayesian mixture models.
+    ex-mix    Examples of Bayesian mixture models.  Includes command
+              files for the test in my paper on "Markov chain sampling 
+              methods for Dirichlet process mixture models"
 
     ex-dist   Examples of Markov chain sampling on distributions
               specified by simple formulas.
@@ -192,6 +188,9 @@ be used, many of which are discussed in the documentation:
     ex-gdes   Examples of neural network learning using gradient 
               descent and early stopping.
 
+    ex-ais    Contains command and data files used for the tests in
+              my paper on "Annealed importance sampling".
+
 The 'bin' directory contains links to all the programs.  The 'doc'
 directory contains all the documentation.
 
@@ -201,8 +200,9 @@ Portability of the software.
 The software is written in ANSI C, and is meant to be run in a UNIX
 environment.  Specifically, it was developed on an SGI machine running
 IRIX Release 5.3.  It also seems to run OK on a SPARC machine running
-SunOS 5, using the 'gcc' C compiler, and on DEC Alpha machines.  As
-far as I know, the software does not depend on any peculiarities of
+SunOS 5, using the 'gcc' C compiler, and on DEC Alpha machines,
+provided that the -ieee and -std options are given to the C compiler.
+As far as I know, the software does not depend on any peculiarities of
 these environments (except perhaps for the use of the drand48
 pseudo-random number generator, and the lgamma function), but you may
 nevertheless have problems getting it to work in substantially

@@ -1,0 +1,24 @@
+
+# Test Annealed Importance Sampling on the mixture of two Gaussian 
+# distributions.  Three versions are tried.
+
+t2spec t2log.ais.a
+mc-temp-sched t2log.ais.a 0.00025:+39 0.01:160
+rand-seed t2log.ais.a 1
+mc-spec t2log.ais.a repeat 20 AIS \
+                    repeat 10 metropolis 0.05 metropolis 0.15 metropolis 0.5
+dist-mc t2log.ais.a 10000
+
+t2spec t2log.ais.b
+mc-temp-sched t2log.ais.b 0.000125:+79 0.01:320
+rand-seed t2log.ais.b 1
+mc-spec t2log.ais.b repeat 40 AIS \
+                    repeat 10 metropolis 0.05 metropolis 0.15 metropolis 0.5
+dist-mc t2log.ais.b 10000
+
+t2spec t2log.ais.c
+mc-temp-sched t2log.ais.c 0.0000625:+159 0.01:640
+rand-seed t2log.ais.c 1
+mc-spec t2log.ais.c repeat 80 AIS \
+                    repeat 10 metropolis 0.05 metropolis 0.15 metropolis 0.5
+dist-mc t2log.ais.c 10000

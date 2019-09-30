@@ -21,6 +21,7 @@ Ex-bayes.doc        Examples of Markov chain sampling for simple Bayesian models
   Ex-bayes-r.doc       A linear regression model
   Ex-bayes-t.doc       Modeling real-valued data with a t-distribution
   Ex-bayes-p.doc       Modeling probabilities for categorical data
+  Ex-bayes-e.doc       A random effects model
 
 Ex-netgp.doc        Examples of flexible Bayesian regression and classification 
                     models based on neural networks and Gaussian processes

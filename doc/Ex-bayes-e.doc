@@ -1,0 +1,150 @@
+
+
+A RANDOM EFFECTS MODEL
+
+In the simple random effects model treated here, measurements of some
+quantity are available for individuals in a number of groups.  Each
+group has associated with it a mean for individuals in the group
+(these are the "random effects").  Note that this is the population
+mean, not the mean for those individuals in the group that were
+actually measured.  The measurements on individuals in the group are
+equal to the group mean plus random individual variation.  The
+distribution of the group means is modeled as being normal with some
+unknown mean and unknown variance.  The individual variation within a
+group is also modeled as being normal, with an unknown variance that
+is the same for all groups.  The number of individuals in each group
+for which there are measurements is considered to be externally
+determined, and is thus not modeled.
+
+The number of individuals in each group together with the sample means
+and sample variances for each group are sufficient statistics for this
+model; only these are provided in the data file 'edata' (one line per
+group, in that order).  This data was synthetically generated using
+the S-Plus program in sgen.s.  There are 18 groups, with the following
+numbers of individuals in each group:
+
+       1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4
+
+The overall mean used to generate the data was 25, the variance of the
+group means was 12^2, and the variance within a group was 6^2.
+
+
+Specifying the model.
+
+We can specify this random effects model as follows:
+
+    > dist-spec elog.met \
+       "u~Normal(0,10^2) + v1~Normal(0,2^2) + v2~Normal(0,2^2)" \
+       "t0~Normal(u,Exp(v1)+Exp(v2)/i) + \
+       (1-Delta(i-1)) * ExpGamma2(Log(t1),i-1,Exp(v2))"
+
+There are three model parameters: the overall mean (u), the log of the
+variance of the group means (v1), and the log of the variance of the
+measurements within a group (v2).  The variances are represented by
+their logs so that they will not have to be constrained.
+
+The argument after the name of the log file to use ("elog.met") is the
+prior specification.  The prior for the overall mean is normal with
+mean zero and standard deviation 10.  The priors for the logs of the
+variances are both normal with mean zero and standard deviation 2.
+These parameters are independent under the prior, so the prior
+specifications are just added together.
+
+Each group will correspond to a "case", in the terminology used
+elsewhere, since given values for the parameters the data on each
+group is independent of the other groups.  The number of measurements
+for the group will be regarded as an "input", since it is not being
+modeled, while the sample mean and sample variance for the group will
+be regarded as "targets".  (This distinction is currently just a
+convention, but might be essential in future versions of the software.)
+
+The likelihood for the data in a group is given by the last argument
+(which is split between two lines).  The sample mean for the group
+(target 0, written as "t0") has a normal distribution whose mean is
+given by the overall mean parameter and whose variance is the sum of
+the variance of the group means (Exp(v1)) and the variance of the
+measurements within a group (Exp(v1)) divided by the group size (the
+input, written as "i0", or "i").  As is well known, the sample
+variance is independent of the sample mean, and has a gamma
+distribution.  This is specified by the last term in the likelihood
+argument.  There is a complication due to the possibility of a group
+with just one measurement, for which the sample variance is undefined
+(it will be zero in the data file).  This is handled by including a
+factor of (1-Delta(i-1)), which is zero if "i" is one, and is one
+otherwise.  The remainder of this term, ExpGamma2(Log(t1),i-1,Exp(v2)), 
+evaluates to the log of the density for Log(t1), the log of the sample
+variance.  This specifies that t1 has the gamma distribution with
+shape parameter (i-1)/2 and mean Exp(v2), which corresponds to the sum
+of the squared deviations having a chi-squared distribution with i-1
+degrees of freedom.  Note that the syntax using "~" cannot be used
+for a transformed variable such as Log(t1).  
+
+
+Specifying the data source.
+
+The source of the data is specified as follows:
+
+    > data-spec elog.met 1 2 / edata .
+
+For this model, each "training case" is a group.  The above command
+says there is one "input" for each group (the number of measurements)
+and two "targets" (the sample mean and sample variance for the group).
+The inputs come from 'edata', and the targets come from there as well,
+following on the same line as the input.
+
+
+Sampling with Metropolis updates.
+
+We can now specify what Markov chain operations to use in each
+iteration.  The following command specifies that each iteration should
+consist of 25 Metropolis updates using a proposal distribution in
+which each of the three parameters are changed by an amount that is
+normally-distributed with standard deviation 0.5:
+
+    > mc-spec elog.met repeat 25 metropolis 0.5
+
+We can now sample for 10000 iterations with the following command:
+
+    > dist-mc elog.met 10000
+
+This takes about three and a half minutes on our machine.
+
+A scatterplot of the posterior distribution for v1 and v2 can be
+obtained using a command such as
+
+    > dist-plt v1 v2 elog.met 100: | plot-points
+
+The first 100 iterations are discarded, as possibly not being
+representative of the posterior distribution.  This plot should show
+most of the points in an ellipse centred at v1=4.5, v2=3.8, which
+corresponds to a between-group standard deviation of about 9.5 and a
+within-group standard deviation of about 6.7.  However, a few points
+are far outside this ellipse, having much smaller values of v1, and
+values for v2 around 5.  These points correspond to the possibility
+that the group means are almost the same, with the variation in the
+sample means for the groups being almost entirely due to sampling
+variation resulting from the within-group variance.  Given the data
+seen, this is is unlikely, but it is not completely excluded.
+
+
+Slice sampling.
+
+We can also use slice sampling for this problem.  One variation of
+slice sampling is specified as follows:
+
+    > mc-spec elog.slc repeat 5 slice-1 2 1
+    > dist-mc elog.slc 10000
+
+Each iteration consists of 5 repetitions of a single-variable slice
+sampling update for each parameter.  These updates are based on
+randomly positioning an interval of width 2 around the current point,
+and then sampling successively from this interval until a point within
+the slice is found.  The last argument of "1" specifies that the
+maximum interval size is just one times the width parameter.  Since
+there is no possibility of widening the interval, there is no point in
+evaluating the energy function at the interval's endpoints.  This
+saving may make this approach beneficial in some circumstances.
+
+These 5 slice sampling operations take about the same time as the 25
+Metropolis updates of the previous section.  The resulting sampling
+efficiency is also about the same for this example.

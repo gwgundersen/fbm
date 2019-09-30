@@ -29,6 +29,11 @@
 #include "mix-data.h"
 
 
+/* ADJUSTABLE PARAMETERS. */
+
+#define Max_extras 1000		/* Maximum number of extras components allowed
+				   for gibbs-ext-indictors */
+
 /* MIXTURE MODEL VARIABLES. */
 
 static int initialize_done = 0;	/* Has this all been set up? */
@@ -62,7 +67,7 @@ static double *svar;		/* Sample variances for each component */
 /* PROCEDURES. */
 
 static void gibbs_hypers (void), gibbs_params (void), gibbs_indicators (int),
-            met_indicators (int, mc_iter *, int);
+            gibbs_ext_indicators(int), met_indicators (int, mc_iter *, int);
 
 static double case_prob (int, int);
 
@@ -126,6 +131,11 @@ void mc_app_initialize
   
     data_spec = logg->data['D'];
 
+    if (data_spec!=0 && model==0)
+    { fprintf(stderr,"No model specified for data\n");
+      exit(1);
+    }
+
     if (data_spec!=0) 
     { mix_data_read (1, 0, mx, model);
     }
@@ -176,10 +186,10 @@ void mc_app_initialize
 
     /* Allocate space for auxiliary stuff, and copy over existing info. */
 
-    ds->aux_dim = Max_active * N_targets * sizeof *offsets;
+    ds->aux_dim = (Max_active+Max_extras) * N_targets * sizeof *offsets;
 
     if (model!=0 && model->type=='R')
-    { ds->aux_dim += Max_active * N_targets * sizeof *noise_SD;
+    { ds->aux_dim += (Max_active+Max_extras) * N_targets * sizeof *noise_SD;
     }
 
     ds->aux = chk_alloc (ds->aux_dim, sizeof (double));
@@ -191,7 +201,7 @@ void mc_app_initialize
     }
 
     if (model!=0 && model->type=='R')
-    { noise_SD = offsets + Max_active * N_targets;
+    { noise_SD = offsets + (Max_active+Max_extras) * N_targets;
       if (have_noise_SD)
       { mc_value_copy (noise_SD, (double*)logg->data['N'],
                        N_active*N_targets);
@@ -234,16 +244,16 @@ void mc_app_initialize
     /* Allocate space for component frequencies, and initialize them.  Also
        allocate "pr" array. */
 
-    freq = chk_alloc (Max_active, sizeof *freq);
-    pr = chk_alloc (Max_active+1, sizeof *pr);
+    freq = chk_alloc (Max_active+Max_extras, sizeof *freq);
+    pr = chk_alloc (Max_active+Max_extras, sizeof *pr);
 
     mix_freq (indicators, N_train, freq, N_active);
 
     /* Allocate space for sample counts, means, and variances. */
 
-    scount = chk_alloc (Max_active, sizeof *scount);
-    smean  = chk_alloc (Max_active, sizeof *smean);
-    svar   = chk_alloc (Max_active, sizeof *svar);
+    scount = chk_alloc (Max_active+1, sizeof *scount);
+    smean  = chk_alloc (Max_active+1, sizeof *smean);
+    svar   = chk_alloc (Max_active+1, sizeof *svar);
 
     /* Make sure we don't do all this again. */
 
@@ -350,6 +360,20 @@ int mc_app_sample
     return 1;
   }
 
+  else if (strcmp(op,"gibbs-ext-indicators")==0)
+  { 
+    if ((int)pm!=pm || pm<-1)
+    { fprintf(stderr,"Invalid parameter for gibbs-ext-indicators\n");
+      exit(1);
+    }
+
+    if (N_train>0)
+    { gibbs_ext_indicators (pm==0 ? 1 : pm);
+    }
+
+    return 1;
+  }
+
   else if (strcmp(op,"gibbs1-indicators")==0)
   { 
     if (N_train>0)
@@ -445,10 +469,15 @@ static void gibbs_hypers (void)
     { m += offsets[x*N_targets+t];
     }
 
-    p = 1 / (mx->mean_prior.width * mx->mean_prior.width);
-    d = 1 / (hyp->SD[t] * hyp->SD[t]);
-    hyp->mean[t] = (d*m) / (N_active*d+p)  
-                     + sqrt(1/(N_active*d+p)) * rand_gaussian();
+    if (mx->mean_prior.width==0)
+    { hyp->mean[t] = 0;
+    }
+    else
+    { p = 1 / (mx->mean_prior.width * mx->mean_prior.width);
+      d = 1 / (hyp->SD[t] * hyp->SD[t]);
+      hyp->mean[t] = (d*m) / (N_active*d+p)  
+                       + sqrt(1/(N_active*d+p)) * rand_gaussian();
+    }
 
     /* Sample for standard deviation of offset for this target. */
 
@@ -841,6 +870,135 @@ static void gibbs_indicators
 }
 
 
+/* DO GIBBS SAMPLING FOR INDICATORS USING EXTRA COMPONENTS.  The parameter 
+   is the number of extra components, or -1 for the "no gaps" method. */
+
+static void gibbs_ext_indicators
+( int nx		/* Number of extra components */
+)
+{
+  int i, x, n, t;
+  double c, r, m;
+  int no_gaps;
+
+  if (nx>Max_extras)
+  { fprintf (stderr, 
+      "Extra components for gibbs-ext-indicators exceeds maximum (%d)\n",
+      Max_extras);
+    exit(1);
+  }
+
+  if (nx==-1)
+  { nx = 1;
+    no_gaps = 1;
+  }
+  else
+  { no_gaps = 0;
+  }
+
+  /* Do Gibbs sampling for indicators. */
+
+  if (mx->N_components==0)
+  { c = 0;
+  }
+  else
+  { c = hyp->con;
+    if (mx->con_prior.scale) c /= mx->N_components;
+  }
+
+  for (i = 0; i<N_train; i++)
+  {
+    /* Do nothing when the "no gaps" method would. */
+
+    if (no_gaps && freq[indicators[i]]==1 
+     && rand_uniform()<(N_active-1.0)/N_active) 
+    { continue;
+    }
+
+    freq[indicators[i]] -= 1;
+
+    /* Draw components from the prior as required. */
+
+    n = freq[indicators[i]]==0 ? N_active+nx-1 
+         : N_active==mx->N_components ? N_active
+         : N_active+nx;
+
+    for (x = N_active; x<n; x++)
+    {
+      freq[x] = 0;
+  
+      for (t = 0; t<N_targets; t++)
+      {
+        offsets[x*N_targets+t] = 
+          hyp->mean[t] + hyp->SD[t]*rand_gaussian();
+  
+        if (model->type=='R')
+        { noise_SD[x*N_targets+t] = 
+            prior_pick_sigma (hyp->noise[t], model->noise.alpha[2]);
+        }
+      }
+    }  
+
+    /* Pick a component. */
+
+    if (mx->N_components==0)
+    { r = hyp->con / nx;
+    }
+    else
+    { r = c * (mx->N_components - N_active + (freq[indicators[i]]==0)) / nx;
+    }
+
+    if (no_gaps) r /= (N_active - (freq[indicators[i]]==0) + 1);
+
+    for (x = 0; x<n; x++)
+    { pr[x] = (freq[x]==0 ? log(r) : log(freq[x]+c)) + case_prob(x,i);
+    }
+
+    m = pr[0];
+    for (x = 1; x<n; x++)
+    { if (pr[x]>m) 
+      { m = pr[x]; 
+      }
+    }
+
+    for (x = 0; x<n; x++)
+    { pr[x] = exp(pr[x]-m);
+    }
+
+    x = rand_pickd(pr,n);
+
+    /* Use the component picked. */
+
+    if (x<N_active)
+    { indicators[i] = x;
+    }
+    else
+    { if (x!=N_active)
+      { for (t = 0; t<N_targets; t++)
+        { offsets[N_active*N_targets+t] = offsets[x*N_targets+t];
+          if (model->type=='R')
+          { noise_SD[N_active*N_targets+t] = noise_SD[x*N_targets+t];
+          }
+        }
+      }
+      indicators[i] = N_active;
+      N_active += 1;
+    }
+
+    freq[indicators[i]] += 1;
+
+    /* Sort by frequency and eliminate unused components. */
+
+    mix_sort(indicators, N_train, freq, N_active, offsets, noise_SD, N_targets);
+
+    while (freq[N_active-1]==0)
+    { if (N_active==1) abort();
+      N_active -= 1;
+    }
+  }
+}
+
+
 /* DO METROPOLIS UPDATES FOR COMPONENT INDICATORS. */
 
 static void met_indicators
@@ -939,8 +1097,8 @@ static void met_indicators
         { dp += singleton ? log(c/(N_train-1)) : -log(c/(N_train-1));
         }
         else if (singleton || E>0)
-        { dp += singleton ?  log(c*(E+1)/(N_train-1+c*(N-E-1))) 
-                          : -log(c*(E+1)/(N_train-1+c*(N-E-1)));
+        { dp += singleton ?  log(c*(E+1)/(N_train-1+c*(N_active-1))) 
+                          : -log(c*E/(N_train-1+c*N_active));
         }
       }
 
@@ -952,6 +1110,7 @@ static void met_indicators
         if (x==N_active)
         { N_active += 1;
           if (N!=0 && N_active>N) abort();
+          freq[x] = 0;
         }
   
         freq[indicators[i]] -= 1;
@@ -959,7 +1118,7 @@ static void met_indicators
         freq[indicators[i]] += 1;
   
         lp = np;
-   
+
         mix_sort (indicators, N_train, freq, N_active, offsets, 
                   noise_SD, N_targets);
   

@@ -1,0 +1,31 @@
+
+# Test Annealed Importance Sampling on the Gaussian distribution.  Four
+# versions are tried.
+
+t1spec t1log.ais.a
+mc-temp-sched t1log.ais.a 0.00025:+39 0.01:160
+rand-seed t1log.ais.a 1
+mc-spec t1log.ais.a repeat 20 AIS \
+                    repeat 10 metropolis 0.05 metropolis 0.15 metropolis 0.5
+dist-mc t1log.ais.a 10000
+
+t1spec t1log.ais.b
+mc-temp-sched t1log.ais.b 0.00025:+39 0.01:160
+rand-seed t1log.ais.b 1
+mc-spec t1log.ais.b repeat 20 AIS \
+                    repeat 5 metropolis 0.05 metropolis 0.15 metropolis 0.5
+dist-mc t1log.ais.b 10000
+
+t1spec t1log.ais.c
+mc-temp-sched t1log.ais.c 0.0005:+19 0.01:80
+rand-seed t1log.ais.c 1
+mc-spec t1log.ais.c repeat 10 AIS \
+                    repeat 10 metropolis 0.05 metropolis 0.15 metropolis 0.5
+dist-mc t1log.ais.c 10000
+
+t1spec t1log.ais.d
+mc-temp-sched t1log.ais.d 0.000125:+79 0.01:320
+rand-seed t1log.ais.d 1
+mc-spec t1log.ais.d repeat 40 AIS \
+                    repeat 10 metropolis 0.05 metropolis 0.15 metropolis 0.5
+dist-mc t1log.ais.d 10000

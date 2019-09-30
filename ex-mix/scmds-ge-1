@@ -1,0 +1,11 @@
+
+# Test of Algorithm 8 with m=1 on the simple data set.
+
+mix-spec slog-ge-1 0 1 / x1 1
+model-spec slog-ge-1 real 0.1
+data-spec slog-ge-1 0 1 / sdata .
+
+mc-spec slog-ge-1 repeat 100 met-indicators 5 gibbs-params 
+mix-mc slog-ge-1 1
+mc-spec slog-ge-1 gibbs-ext-indicators 1 gibbs-params
+mix-mc slog-ge-1 20000

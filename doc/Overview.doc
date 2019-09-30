@@ -13,9 +13,23 @@ finite and infinite mixture models.  This section provides an overview
 of the various components of the software.
 
 
+Program usage.
+
+The software is designed to be usable interactively by typing commands
+to run the various programs to the Unix shell.  These programs may
+create or modify files that hold the results.  You will usually want
+to create a directory for each project you are working on, and change
+to that directory before issuing these commands, so that the files
+pertaining to that project will be separate.
+
+If you're doing serious work, you will probably want to create Unix
+command files holding the main commands, so that you won't forget what
+you did.
+
+
 Log files.
 
-All the programs make use of a "log file" facility supported by
+Most of the programs make use of a "log file" facility supported by
 modules and programs in 'util'.  A log file records all the
 information pertaining to a "run" of an iterative program.  The first
 few records of the log file (with "indexes" of -1) contain the

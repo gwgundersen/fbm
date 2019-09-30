@@ -181,6 +181,11 @@ void mc_app_initialize
   
     data_spec = logg->data['D'];
 
+    if (data_spec!=0 && model==0)
+    { fprintf(stderr,"No model specified for data\n");
+      exit(1);
+    }
+
     train_sumsq = chk_alloc (arch->N_inputs, sizeof *train_sumsq);
     for (j = 0; j<arch->N_inputs; j++) train_sumsq[j] = 0;
   
@@ -203,7 +208,7 @@ void mc_app_initialize
         }
       }
 
-      if (model->type=='V' && surv->hazard_type!='C')
+      if (model!=0 && model->type=='V' && surv->hazard_type!='C')
       {
         double tsq;
         int n;

@@ -1,0 +1,9 @@
+
+# Linear regression example with Gaussian prior, implemented as a degenerate 
+# form of neural network model.
+
+net-spec slog.gaussian.net 10 1 / - 0.05:0.5 -
+model-spec slog.gaussian.net real 0.1:1
+data-spec slog.gaussian.net 10 1 / sdata .
+mc-spec slog.gaussian.net repeat 10 heatbath hybrid 20:2 0.2 sample-sigmas
+net-mc slog.gaussian.net 1000

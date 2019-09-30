@@ -1,0 +1,7 @@
+This directory contains command and data files for the tests reported
+in my paper on "Annealed Importance Sampling".  The first set of
+tests, on a Gaussian distribution and a mixture of two Gaussians, use
+the files whose names start with "t".  A test of tempered transitions
+is also included in this set.  The second set of tests, on linear
+regression models with Gaussian and Cauchy priors, use the files whose
+names start with "s".

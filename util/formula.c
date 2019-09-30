@@ -424,19 +424,7 @@ static double prefactor
 
     case 'E':
     {
-      if (nch[0]=='E' && nch[1]=='x' && nch[2]=='p' && !LOWER(nch[3]))
-      { nch += 2;
-        next();
-        v = prefactor(gr);
-        if (eval) v = exp(v);
-        if (gradvars)
-        { for (k = 0; k<n_gv; k++)
-          { gr [c_gv[k]] [i_gv[k]] *= v;
-          }
-        }
-      }
-
-      else if (nch[0]=='E' && nch[1]=='x' && nch[2]=='p' && nch[3]=='G'
+      if (nch[0]=='E' && nch[1]=='x' && nch[2]=='p' && nch[3]=='G'
                            && nch[4]=='a' && nch[5]=='m' && nch[6]=='m'
                            && nch[7]=='a' && nch[8]=='2' && !DIGIT(nch[9]))
       { nch += 8;
@@ -450,6 +438,18 @@ static double prefactor
       { nch += 7;
         next();
         v = expgamma(0,v,gr);
+      }
+
+      else if (nch[0]=='E' && nch[1]=='x' && nch[2]=='p' && !LOWER(nch[3]))
+      { nch += 2;
+        next();
+        v = prefactor(gr);
+        if (eval) v = exp(v);
+        if (gradvars)
+        { for (k = 0; k<n_gv; k++)
+          { gr [c_gv[k]] [i_gv[k]] *= v;
+          }
+        }
       }
 
       else

@@ -1,0 +1,13 @@
+
+# Linear regression example with Cauchy prior, implemented using the 'dist'
+# module.  This is about twenty times slower than using the 'net' module.
+
+dist-spec slog.cauchy.dist \
+"u ~ ExpGamma2(0.5,1/0.05^2) + v ~ ExpGamma2(1,1/0.1^2) + Log(1+w0^2*Exp(u)) \
+ + Log(1+w1^2*Exp(u)) + Log(1+w2^2*Exp(u)) + Log(1+w3^2*Exp(u)) \
+ + Log(1+w4^2*Exp(u)) + Log(1+w5^2*Exp(u)) + Log(1+w6^2*Exp(u)) \
+ + Log(1+w7^2*Exp(u)) + Log(1+w8^2*Exp(u)) + Log(1+w9^2*Exp(u)) - 10u/2" \
+"t ~ Normal(w0i0+w1i1+w2i2+w3i3+w4i4+w5i5+w6i6+w7i7+w8i8+w9i9,Exp(-v))"
+data-spec slog.cauchy.dist 10 1 / sdata .
+mc-spec slog.cauchy.dist repeat 10 heatbath hybrid 20:2 0.04
+dist-mc slog.cauchy.dist 100

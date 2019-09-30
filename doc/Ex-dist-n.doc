@@ -229,37 +229,41 @@ illustrates the procedure:
        15  -0.020351    8.314831
 
 The 'dist-tbl' command produces a list of values for "x" at iterations
-from 51 on.  This list is piped into the 'series' program, which looks
-only at the first value (for "x").  With the options "msac 15", the
-'series' program calculates estimates for the mean and standard
-deviation, which match those calculated above by 'dist-est'.  It also
-estimates the autocorrelations for "x" at lags up to 15.  From these
-autocorrelation estimates, 'series' finds the "cumulative
-correlations" at the various lags, which are defined as one plus twice
-the sum of the autocorrelations up to that lag.  In calculating the
-standard error for the mean, 'series' divides the sample size by the
-cumulative correlation for the last lag requested.
+from 51 on.  This list is piped into the 'series' program.  With the
+options "msac 15", the 'series' program calculates estimates for the
+mean and standard deviation, which match those calculated above by
+'dist-est'.  It also estimates the autocorrelations for "x" at lags up
+to 15.  From these autocorrelation estimates, 'series' finds the
+"cumulative correlations" at the various lags, which are defined as
+one plus twice the sum of the autocorrelations up to that lag.  If the
+autocorrelations from that point on are approximately zero, as seems
+to be the case above, the cumulative correlations to that point will
+approximate the autocorrelation time for the quantity, which is the
+factor by which the effective sample size is less than the number of
+points used.  In calculating the standard error for the mean, 'series'
+assumes that this is the case, and it therefore divides the sample
+size by the cumulative correlation for the last lag requested when
+computing the standard error. 
 
 In the example above, the standard error calculated by 'series'
 appears to be realistic.  This will be true only if the maximum lag
 given as an argument to series is appropriate, however.  This maximum
 lag should be large enough that the autocorrelations at larger lags
 are close to zero, but not too much larger than this, since including
-autocorrelations at many lags introduces extra noise into the
-cumulative correlation.
+autocorrelations at many lags introduces extra noise into the estimate
+of the autocorrelation time.
 
-An alternative approach is to use 'series' to find out the lag at
-which the autocorrelations have fallen almost to zero, and then use
-'dist-est' to find the expectation, telling it to look at iterations
-separated by that lag.  This is somewhat wasteful of data, but is at
-present the only easy way to get correct standard errors when
-estimating some function of state rather than a state variable itself.
-For example, from the output of 'series' above, it seems that
-autocorrelations for "x" are almost zero at about lag 10.  This is
-consistent with states at that lag being almost independent (although
-lack of correlation does not guarantee independence).  On that basis,
-we might estimate the expectation of Sin(x) with the following
-command:
+An alternative approach is to use 'series' to find out the lag past
+which the autocorrelations are almost zero, and then use 'dist-est' to
+find the expectation, telling it to look at iterations separated by
+that lag.  This is somewhat wasteful of data, but is at present the
+only easy way to get correct standard errors when estimating some
+function of state rather than a state variable itself.  For example,
+from the output of 'series' above, it seems that autocorrelations for
+"x" are almost zero at about lag 10.  This is consistent with states
+at that lag being almost independent (although lack of correlation
+does not guarantee independence).  On that basis, we might estimate
+the expectation of Sin(x) with the following command:
 
     > dist-est "Sin(x)" nlog 51:%10
 

@@ -12,7 +12,7 @@
 
         Copyright (c) 1995, 1996, 1997, 1998 by Radford M. Neal 
 
-                         Version of 1998-08-02
+                         Version of 1998-09-01
 
 Permission is granted for anyone to copy, use, or modify these
 programs and accompanying documents for purposes of research or
@@ -67,6 +67,7 @@ Ex-bayes.doc        Examples of Markov chain sampling for simple Bayesian models
   Ex-bayes-r.doc       A linear regression model
   Ex-bayes-t.doc       Modeling real-valued data with a t-distribution
   Ex-bayes-p.doc       Modeling probabilities for categorical data
+  Ex-bayes-e.doc       A random effects model
 
 Ex-netgp.doc        Examples of flexible Bayesian regression and classification 
                     models based on neural networks and Gaussian processes
@@ -210,25 +211,19 @@ in Carl Rasmussen's thesis (see above).
 
 Bayesian mixture models.
 
-The software includes a preliminary implementation of Bayesian mixture
-models for multivariate real or binary data.  The finite mixture
-models are similar to those which have been used by many people.  For
-example, Lavine and West (Canadian Journal of Statistics, vol. 20,
-pp. 451-461, 1992) fit similar models using similar Markov chain Monte
-Carlo methods.  The countably infinite mixture models are equivalent
-to Dirichlet process mixtures.  Markov chain sampling for these models
-is described by Escobar and West (Journal of the American Statistical
-Association, vol. 90, pp. 577-588, 1995).  Both finite and infinite
-mixture models (for binary data) are described in my technical report,
-"Bayesian mixture modeling by Monte Carlo simulation", available at
-ftp://ftp.cs.utoronto.ca/pub/radford/bmm.ps.Z.  The models and Markov
-chain methods used in the software are not identical to those
-described in any of these references, however.  The details can be
-found only in the software documentation.  For this reason, the
-mixture model software may be a bit difficult to figure out until such
-time as I get around to writing up a paper describing this
-implementation.  This part of the software is rather preliminary in
-other respects as well.
+The software Bayesian mixture models for multivariate real or binary
+data, with both finite and countably infinite numbers of components.
+The countably infinite mixture models are equivalent to Dirichlet
+process mixture models.  The sampling methods that I have implemented
+for these models are described in my technical report on "Markov chain
+sampling methods for Dirichlet process mixture models", which can be
+obtained from ftp://ftp.cs.utoronto.ca/pub/radford/mixmc.ps.Z.  See
+also my technical report on "Bayesian mixture modeling by Monte Carlo
+simulation", at ftp://ftp.cs.utoronto.ca/pub/radford/bmm.ps.Z.  
+
+The software implements the basic sampling operations for these
+models, but is rather preliminary in some respects, lacking many
+facilities that would be useful in practical applications.
 
 
 Software components.
@@ -272,7 +267,9 @@ be used, many of which are discussed in the documentation:
     ex-netgp  Examples of Bayesian regression and classification 
               models based on neural networks and Gaussian processes.
 
-    ex-mix    Examples of Bayesian mixture models.
+    ex-mix    Examples of Bayesian mixture models.  Includes command
+              files for the test in my paper on "Markov chain sampling 
+              methods for Dirichlet process mixture models"
 
     ex-dist   Examples of Markov chain sampling on distributions
               specified by simple formulas.
@@ -283,6 +280,9 @@ be used, many of which are discussed in the documentation:
     ex-gdes   Examples of neural network learning using gradient 
               descent and early stopping.
 
+    ex-ais    Contains command and data files used for the tests in
+              my paper on "Annealed importance sampling".
+
 The 'bin' directory contains links to all the programs.  The 'doc'
 directory contains all the documentation.
 
@@ -292,8 +292,9 @@ Portability of the software.
 The software is written in ANSI C, and is meant to be run in a UNIX
 environment.  Specifically, it was developed on an SGI machine running
 IRIX Release 5.3.  It also seems to run OK on a SPARC machine running
-SunOS 5, using the 'gcc' C compiler, and on DEC Alpha machines.  As
-far as I know, the software does not depend on any peculiarities of
+SunOS 5, using the 'gcc' C compiler, and on DEC Alpha machines,
+provided that the -ieee and -std options are given to the C compiler.
+As far as I know, the software does not depend on any peculiarities of
 these environments (except perhaps for the use of the drand48
 pseudo-random number generator, and the lgamma function), but you may
 nevertheless have problems getting it to work in substantially
@@ -316,10 +317,9 @@ environment may be difficult or impossible.
 Unpacking the files.
 
 The software is distributed as a Unix tar archive.  To obtain the
-files, create an empty directory and change to it, download the tar
-archive for the desired version by anonymous ftp or via your Web
-browser to a file of the form 'fbm.YYYY-MM-DD.tar', and then issue the
-Unix command
+files, download the tar archive for the desired version by anonymous
+ftp or via your Web browser to a file of the form 'fbm.YYYY-MM-DD.tar', 
+and then issue the Unix command
 
     tar xf fbm.YYYY-MM-DD.tar
 
@@ -329,13 +329,12 @@ doing the above.  The following instructions cover what to do next for
 the current version; you should read the old documentation if for some
 reason you are installing an older version.
 
-The tar command should create sub-directories 'util', 'mc', 'dist',
-'bvg', 'net', 'gp', 'mix', 'ex-dist', 'ex-bayes', 'ex-netgp',
-'ex-mix', 'ex-gdes', 'doc', and 'bin', and place a large number of
-files in these sub-directories.  It should also place the files
-'README', 'make.include', 'make-all', and 'make-clean' in the current
-directory.  If all this seems to have worked, you can remove the file
-'fbm.YYYY-MM-DD.tar'.
+The tar command should create a directory called 'fbm.YYYY-MM-DD',
+where YYYY-MM-DD is the release data.  It should place numerous files
+and sub-directories in this directory.  If this seems to have worked,
+you can remove the file 'fbm.YYYY-MM-DD.tar'.  You should now change
+into the 'fbm.YYYY-MM-DD' directory, as the following instructions
+assumed that you are there.
 
 
 Looking at the documentation.
@@ -349,7 +348,8 @@ contain information on current and past releases.  These may be of
 interest if you are upgrading from an older version of the software.
 
 If you have a Web browser, you can access all these documentation
-files via 'index.html', as described in Guide.doc.
+files via 'index.html' in the 'doc' directory, as described in
+Guide.doc.
 
 
 Compiling the programs.
@@ -365,7 +365,12 @@ various sub-directories, or modify the source files.
 
 Here are some reasons that you might need to customize things:
 
-  1) The programs were written with IEEE floating-point in mind, and
+  1) The programs are written in ANSI standard C.  If you compiler
+     defaults to some other idea of what C is, you should try to
+     persuade it otherwise.  On DEC Alpha machines, the "-std" flag
+     does this.  It can be put in CFLAGS in 'make.include'.
+
+  2) The programs were written with IEEE floating-point in mind, and
      therefore may occasionally perform operations that result in
      overflow or underflow.  If this causes program termination on
      your machine (eg, with a "floating point exception"), you will
@@ -373,14 +378,14 @@ Here are some reasons that you might need to customize things:
      machines, for example, the problem can be fixed using a "-ieee"
      compiler option, which can be put in CFLAGS in 'make.include'.
 
-  2) The 'util' directory contains a file of 100,000 natural random
+  3) The 'util' directory contains a file of 100,000 natural random
      bytes, which are used in combination with pseudo-random numbers
      This file is accessed by many of the programs, using a path 
      name that by default points into this 'util' directory.  If you 
      plan on moving this file elsewhere, you will need to change the 
      compilation command for rand.c at the end of 'util/util.make'.
 
-  3) If you are rather short of memory, you might want to reduce the
+  4) If you are rather short of memory, you might want to reduce the
      size of the Max_optional_memory constant defined in gp/gp-mc.c.
      This will save memory at the cost of some time.
 
@@ -427,7 +432,7 @@ programs by using the command
     make-clean
 
 when in the main directory.  Of course, you then won't be able to use
-the programs again until you do another make-all to recompile them.
+the programs until you do another make-all to recompile them.
 
 
 
@@ -444,9 +449,23 @@ finite and infinite mixture models.  This section provides an overview
 of the various components of the software.
 
 
+Program usage.
+
+The software is designed to be usable interactively by typing commands
+to run the various programs to the Unix shell.  These programs may
+create or modify files that hold the results.  You will usually want
+to create a directory for each project you are working on, and change
+to that directory before issuing these commands, so that the files
+pertaining to that project will be separate.
+
+If you're doing serious work, you will probably want to create Unix
+command files holding the main commands, so that you won't forget what
+you did.
+
+
 Log files.
 
-All the programs make use of a "log file" facility supported by
+Most of the programs make use of a "log file" facility supported by
 modules and programs in 'util'.  A log file records all the
 information pertaining to a "run" of an iterative program.  The first
 few records of the log file (with "indexes" of -1) contain the
@@ -716,9 +735,9 @@ problems.  These examples are meant to illustrate the features of the
 software.  You should note that the models and Markov chain methods
 used are not necessarily appropriate for other problems.  To gain a
 full understanding of the various possibilities, and their advantages
-and disadvantages, you will need to read both the general references
-given earlier for these models, and the detailed documentation on the
-various commands.
+and disadvantages, you will need to read both the pertinent references
+(see Facilities.doc), and the detailed documentation on the various
+commands.
 
 The output shown for these examples was obtained by running the
 software on our machine, with ">" at the start of a line indicating a
@@ -747,7 +766,9 @@ beginning with "ex", along with the C source of the programs that
 generated the data.  The commands given assume that you are in the
 directory containing the data.  The command sequences used for each
 example are also stored in these directories, in shell files with the
-names like 'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.
+names like 'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.  The
+'ex-mix' and 'ex-ais' directories also contain other command files
+used for examples in my papers.
 
 Computation times are given for many of the examples.  These are all
 for the current version of the software, run on our computer, which is
@@ -1007,37 +1028,41 @@ illustrates the procedure:
        15  -0.020351    8.314831
 
 The 'dist-tbl' command produces a list of values for "x" at iterations
-from 51 on.  This list is piped into the 'series' program, which looks
-only at the first value (for "x").  With the options "msac 15", the
-'series' program calculates estimates for the mean and standard
-deviation, which match those calculated above by 'dist-est'.  It also
-estimates the autocorrelations for "x" at lags up to 15.  From these
-autocorrelation estimates, 'series' finds the "cumulative
-correlations" at the various lags, which are defined as one plus twice
-the sum of the autocorrelations up to that lag.  In calculating the
-standard error for the mean, 'series' divides the sample size by the
-cumulative correlation for the last lag requested.
+from 51 on.  This list is piped into the 'series' program.  With the
+options "msac 15", the 'series' program calculates estimates for the
+mean and standard deviation, which match those calculated above by
+'dist-est'.  It also estimates the autocorrelations for "x" at lags up
+to 15.  From these autocorrelation estimates, 'series' finds the
+"cumulative correlations" at the various lags, which are defined as
+one plus twice the sum of the autocorrelations up to that lag.  If the
+autocorrelations from that point on are approximately zero, as seems
+to be the case above, the cumulative correlations to that point will
+approximate the autocorrelation time for the quantity, which is the
+factor by which the effective sample size is less than the number of
+points used.  In calculating the standard error for the mean, 'series'
+assumes that this is the case, and it therefore divides the sample
+size by the cumulative correlation for the last lag requested when
+computing the standard error. 
 
 In the example above, the standard error calculated by 'series'
 appears to be realistic.  This will be true only if the maximum lag
 given as an argument to series is appropriate, however.  This maximum
 lag should be large enough that the autocorrelations at larger lags
 are close to zero, but not too much larger than this, since including
-autocorrelations at many lags introduces extra noise into the
-cumulative correlation.
+autocorrelations at many lags introduces extra noise into the estimate
+of the autocorrelation time.
 
-An alternative approach is to use 'series' to find out the lag at
-which the autocorrelations have fallen almost to zero, and then use
-'dist-est' to find the expectation, telling it to look at iterations
-separated by that lag.  This is somewhat wasteful of data, but is at
-present the only easy way to get correct standard errors when
-estimating some function of state rather than a state variable itself.
-For example, from the output of 'series' above, it seems that
-autocorrelations for "x" are almost zero at about lag 10.  This is
-consistent with states at that lag being almost independent (although
-lack of correlation does not guarantee independence).  On that basis,
-we might estimate the expectation of Sin(x) with the following
-command:
+An alternative approach is to use 'series' to find out the lag past
+which the autocorrelations are almost zero, and then use 'dist-est' to
+find the expectation, telling it to look at iterations separated by
+that lag.  This is somewhat wasteful of data, but is at present the
+only easy way to get correct standard errors when estimating some
+function of state rather than a state variable itself.  For example,
+from the output of 'series' above, it seems that autocorrelations for
+"x" are almost zero at about lag 10.  This is consistent with states
+at that lag being almost independent (although lack of correlation
+does not guarantee independence).  On that basis, we might estimate
+the expectation of Sin(x) with the following command:
 
     > dist-est "Sin(x)" nlog 51:%10
 
@@ -1556,26 +1581,28 @@ for some other distributions.
 Performance summary.
 
 The following table summarizes the inefficiency factor for estimating
-the expectation of the "x" variable using the various methods,
-determined from estimates of the cumulative correlations.  The
+the expectation of the "x" variable using the various methods (the
+autocorrelation time), determined from estimates of the cumulative
+correlations up to when the autocorrelations are near zero.  The
 repetition counts for the methods were set so that they all required
 about 2 seconds of computation time for 500 iterations.
 
-  METHOD      STEPSIZE   CUM.CORR.  NOTES
+  METHOD      STEPSIZE   AUTOCORR.  NOTES
+                           TIME
 
   metropolis     0.2        122
                   1          23
                   5          20
 
-  met-1          0.2        460     Cum. corr. estimated using 2000 iterations
+  met-1          0.2        460      Autocorr. time found using 2000 iterations
                   1          55
                   5         118
 
-  slice-1        0.2         77     Computation times had to be a bit greater 
-                  1          32      than 2s for the slice sampling methods, as
-                  5          62      the repetition count has to be an integer
+  slice-1        0.2         77      Computation times had to be a bit greater 
+                  1          32       than 2s for the slice sampling methods, as
+                  5          62       the repetition count has to be an integer
 
-  dynamic        0.3        3.3     This method is not exact
+  dynamic        0.3        3.3      This method is not exact
 
   hybrid (HMC)   0.3        2.2
 
@@ -1774,7 +1801,8 @@ From this plot, it appears that the equilibrium distribution is
 reached by about iteration 100, and that the chain is sampling
 somewhat adequately from then on, though with a substantial degree of
 autocorrelation.  We can quantify the inefficiency in estimation of
-the precision, v, that results from these autocorrelations as follows:
+the log precision, v, that results from these autocorrelations as
+follows:
 
     > dist-tbl v rlog.met 100: | series mac 30
 
@@ -2427,17 +2455,19 @@ faster than Annealed Importance Sampling.  However, importance
 sampling quickly becomes infeasible for problems with more parameters
 or with more data.  Annealed Importance Sampling is more feasible for
 realistic problems, though some work is needed to set up a good
-tempering schedule.  See mc-ais.doc for documentation on how to obtain
-information that is helpful in doing this.
+tempering schedule, which may have to include many more distributions
+than were needed for this easy problem (often hundreds or more).  See
+mc-ais.doc for documentation on how to obtain information that is
+helpful in adjusting the tempering schedule.
 
 The software also supports the related methods of simulated tempering,
-tempered transitions, and tempered hybrid Monte Carlo.  There's no
-tutorial documentation on how to use these methods, though - just the
-documentation in mc-spec.doc.
-
-Annealed importance sampling and the tempering schemes are also
-supported for neural network models, but not for Gaussian process and
-mixture models.
+tempered transitions, and tempered hybrid Monte Carlo.  Annealed
+importance sampling and the tempering schemes are also supported for
+neural network models (but not for Gaussian process and mixture
+models).  There's no tutorial documentation on these features,
+however, just the detailed command documentation, and the command
+files in the 'ex-ais' directory that implement the tests done in my
+"Annealed Importance Sampling" paper.
 
 
 
@@ -2964,9 +2994,9 @@ time to compute (the 'E' and 'H' quantities, defined in the "mc"
 module, may also take a long time).  See gp-quantities.doc for
 details.
 
-Once the gp-mc run has completed (which takes less than a minute on
-our SGI machine), the iterations from the latter part of the run can
-be used to make predictions for test cases.  This is done using
+Once the gp-mc run has completed (which takes about 45 seconds on our
+SGI machine), the iterations from the latter part of the run can be
+used to make predictions for test cases.  This is done using
 'gp-pred', which operates much like 'net-pred'.  The following command
 makes predictions for the test cases based on the last 80 of the 100
 iterations, and reports the average squared error:
@@ -3595,7 +3625,9 @@ given here of how this can be done for binary and for real-valued
 data.
 
 The data and command files for these examples are in the "ex-mix"
-directory.
+directory.  This directory also contains the data and command files
+used for the example in my tech report on "Markov chain sampling
+methods for Dirichlet process mixture models".
 
 
 A PROBABILITY ESTIMATION PROBLEM WITH BINARY DATA
@@ -3879,8 +3911,10 @@ with a training case is proposed with probability determined by the
 frequencies with which components are associated with other training
 cases.  The proposal is accepted or rejected based on the resulting
 change in likelihood.  The process can then be repeated any desired
-number of times, to produce an approximation to Gibbs sampling.  With
-this change, we can use the following 'mc-spec' command for this model:
+number of times, to produce an approximation to Gibbs sampling (the
+"approximation" is only with respect to convergence speed, the answer
+is exact, asymptotically).  With this change, we can use the following
+'mc-spec' command for this model:
 
     > mc-spec blog.inf repeat 20 met-indicators 10 gibbs-params gibbs-hypers
 
@@ -3947,6 +3981,19 @@ be expected when the true distribution can be expressed using only
 four components.  The number of such low-frequency components will
 vary from iteration to iteration, as will other aspects of the state,
 in accordance with the variability in the posterior distribution.
+
+A number of other ways of sampling for the indicators for countably
+infinite mixture models are also available.  Here are two:
+
+    > mc-spec blog.inf2 repeat 20 \
+                gibbs-ext-indicators 2 gibbs-params gibbs-hypers
+
+    > mc-spec blog.inf3 repeat 20 \
+                met1-indicators gibbs1-indicators gibbs-params gibbs-hypers
+
+These methods may be more efficient than using the "met-indicators"
+operation for some models.  See mix-mc.doc for descriptions of these
+and other Markov chain operations for mixture models.
 
 
 A BIVARIATE DENSITY ESTIMATION PROBLEM
@@ -4714,6 +4761,6 @@ rejection sampling, and the features allowing cpu time to be stored,
 displayed, and used to control the number of iterations, are also
 based on work by Carl Edward Rasmussen.
 
-Thanks also to David MacKay, Chris Williams, Tim Howells, Tony Plate,
-Dirk Husmeier, and Marcus Lee for comments on the documentation, for
-testing the programs, and for finding bugs.
+Thanks also to Tim Howells, Dirk Husmeier, Marcus Lee, David MacKay,
+Tony Plate, Jeff Rosenthal, and Chris Williams for comments on the
+documentation, for testing the programs, and for finding bugs.

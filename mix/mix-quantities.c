@@ -96,10 +96,21 @@ void mix_available
     high = qd[v].high;
     mod = qd[v].modifier;
 
-    if (letter && qd[v].available==0)
+    if (letter && qd[v].available==0 && (letter!='t' || mod!=-1))
     {
       switch (letter)
       {
+        case 't':
+        { if (mod==-1) break;
+          qd[v].available = -1;
+          if (mod>=0 && mod<mx->N_targets 
+           && low!=-1 && low<N_train && high<N_train)
+          { if (high==-1) qd[v].high = N_train-1;
+            qd[v].available = 1;
+          }
+          break;
+        }
+
         case 'u':
         { qd[v].available = -1;
           if  (low!=-1 && low<mx->N_targets && high<mx->N_targets)
@@ -150,6 +161,25 @@ void mix_available
         { qd[v].available = -1;
           if (mod<100 && low==-1 && high==-1 && N_train>0)
           { qd[v].available = 1;
+          }
+          break;
+        }
+
+        case 'o':
+        { qd[v].available = -1;
+          if (mod>=0 && mod<mx->N_targets 
+           && low!=-1 && low<N_train && high<N_train)
+          { if (high==-1) qd[v].high = N_train-1;
+            qd[v].available = 1;
+          }
+          break;
+        }
+
+        case 'h':
+        { qd[v].available = -1;
+          if (mod==-1 && low!=-1 && low<N_train && high<N_train)
+          { if (high==-1) qd[v].high = N_train-1;
+            qd[v].available = 1;
           }
           break;
         }
@@ -209,20 +239,28 @@ void mix_evaluate
   for (v = 0; v<Max_quantities; v++)
   {
     letter = qd[v].letter;
+    low  = qd[v].low;
+    high = qd[v].high;
+    mod  = qd[v].modifier;
 
-    if (letter && !qh->updated[v])
+    if (letter && !qh->updated[v] && (letter!='t' || mod!=-1))
     {
       inputs = train_inputs;
       targets = train_targets;
-
-      low  = qd[v].low;
-      high = qd[v].high;
-      mod  = qd[v].modifier;
 
       if (mod<0) mod = 0;
 
       switch (letter)
       { 
+        case 't':
+        { if (mod==-1) break;
+          for (i = low; i<=high; i++)
+          { qh->value[v][i-low] = train_targets[data_spec->N_targets*i+mod];
+          }
+          qh->updated[v] = 1;
+          break;
+        }
+
         case 'u':
         { if (mod>0 && offsets==0) break;
           for (i = low; i<=high; i++)
@@ -319,6 +357,26 @@ void mix_evaluate
               need -= freq[i];
             }
             *qh->value[v] = i;
+          }
+          qh->updated[v] = 1;
+          break;
+        }
+
+        case 'o':
+        { if (indicators==0 || offsets==0) break;
+          for (i = low; i<=high; i++)
+          { qh->value[v][i-low] = offsets[indicators[i]*mx->N_targets+mod];
+          }
+          qh->updated[v] = 1;
+          break;
+        }
+
+        case 'h':
+        { if (indicators==0) break;
+          mix_freq(indicators,N_train,freq,N_active);
+          for (i = low; i<=high; i++)
+          { if (indicators[i]<0 || indicators[i]>=N_active) abort();
+            qh->value[v][i-low] = freq[indicators[i]];
           }
           qh->updated[v] = 1;
           break;

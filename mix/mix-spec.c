@@ -120,7 +120,17 @@ void main
 
   if (*ap==0 || !prior_parse(&mx->con_prior,*ap++))  usage();
   if (*ap==0 || !prior_parse(&mx->SD_prior,*ap++))   usage();
-  if (*ap==0 || !prior_parse(&mx->mean_prior,*ap++)) usage();
+
+  if (*ap==0)
+  { mx->mean_prior.width = 0;
+    mx->mean_prior.scale = 0;
+    mx->mean_prior.alpha[0] = 0;
+    mx->mean_prior.alpha[1] = 0;
+    mx->mean_prior.alpha[2] = 0;
+  }
+  else
+  { if (!prior_parse(&mx->mean_prior,*ap++)) usage();
+  }
 
   if (*ap!=0) usage();
 
@@ -186,7 +196,7 @@ static void usage(void)
   fprintf(stderr,
    "Usage: mix-spec log-file N-inputs N-targets [ N-components ]\n");
   fprintf(stderr,
-   "                / concentration SD-prior mean-prior\n");
+   "                / concentration SD-prior [ mean-prior ]\n");
   fprintf(stderr,
    "       (Note: N-inputs must be 0 at present)\n");
   fprintf(stderr,

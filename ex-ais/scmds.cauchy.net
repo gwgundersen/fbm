@@ -1,0 +1,9 @@
+
+# Linear regression example with Cauchy prior, implemented as a degenerate 
+# form of neural network model.
+
+net-spec slog.cauchy.net 10 1 / - 0.05:0.5::1 -
+model-spec slog.cauchy.net real 0.1:1
+data-spec slog.cauchy.net 10 1 / sdata .
+mc-spec slog.cauchy.net repeat 10 heatbath hybrid 20:2 0.3 sample-sigmas
+net-mc slog.cauchy.net 1000

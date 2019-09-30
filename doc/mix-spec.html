@@ -13,7 +13,7 @@ specifications for the mixture model stored in that log file.
 Usage:
 
     mix-spec log-file N-inputs N-targets [ N-components ]
-             / concentration SD-prior mean-prior 
+             / concentration SD-prior [ mean-prior ]
 
 or:
 
@@ -40,16 +40,20 @@ default), as this is the scaling needed for the finite model to reach
 a sensible limit.
 
 Each component of the mixture has associated with it a set of "offset"
-parameters, one for each target value.  The prior distribution of
-these offsets is defined by top-level means and standard deviations
-for each target value.  The top-level means are variable hyperparameters, 
-which are given independent Gaussian priors with mean zero and standard
-deviation as specified by the mean-prior argument of mix-spec.  The
-top-level standard deviations may be fixed or variable, as specified
-by the SD-prior argument of mix-spec, using the general form of
-specification described in <A HREF="prior.html">prior.doc</A>.  If the SD-prior argument starts 
-with "x", it is automatically scaled according to the number of target
-values, as described in <A HREF="prior.html">prior.doc</A>.
+parameters, one for each target value.  The offset of a binary target
+will determine the probability of it being a "1"; the offset for a
+real-valued target gives its mean.  The prior distribution of these
+offsets is defined by top-level means and standard deviations for each
+target value.  The top-level mean for each target is usually a
+variable hyperparameter; these means are given independent Gaussian
+priors with mean zero and standard deviation as specified by the
+mean-prior argument of mix-spec.  If mean-prior is absent, all the
+top-level means are set to zero.  The top-level standard deviations
+for the offsets associated with the targets may be either fixed or
+variable, as specified by the SD-prior argument of mix-spec, using the
+general form of specification described in <A HREF="prior.html">prior.doc</A>.  If the SD-prior
+argument starts with "x", it is automatically scaled according to the
+number of target values, as described in <A HREF="prior.html">prior.doc</A>.
 
 The specification of the model is completed using the model-spec
 command (see <A HREF="model-spec.html">model-spec.doc</A>), which specifies whether the model is for
@@ -60,7 +64,12 @@ values and components, a standard deviation for each target value,
 common to all components, and standard deviations for each target value 
 for each component.
 
-            Copyright (c) 1997 by Radford M. Neal
+Note: There is no way at present of getting the prior for the means of
+the offsets for the targets to have a mean other than zero, but you
+can get an equivalent effect by transforming the target values by
+subtracting a constant.
+
+            Copyright (c) 1997, 1998 by Radford M. Neal
 </pre>
 </body>
 </html>

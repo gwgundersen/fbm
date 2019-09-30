@@ -7,3 +7,7 @@ you'll need to recompile the programs, which is done with a command
 such as the following:
 
    cc rgen.c rand.c -DRAND_FILE=\"../util/randfile\" -lm -o rgen
+
+The data in 'sdata' and commands in the scmds-* files are for the test
+in my tech report on "Markov chain sampling methods for Dirichlet
+process mixture models".

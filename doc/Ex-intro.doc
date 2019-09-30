@@ -7,9 +7,9 @@ problems.  These examples are meant to illustrate the features of the
 software.  You should note that the models and Markov chain methods
 used are not necessarily appropriate for other problems.  To gain a
 full understanding of the various possibilities, and their advantages
-and disadvantages, you will need to read both the general references
-given earlier for these models, and the detailed documentation on the
-various commands.
+and disadvantages, you will need to read both the pertinent references
+(see Facilities.doc), and the detailed documentation on the various
+commands.
 
 The output shown for these examples was obtained by running the
 software on our machine, with ">" at the start of a line indicating a
@@ -38,7 +38,9 @@ beginning with "ex", along with the C source of the programs that
 generated the data.  The commands given assume that you are in the
 directory containing the data.  The command sequences used for each
 example are also stored in these directories, in shell files with the
-names like 'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.
+names like 'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.  The
+'ex-mix' and 'ex-ais' directories also contain other command files
+used for examples in my papers.
 
 Computation times are given for many of the examples.  These are all
 for the current version of the software, run on our computer, which is

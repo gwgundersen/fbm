@@ -294,17 +294,19 @@ faster than Annealed Importance Sampling.  However, importance
 sampling quickly becomes infeasible for problems with more parameters
 or with more data.  Annealed Importance Sampling is more feasible for
 realistic problems, though some work is needed to set up a good
-tempering schedule.  See <A HREF="mc-ais.html">mc-ais.doc</A> for documentation on how to obtain
-information that is helpful in doing this.
+tempering schedule, which may have to include many more distributions
+than were needed for this easy problem (often hundreds or more).  See
+<A HREF="mc-ais.html">mc-ais.doc</A> for documentation on how to obtain information that is
+helpful in adjusting the tempering schedule.
 
 The software also supports the related methods of simulated tempering,
-tempered transitions, and tempered hybrid Monte Carlo.  There's no
-tutorial documentation on how to use these methods, though - just the
-documentation in <A HREF="mc-spec.html">mc-spec.doc</A>.
-
-Annealed importance sampling and the tempering schemes are also
-supported for neural network models, but not for Gaussian process and
-mixture models.
+tempered transitions, and tempered hybrid Monte Carlo.  Annealed
+importance sampling and the tempering schemes are also supported for
+neural network models (but not for Gaussian process and mixture
+models).  There's no tutorial documentation on these features,
+however, just the detailed command documentation, and the command
+files in the 'ex-ais' directory that implement the tests done in my
+"Annealed Importance Sampling" paper.
 </pre>
 </body>
 </html>

@@ -502,26 +502,28 @@ for some other distributions.
 Performance summary.
 
 The following table summarizes the inefficiency factor for estimating
-the expectation of the "x" variable using the various methods,
-determined from estimates of the cumulative correlations.  The
+the expectation of the "x" variable using the various methods (the
+autocorrelation time), determined from estimates of the cumulative
+correlations up to when the autocorrelations are near zero.  The
 repetition counts for the methods were set so that they all required
 about 2 seconds of computation time for 500 iterations.
 
-  METHOD      STEPSIZE   CUM.CORR.  NOTES
+  METHOD      STEPSIZE   AUTOCORR.  NOTES
+                           TIME
 
   metropolis     0.2        122
                   1          23
                   5          20
 
-  met-1          0.2        460     Cum. corr. estimated using 2000 iterations
+  met-1          0.2        460      Autocorr. time found using 2000 iterations
                   1          55
                   5         118
 
-  slice-1        0.2         77     Computation times had to be a bit greater 
-                  1          32      than 2s for the slice sampling methods, as
-                  5          62      the repetition count has to be an integer
+  slice-1        0.2         77      Computation times had to be a bit greater 
+                  1          32       than 2s for the slice sampling methods, as
+                  5          62       the repetition count has to be an integer
 
-  dynamic        0.3        3.3     This method is not exact
+  dynamic        0.3        3.3      This method is not exact
 
   hybrid (HMC)   0.3        2.2
 

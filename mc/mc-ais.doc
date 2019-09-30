@@ -26,6 +26,7 @@ which should consist of one or more letters form the following list:
 
     v   variance of the normalized importance weights at this index
     V   variance of the logs of the importance weights at this index
+    W   log (1 + variance of the importance weights at this index)
     a   adjusted sample size at this index
 
 The values requested are written to standard output.  Each line of
@@ -39,11 +40,21 @@ importance weights are obtained by dividing by the mean weight.  The
 adjusted sample size is the number of points for which data exists
 divided by one plus the variance of the normalized importance weights.
 It is a rough indicator of the effective size of the sample available
-for computing expectations.  Ideally, for maximum efficiency, the
-tempering schedule should be chosen so that the variance of the log
-weights goes up linearly with the tempering index, ending at the value
-of about one, though this may not be achievable when there are
-isolated modes.  The variance of the normalized weights would ideally
-be e-1 (about 1.7).
+for computing expectations.  
+
+If the distribution of the logs of the weights is Gaussian, maximum
+sampling efficiency is achieved when the tempering schedule is such
+that the variance of the log weights (V) goes up linearly with the
+tempering index (I), ending at the value of about one, corresponding
+to the variance for the normalized weights being e-1 (about 1.7).
+
+The distribution of the log weights will not be Gaussian when there
+are isolated modes, however, or when there are occasional very bad
+runs.  Because of this, it may be better to monitoring W than V, as it
+will not be affected by a few really bad runs.  (When the logs of the
+weights are Gaussian, W and V should be the same.)  A general rule of
+thumb is therefore to modify the tempering schedule so that the
+command "mc-ais IW logfile" shows W increasing approximately linearly
+with tempering index (I) up to a final value of about one.
 
             Copyright (c) 1998 by Radford M. Neal

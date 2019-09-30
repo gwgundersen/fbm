@@ -303,6 +303,11 @@ void main
           { printf(" %9.3f", n_points[i]>1 ? n_points[i]/(1+ww_var[i]) : 0);
             break;
           }
+
+          case 'W':
+          { printf(" %9.3f", n_points[i]>1 ? log (1+ww_var[i]) : 0);
+            break;
+          }
   
           default:
           { fprintf(stderr,"Invalid value specifier: %c\n",*v);

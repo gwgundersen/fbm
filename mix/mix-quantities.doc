@@ -12,6 +12,8 @@ Markov chain operations are not supported.
 The quantities specific to mixture models are as follows (if "n" is
 present after the letter, it represents a numeric modifier):
 
+    tn   Array of n'th target values for training cases.
+
     u    An array containing the mean offset for each target value.
 
     un   An array containing the offset parameters for component n,
@@ -57,4 +59,13 @@ present after the letter, it represents a numeric modifier):
          training cases.  The default is n=0 - ie, just "a" is the total
          number of currently active components.
 
-            Copyright (c) 1997 by Radford M. Neal
+    on   Array giving for each training case (numbered from 0) the offset 
+         parameter for the n'th target value for the component associated 
+         with this training case.  
+
+    h    Array giving for each training case (numbered from 0) the number
+         of training cases currently associated with the component associated
+         with this training case (counting this case itself, so the minimum 
+         value is 1, and the maximum is the number of training cases).
+
+            Copyright (c) 1997, 1998 by Radford M. Neal

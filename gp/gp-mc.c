@@ -194,6 +194,11 @@ void mc_app_initialize
   
     data_spec = logg->data['D'];
 
+    if (data_spec!=0 && model==0)
+    { fprintf(stderr,"No model specified for data\n");
+      exit(1);
+    }
+
     if (data_spec!=0) 
     { gp_data_read (1, 0, gp, model, surv);
     }
@@ -883,7 +888,7 @@ void mc_app_stepsizes
   if (gp->has_jitter)
   { 
     if (gp->jitter.alpha[0]!=0)
-    { *stepsizes.jitter = 0.5/sqrt(N_train*gp->N_outputs+1);
+    { *stepsizes.jitter = 0.5/sqrt((double)N_train*gp->N_outputs+1);
     }
   }
 
@@ -920,13 +925,13 @@ void mc_app_stepsizes
   {  
     if (model->noise.alpha[0]!=0)
     { *stepsizes.noise_cm = 
-         model->noise.alpha[1]==0 ? 0.5/sqrt(N_train*gp->N_outputs+1)
-                                  : 0.1/sqrt(gp->N_outputs);
+         model->noise.alpha[1]==0 ? 0.5/sqrt((double)N_train*gp->N_outputs+1)
+                                  : 0.1/sqrt((double)gp->N_outputs);
     }
     
     if (model->noise.alpha[1]!=0)
     { for (i = 0; i<gp->N_outputs; i++)
-      { *stepsizes.noise[i] = 0.5/sqrt(N_train+1);
+      { *stepsizes.noise[i] = 0.5/sqrt((double)N_train+1);
       }
     }
   }

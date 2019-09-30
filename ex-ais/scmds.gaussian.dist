@@ -1,0 +1,13 @@
+
+# Linear regression example with Gaussian prior, implemented using the 'dist'
+# module.  This is about twenty times slower than using the 'net' module.
+
+dist-spec slog.gaussian.dist \
+"u ~ ExpGamma2(0.5,1/0.05^2) + v ~ ExpGamma2(1,1/0.1^2) + w0~Normal(0,Exp(-u)) \
+ + w1~Normal(0,Exp(-u)) + w2~Normal(0,Exp(-u)) + w3~Normal(0,Exp(-u)) \
+ + w4~Normal(0,Exp(-u)) + w5~Normal(0,Exp(-u)) + w6~Normal(0,Exp(-u)) \
+ + w7~Normal(0,Exp(-u)) + w8~Normal(0,Exp(-u)) + w9~Normal(0,Exp(-u))" \
+"t ~ Normal(w0i0+w1i1+w2i2+w3i3+w4i4+w5i5+w6i6+w7i7+w8i8+w9i9,Exp(-v))"
+data-spec slog.gaussian.dist 10 1 / sdata .
+mc-spec slog.gaussian.dist repeat 10 heatbath hybrid 20:2 0.05
+dist-mc slog.gaussian.dist 100
