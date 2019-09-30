@@ -1,6 +1,6 @@
 /* COMBINE.C - Combine files into one, with lines in parallel. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -15,29 +15,50 @@
 
 #include <stdio.h>
 
-#define Maxfiles 20
+#define Maxfiles 100
 
 main(argc,argv)
   int argc;
   char **argv;
 { 
   FILE *f[Maxfiles];
+  double num[Maxfiles];
   int nfiles, at_eof;
+  int any_files;
+  char junk;
   int i, c;
 
   if (argc<2)
-  { fprintf(stderr,"Usage: combine file1 file2 ...\n");
+  { fprintf(stderr,"Usage: combine file1 file2|number2 ...\n");
     exit(1);
   }
  
   nfiles = argc-1;
 
+  if (nfiles>Maxfiles)
+  { fprintf(stderr,"Too many files/numbers\n");
+    exit(1);
+  }
+
+  any_files = 0;
+
   for (i = 0; i<nfiles; i++)
-  { f[i] = fopen(argv[i+1],"r");
-    if (f[i]==NULL)
-    { fprintf(stderr,"Can't open file %s\n",argv[i+1]);
-      exit(1);
+  { if (i>0 && sscanf(argv[i+1],"%lf%c",&num[i],&junk)==1)
+    { f[i] = NULL;
     }
+    else
+    { f[i] = fopen(argv[i+1],"r");
+      if (f[i]==NULL)
+      { fprintf(stderr,"Can't open file %s\n",argv[i+1]);
+        exit(1);
+      }
+      any_files = 1;
+    }
+  }
+
+  if (!any_files)
+  { fprintf(stderr,"At least one argument must be a file\n");
+    exit(1);
   }
 
   for (;;)
@@ -46,23 +67,35 @@ main(argc,argv)
 
     for (i = 0; i<nfiles; i++)
     { 
-      c = getc(f[i]);
-      if (c==EOF && i>0 && !at_eof || at_eof && c!=EOF)
-      { fprintf(stderr,"Files do not have same number of lines\n");
-        exit(1);
+      if (f[i]==NULL)
+      { if (!at_eof) 
+        { if (num[i]==(int)num[i])
+          { printf(" %d",(int)num[i]);
+          }
+          else
+          { printf(" %f",num[i]);
+          }
+        }
       }
-      if (c==EOF) 
-      { at_eof = 1;
-        continue;
-      }
-
-      if (i>0) printf(" ");
-
-      while (c!=EOF && c!='\n')
-      { printf("%c",c);
+      else
+      {
         c = getc(f[i]);
-      }
+        if (c==EOF && i>0 && !at_eof || at_eof && c!=EOF)
+        { fprintf(stderr,"Files do not have same number of lines\n");
+          exit(1);
+        }
+        if (c==EOF) 
+        { at_eof = 1;
+          continue;
+        }
 
+        if (i>0) printf(" ");
+
+        while (c!=EOF && c!='\n')
+        { printf("%c",c);
+          c = getc(f[i]);
+        }
+      }
     }
 
     if (at_eof)

@@ -22,8 +22,9 @@ and/or by the noise variances to use for each training case.  This
 auxiliary state is updated only by the application-specific sampling
 procedures described below.  This augmentation is not needed for
 regression models where the noise variance is the same for all cases,
-but is needed for classification models and for regression models with
-varying noise (equivalently, noise that has a t distribution).
+but is needed for classification models, models for count data, and
+regression models with varying noise (equivalently, noise that has a t
+distribution).
 
 If latent values are present when they are not needed, they will be
 used when updating the hyperparameters (treated as noise-free data).
@@ -104,13 +105,13 @@ The following application-specific sampling procedures are implemented:
        Samples values for the case-specific noise variances in a 
        regression model where these vary (equivalently, where the noise 
        has a t distribution).  This operation requires that the latent
-       values the training cases be available.  If these are not recorded, 
-       such values are automatically sampled and then discarded.
+       values for the training cases be available.  If these are not
+       recorded, such values are automatically sampled and then discarded.
 
 Tempering methods and Annealed Importance Sampling are not currently
 supported.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal
 </pre>
 </body>
 </html>

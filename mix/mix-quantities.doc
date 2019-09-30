@@ -68,4 +68,4 @@ present after the letter, it represents a numeric modifier):
          with this training case (counting this case itself, so the minimum 
          value is 1, and the maximum is the number of training cases).
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

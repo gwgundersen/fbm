@@ -33,4 +33,4 @@ an 'S' record containing the hyperparameters ('sigma' values), and a
 An 'r' record recording the random number generator state is written
 as well.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

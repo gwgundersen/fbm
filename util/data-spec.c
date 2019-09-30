@@ -1,6 +1,6 @@
 /* DATA-SPEC.C - Program for specifying data sets for training and testing. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -48,6 +48,7 @@ main
 
   static double tmean[Max_targets];
   static double tvar[Max_targets];
+  static int tn[Max_targets];
 
   data_specifications *ds;
 
@@ -307,7 +308,11 @@ main
     for (i = 0; i<n; i++)
     { numin_read(&ns,iv);
       for (j = 0; j<ds->N_inputs; j++)
-      { iv[j] = data_trans (iv[j], ds->trans[j]);
+      { if (isnan(iv[j])) 
+        { fprintf(stderr,"Missing values not allowed for inputs\n");
+          exit(1);
+        }
+        iv[j] = data_trans (iv[j], ds->trans[j]);
         imean[j] += iv[j];
         ivar[j] += iv[j]*iv[j];
       }
@@ -338,14 +343,17 @@ main
     for (j = 0; j<ds->N_targets; j++)
     { tmean[j] = 0;
       tvar[j] = 0;
+      tn[j] = 0;
     }
   
     for (i = 0; i<n; i++)
     { numin_read(&ns,tv);
       for (j = 0; j<ds->N_targets; j++)
-      { tv[j] = data_trans (tv[j], ds->trans[ds->N_inputs+j]);
+      { if (isnan(tv[j])) continue;
+        tv[j] = data_trans (tv[j], ds->trans[ds->N_inputs+j]);
         tmean[j] += tv[j];
         tvar[j] += tv[j]*tv[j];
+        tn[j] += 1;
         if (ds->int_target)
         { if (tv[j]!=(int)tv[j] || tv[j]<0 || tv[j]>=ds->int_target)
           { fprintf(stderr,"Training target out of bounds or not integer: %f\n",
@@ -357,8 +365,8 @@ main
     }
   
     for (j = 0; j<ds->N_targets; j++)
-    { tmean[j] /= n;
-      tvar[j] /= n;
+    { tmean[j] /= tn[j];
+      tvar[j] /= tn[j];
       tvar[j] -= tmean[j]*tmean[j];
       if (ds->trans[ds->N_inputs+j].data_shift)
       { ds->trans[ds->N_inputs+j].shift = -tmean[j];
@@ -384,7 +392,11 @@ main
       for (i = 0; i<n; i++)
       { numin_read(&ns,iv);
         for (j = 0; j<ds->N_targets; j++)
-        { iv[j] = data_trans (iv[j], ds->trans[j]);
+        { if (isnan(iv[j])) 
+          { fprintf(stderr,"Missing values not allowed for inputs\n");
+            exit(1);
+          }
+          iv[j] = data_trans (iv[j], ds->trans[j]);
         } /* Above done just so errors will be reported at this time */
       }
   
@@ -402,11 +414,13 @@ main
         for (i = 0; i<n; i++)
         { numin_read(&ns,tv);
           for (j = 0; j<ds->N_targets; j++)
-          { tv[j] = data_trans (tv[j], ds->trans[ds->N_inputs+j]);
+          { if (isnan(tv[j])) continue;
+            tv[j] = data_trans (tv[j], ds->trans[ds->N_inputs+j]);
           }
           if (ds->int_target)
           { for (j = 0; j<ds->N_targets; j++)
-            { if (tv[j]!=(int)tv[j] || tv[j]<0 || tv[j]>=ds->int_target)
+            { if (isnan(tv[j])) continue;
+              if (tv[j]!=(int)tv[j] || tv[j]<0 || tv[j]>=ds->int_target)
               { fprintf(stderr,"Test target out of bounds or not integer: %f\n",
                         tv[j]);
                 exit(1);

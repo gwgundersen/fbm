@@ -1,6 +1,6 @@
 /* NET-SPEC.C - Program to specify a new network (and create log file). */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -197,6 +197,8 @@ main
     int i;
 
     if ((size = atoi(*ap++))<=0) usage();
+
+    if (*ap==0) usage();
 
     omit = 0;
     type = -1;

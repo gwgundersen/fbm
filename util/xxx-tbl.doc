@@ -54,4 +54,4 @@ If the -h flag was used, the following S-Plus command should be used:
 
     > x <- read.table("x",headers=T)
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

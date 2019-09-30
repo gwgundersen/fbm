@@ -1,6 +1,6 @@
 /* GP-LIKE.C - Likelihood computations for Gaussian Process models. */  
  
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -45,7 +45,7 @@ double gp_likelihood
   double *noise_variances	/* Noise variances (if they vary by case) */
 )
 { 
-  double l, n, a;
+  double l, n, a, s;
   int i, j;
    
   if (m->type=='C')
@@ -63,6 +63,23 @@ double gp_likelihood
     for (j = 0; j<d->N_targets; j++)
     { l += targets[j]!=0 ? -log(1+exp(-latent_values[j])) 
                          : -log(1+exp(latent_values[j]));
+    }
+  }
+
+  else if (m->type=='N')
+  { l = 0;
+    for (j = 0; j<d->N_targets; j++)
+    { if (targets[j]>=0)
+      { l += targets[j]*latent_values[j] - lgamma(targets[j]+1) 
+              - exp(latent_values[j]);
+      }
+      else
+      { s = - exp(latent_values[j]);
+        for (i = 1; i <= -targets[j]; i++)
+        { s = addlogs (s, i*latent_values[j]-lgamma(i+1)-exp(latent_values[j]));
+        }
+        l += s;
+      }
     }
   }
 

@@ -19,7 +19,7 @@ independent.)  In the Bayesian models based on these Gaussian
 processes, the functions in question are used to define a model for
 the target attributes in training and test cases given the values of
 nthe input attributes in these cases.  The Gaussian process gives the
-prior distribution over these functions.
+prior distribution over these functions.  
 
 A Gaussian process is specified by giving its covariance function,
 which is expressed in terms of "hyperparameters", which are themselves
@@ -30,9 +30,14 @@ specified, see <A HREF="gp-spec.html">gp-spec.doc</A>.
 
 The models based on these Gaussian processes are described using a
 general scheme that is also used for neural network models, see
-<A HREF="model-spec.html">model-spec.doc</A> for details.  Survival models are not allowed.
+<A HREF="model-spec.html">model-spec.doc</A> for details.  Survival models are not allowed.  The
+function from the Gaussian process is the conditonal mean for models
+of "real" data, the logit of the probability of class 1 for "binary"
+data, the log of the probability of a class (plus an arbitrary
+constant) for "class" data, and the log of the Poisson mean for
+"count" data.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal
 </pre>
 </body>
 </html>

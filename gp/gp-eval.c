@@ -1,6 +1,6 @@
 /* GP-EVAL.C - Program to evaluate functions drawn from Gaussian processes. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -46,6 +46,8 @@ main
   char **argv
 )
 {
+  static data_specifications ds0;  /* static so it's initialized to zero. */
+
   gp_spec *gp;
   model_specification *m;
 
@@ -53,12 +55,13 @@ main
 
   double grid_low[Max_dim];
   double grid_high[Max_dim];
+  char *fname;
 
   int grid_size[Max_dim];
   int grid_point[Max_dim];
-  int grid_total;
+  int n_points;
 
-  double *grid_inputs;
+  double *input_pts;
 
   double *latent_values;
   double *noise_variances;
@@ -116,21 +119,34 @@ main
     ap += 1;
   }
 
-  if (*ap==0 || (argv+argc-ap)%4!=0) usage();
-
-  ng = 0;
-
-  for ( ; *ap!=0; ap += 4)
-  { if (strcmp(ap[0],"/")!=0 
-     || (grid_size[ng] = atoi(ap[3]))<=0 && strcmp(ap[3],"0")!=0) usage();
-    grid_low[ng] = atof(ap[1]);
-    grid_high[ng] = atof(ap[2]);
-    ng += 1;
+  if (*ap==0 && gen_targets)
+  { 
+    gen_targets = 0;
+    fname = "targets";
   }
+  else if (argv+argc-ap==1)
+  { 
+    fname = ap[0];
+  }
+  else
+  {
+    fname = 0;
 
-  if (ng>Max_dim)
-  { fprintf(stderr,"Too many input dimensions (max %d)\n",Max_dim);
-    exit(1);
+    if (*ap==0 || (argv+argc-ap)%4!=0) usage();
+
+    ng = 0;
+
+    for ( ; *ap!=0; ap += 4)
+    { if (ng>=Max_dim)
+      { fprintf(stderr,"Too many input dimensions (max %d)\n",Max_dim);
+        exit(1);
+      }
+      if (strcmp(ap[0],"/")!=0 
+       || (grid_size[ng] = atoi(ap[3]))<=0 && strcmp(ap[3],"0")!=0) usage();
+      grid_low[ng] = atof(ap[1]);
+      grid_high[ng] = atof(ap[2]);
+      ng += 1;
+    }
   }
 
   /* Open log file and read Gaussian process and model specifications. */
@@ -152,7 +168,7 @@ main
     exit(1);
   }
 
-  if (gp->N_inputs!=ng)
+  if (fname==0 && gp->N_inputs!=ng)
   { fprintf(stderr,
       "Number of grid ranges doesn't match number of input dimensions\n");
     exit(1);
@@ -184,66 +200,88 @@ main
 
   logg.req_size['S'] = h->total_hypers * sizeof(double);
 
-  data_spec = logg.data['D'];
+  /* Read training data, if present, and data file, if we're not using a grid.*/
 
-  if (data_spec!=0) 
-  { gp_data_read (1, 0, gp, m, 0);
+  data_spec = logg.data['D']==0 ? &ds0 : logg.data['D'];
+
+  if (logg.data['D']==0)
+  { N_train==0;
+    data_spec->N_inputs = gp->N_inputs;
+    data_spec->N_targets = gp->N_outputs;
+    if (m!=0 && m->type=='B') 
+    { data_spec->int_target = 2;
+    }
+  }
+
+  if (logg.data['D']!=0 || fname!=0)
+  { 
+    if (fname!=0)
+    { strcpy(data_spec->test_inputs, fname);
+    }
+
+    gp_data_read (logg.data['D']!=0, fname!=0, gp, m, 0);
+  }
+
+  /* Compute the input points over the grid, if we're doing that.  Otherwise,
+     use inputs from the data file. */
+
+  if (fname!=0)
+  { 
+    input_pts = test_inputs;
+    n_points = N_test;
   }
   else
-  { N_train = 0;
-  }
-
-  /* Compute the input points over the grid. */
-
-  grid_total = 1;
-  for (i = 0; i<gp->N_inputs; i++) grid_total *= grid_size[i]+1;
-
-  grid_inputs = chk_alloc ((grid_total+1)*gp->N_inputs, sizeof(double));
-
-  g = grid_inputs;
-
-  for (i = 0; i<gp->N_inputs; i++) 
-  { grid_point[i] = 0;
-    g[i] = grid_low[i];
-  }
-    
-  for (;;)
   {
-    g += gp->N_inputs;
-
-    for (i = gp->N_inputs-1; i>=0 && grid_point[i]==grid_size[i]; i--) 
+    n_points = 1;
+    for (i = 0; i<gp->N_inputs; i++) n_points *= grid_size[i]+1;
+  
+    input_pts = chk_alloc ((n_points+1)*gp->N_inputs, sizeof(double));
+  
+    g = input_pts;
+  
+    for (i = 0; i<gp->N_inputs; i++) 
     { grid_point[i] = 0;
       g[i] = grid_low[i];
     }
-
-    if (i<0) break;
-
-    grid_point[i] += 1;
-    g[i] = grid_low[i] 
-             + grid_point[i] * (grid_high[i]-grid_low[i]) / grid_size[i];
-
-    for (i = i-1 ; i>=0; i--)
-    { g[i] = g[i-gp->N_inputs];
+      
+    for (;;)
+    {
+      g += gp->N_inputs;
+  
+      for (i = gp->N_inputs-1; i>=0 && grid_point[i]==grid_size[i]; i--) 
+      { grid_point[i] = 0;
+        g[i] = grid_low[i];
+      }
+  
+      if (i<0) break;
+  
+      grid_point[i] += 1;
+      g[i] = grid_low[i] 
+               + grid_point[i] * (grid_high[i]-grid_low[i]) / grid_size[i];
+  
+      for (i = i-1 ; i>=0; i--)
+      { g[i] = g[i-gp->N_inputs];
+      }
     }
   }
 
   /* Allocate some space. */
 
-  rnd    = chk_alloc (grid_total, sizeof(double));
-  mean   = chk_alloc (grid_total, sizeof(double));
-  output = chk_alloc (grid_total, sizeof(double));
+  rnd    = chk_alloc (n_points, sizeof(double));
+  mean   = chk_alloc (n_points, sizeof(double));
+  output = chk_alloc (n_points, sizeof(double));
 
   train_cov = chk_alloc (N_train*N_train, sizeof (double));
 
   scr1 = chk_alloc (N_train, sizeof(double));
   scr2 = chk_alloc (N_train, sizeof(double));
 
-  grid_cov = chk_alloc (grid_total*grid_total, sizeof (double));
-  if (N_train>0) grid_cov2 = chk_alloc (grid_total*grid_total, sizeof (double));
+  grid_cov = chk_alloc (n_points*n_points, sizeof (double));
+  if (N_train>0) grid_cov2 = chk_alloc (n_points*n_points, sizeof (double));
 
-  tr_gr_cov = chk_alloc (N_train*grid_total, sizeof (double));
-  gr_tr_cov = chk_alloc (grid_total*N_train, sizeof (double));
-  prd       = chk_alloc (grid_total*N_train, sizeof (double));
+  tr_gr_cov = chk_alloc (N_train*n_points, sizeof (double));
+  gr_tr_cov = chk_alloc (n_points*N_train, sizeof (double));
+  prd       = chk_alloc (n_points*N_train, sizeof (double));
 
   /* Draw function values for the specified iterations. */
 
@@ -335,33 +373,33 @@ main
 
     if (N_train>0)
     { 
-      gp_cov (gp, h, grid_inputs, grid_total, train_inputs, N_train, 
+      gp_cov (gp, h, input_pts, n_points, train_inputs, N_train, 
               gr_tr_cov, 0, 0);
 
-      matrix_product (gr_tr_cov, train_cov, prd, grid_total, N_train, N_train);
+      matrix_product (gr_tr_cov, train_cov, prd, n_points, N_train, N_train);
     }
 
     /* Compute the mean of the values at the grid points. */
 
     if (N_train==0)
     { 
-      for (i = 0; i<grid_total; i++) mean[i] = 0;
+      for (i = 0; i<n_points; i++) mean[i] = 0;
     }
     else
     { 
       matrix_product (prd, latent_values ? latent_values : train_targets,
-                      mean, grid_total, 1, N_train);
+                      mean, n_points, 1, N_train);
     }
 
     /* Compute the prior covariance matrix for function values at the 
        grid points. */
 
-    gp_cov (gp, h, grid_inputs, grid_total, grid_inputs, grid_total, 
+    gp_cov (gp, h, input_pts, n_points, input_pts, n_points, 
             grid_cov, 0, 0);
 
     if (gp->has_jitter)
-    { for (i = 0; i<grid_total; i++)
-      { grid_cov[i*grid_total+i] += exp(2 * *h->jitter);
+    { for (i = 0; i<n_points; i++)
+      { grid_cov[i*n_points+i] += exp(2 * *h->jitter);
       }
     }
 
@@ -370,28 +408,28 @@ main
 
     if (N_train>0)
     { 
-      gp_cov (gp, h, train_inputs, N_train, grid_inputs, grid_total,
+      gp_cov (gp, h, train_inputs, N_train, input_pts, n_points,
               tr_gr_cov, 0, 0);
  
-      matrix_product (prd, tr_gr_cov, grid_cov2, grid_total, grid_total, 
+      matrix_product (prd, tr_gr_cov, grid_cov2, n_points, n_points, 
                       N_train);
 
-      for (j = 0; j<grid_total*grid_total; j++) grid_cov[j] -= grid_cov2[j];
+      for (j = 0; j<n_points*n_points; j++) grid_cov[j] -= grid_cov2[j];
     }
 
     /* Add the noise variance if we're generating targets. */
 
     if (gen_targets)
     { if (m->noise.alpha[2]!=0)
-      { for (i = 0; i<grid_total; i++) 
+      { for (i = 0; i<n_points; i++) 
         { double n;
           n = prior_pick_sigma(exp(*h->noise[0]),m->noise.alpha[2]);
-          grid_cov[i*grid_total+i] += n*n;
+          grid_cov[i*n_points+i] += n*n;
         }
       }
       else
-      { for (i = 0; i<grid_total; i++) 
-        { grid_cov[i*grid_total+i] += exp(2 * *h->noise[0]);
+      { for (i = 0; i<n_points; i++) 
+        { grid_cov[i*n_points+i] += exp(2 * *h->noise[0]);
         }
       }
     }
@@ -400,15 +438,15 @@ main
        be adequate to regularize the computation. */
 
     if (!gp->has_jitter && !gen_targets)
-    { for (i = 0; i<grid_total; i++)
-      { grid_cov[i*grid_total+i] += Regularization;
+    { for (i = 0; i<n_points; i++)
+      { grid_cov[i*n_points+i] += Regularization;
       }   
     }
 
     /* Find the Cholesky decomposition of the posterior covariance for the
        grid points, which is what is needed for generating them at random. */
 
-    if (!cholesky (grid_cov, grid_total, 0))
+    if (!cholesky (grid_cov, n_points, 0))
     { fprintf(stderr,"Couldn't find Cholesky decomposition for grid points\n");
       exit(1);
     }
@@ -422,13 +460,13 @@ main
       /* Generate function at random using posterior mean and Cholesky 
          decomposition of posterior covariance. */
 
-      for (i = 0; i<grid_total; i++)
+      for (i = 0; i<n_points; i++)
       { rnd[i] = rand_gaussian();
       }
 
-      for (i = 0; i<grid_total; i++)
+      for (i = 0; i<n_points; i++)
       { output[i] = 
-            mean[i] + inner_product (rnd, 1, grid_cov+i*grid_total, 1, i+1);
+            mean[i] + inner_product (rnd, 1, grid_cov+i*n_points, 1, i+1);
       }
 
       /* Print the value of the function, or targets generated from it, 
@@ -441,15 +479,18 @@ main
       { printf("\n");
       }
 
-      for (j = 0; j<grid_total; j++)
+      for (j = 0; j<n_points; j++)
       {
-        if (j>0 && gp->N_inputs>0
-          && grid_inputs[gp->N_inputs*(j+1)-1]<grid_inputs[gp->N_inputs*j-1])
-        { printf("\n");
-        }
-
-        for (i = 0; i<gp->N_inputs; i++)  
-        { printf (" %8.5f", grid_inputs[gp->N_inputs*j+i]);
+        if (fname==0)
+        {
+          if (j>0 && gp->N_inputs>0
+            && input_pts[gp->N_inputs*(j+1)-1]<input_pts[gp->N_inputs*j-1])
+          { printf("\n");
+          }
+  
+          for (i = 0; i<gp->N_inputs; i++)  
+          { printf (" %8.5f", input_pts[gp->N_inputs*j+i]);
+          }
         }
 
         printf (" %.7e\n", output[j]);
@@ -467,7 +508,9 @@ main
 static void usage(void)
 {
   fprintf (stderr, 
-"Usage: gp-eval log-file range [ [-]N ] { / low high grid-size } [ \"targets\" ]\n"
-);
+"Usage: gp-eval log-file range [ [-]N ] { / low high grid-size } [ \"targets\" ]\n");
+  fprintf (stderr, 
+"   or: gp-eval log-file range [ [-]N ] data-file [ \"targets\" ]\n");
+
   exit(1);
 }

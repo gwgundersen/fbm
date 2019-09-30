@@ -1,6 +1,6 @@
 /* NET-MODEL.C - Module dealing with the interpretation of network outputs. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -87,6 +87,10 @@ void net_model_prob
 
       for (i = 0; i<a->N_outputs; i++)
       { double oi;
+        if (isnan(t[i]))
+        { if (dp) dp->o[i] = 0;
+          continue;
+        }
         oi = v->o[i];
         if (t[i]==0)
         { if (oi<0)
@@ -115,6 +119,16 @@ void net_model_prob
 
     case 'C':  /* Single class with multiple possible values */
     {
+      if (isnan(*t)) 
+      { if (pr) *pr = 0;
+        if (dp) 
+        { for (i = 0; i<a->N_outputs; i++)
+          { dp->o[i] = 0;
+          }
+        }
+        break;
+      }
+
       z = v->o[0];
 
       for (i = 1; i<a->N_outputs; i++)
@@ -143,8 +157,17 @@ void net_model_prob
       { 
         if (pr) *pr = 0;
 
+        if (pr && op<1) 
+        { *pr -= 0.5 * a->N_outputs * Log2pi;
+        }
+
         for (i = 0; i<a->N_outputs; i++)
-        { d = (v->o[i] - t[i]) / s->noise[i];
+        { if (isnan(t[i]))
+          { if (dp) dp->o[i] = 0;
+            if (pr && op<1) *pr += 0.5 * Log2pi;
+            continue;
+          }
+          d = (v->o[i] - t[i]) / s->noise[i];
           if (d<-1e10) d = -1e10;
           if (d>+1e10) d = +1e10;
           if (pr) 
@@ -155,18 +178,27 @@ void net_model_prob
           { dp->o[i] = d / s->noise[i];
           }
         }
-
-        if (pr && op<1) 
-        { *pr -= 0.5 * a->N_outputs * Log2pi;
-        }
       }
 
       else /* Student t distribution for noise */
       {
         if (pr) *pr = 0;
 
+        if (pr && op<1) 
+        { if (alpha!=alpha_saved)
+          { cnst = lgamma((alpha+1)/2) - lgamma(alpha/2) - 0.5*log(M_PI*alpha);
+            alpha_saved = alpha;
+          }
+          *pr += a->N_outputs * cnst;
+        }
+
         for (i = 0; i<a->N_outputs; i++)
-        { d = (v->o[i] - t[i]) / s->noise[i];
+        { if (isnan(t[i]))
+          { if (dp) dp->o[i] = 0;
+            if (pr && op<1) *pr -= cnst;
+            continue;
+          }
+          d = (v->o[i] - t[i]) / s->noise[i];
           if (d<-1e10) d = -1e10;
           if (d>+1e10) d = +1e10;
           x = 1 + d*d/alpha;
@@ -180,14 +212,6 @@ void net_model_prob
           { dp->o[i] = ((alpha+1)/alpha) * (d/s->noise[i]) / x;
           }
         }
-
-        if (pr && op<1) 
-        { if (alpha!=alpha_saved)
-          { cnst = lgamma((alpha+1)/2) - lgamma(alpha/2) - 0.5*log(M_PI*alpha);
-            alpha_saved = alpha;
-          }
-          *pr += a->N_outputs * cnst;
-        }
       }
 
       break;
@@ -197,6 +221,12 @@ void net_model_prob
     { 
       int censored;
       double m, ot, ho;
+
+      if (isnan(t[0]))
+      { if (pr) *pr = 0;
+        if (dp) dp->o[0] = 0;
+        break;
+      }
 
       if (t[0]<0)
       { censored = 1;

@@ -10,9 +10,9 @@
 
                    MARKOV CHAIN MONTE CARLO METHODS
 
-              Copyright (c) 1995-2003 by Radford M. Neal 
+              Copyright (c) 1995-2004 by Radford M. Neal 
 
-                         Version of 2003-06-29
+                         Version of 2004-11-10
 
 Permission is granted for anyone to copy, use, modify, or distribute
 these programs and accompanying documents for any purpose, provided
@@ -83,6 +83,7 @@ Ex-mixdft.doc       Examples of mixture models and Dirichlet diffusion trees
 
   Ex-mixdft-b.doc      A probability estimation problem with binary data 
   Ex-mixdft-r.doc      A bivariate density estimation problem 
+  Ex-dft-a.doc         Building an additive model using two diffusion trees
 
 Ex-surv.doc         Examples of Bayesian neural network survival models
 
@@ -358,7 +359,7 @@ the current version; you should read the old documentation if for some
 reason you are installing an older version.
 
 The tar command should create a directory called 'fbm.YYYY-MM-DD',
-where YYYY-MM-DD is the release data.  It should place numerous files
+where YYYY-MM-DD is the release date.  It should place numerous files
 and sub-directories in this directory.  If this seems to have worked,
 you can remove the file 'fbm.YYYY-MM-DD.tar'.  You should now change
 into the 'fbm.YYYY-MM-DD' directory, as the following instructions
@@ -1265,7 +1266,7 @@ need to be run for more iterations.
 We can get a quantitative idea of how poor the sampling is with the
 following command:
 
-    > dist-tbl x glog.met,1 11: | series mac 30
+    > dist-tbl x glog.met,1 11: | series mac 50
 
     Number of realizations: 1  Total points: 1990
 
@@ -4167,7 +4168,7 @@ Here, the "a" option is used to suppress everything except the summary.
 If we are interested in the probabilities for each class, we can use
 the "n" option, as follows:
 
-    > net-pred n clog.net 51:
+    > net-pred tn clog.net 51:
 
     Number of iterations used: 150
 
@@ -6167,6 +6168,8 @@ Markov chain Monte Carlo facilities [mc]:
     xxx-stepsizes   Display and evaluate stepsizes used for dynamics
     xxx-genp        Generate random momentum variables
 
+    xxx-his         Do Hamiltonian importance sampling
+
 
 Markov chain sampling for a specified distribution [dist]:
 
@@ -6281,7 +6284,7 @@ rejection sampling, and the features allowing cpu time to be stored,
 displayed, and used to control the number of iterations, are also
 based on work by Carl Edward Rasmussen.
 
-Thanks also to Tim Howells, Dirk Husmeier, Marcus Lee, David MacKay,
-Neil Montgomery, Tony Plate, Jeff Rosenthal, Ricard Ferran Sans, and
-Chris Williams for comments on the documentation, for testing the
-programs, and for finding bugs.
+Thanks also to Tim Howells, Dirk Husmeier, Krunoslav Kovac, Marcus
+Lee, David MacKay, Neil Montgomery, Tony Plate, Jeff Rosenthal, Ricard
+Ferran Sans, and Chris Williams for comments on the documentation, for
+testing the programs, and for finding bugs.

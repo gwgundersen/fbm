@@ -1,6 +1,6 @@
 /* MODEL-SPEC.C - Program to specify a data model. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -83,6 +83,11 @@ main
         break;
       }
 
+      case 'N': 
+      { printf("count"); 
+        break;
+      }
+
       case 'C': 
       { printf("class");   
         break;
@@ -157,6 +162,9 @@ main
   
   if (strcmp(*ap,"binary")==0) 
   { m->type = 'B';
+  }
+  else if (strcmp(*ap,"count")==0) 
+  { m->type = 'N';
   }
   else if (strcmp(*ap,"class")==0) 
   { m->type = 'C';
@@ -307,11 +315,9 @@ static void usage(void)
    "Usage: model-spec log-file model-specification...\n");
   fprintf(stderr,
    "   or: model-spec log-file (to display stored specifications)\n");
-  fprintf(stderr,
-   "Model specification:\n");
-  fprintf(stderr,
-   "   real noise-prior [ \"acf\" corr { corr } ] | binary | class | survival ... \n");
+  fprintf(stderr, "Model specification:\n");
+  fprintf(stderr, "   real noise-prior [ \"acf\" corr { corr } ]\n");
+  fprintf(stderr, "      | binary | count | class | survival ... \n");
 
   exit(1);
 }
-

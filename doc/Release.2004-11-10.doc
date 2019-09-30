@@ -1,0 +1,74 @@
+
+
+NOTES ON THE VERSION OF 2004-11-10
+
+Except for the lightly-documented addition of Hamiltonian importance
+sampling, this release contains only some fairly minor (though useful)
+extensions and some bug fixes.
+
+
+Changes in this version:
+
+1) Hamiltonian importance sampling was added.  See xxx-his.doc.  More
+   tutorial documentation (and maybe a paper!) may be written some day.
+
+2) A "count" data model has been added, which models Poisson count 
+   data.  It is implemented only for Gaussian process models, where
+   the Gaussian process produces the log of the Poisson mean.
+
+3) The "numin" module has been changed to allow for missing values,
+   written as "?", which are allowed for targets by some models (currently 
+   only neural network models).
+
+4) The gp-eval program has been extended to allow evaluations at points
+   read from a data file, rather than from a grid.  See gp-eval.doc for
+   details.
+
+5) An "E" option has been added to net-pred and gp-pred, which gives the 
+   expected fraction of wrong guesses at binary targets.  For details,
+   see net-pred.doc and gp-pred.doc.  This was documented in the last 
+   release, but not actually included in the version of the program 
+   that was distributed.
+
+6) Data file reading was changed to not read the whole data file if only
+   a part of it is required.  The speed of reading when there are many
+   inputs or targets has also been improved.
+
+7) A new "K0" quantity has been added, equal to the expected value of 
+   the kinetic energy (the "K" quantity).  See mc-quantities.doc.
+
+
+Bug fixes.
+
+1) Some out-of-date versions of the copyright notice were replaced with the
+   current version.
+
+2) Fixed a bug in dist-est, in which using too many iterations produced
+   garbage results, rather than an error message.
+
+3) Fixed a bug that affected "offsets" for neural network models.
+
+4) Fixed some other bugs involving error checking.
+
+
+Known bugs and other deficiencies.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The latent value update operations for Gaussian processes may recompute 
+   the inverse covariance matrix even when an up-to-date version was 
+   computed for the previous Monte Carlo operation.
+
+4) Covariance matrices are stored in full, even though they are symmetric,
+   which sometimes costs a factor of two in memory usage.
+
+5) Giving net-pred several log files that have different network architectures
+   doesn't work, but an error message is not always produced (the results may
+   just be nonsense).

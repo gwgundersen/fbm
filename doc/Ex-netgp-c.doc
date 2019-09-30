@@ -102,7 +102,7 @@ Here, the "a" option is used to suppress everything except the summary.
 If we are interested in the probabilities for each class, we can use
 the "n" option, as follows:
 
-    > net-pred n clog.net 51:
+    > net-pred tn clog.net 51:
 
     Number of iterations used: 150
 

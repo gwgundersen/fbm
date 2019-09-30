@@ -103,6 +103,8 @@ Markov chain Monte Carlo facilities [mc]:
     xxx-stepsizes   Display and evaluate stepsizes used for dynamics
     xxx-genp        Generate random momentum variables
 
+    xxx-his         Do Hamiltonian importance sampling
+
 
 Markov chain sampling for a specified distribution [dist]:
 

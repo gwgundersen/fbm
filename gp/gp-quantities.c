@@ -1,6 +1,6 @@
 /* GP-QUANTITIES.C - Module defining quantities for Gaussian processes. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -287,6 +287,9 @@ void gp_evaluate
               { qh->value[v][i-low] = 
                   1 / (1+exp(-latent_values[gp->N_outputs*i+mod]));
               }
+              else if (model_type=='N')
+              { qh->value[v][i-low] = exp(latent_values[gp->N_outputs*i+mod]);
+              }
               else if (model_type=='C')
               { double s;
                 int m;
@@ -385,12 +388,16 @@ void gp_evaluate
 
             for (m = mod; m<=(qd[v].modifier==-1 ? M_targets-1 : mod); m++)
             { tv = model_type=='C' ? targets[i]==m : targets[M_targets*i+m];
+              if (model_type=='N' && tv<0) continue;
               fv = latent_values[M_targets*i+m];
               if (model_type=='R')
               { gv = fv;
               }
               else if (model_type=='B')
               { gv = 1/(1+exp(-fv));
+              }
+              else if (model_type=='N')
+              { gv = exp(fv);
               }
               else if (model_type=='C')
               { gv = exp(fv)/s;
@@ -443,6 +450,7 @@ void gp_evaluate
 
             for (m = mod; m<=(qd[v].modifier==-1 ? M_targets-1 : mod); m++)
             { tv = model_type=='C' ? targets[i]==m : targets[M_targets*i+m];
+              if (model_type=='N' && tv<0) continue;
               fv = latent_values[M_targets*i+m];
               if (model_type=='R')
               { gv = fv;
@@ -452,6 +460,9 @@ void gp_evaluate
               }
               else if (model_type=='C')
               { gv = exp(fv)/s;
+              }
+              else if (model_type=='N')
+              { gv = exp(fv);
               }
               else
               { abort();
@@ -515,8 +526,10 @@ void gp_evaluate
 
           for (i = low; i<=high; i++)
           {
-            qh->value[v][i-low] = qd[v].modifier>0 || !gp->has_linear ? 0
-                                : 0.5 * exp(2 * *hypers.linear[i]);
+            qh->value[v][i-low] = 
+               qd[v].modifier>0 || !gp->has_linear 
+                 || gp->linear_flags[i]&Flag_omit ? 0
+               : 0.5 * exp(2 * *hypers.linear[i]);
 
             for (m = 1; m<=gp->N_exp_parts; m++)
             {

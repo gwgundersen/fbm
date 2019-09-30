@@ -1,6 +1,6 @@
 /* NUMIN.C - Module for reading numeric input. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -35,7 +35,7 @@ void numin_spec
 )
 { 
   char *s, *f;
-  int i;
+  int i, j, n;
 
   s = spec;
 
@@ -62,7 +62,7 @@ void numin_spec
     { ns->index[i] = ns->last_index = ns->last_index + 1;
     }
 
-    return;
+    goto setup;
   }
 
   /* Look for file name, reset defaults if one is present. */
@@ -118,6 +118,23 @@ void numin_spec
 
   if (*s!=0) goto error;
 
+  /* Set up other form of index. */
+
+setup:
+  n = 0;
+  for (i = 0; i<ns->N_items; i++)
+  { if (ns->index[i]!=0)
+    { for (j = n; j>0 && ns->iused[j-1]>ns->index[i]; j--)
+      { ns->iused[j] = ns->iused[j-1];
+        ns->ifor[j] = ns->ifor[j-1];
+      }
+      ns->iused[j] = ns->index[i];
+      ns->ifor[j] = i;
+      n += 1;
+    }
+  }
+  ns->iused[n] = 0;
+
   return;
 
 error:
@@ -153,7 +170,7 @@ int numin_start
   ns->length = 0;
   c = getc(ns->file);
 
-  while (c!=EOF)
+  while (c!=EOF && (ns->complement || ns->last==0 || ns->length<ns->last))
   { ns->length += 1;
     while (c!=EOF && c!='\n') c = getc(ns->file);
     c = getc(ns->file);
@@ -169,7 +186,8 @@ int numin_start
   if (ns->last==0) ns->last = ns->length;
 
   if (*ns->filename=='%')
-  { ns->file = popen(ns->filename+1,"r");
+  { pclose(ns->file);
+    ns->file = popen(ns->filename+1,"r");
   }
   else
   { rewind(ns->file);
@@ -185,7 +203,8 @@ int numin_start
 /* READ THE NEXT LINE.  The number of items required (as passed to numin_start)
    are read from the next line of the file, and stored in the array of doubles
    passed.  The caller must stop reading before the end of file is reached 
-   (based on the line count returned from numin_start). */
+   (based on the line count returned from numin_start).  Missing values are
+   represented by NaN. */
 
 void numin_read
 ( numin_source *ns,	/* Structure holding numeric input specification */
@@ -223,17 +242,22 @@ void numin_read
       c = getc(ns->file);
     }
     item[j] = 0;
-    for (k = 0; k<ns->N_items; k++)
-    { if (ns->index[k]==i)
-      { if (sscanf(item,"%lf",&value)!=1) 
-        { fprintf (stderr, "Bad numeric item on line %d of %s\n",
-                   ns->line, ns->filename);
-          exit(1);
-        }
-        if (p!=0) p[k] = value;
+
+    if (ns->iused[n]==i)
+    { if (strcmp(item,"?")==0)
+      { value = 0.0/0.0;
+      }
+      else if (sscanf(item,"%lf",&value)!=1) 
+      { fprintf (stderr, "Bad numeric item on line %d of %s: %s\n",
+                 ns->line, ns->filename, item);
+        exit(1);
+      }
+      while (ns->iused[n]==i)
+      { if (p!=0) p[ns->ifor[n]] = value;
         n += 1;
       }
     }
+
     i += 1;
   }
 

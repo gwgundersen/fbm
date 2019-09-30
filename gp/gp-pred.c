@@ -1,6 +1,6 @@
 /* GP-PRED.C - Make predictions for test cases using Gaussian processes. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -411,6 +411,56 @@ int pred_app_use_index (void)
         if (have_targets && op_p)
         { targ = test_targets[gp->N_outputs*i+j];
           test_log_prob[i] += targ==1 ? log(prb) : log(1-prb);
+        }
+      }
+    }
+
+    else if (m->type=='N') /* Model for count data */
+    {
+      test_log_prob[i] = 0;
+ 
+      for (j = 0; j<gp->N_outputs; j++)
+      {
+        double mean, sd, tfact, prb;
+        int targ;
+
+        mean = meanp[i*gp->N_outputs+j];
+        sd   = sqrt(varp[i*gp->N_outputs+j]);
+
+        if (have_targets && op_p)
+        { targ = test_targets[gp->N_outputs*i+j];
+          tfact = lgamma(targ+1);
+          prb = 0;
+        }
+        else
+        { targ = -1;
+        }
+
+        test_targ_pred[M_targets*i+j] = 0;
+
+        if (op_R)
+        { test_targ_pred[M_targets*i+j] = mean;
+        }
+
+        if (!op_R || targ>=0)
+        {
+          for (k = 0; k<Prediction_sample; k++)
+          { double v;
+            v = mean + rand_gaussian() * sd;
+            if (!op_R) 
+            { test_targ_pred[M_targets*i+j] += exp(v);
+            }
+            if (targ>=0)
+            { prb += exp (targ*v - tfact - exp(v));
+            }
+          }
+    
+          if (!op_R) 
+          { test_targ_pred[M_targets*i+j] /= Prediction_sample;
+          }
+          if (targ>=0) 
+          { test_log_prob[i] += log(prb/Prediction_sample);
+          }
         }
       }
     }

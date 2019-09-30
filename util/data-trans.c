@@ -1,6 +1,6 @@
 /* DATA-TRANS.C - Routines for transforming to and from raw data. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -137,6 +137,8 @@ double data_trans
   data_transformation t	/* Transformation to apply */
 )
 {
+  if (isnan(d)) return d;
+
   if (t.take_log)
   { 
     if (d<=0) 
@@ -160,6 +162,8 @@ double data_inv_trans
   data_transformation t	/* Transformation to apply */
 )
 {
+  if (isnan(d)) return d;
+
   d = (d/t.scale) - t.shift;
 
   return t.take_log ? exp(d) : d;

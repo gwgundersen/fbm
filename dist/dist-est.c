@@ -1,6 +1,6 @@
 /* DIST-EST.C - Program to estimate the expectation of a function of state. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -27,7 +27,7 @@
 
 /* VALUES AND IMPORTANCE WEIGHTS AT DATA POINTS. */
 
-#define Max_points 100000		/* Maximum number of points allowed */
+#define Max_points 200000		/* Maximum number of points allowed */
 
 static int n_points;			/* Number of points used for estimate */
 
@@ -220,6 +220,11 @@ main
       { 
         if (q==0)
         { fprintf(stderr,"No variables stored with iteration\n");
+          exit(1);
+        }
+
+        if (n_points>=Max_points)
+        { fprintf(stderr,"Too many points for estimate (max %d)\n",Max_points);
           exit(1);
         }
 

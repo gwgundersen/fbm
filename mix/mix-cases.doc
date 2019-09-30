@@ -32,4 +32,4 @@ on standard output, in the format documented in mix-display.doc, with
 the newly generated cases following the training cases (if any).  By
 default, none of this information is displayed.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

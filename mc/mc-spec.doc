@@ -435,4 +435,4 @@ their description of opt2 in table 2. b1=1-b2 should be 1-1/sqrt(2).)
 The list of operations is stored in a record of type 'o'; the
 trajectory specification in a record of type 't'.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

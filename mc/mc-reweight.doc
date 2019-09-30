@@ -1,0 +1,26 @@
+
+
+MC-REWEIGHT:  Copy part of a log file while changing iteration weights.
+
+MC-reweight operates much like log-copy except that it also changes
+the weights for iterations by altering the records of type 'i'.  This
+allows the iterations to be changed so as to produce an importance
+sampling estimate for some distribution other than the one originally
+sampled, provided a program for computing the appropriate weights has
+been written.
+
+Usage:
+
+   mc-reweight logfile-in range logfile-out < file-of-log-weights
+
+Records with negative indexes or with indexes in the indicated range
+are copied from logfile-in to a newly-created logfile-out, except that
+records of type 'i', which record information on Monte Carlo
+iterations, are altered by adding values read from standard input to
+the log weights recorded in these records.  The range has the usual
+[low][:[high]][%modulus] form, as described in parse_range in misc.c.
+If high and the colon are omitted, high defaults to low.  If high is
+omitted but the colon is present, the range extends to the end of the
+file.
+
+            Copyright (c) 1995-2004 by Radford M. Neal

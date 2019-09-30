@@ -38,6 +38,7 @@ Ex-mixdft.doc       Examples of mixture models and Dirichlet diffusion trees
 
   Ex-mixdft-b.doc      A probability estimation problem with binary data 
   Ex-mixdft-r.doc      A bivariate density estimation problem 
+  Ex-dft-a.doc         Building an additive model using two diffusion trees
 
 Ex-surv.doc         Examples of Bayesian neural network survival models
 

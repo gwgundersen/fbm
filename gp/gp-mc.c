@@ -1,6 +1,6 @@
 /* GP-MC.C - Interface between Gaussian process and Markov chain modules. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -976,6 +976,50 @@ static double logp
 }
 
 
+/* ANOTHER LOG PROBABILITY FUNCTION USED IN SCAN-VALUES AND JITTER-VALUES.  
+   Like logp above, but for Poisson models.  Negative values are left
+   censored up to their absolute value. */
+
+static double logpp
+( double x,		/* Point to evaluate log density at */
+  double *d,		/* Place to store derivative of log density */
+  void *extra		/* Extra information */
+)
+{
+  struct extra *ex = extra;
+  double e, v, s, lg;
+  int i;
+
+  e = exp(x);
+
+  *d = - (x-ex->mean) / ex->var;
+  v = - (x-ex->mean)*(x-ex->mean) / (2*ex->var);
+
+  if (ex->b>0)
+  { *d += ex->b - e;
+    v += ex->b*x - e;
+  }
+  else
+  {
+    s = -e;
+    for (i = 1; i <= -ex->b; i++)
+    { s = addlogs (s, i*x - e - lgamma(i+1));
+    }
+   
+    v += s;
+
+    s = 0;
+    for (i = 0; i <= -ex->b; i++)
+    { s += exp (lgamma(-ex->b+1) - lgamma(i+1) - (-ex->b+1-i)*x);
+    }
+
+    *d += -1/s;
+  }
+
+  return v;
+}
+
+
 /* DO GIBBS SAMPLING SCANS FOR LATENT VALUES. */
 
 static void scan_values
@@ -1039,6 +1083,14 @@ static void scan_values
           ex.var  = 1/prec;
           ex.b    = train_targets[i*N_outputs+j]==1;
           latent_values[i*N_outputs+j] = ars (mean, sqrt(1/prec), logp, &ex);
+        }
+
+        else if (model->type=='N')
+        { struct extra ex;
+          ex.mean = mean;
+          ex.var  = 1/prec;
+          ex.b    = train_targets[i*N_outputs+j];
+          latent_values[i*N_outputs+j] = ars (mean, sqrt(1/prec), logpp, &ex);
         }
 
         else if (model->type=='C')
@@ -1457,6 +1509,14 @@ static void jitter_values
           ex.var  = 1/prec;
           ex.b    = train_targets[i*N_outputs+j]==1;
           latent_values[i*N_outputs+j] = ars (mean, sqrt(1/prec), logp, &ex);
+        }
+
+        else if (model->type=='N')
+        { struct extra ex;
+          ex.mean = mean;
+          ex.var  = 1/prec;
+          ex.b    = train_targets[i*N_outputs+j];
+          latent_values[i*N_outputs+j] = ars (mean, sqrt(1/prec), logpp, &ex);
         }
 
         else if (model->type=='C')

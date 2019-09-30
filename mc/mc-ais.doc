@@ -57,4 +57,4 @@ thumb is therefore to modify the tempering schedule so that the
 command "mc-ais IW logfile" shows W increasing approximately linearly
 with tempering index (I) up to a final value of about one.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

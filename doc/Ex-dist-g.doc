@@ -112,7 +112,7 @@ need to be run for more iterations.
 We can get a quantitative idea of how poor the sampling is with the
 following command:
 
-    > dist-tbl x glog.met,1 11: | series mac 30
+    > dist-tbl x glog.met,1 11: | series mac 50
 
     Number of realizations: 1  Total points: 1990
 

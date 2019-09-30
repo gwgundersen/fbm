@@ -115,4 +115,4 @@ which case points from the prior are obtained by reading from standard
 input, which must be a file of points, or a pipe from a separate
 program for sampling from the prior.  See dist-mc.doc for details.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

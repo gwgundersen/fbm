@@ -13,4 +13,4 @@ found each iteration are stored in records of type 'X'.  The Markov
 chain Monte Carlo package will of course put various other records in
 the log file as well.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

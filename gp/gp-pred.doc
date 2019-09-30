@@ -80,14 +80,14 @@ The 'options' argument consists of one or more of the following letters:
 Some of these options are illegal for some data models.  The illegal
 combinations are marked with an 'X' in the following table:
 
-        binary  class  real-valued  no-model
+        binary  count  class  real-valued  no-model
 
-    r     X       X
-    p                                  X
-    m                      X           X
+    r     X              X
+    p                                         X
+    m             X               X           X
     n                   
-    d/D   X       X    
-    q/Q   X       X    
+    d/D   X       X      X    
+    q/Q   X       X      X    
 
 Furthermore, the 'a' option is incompatible with 'b', 'i', 't', or
 'q', and the 't', 'p', and 'a' options may be used only if the true
@@ -96,7 +96,10 @@ only if the true targets are known.  The 'n' option for class models
 displays the mean probabilities for each class, and computes a single
 figure for squared error that is the sum of the squares of the
 differences between these probabilities and the indicator variables
-that are one for the right class and zero for the wrong classes.
+that are one for the right class and zero for the wrong classes.  The
+'r' option for count data causes the 'n' option to output the mean
+prediction for the log of the Poisson mean (and no squared errors are
+computed, regardless of whether targets are available).
 
 Making predictions requires inverting the covariance matrix of the
 training points for each Gaussian process used, which can take a
@@ -106,8 +109,8 @@ the log file for each iteration, but this could take up a very large
 amount of disk space.  When the number of test cases is large, it will
 take much longer to compute the median or log probability predictions
 (options "d" or "p") for a regression model than to compute only the
-mean predictions (option "n").  For binary and class models, all 
-sorts of predictions take about the same amount of time.
+mean predictions (option "n").  For binary, count, and class models,
+all sorts of predictions take about the same amount of time.
 
 The median and quantiles are calculated by Monte Carlo, using a sample
 consisting of 101 points from the predictive distribution for each
@@ -143,4 +146,4 @@ However, users might have a use for -alt-mean, which forces a possibly
 more accurate computation of the mean prediction (which is, however,
 slower, if only the mean is being computed).
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

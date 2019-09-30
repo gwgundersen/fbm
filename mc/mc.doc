@@ -73,4 +73,4 @@ The state of the random number generator after each iteration is
 stored in records of type 'r', the first of which may be written at
 index -1 using the 'rand-seed' program.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

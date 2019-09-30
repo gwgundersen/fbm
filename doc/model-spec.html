@@ -74,7 +74,23 @@ and the same number of binary target values as the network has output
 units.  The targets must be specified to be binary using the
 int-target option of data-spec.  Each output, o, of the network is
 used to derive the probability, p, that the corresponding target will
-be '1', via the logistic function, p = 1/(1+exp(-o)).
+be '1', via the logistic function, p = 1/(1+exp(-o)).  The different
+targets are assumed to be independent.
+
+
+Poisson regressoin for count data.
+
+A Poisson regression model for integer count data is specified by the
+argument "count".  The data for each case consists of the same number
+of input values as the network has input units, and the same number of
+integer target values as the network has output units.  Checking that
+the target values are integers is will only be done (if at all) by the
+programs that actually look at the data, not by the data-spec program.
+Negative integer values represent censored data - in particular, a
+value of -a indicates that the actual value is some value between 0
+and a (inclusive).  The outputs of the network are the logs of the
+Poisson means for each target value.  The different targets are
+assumed to be independent.
 
 
 Generalized logistic regression for class targets ("softmax").
@@ -131,7 +147,7 @@ target's absolute value).
 
 Survival models are not implemented for Gaussian processes.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal
 </pre>
 </body>
 </html>

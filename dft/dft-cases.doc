@@ -55,4 +55,4 @@ which must be compatible with the records written (though this is not
 checked).  This facility allows a new chain to be run starting from
 the generated state, which is useful for testing.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

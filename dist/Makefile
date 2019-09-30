@@ -1,26 +1,26 @@
 # MAKEFILE FOR MARKOV CHAIN MONTE CARLO FOR A SPECIFIED DISTRIBUTION.
 
-# Copyright (c) 1998 by Radford M. Neal
+# Copyright (c) 1995-2004 by Radford M. Neal
 #
-# Permission is granted for anyone to copy, use, or modify this program 
-# for purposes of research or education, provided this copyright notice 
-# is retained, and note is made of any changes that have been made. 
-#
-# This program is distributed without any warranty, express or implied.
-# As this program was written for research purposes only, it has not been
-# tested to the degree that would be advisable in any important application.
-# All use of this program is entirely at the user's own risk.
+# Permission is granted for anyone to copy, use, modify, or distribute this
+# program and accompanying programs and documents for any purpose, provided 
+# this copyright notice is retained and prominently displayed, along with
+# a note saying that the original programs are available from Radford Neal's
+# web page, and note is made of any changes made to the programs.  The
+# programs and documents are distributed without any warranty, express or
+# implied.  As the programs were written for research purposes only, they have
+# not been tested to the degree that would be advisable in any important
+# application.  All use of these programs is entirely at the user's own risk.
 
 include ../make.include
 
 programs:	dist-spec dist-mc dist-plt dist-tbl dist-hist dist-grad-test \
 		dist-stepsizes dist-initial dist-display dist-est dist-gen \
-		dist-genp
-
+		dist-genp dist-his
 clean:
 	rm -f *.o dist-spec dist-mc dist-plt dist-tbl dist-hist dist-grad-test \
 	          dist-stepsizes dist-initial dist-display dist-est dist-gen \
-		  dist-genp 
+		  dist-genp dist-his
 
 
 include ../util/util.make
@@ -85,6 +85,18 @@ dist-mc:	mc.o dist-mc.o	dist-plt.o dist-util.o dist-quantities.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-util.o \
 		  mc-quantities.o dist-data.o numin.o data-trans.o digamma.o \
 		  -lm -o dist-mc
+
+dist-his:	mc-his.o dist-mc.o dist-plt.o dist-util.o dist-quantities.o \
+				formula.o misc.o log.o rand.o quantities.o \
+				mc-heatbath.o mc-traj.o mc-util.o \
+				mc-quantities.o dist-data.o numin.o \
+				data-trans.o digamma.o
+		$(CC) $(LFLAGS) mc-his.o dist-mc.o dist-util.o \
+		  dist-quantities.o \
+		  formula.o dist-plt.o misc.o log.o rand.o \
+		  quantities.o mc-traj.o mc-heatbath.o mc-util.o \
+		  mc-quantities.o dist-data.o numin.o data-trans.o digamma.o \
+		  -lm -o dist-his
 
 dist-mc.o:	dist-mc.c	misc.h log.h dist.h mc.h formula.h \
 				data.h dist-data.h

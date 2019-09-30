@@ -1,6 +1,6 @@
 /* MC-HIS.C - Skeleton of program for Hamiltonian importance sampling. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -64,7 +64,7 @@ main
   char **ap;
   char junk;
 
-  double level, E0;
+  double level, E0, E1, H0, H1;
   double *kinetic;
 
   int index;
@@ -256,6 +256,13 @@ main
 
        Note that if max_steps==min_steps, the sequence starts at 0. */
 
+    it->move_point = 0;
+    it->rejects = 0;
+    it->proposals = 0;
+    it->delta = 0;
+    it->decay = decay;
+    it->stepsize_factor = stepsize;
+
     j = max_steps>min_steps ? -1 : 0;
 
     while (j!=max_steps+1)
@@ -277,12 +284,11 @@ main
         { for (k = 0; k<ds.dim; k++)
           { ds.p[k] /= decay;
           }
+          ds.know_kinetic = 0;
           if (mix!=0)
           { mc_mix_momentum (&ds, mix); 
           }
         }
-
-        ds.know_kinetic = 0;
 
         ds.temp_state->inv_temp = 0;
         mc_app_energy(&ds,1,1,&E0,0);
@@ -291,16 +297,26 @@ main
         mc_value_copy (save_p, ds.p, ds.dim);
 
         ds.temp_state->inv_temp = -1;
+        mc_app_energy(&ds,1,1,&H0,0);
+        H0 += mc_kinetic_energy(&ds);
+
         mc_trajectory (&ds, steps, 0);
 
+        mc_app_energy(&ds,1,1,&H1,0);
+        H1 += mc_kinetic_energy(&ds);
+
         ds.temp_state->inv_temp = 0;
-        mc_app_energy(&ds,1,1,&E0,0);
-        if (E0>level)
+        mc_app_energy(&ds,1,1,&E1,0);
+
+        if (E1>level || (H1-H0)>1000 || (H0-H1)>1000)
         { mc_value_copy (ds.q, save_q, ds.dim);
           for (k = 0; k<ds.dim; k++)
           { ds.p[k] = -save_p[k];
           }
+          it->rejects += 1;
         }
+        it->proposals += 1;
+        it->delta = E1-E0;
 
         if (j>0)
         { if (mix!=0)
@@ -309,9 +325,8 @@ main
           for (k = 0; k<ds.dim; k++)
           { ds.p[k] *= decay;
           }
+          ds.know_kinetic = 0;
         }
-
-        ds.know_kinetic = 0;
       }
 
       /* Save kinetic energy for possible start states. */
@@ -378,6 +393,9 @@ main
         logf.header.index = index;
         logf.header.size = sizeof *it;
         log_file_append (&logf, it);
+
+        it->rejects = 0;
+        it->proposals = 0;
 
         index += 1;
       }

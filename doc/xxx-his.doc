@@ -1,0 +1,87 @@
+
+
+XXX-HIS:  Do Hamiltonian importance sampling.
+
+There is a version of this program for each 'mc' application that
+supports Hamiltonian importance sampling.  These programs implement an
+importance sampling scheme in which states are randomly sampled from a
+zero-temperature distribution (the prior, or a uniform distribution),
+and then modified by applying Hamiltonian dynamics with momemtum
+decay, with slice sampling reversals if necessary to take account of
+the prior.  This produces a distribution over states which we hope is
+close to the desired distribution, and which we can use to estimate
+expectations with respect to the desired distribution by means of
+importance sampling.
+
+Usage:
+
+    xxx-his log-file n-traj min-steps max-steps [ [-]modulus ]
+                   / stepsize [ steps ] / inv-temp decay [ mix ]
+ 
+Here 'xxx' is a prefix identifying the particular incarnation of this
+program (eg, dist-his).
+
+The log file must contain appropriate specifications for the model
+before xxx-his is run.  One or more states, with appropriate weights,
+are appended to this log file when each of n-traj trajectories are
+simulated using the parameters specified after the two "/" arguments.
+These states can be used to estimate expectations of various
+quantities (eg, using dist-est), as well as the normalizing constant
+for the distribution.  After xxx-his has finished, additional
+trajectories can be simulated by simply running the program again.
+
+The importance sampling distribution is an equal mixture of the
+distributions defined by first sampling "position" coordinates from
+the zero-temperature distribution and "momentum" coordinates from the
+canonical distribution at inverse temperature inv-temp, and then
+applying between min-steps and max-steps iterations of Hamiltonian
+dynamics with momentum decay (perhaps slice sampling reversals to
+account for the prior).  The inverse temperature may be specified
+directly, or as "/T", where T is the temperature.
+
+Conceptually, each trajectory simulated by xxx-his gives rise to
+(max-steps - min-steps + 1) states from this importance sampling
+distribution, produced by overlapping portions of the trajectory.
+These states are written to the log file with appropriate importance
+weights, unless modulus in specified, in which case only those whose
+indexes (from 0) are multiples of modulus are written.  To find the
+appropriate importance weights, the total probability of producing
+each state under the importance sampling distribution must be found.
+This involves a sum over all possible numbers of steps (from min-steps
+to max-steps) that might have been used to produce the state.  Finding
+this sum requires simulating a backwards portion of the trajectory for
+(max-steps - min-steps) steps.  The states from this backward portion
+of the trajectory, and from the portion before min-steps have been
+done, are not saved in the log file, unless "-" is included before
+modulus, in which case they are saved with weights that are
+effectively zero (which works OK for estimating expectations, though
+not for estimating normalizing constants).
+
+Each iteration of the dynamics starts with the selection of a "slice"
+level, uniformly distributed between zero and the prior density of the
+current state (this is irrelevant if the prior is uniform).  This is
+followed by steps (default 1) leapfrog updates, with stepsizes given
+by the application's defaults times the given stepsize (or this
+stepsize is used unaltered if it is preceeded by "-").  The prior
+density of the resulting state is then calculated, and if it is less
+than the slice level, the state is restored to what it was before the
+leapfrog updates, and the momentum is negated.  Following this, the
+momentum is multiplied by decay.  If a mix value is given, the
+direction of the momentum is also altered at random by adding to each
+component independent Gaussian noise with standard deviation equal to
+mix times the norm of the momentum divided by the square root of the
+dimensionality, and then rescaling so that the norm of the momentum is
+unchanged.  These steps are reversed (with division by decay rather
+than multiplication) when simulating backwards.
+
+For good results, inv-temp should be chosen to be small enough that
+the canonical distribution at this temperature is almost the same as
+the prior (or almost uniform).  The range min-steps to max-steps
+should be chosen so that the system cools to approximately a
+temperature of one somewhere within this range of steps.  The stepsize
+needs to be small enough that the dynamics is stable.  Finally, the
+decay needs to be sufficienly slow (ie, the decay parameter needs to
+be only slightly less than one) if the importance weights are not to
+be highly variable.
+
+            Copyright (c) 1995-2004 by Radford M. Neal

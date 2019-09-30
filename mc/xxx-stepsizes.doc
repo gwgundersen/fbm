@@ -28,4 +28,4 @@ of first derivatives, using the given delta.
 The 'dist' module uses a specialized stepsizes program that also
 allows stepsizes to be set.  See dist-stepsizes.doc for details.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal

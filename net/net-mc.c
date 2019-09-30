@@ -1,6 +1,6 @@
 /* NET-MC.C - Interface between neural network and Markov chain modules. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -1025,8 +1025,19 @@ void mc_app_energy
     net_setup_param_pointers (&grad, arch, flgs);
   }
 
-  net_prior_prob (&params, &sigmas, &log_prob, gr ? &grad : 0, 
-                  arch, flgs, priors, 2);
+  if (inv_temp>=0)
+  { net_prior_prob (&params, &sigmas, &log_prob, gr ? &grad : 0, 
+                    arch, flgs, priors, 2);
+  }
+  else
+  { log_prob = 0;
+    if (gr)
+    { for (i = 0; i<ds->dim; i++) 
+      { gr[i] = 0;
+      }
+    }
+    inv_temp = -inv_temp;
+  }
 
   if (energy) *energy = -log_prob;
 

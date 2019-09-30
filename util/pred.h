@@ -1,6 +1,6 @@
 /* PRED.H - Interface between pred program skeleton and application. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -43,9 +43,9 @@ extern double *test_targets;	/* True targets for test cases */
 
 extern int op_i, op_t, op_r, 	/* Options specified in the xxx-pred command; */
            op_p, op_m, op_n, 	/*   op_N is the number of digit options      */
-           op_d, op_l, op_b, 
-           op_a, op_q, op_Q,
-           op_D, op_N;
+           op_d, op_l, op_b,    /*   op_R is the 'r' option for count data    */
+           op_a, op_q, op_Q,    /*    (for which op_r has been set to 0)      */
+           op_D, op_N, op_R;
 
 extern int keep[10];		/* Which components to keep, when op_N != 0 */
 

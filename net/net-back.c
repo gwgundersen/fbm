@@ -1,6 +1,6 @@
 /* NET-BACK.C - Routine for backpropagating the "error" through the network. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -109,7 +109,7 @@ void net_back
                        flgs ? flgs->omit : 0, 1);
     }
  
-    for (l = 0; l<a->N_layers; a++)
+    for (l = 0; l<a->N_layers; l++)
     { if (a->has_ih[l])
       { sum_derivatives (d->s[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
                          flgs ? flgs->omit : 0, 1<<(l+1));

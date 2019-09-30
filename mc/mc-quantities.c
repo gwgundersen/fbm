@@ -1,6 +1,6 @@
 /* MC-QUANTITIES.C - Module for quantities relating to Monte Carlo simulation.*/
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -70,6 +70,7 @@ void mc_available
       if (strchr("QEKHDdfmrekjJ",letter)!=0)
       { qd[i].available = 
           low==-1 && (mod==-1 || letter=='E' && (mod==0 || mod==1)
+                              || letter=='K' && mod==0
                               || letter=='m' && mod<=5
 #if 0
                               || letter=='H' && mod==0
@@ -162,12 +163,18 @@ void mc_evaluate
         }
   
         case 'K':
-        { if (!ds.know_kinetic)
-          { ds.kinetic_energy = mc_kinetic_energy(&ds);
-            ds.know_kinetic = 1;
+        { if (mod==0)
+          { *qh->value[i] = ds.dim/2.0;
+            qh->updated[i] = 1;
           }
-          *qh->value[i] = ds.kinetic_energy;
-          qh->updated[i] = 1;
+          else
+          { if (!ds.know_kinetic)
+            { ds.kinetic_energy = mc_kinetic_energy(&ds);
+              ds.know_kinetic = 1;
+            }
+            *qh->value[i] = ds.kinetic_energy;
+            qh->updated[i] = 1;
+          }
           break;
         }
   

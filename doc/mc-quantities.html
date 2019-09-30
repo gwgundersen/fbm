@@ -16,6 +16,7 @@ application being used.
     E0  Potential energy at end of iteration at inverse temperature of 0
     E1  Equal to E - E0
     K   Kinetic energy at end of iteration
+    K0  Expected value of kinetic energy, equal to half the dimensionality 
     H   Total energy at end of iteration (sum of E and K)
     D[n] Change in total energy for last state proposed (up to max of n)
          (for Metropolis, hybrid, and multivariate slice sampling operations)
@@ -48,8 +49,9 @@ application being used.
     sn  Stepsize selected by application for component n
 
 None of these quantities can be used with a range; 'q', 'p', and 's'
-must have a modifier, 'D' and 'Q' may have a modifier, 'E' may only
-have a modifier of '0' or '1', the others may not have a modifier.
+must have a modifier; 'D' and 'Q' may have a modifier; 'E' may only
+have a modifier of '0' or '1'; 'K' may only have a modifier of '0';
+the others may not have a modifier.
 
 The 'Q' quantity is the importance weight, which will always be one
 except during annealed importance sampling.  Note that these weights
@@ -70,7 +72,7 @@ is accepted, and is otherwise based on just the first half.
 
 Momenta of zero are assumed if none exist.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal
 </pre>
 </body>
 </html>

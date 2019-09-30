@@ -1,6 +1,6 @@
 /* PRED.C - Skeleton for programs that make predictions for test cases. */
 
-/* Copyright (c) 1995-2003 by Radford M. Neal 
+/* Copyright (c) 1995-2004 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -49,11 +49,11 @@
 /* SHARED VARIABLES.  Declared as external in pred.h, which is where they're
    documented. */
 
-int op_i, op_t, op_r, 
+int op_i, op_t, op_r, op_R,
     op_p, op_m, op_n, 
     op_d, op_l, op_b, 
     op_a, op_q, op_Q,
-    op_D, op_N;
+    op_D, op_E, op_N;
 
 int keep[10];
 
@@ -97,7 +97,10 @@ main
   double *sq_error, *sq_error_sq, *abs_error, *abs_error_sq, *wrong, *wrong_sq;
   double tsq_error, tsq_error_sq, tabs_error, tabs_error_sq;
   double ave_log_prob, ave_log_prob_sq;
+  double *E_sq_error, *E_abs_error, *E_wrong;
+  double E_tsq_error, E_tabs_error, ave_E_log_prob;
   double *guess, *error;
+  double *E_error;
   double *sum_targets;
   double *sum_targets_med;
   double *log_prob;
@@ -179,6 +182,7 @@ main
   op_n = strchr(options,'n')!=0;
   op_d = strchr(options,'d')!=0;
   op_D = strchr(options,'D')!=0;
+  op_E = strchr(options,'E')!=0;
   op_q = strchr(options,'q')!=0;
   op_Q = strchr(options,'Q')!=0;
   op_l = strchr(options,'l')!=0;
@@ -196,8 +200,8 @@ main
     }
   }
 
-  if (strlen(options) 
-       != op_i+op_t+op_r+op_p+op_m+op_n+op_d+op_D+op_b+op_a+op_q+op_Q+op_l+op_N)
+  if (strlen(options) != op_i+op_t+op_r+op_p+op_m+op_n+op_d
+                             +op_D+op_E+op_b+op_a+op_q+op_Q+op_l+op_N)
   { usage();
   }
 
@@ -255,7 +259,7 @@ main
   /* Check for illegal option combinations. */
 
   if (op_a && (op_t || op_i || op_q || op_Q)
-   || op_r && (m!=0 && m->type=='B' || m!=0 && m->type=='C')
+   || op_r && (m!=0 && (m->type=='B' || m->type=='C'))
    || op_l && (m==0 || m->type!='R')
    || op_m && (m==0 || m->type=='R' || m->type=='V')
    || (op_d || op_D || op_q || op_Q) 
@@ -269,11 +273,38 @@ main
     exit(1);
   }
 
-  if (!have_targets && (op_t || op_p || op_a))
-  { fprintf(stderr,
-     Ponly ? "Option 'p' is valid only when the targets are known\n"
-     : "Options 't', 'p', and 'a' are valid only when the targets are known\n");
+  if (!have_targets && op_p)
+  { fprintf(stderr,"Option 'p' needs known targets\n");
     exit(1);
+  }
+
+  if (!have_targets && op_t)
+  { fprintf(stderr,"Option 't' needs known targets\n");
+    exit(1);
+  }
+
+  if (!have_targets && !op_E && op_a)
+  { fprintf(stderr,
+            "Option 'a' makes no sense without 'E' and without targets\n");
+    exit(1);
+  }
+
+  if (op_E && m->type!='B')
+  { fprintf(stderr,
+      "The 'E' option is currently implemented only for binary models\n");
+    exit(1);
+  }
+
+  if ((op_m || op_d || op_D || op_q || op_Q) && m->type=='N')
+  { fprintf(stderr,
+"The m, d, D, q, and Q options are not currently implemented for count models\n"
+    );
+    exit(1);
+  }
+
+  if (m!=0 && m->type=='N')
+  { op_R = op_r;
+    op_r = 0;
   }
 
   /* Initialize application, including reading data. */
@@ -295,17 +326,29 @@ main
       test_targ_pred = chk_alloc (M_targets*N_test, sizeof (double));
       test_targ_med  = chk_alloc (M_targets*N_test, sizeof (double));
       sq_error       = chk_alloc (M_targets, sizeof (double));
+      E_sq_error     = chk_alloc (M_targets, sizeof (double));
       sq_error_sq    = chk_alloc (M_targets, sizeof (double));
       guess          = chk_alloc (M_targets, sizeof (double));
       error          = chk_alloc (M_targets, sizeof (double));
+      E_error        = chk_alloc (M_targets, sizeof (double));
       abs_error      = chk_alloc (data_spec->N_targets, sizeof (double));
+      E_abs_error    = chk_alloc (data_spec->N_targets, sizeof (double));
       wrong          = chk_alloc (data_spec->N_targets, sizeof (double));
+      E_wrong        = chk_alloc (data_spec->N_targets, sizeof (double));
       abs_error_sq   = chk_alloc (data_spec->N_targets, sizeof (double));
       wrong_sq       = chk_alloc (data_spec->N_targets, sizeof (double));
     }
 
     if (op_d || op_q || op_Q)
     { 
+      if (0)
+      { fprintf(stderr,"Memory required for median/quantiles: %.0f\n",
+         (double) N_test * sizeof *median_sample +
+         (double) N_test * (data_spec->N_targets * sizeof **median_sample +
+                   Median_sample*Max_median_points * sizeof ***median_sample));
+        fflush(stderr);
+      }
+
       median_sample = chk_alloc (N_test, sizeof *median_sample);
   
       for (i = 0; i<N_test; i++)
@@ -607,7 +650,12 @@ main
     }
 
     if (op_p)
-    { printf("  Log Prob");
+    { if (have_targets) 
+      { printf("  Log Prob");
+      }
+      if (op_E)
+      { printf("  E Log Pr");
+      }
     }
 
     if (op_m)
@@ -615,12 +663,18 @@ main
       if (have_targets) 
       { printf(" %-*s",2*data_spec->N_targets," Wrong?");
       }
+      if (op_E)
+      { printf(" %-*s",5*data_spec->N_targets,"E Wrong");
+      }
     }
 
     if (op_n)
     { printf(" %-*s",7*M_targets,"  Means");
-      if (have_targets) 
+      if (have_targets && !op_R) 
       { printf(" %-*s",7*data_spec->N_targets,"Error^2");
+      }
+      if (op_E)
+      { printf(" %-*s",7*data_spec->N_targets,"E Err^2");
       }
     }
 
@@ -628,6 +682,9 @@ main
     { printf(" %-*s",7*M_targets,"Medians");
       if (have_targets) 
       { printf(" %-*s",7*M_targets,"|Error|");
+      }
+      if (op_E)
+      { printf(" %-*s",7*M_targets,"E |Err|");
       }
     }
 
@@ -653,20 +710,24 @@ main
   if (guessing)
   {
     ave_log_prob = ave_log_prob_sq = 0;
+    ave_E_log_prob = 0;
 
     if (!Ponly) 
     { for (j = 0; j<M_targets; j++) 
       { sq_error[j] = 0;
         sq_error_sq[j] = 0;
+        E_sq_error[j] = 0;
       }
  
       for (j = 0; j<data_spec->N_targets; j++) 
       { abs_error[j] = wrong[j] = 0;
         abs_error_sq[j] = wrong_sq[j] = 0;
+        E_abs_error[j] = E_wrong[j] = 0;
       }
 
       tsq_error = tabs_error =  0;
       tsq_error_sq = tabs_error_sq = 0;
+      E_tsq_error = E_tabs_error = 0;
     }
   }
 
@@ -701,11 +762,22 @@ main
     }
 
     if (op_p)
-    { 
-      log_prob[i] -= log(sum_weights);
-      ave_log_prob += log_prob[i];
-      ave_log_prob_sq += log_prob[i]*log_prob[i];
-      if (!op_a) printf(op_b ? " %.8e" : " %9.3f",log_prob[i]);
+    { if (have_targets)
+      { log_prob[i] -= log(sum_weights);
+        ave_log_prob += log_prob[i];
+        ave_log_prob_sq += log_prob[i]*log_prob[i];
+        if (!op_a) printf(op_b ? " %.8e" : " %9.3f",log_prob[i]);
+      }
+      if (op_E)
+      { double pa, pb, E_lp;
+        pa = exp(log_prob[i]); 
+        pb = 1-pa;
+        E_lp = 0;
+        if (pa>0) E_lp += pa*log(pa);
+        if (pb>0) E_lp += pb*log(pb);
+        ave_E_log_prob += E_lp;
+        if (!op_a) printf(op_b ? " %.8e" : " %9.3f",E_lp);
+      }
     }
 
     if (op_m)
@@ -728,11 +800,17 @@ main
 
       if (m->type=='B')
       { for (j = 0; j<data_spec->N_targets; j++)
-        { guess[j] = sum_targets[M_targets*i+j]/sum_weights > 0.5;
+        { double p1;
+          p1 = sum_targets[M_targets*i+j]/sum_weights;
+          guess[j] = p1 > 0.5;
           if (have_targets)
           { error[j] = guess[j] != test_targets[data_spec->N_targets*i+j];
             wrong[j] += error[j];
             wrong_sq[j] += error[j]*error[j];
+          }
+          if (op_E)
+          { E_error[j] = guess[j]==0 ? p1 : 1-p1;
+            E_wrong[j] += E_error[j];
           }
         }
       }
@@ -750,19 +828,27 @@ main
           for (j = 0; j<data_spec->N_targets; j++) 
           { printf(" %1.0f",error[j]);
           }
+          if (data_spec->N_targets<2) printf(" ");
+        }
+        if (op_E)
+        { printf(" ");
+          if (data_spec->N_targets<2) printf("  ");
+          for (j = 0; j<data_spec->N_targets; j++) 
+          { printf(" %4.2f",E_error[j]);
+          }
         }
       }
     }
 
     if (op_n)
     { 
-      double tot_error;
+      double tot_error, E_tot_error;
 
-      tot_error = 0;
+      tot_error = E_tot_error = 0;
 
       for (j = 0; j<M_targets; j++)
       { guess[j] = sum_targets[M_targets*i+j] / sum_weights;
-        if (have_targets)
+        if (have_targets && !op_R)
         { double val, diff;
           val = m!=0 && m->type=='C' ? j==test_targets[i]
                                      : test_targets[data_spec->N_targets*i+j];
@@ -776,9 +862,16 @@ main
           sq_error[j] += error[j];
           sq_error_sq[j] += error[j]*error[j];
         }
+        if (op_E)
+        { E_error[j] = guess[j] * (1-guess[j])*(1-guess[j])
+                     + (1-guess[j]) * guess[j]*guess[j];
+          E_tot_error += E_error[j];
+          E_sq_error[j] += E_error[j];
+        }
       }
 
       tsq_error += tot_error;
+      E_tsq_error += E_tot_error;
       tsq_error_sq += tot_error * tot_error;
 
       if (!op_a) 
@@ -786,7 +879,7 @@ main
         for (j = 0; j<M_targets; j++) 
         { printf(op_b ? " %+.8e" : " %6.2f",guess[j]);
         }
-        if (have_targets)
+        if (have_targets && !op_R)
         { printf(" ");
           if (m!=0 && m->type=='C') 
           { printf(op_b ? " %.8e" : " %6.4f",tot_error);
@@ -794,6 +887,17 @@ main
           else
           { for (j = 0; j<data_spec->N_targets; j++) 
             { printf(op_b ? " %.8e" : " %6.4f",error[j]);
+            }
+          }
+        }
+        if (op_E)
+        { printf(" ");
+          if (m!=0 && m->type=='C') 
+          { printf(op_b ? " %.8e" : " %6.4f",E_tot_error);
+          }
+          else
+          { for (j = 0; j<data_spec->N_targets; j++) 
+            { printf(op_b ? " %.8e" : " %6.4f",E_error[j]);
             }
           }
         }
@@ -909,15 +1013,17 @@ main
     if (!op_a) printf("\n");
   }
 
-  /* Print the averages. */
+  /* Print number of test cases for op_a. */
+
+  if (op_a)
+  { printf("\nNumber of test cases: %d\n", N_test);
+  }
+
+  /* Print the averages for performance on test cases. */
 
   if (have_targets && guessing && !op_b)
   { 
     printf("\n");
-
-    if (op_a)
-    { printf("Number of test cases: %d\n\n", N_test);
-    }
 
     if (op_p) 
     { double a;
@@ -931,7 +1037,7 @@ main
 
     if (op_m) 
     { double a;
-      printf("Fraction of guesses that were wrong: ");
+      printf("Fraction of guesses that were wrong:   ");
       for (j = 0; j<data_spec->N_targets; j++)
       { a = wrong[j] / N_test;
         printf(" %6.4f",a);
@@ -942,11 +1048,11 @@ main
       printf("\n");
     }
 
-    if (op_n) 
+    if (op_n && !op_R) 
     { 
       double a;
 
-      printf("Average squared error guessing mean: ");
+      printf("Average squared error guessing mean:  ");
 
       if (m!=0 && m->type=='C')
       { a = tsq_error / N_test;
@@ -1003,6 +1109,71 @@ main
     }
   }
 
+  /* Print the average expected performance on test cases. */
+
+  if (op_E && guessing && !op_b)
+  { 
+    printf("\n");
+
+    if (op_p) 
+    { double a;
+      a = ave_E_log_prob/N_test;
+      printf("Average expected log probability of targets: %9.3f\n", a);
+    }
+
+    if (op_m) 
+    { double a;
+      printf("Fraction of guesses expected to be wrong:       ");
+      for (j = 0; j<data_spec->N_targets; j++)
+      { a = E_wrong[j] / N_test;
+        printf(" %6.4f",a);
+      }
+      printf("\n");
+    }
+
+    if (op_n && !op_R) 
+    { 
+      double a;
+
+      printf("Average expected squared error guessing mean:  ");
+
+      if (m!=0 && m->type=='C')
+      { a = E_tsq_error / N_test;
+        printf (" %8.5f\n", a);
+      } 
+      else
+      { for (j = 0; j<data_spec->N_targets; j++)
+        { a = E_sq_error[j]/N_test;
+          printf (" %8.5f", a);
+        }
+        printf("\n");
+      }
+
+      if (data_spec->N_targets>1) 
+      { a = E_tsq_error / N_test;
+        printf("                                              (total %.5f)\n",a);
+      }
+    }
+
+    if (op_d) 
+    { 
+      double a;
+
+      printf("Average expected abs. error guessing median:  ");
+
+      for (j = 0; j<data_spec->N_targets; j++)
+      { a = E_abs_error[j] / N_test;
+        printf(" %8.5f", a);
+      }
+      printf("\n");
+
+      if (data_spec->N_targets>1)
+      { a = E_tabs_error / N_test;
+        printf("                                              (total %.5f)\n",a);
+      }
+    }
+  }
+
   if (!op_b)    
   { printf("\n");
   }
@@ -1054,6 +1225,9 @@ static void usage(void)
     );
    fprintf(stderr,
 "       <digit> = select component, r = raw data, b/B = bare, a = averages only\n"
+    );
+   fprintf(stderr,
+"       E = report expected performance on test cases\n"
     );
   }
   exit(1);

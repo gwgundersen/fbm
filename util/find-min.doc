@@ -21,4 +21,4 @@ validation error.  This iteration number is substituted for the
 command in back-quotes, thereby providing net-pred with the iteration
 from log-file to be used.
 
-            Copyright (c) 1995-2003 by Radford M. Neal
+            Copyright (c) 1995-2004 by Radford M. Neal
