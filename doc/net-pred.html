@@ -87,7 +87,9 @@ only if the true targets are known. The 'n' option for class models
 displays the mean probabilities for each class, and computes a single
 figure for squared error that is the sum of the squares of the
 differences between these probabilities and the indicator variables
-that are one for the right class and zero for the wrong classes.
+that are one for the right class and zero for the wrong classes.  The
+'p' option is currently not implemented for survival models with
+piecewise-constant hazard functions.
 
 The median and the 10% and 90% quantiles are calculated by Monte
 Carlo, using a sample consisting of eleven points from each network's
@@ -113,7 +115,7 @@ If only inputs and targets are to be displayed (no predictions), one
 may give just a single log file with no range.  Otherwise, at least
 one network must be specified.
 
-            Copyright (c) 1995, 1998 by Radford M. Neal
+            Copyright (c) 1995, 1998, 1999 by Radford M. Neal
 </pre>
 </body>
 </html>

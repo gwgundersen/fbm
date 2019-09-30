@@ -1,0 +1,46 @@
+<html>
+<body>
+<pre>
+
+
+NOTES ON THE VERSION OF 1999-02-20
+
+Changes in this version:
+
+1) Examples of neural network models for survival analysis have been
+   added.  Some bugs in this part of the software have been fixed too.
+
+
+Bug fixes.
+
+Some bugs regarding the survival analysis models have been fixed.  A
+problem that arose when automatic standardization was used for a variable
+that always had the same value in the training data has been fixed.  The
+computation of the likelihood for binary models is now more bullet-proof,
+and should avoid floating point overflow even in extreme cases.
+
+
+Known bugs and other deficiencies.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The latent value update operations for Gaussian processes may recompute 
+   the inverse covariance matrix even when an up-to-date version was 
+   computed for the previous Monte Carlo operation.
+
+4) Covariance matrices are stored in full, even though they are symmetric,
+   which sometimes costs a factor of two in memory usage.
+
+5) The "p" option of net-pred isn't allowed for survival models with
+   piecewise-constant hazard.  There's no big reason for this - I just
+   haven't gotten around to it.
+</pre>
+</body>
+</html>

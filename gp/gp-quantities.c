@@ -1,4 +1,4 @@
-/* GP-QUANTITIES.C - Module defining quantities for Gaussian processes. 
+/* GP-QUANTITIES.C - Module defining quantities for Gaussian processes. */
 
 /* Copyright (c) 1996 by Radford M. Neal 
  *

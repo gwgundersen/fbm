@@ -1,0 +1,8 @@
+#!/bin/sh
+
+base=`echo $1 | sed s/\\.doc\$//`
+
+echo Converting $base.doc to $base.ps
+
+enscript -q -l -fCourier11 -p - $base.doc | psnup-mod -q -m10 -L50 \
+   -F"                                  $base.doc" >$base.ps

@@ -1,5 +1,5 @@
 cat Copyright.doc
-catff Contents
+catff Contents.doc
 
 catff Facilities.doc
 catff Install.doc 
@@ -8,16 +8,18 @@ catff Overview.doc
 catff Ex-intro.doc
 
 catff Ex-dist.doc 
-cat Ex-dist-n.doc Ex-dist-g.doc
+cat Ex-dist-n.doc Ex-dist-g.doc 
 
 catff Ex-bayes.doc
-cat Ex-bayes-r.doc Ex-bayes-t.doc Ex-bayes-p.doc
+cat Ex-bayes-r.doc Ex-bayes-t.doc Ex-bayes-p.doc Ex-bayes-e.doc
 
 catff Ex-netgp.doc
 cat Ex-netgp-r.doc Ex-netgp-b.doc Ex-netgp-c.doc Ex-netgp-o.doc
 
 catff Ex-mix.doc
 cat Ex-mix-b.doc Ex-mix-r.doc
+
+catff Ex-surv.doc
 
 catff Ex-gdes.doc
 

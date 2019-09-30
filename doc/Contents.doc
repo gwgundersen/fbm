@@ -36,6 +36,8 @@ Ex-mix.doc          Examples of Bayesian mixture models
   Ex-mix-b.doc         A probability estimation problem with binary data 
   Ex-mix-r.doc         A bivariate density estimation problem 
 
+Ex-surv.doc         Examples of Bayesian neural network survival models
+
 Ex-gdes.doc         Examples of gradient descent learning with early stopping
 
 Hints.doc           Hints and warnings

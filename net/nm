@@ -1,6 +1,6 @@
 /* NET-MODEL.C - Module dealing with the interpretation of network outputs. */
 
-/* Copyright (c) 1995, 1996, 1999 by Radford M. Neal 
+/* Copyright (c) 1995, 1996 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -194,7 +194,7 @@ void net_model_prob
     case 'V':  /* Survival model */
     { 
       int censored;
-      double m, ot, ho;
+      double ot, h;
 
       if (t[0]<0)
       { censored = 1;
@@ -205,24 +205,14 @@ void net_model_prob
         ot = t[0];
       }
 
-      m = v->o[0]+log(ot);
+      h = exp(v->o[0]);
 
-      if (m>200.0)
-      { ho = exp(200.0);
-        if (pr) *pr = - ho;
-        if (dp) dp->o[0] = 0;
-      }
-      else
-      { 
-        ho = exp(m);
+      if (pr) *pr = - ot * h;
+      if (dp) dp->o[0] = ot * h;
 
-        if (pr) *pr = - ho;
-        if (dp) dp->o[0] = ho;
-
-        if (!censored)
-        { if (pr) *pr += v->o[0];
-          if (dp) dp->o[0] -= 1;
-        }
+      if (!censored)
+      { if (pr) *pr += v->o[0];
+        if (dp) dp->o[0] -= 1;
       }
 
       break;

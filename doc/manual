@@ -10,9 +10,9 @@
 
                    MARKOV CHAIN MONTE CARLO METHODS
 
-        Copyright (c) 1995, 1996, 1997, 1998 by Radford M. Neal 
+      Copyright (c) 1995, 1996, 1997, 1998, 1999 by Radford M. Neal 
 
-                         Version of 1998-09-01
+                         Version of 1999-02-20
 
 Permission is granted for anyone to copy, use, or modify these
 programs and accompanying documents for purposes of research or
@@ -81,6 +81,8 @@ Ex-mix.doc          Examples of Bayesian mixture models
 
   Ex-mix-b.doc         A probability estimation problem with binary data 
   Ex-mix-r.doc         A bivariate density estimation problem 
+
+Ex-surv.doc         Examples of Bayesian neural network survival models
 
 Ex-gdes.doc         Examples of gradient descent learning with early stopping
 
@@ -277,6 +279,8 @@ be used, many of which are discussed in the documentation:
     ex-bayes  Examples of Markov chain sampling for Bayesian models
               specified using formulas for the prior and likelihood.
 
+    ex-surv   Examples of neural network survival models.
+
     ex-gdes   Examples of neural network learning using gradient 
               descent and early stopping.
 
@@ -291,13 +295,13 @@ Portability of the software.
 
 The software is written in ANSI C, and is meant to be run in a UNIX
 environment.  Specifically, it was developed on an SGI machine running
-IRIX Release 5.3.  It also seems to run OK on a SPARC machine running
-SunOS 5, using the 'gcc' C compiler, and on DEC Alpha machines,
-provided that the -ieee and -std options are given to the C compiler.
-As far as I know, the software does not depend on any peculiarities of
-these environments (except perhaps for the use of the drand48
-pseudo-random number generator, and the lgamma function), but you may
-nevertheless have problems getting it to work in substantially
+IRIX Release 6.5.  It also seems to run OK on a SPARC machine running
+SunOS 5, using the 'gcc' C compiler, on Linux systems, and on DEC
+Alpha machines, provided that the -ieee and -std options are given to
+the C compiler.  As far as I know, the software does not depend on any
+peculiarities of these environments (except perhaps for the use of the
+drand48 pseudo-random number generator, and the lgamma function), but
+you may nevertheless have problems getting it to work in substantially
 different environments, and I can offer little or no assistance in
 this regard.  There is no dependence on any particular graphics
 package or graphical user interface.  (The 'xxx-plt' programs are
@@ -335,6 +339,11 @@ and sub-directories in this directory.  If this seems to have worked,
 you can remove the file 'fbm.YYYY-MM-DD.tar'.  You should now change
 into the 'fbm.YYYY-MM-DD' directory, as the following instructions
 assumed that you are there.
+
+NOTE: If you don't like the name 'fbm.YYYY-MM-DD' for this directory,
+change the name now, BEFORE compiling the programs, since the programs
+look for a file of natural random numbers in this directory, under the
+name it has when they are compiled.
 
 
 Looking at the documentation.
@@ -772,7 +781,7 @@ used for examples in my papers.
 
 Computation times are given for many of the examples.  These are all
 for the current version of the software, run on our computer, which is
-an SGI machine with 194 MHz MIPS R10000 processors.
+an SGI machine with 194 MHz MIPS R10000 processors, running IRIX 6.5.
 
 
 
@@ -2468,6 +2477,156 @@ models).  There's no tutorial documentation on these features,
 however, just the detailed command documentation, and the command
 files in the 'ex-ais' directory that implement the tests done in my
 "Annealed Importance Sampling" paper.
+
+
+A RANDOM EFFECTS MODEL
+
+In the simple random effects model treated here, measurements of some
+quantity are available for individuals in a number of groups.  Each
+group has associated with it a mean for individuals in the group
+(these are the "random effects").  Note that this is the population
+mean, not the mean for those individuals in the group that were
+actually measured.  The measurements on individuals in the group are
+equal to the group mean plus random individual variation.  The
+distribution of the group means is modeled as being normal with some
+unknown mean and unknown variance.  The individual variation within a
+group is also modeled as being normal, with an unknown variance that
+is the same for all groups.  The number of individuals in each group
+for which there are measurements is considered to be externally
+determined, and is thus not modeled.
+
+The number of individuals in each group together with the sample means
+and sample variances for each group are sufficient statistics for this
+model; only these are provided in the data file 'edata' (one line per
+group, in that order).  This data was synthetically generated using
+the S-Plus program in sgen.s.  There are 18 groups, with the following
+numbers of individuals in each group:
+
+       1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4
+
+The overall mean used to generate the data was 25, the variance of the
+group means was 12^2, and the variance within a group was 6^2.
+
+
+Specifying the model.
+
+We can specify this random effects model as follows:
+
+    > dist-spec elog.met \
+       "u~Normal(0,10^2) + v1~Normal(0,2^2) + v2~Normal(0,2^2)" \
+       "t0~Normal(u,Exp(v1)+Exp(v2)/i) + \
+       (1-Delta(i-1)) * ExpGamma2(Log(t1),i-1,Exp(v2))"
+
+There are three model parameters: the overall mean (u), the log of the
+variance of the group means (v1), and the log of the variance of the
+measurements within a group (v2).  The variances are represented by
+their logs so that they will not have to be constrained.
+
+The argument after the name of the log file to use ("elog.met") is the
+prior specification.  The prior for the overall mean is normal with
+mean zero and standard deviation 10.  The priors for the logs of the
+variances are both normal with mean zero and standard deviation 2.
+These parameters are independent under the prior, so the prior
+specifications are just added together.
+
+Each group will correspond to a "case", in the terminology used
+elsewhere, since given values for the parameters the data on each
+group is independent of the other groups.  The number of measurements
+for the group will be regarded as an "input", since it is not being
+modeled, while the sample mean and sample variance for the group will
+be regarded as "targets".  (This distinction is currently just a
+convention, but might be essential in future versions of the software.)
+
+The likelihood for the data in a group is given by the last argument
+(which is split between two lines).  The sample mean for the group
+(target 0, written as "t0") has a normal distribution whose mean is
+given by the overall mean parameter and whose variance is the sum of
+the variance of the group means (Exp(v1)) and the variance of the
+measurements within a group (Exp(v1)) divided by the group size (the
+input, written as "i0", or "i").  As is well known, the sample
+variance is independent of the sample mean, and has a gamma
+distribution.  This is specified by the last term in the likelihood
+argument.  There is a complication due to the possibility of a group
+with just one measurement, for which the sample variance is undefined
+(it will be zero in the data file).  This is handled by including a
+factor of (1-Delta(i-1)), which is zero if "i" is one, and is one
+otherwise.  The remainder of this term, ExpGamma2(Log(t1),i-1,Exp(v2)), 
+evaluates to the log of the density for Log(t1), the log of the sample
+variance.  This specifies that t1 has the gamma distribution with
+shape parameter (i-1)/2 and mean Exp(v2), which corresponds to the sum
+of the squared deviations having a chi-squared distribution with i-1
+degrees of freedom.  Note that the syntax using "~" cannot be used
+for a transformed variable such as Log(t1).  
+
+
+Specifying the data source.
+
+The source of the data is specified as follows:
+
+    > data-spec elog.met 1 2 / edata .
+
+For this model, each "training case" is a group.  The above command
+says there is one "input" for each group (the number of measurements)
+and two "targets" (the sample mean and sample variance for the group).
+The inputs come from 'edata', and the targets come from there as well,
+following on the same line as the input.
+
+
+Sampling with Metropolis updates.
+
+We can now specify what Markov chain operations to use in each
+iteration.  The following command specifies that each iteration should
+consist of 25 Metropolis updates using a proposal distribution in
+which each of the three parameters are changed by an amount that is
+normally-distributed with standard deviation 0.5:
+
+    > mc-spec elog.met repeat 25 metropolis 0.5
+
+We can now sample for 10000 iterations with the following command:
+
+    > dist-mc elog.met 10000
+
+This takes about three and a half minutes on our machine.
+
+A scatterplot of the posterior distribution for v1 and v2 can be
+obtained using a command such as
+
+    > dist-plt v1 v2 elog.met 100: | plot-points
+
+The first 100 iterations are discarded, as possibly not being
+representative of the posterior distribution.  This plot should show
+most of the points in an ellipse centred at v1=4.5, v2=3.8, which
+corresponds to a between-group standard deviation of about 9.5 and a
+within-group standard deviation of about 6.7.  However, a few points
+are far outside this ellipse, having much smaller values of v1, and
+values for v2 around 5.  These points correspond to the possibility
+that the group means are almost the same, with the variation in the
+sample means for the groups being almost entirely due to sampling
+variation resulting from the within-group variance.  Given the data
+seen, this is is unlikely, but it is not completely excluded.
+
+
+Slice sampling.
+
+We can also use slice sampling for this problem.  One variation of
+slice sampling is specified as follows:
+
+    > mc-spec elog.slc repeat 5 slice-1 2 1
+    > dist-mc elog.slc 10000
+
+Each iteration consists of 5 repetitions of a single-variable slice
+sampling update for each parameter.  These updates are based on
+randomly positioning an interval of width 2 around the current point,
+and then sampling successively from this interval until a point within
+the slice is found.  The last argument of "1" specifies that the
+maximum interval size is just one times the width parameter.  Since
+there is no possibility of widening the interval, there is no point in
+evaluating the energy function at the interval's endpoints.  This
+saving may make this approach beneficial in some circumstances.
+
+These 5 slice sampling operations take about the same time as the 25
+Metropolis updates of the previous section.  The resulting sampling
+efficiency is also about the same for this example.
 
 
 
@@ -4176,6 +4335,262 @@ representation of the predictive distribution for a single new data
 point, which is the average of distributions drawn from the posterior,
 could be obtained by combining the output of 'mix-cases' for a number
 of iterations.
+
+
+
+EXAMPLES OF NEURAL NETWORK SURVIVAL MODELS
+
+The neural network software can also be used to model survival data.
+In this application, the network models the "hazard function", which
+determines the instantaneous risk of "death".  The hazard may be
+depend on the values of inputs (covariates) for a particular case.  It
+may be constant through time (for each case), or it may change over
+time.  The data may be censored - ie, for some cases, it may be known
+only that the individual survived for at least a certain time.
+
+The details of these models are described in model-spec.doc.
+
+Please note that this part of the software is somewhat experimental,
+and may have more bugs than the other parts.
+
+
+Survival models with constant hazard.
+
+I generated 700 cases of synthetic data in which the hazard function
+is constant through time, but depends on one input, which was randomly
+generated from a standard normal distribution.  When the input was x,
+the hazard was h(x) = 1+(x-1)^2, which makes the distribution of the
+time of death be exponential with mean 1/h(x).  For the first 200
+cases, the time of death was censored at 0.5; if the actual time of
+death was later than this, the time recorded was minus the censoring
+time (ie, -0.5).  
+
+The first 500 of these cases were used for training, and the remaining
+200 for testing.
+
+The network used to model this data had one input (x), and one output,
+which was interpreted as log h(x).  One layer of eight hidden units
+was used.  The following commands specify the network, model, and data
+source:
+
+    > net-spec clog.net 1 8 1 / - 0.05:1 0.05:1 - x0.05:1 - 100 
+    > model-spec clog.net survival const-hazard
+    > data-spec clog.net 1 1 / cdata@1:500 . cdata@-1:500 .
+
+We can now train the network using the same general methods as for
+other models.  Here is one set of commands that work reasonably well:
+
+    > net-gen clog.net fix 0.5
+    > mc-spec clog.net repeat 10 heatbath hybrid 100:10 0.2
+    > net-mc clog.net 1
+    > mc-spec clog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
+    > net-mc clog.net 100
+
+This takes about 13 minutes of computing time on our SGI machine.
+
+Predictions for test cases can now be made using net-pred.  For
+example, the following command produces the 10% and 90% quantiles of
+the predictive distribution for time of death, based on iterations
+from 25 onward.  These predictions can be compared to the actual times
+of death (the "targets"):
+
+    > net-pred itq clog.net 25:
+
+    Number of iterations used: 76
+
+    Case  Inputs Targets 10% Qnt 90% Qnt
+
+       1   -0.01    0.29    0.05    1.05
+       2   -1.43    0.04    0.02    0.40
+       3   -0.68    0.03    0.03    0.53
+       4    0.47    0.11    0.08    1.66
+       5    0.63    0.97    0.08    1.78
+
+            ( middle lines omitted )
+
+     196    1.39    0.21    0.09    1.98
+     197    0.04    0.07    0.05    1.10
+     198    1.66    0.56    0.10    1.79
+     199    1.33    1.48    0.07    1.78
+     200   -1.41    0.08    0.02    0.42
+
+
+Since there is only one input for this model, we can easily look at
+the posterior distribution of the log of the hazard function with the
+following command:
+
+    > net-eval clog.net 25:%5 / -3 3 100 | plot
+
+This plots sixteen functions that are drawn from the posterior
+distribution of the log of the hazard function.  These functions
+mostly match the actual function, which is log(1+(x-1)^2), for values
+of x up to about one.  There is considerable uncertainty for values of
+x above one, however.  Some of the functions from the posterior are a
+good match for the true function in this region, but most are below
+the true function.  Note that the data here are fairly sparse.
+
+
+Survival models with piecewise-constant hazard.
+
+One can also define models in which the hazard function depends on
+time, as well, perhaps, on various inputs.  To demonstrate this, I
+generated synthetic data for which the hazard function was given by
+h(x,t) = (1+(x-1)^2) * t, which makes the cumulative distribution
+function for the time of death of an individual for whom the covariate
+is x be 1-exp(-(1+(x-1)^2)*t^2/2).
+
+I generated 1000 cases (none of which were censored), and used the
+first 700 for training and the remaining 300 for testing.
+
+The network for this problem has two input units.  The first input is
+set to the time, t, the second to the value of the covariate, x.
+There is a single output unit, whose value will be interpreted as the
+log of the hazard function.  If we decide to use one layer of eight
+hidden units, we might specify the network as follows:
+
+    > net-spec vlog.net 2 8 1 / - 0.05:1:1 0.05:1 - x0.05:1 - 100 
+
+The prior for the input-hidden weights uses separate hyperparameters
+for the two input units (representing time, t, and the covariate, x),
+allowing the smoothness of the hazard function to be different for the
+two.  In particular, if the hazard is actually constant, the time
+input should end up being almost ignored.  (This can be demonstrated
+by applying this model to the data used in the previous example.)
+
+The hazard function determines the likelihood by means of its integral
+from time zero up to the observed time of death, or the censoring
+time.  Computing this exactly would be infeasible if the hazard
+function was defined to be the network output when the first input is
+set to a given time.  To allow these integrals to be done in a
+reasonable amount of compute time, the hazard function is instead
+piecewise constant with respect to time (but continuous with respect
+to the covariates).  The time points where the hazard function changes
+are given in the model-spec command.  For example, we can use the
+following specification:
+
+    > model-spec vlog.net survival pw-const-hazard 0.05 0.1 0.2 0.35 \
+                                                    0.5 0.7 1.0 1.5
+
+The eight numbers above are the times at which the hazard function
+changes.  The log of the value of the hazard before the first time
+(0.05) is found from the output of the network when the first input is
+set to this time (and other inputs are set to the covariates for the
+case); similarly for the log of the value of the hazard function after
+the last time point (1.5).  The log of the hazard for other pieces is
+found by setting the first input of the network to the average of the
+times at the ends of the piece.  For instance, the log of the value of
+the hazard function in the time range 0.7 to 1.0 is found by setting
+the first input to (0.7+1.0)/2 = 0.85.  Alternatively, if the "log"
+option is used, everything is done in terms of the log of the time
+(see model-spec.doc for details).
+
+Note that the number of time points specified is limited only by the
+greater amount of computation required when there are many of them.
+The hyperparameters controlling the weight priors will be able to
+control "overfitting" even if the hazard function has many pieces.
+
+The data specification for this problem says there is just one input
+(the covariate) and one target (the time of death, or censoring time):
+
+    > data-spec vlog.net 1 1 / vdata@1:700 . vdata@-1:700 .
+
+Note that data-spec should be told there is only one input even though
+net-spec is told there are two inputs - the extra input for the net is
+the time, not an input read from the data file.
+
+The following commands sample from the posterior distribution:
+
+    > net-gen vlog.net fix 0.5
+    > mc-spec vlog.net repeat 10 heatbath hybrid 100:10 0.2
+    > net-mc vlog.net 1
+    > mc-spec vlog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
+    > net-mc vlog.net 100
+
+This takes about two hours on our SGI machine.
+
+The net-pred command can be used to make predictions for test cases.
+Here is a command to display the median of the predictive distribution
+for time of death, based on iterations from 25 on, along with the
+covariates (inputs) and the actual times of death (targets) for the
+test cases:
+
+    > net-pred itd vlog.net 25:
+
+    Number of iterations used: 76
+    
+    Case  Inputs Targets Medians |Error|
+    
+       1    0.00    0.07    0.86  0.7898
+       2   -0.22    0.42    0.75  0.3271
+       3   -2.24    0.04    0.38  0.3385
+       4   -0.81    0.26    0.58  0.3151
+       5    1.02    3.12    1.05  2.0644
+ 
+             ( middle lines omitted )
+
+     296   -0.81    0.28    0.58  0.2995
+     297    1.19    1.60    1.07  0.5305
+     298   -1.53    0.57    0.47  0.0973
+     299    0.99    2.67    1.09  1.5800
+     300    0.28    1.13    0.94  0.1857
+
+Average abs. error guessing median:    0.32971+-0.01645
+
+The predictive medians can be plotted against the inputs as follows:
+
+    > net-pred idb vlog.net 25: | plot-points
+
+The fairly small amount of scatter seen in this plot is a result of
+computing the medians by Monte Carlo, which produces some random
+error.  The exact median time of death as predicted by the model is a
+smooth function of the input.
+
+These predictions can be compared to the true median time of death for
+individuals with the given covariates, as determined by the way the
+data was generated, which are in the file "vmedians".
+
+The log of the true hazard function for this problem is the sum of a
+function of x only and a function of t only - what is called a
+"proportional hazards" model.  A network model specified as follows
+can discover this:
+
+    > net-spec v2log.net 2 8 8 1 / - 0.05:1:1 0.05:1 - - 0.05:1:1 0.05:1 - \
+                                   x0.05:1 x0.05:1 - 100 
+
+The input-hidden weights for the two hidden layers have hierarchical
+priors that allow one of them to look at only the time input and the
+other to look at only the covariate.  There are no connections between
+the hidden layers.  Final output can therefore be an additive function
+of time and the covariate, if the hyperparameters are set in this way.
+
+The remaining commands can be the same as above, except that the
+stepsize needs to be reduced to get a reasonable acceptance rate (the
+number of leapfrog steps is increased to compensate):
+
+    > model-spec v2log.net survival pw-const-hazard 0.05 0.1 0.2 0.35 \
+                                                     0.5 0.7 1.0 1.5
+
+    > data-spec v2log.net 1 1 / vdata@1:700 . vdata@-1:700 .
+
+    > net-gen v2log.net fix 0.5
+    > mc-spec v2log.net repeat 10 heatbath hybrid 100:10 0.1
+    > net-mc v2log.net 1
+
+    > mc-spec v2log.net repeat 4 sample-sigmas heatbath hybrid 1000:10 0.25
+    > net-mc v2log.net 100
+
+This takes about seven hours to run on our SGI machine.  
+
+The model does in fact discover that an additive form for the log
+hazard is appropriate, as can be seen by examining the hyperparameters
+with a command such as the following:
+
+    > net-plt t h1@h3@ v2log.net | plot
+
+One can see from this that the Markov chain spends most of its time in
+regions of the hyperparameter space in which one hidden layer looks
+almost only at the time input, and the other looks almost only at the
+covariate.
 
 
 

@@ -1,6 +1,6 @@
 /* NET-PRED.C - Make predictions for for test cases using neural networks. */
 
-/* Copyright (c) 1995, 1996, 1998 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1998, 1999 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -79,6 +79,13 @@ void pred_app_init (void)
 
   net_check_specs_present(a,p,0,m,sv);
 
+  if (op_p && m!=0 && m->type=='V' && sv->hazard_type!='C')
+  { fprintf(stderr,
+"Option p is implemented for survival models only when the hazard is constant\n"
+    );
+    exit(1);
+  }
+
   s->total_sigmas = net_setup_sigma_count(a,m);
   w->total_params = net_setup_param_count(a);
 
@@ -93,7 +100,8 @@ void pred_app_init (void)
 
   t = test_inputs;
   for (i = 0; i<N_test; i++)
-  { for (j = 0; j<data_spec->N_inputs; j++)
+  { for (j = m!=0 && m->type=='V' && sv->hazard_type!='C' ? 1 : 0; 
+         j<a->N_inputs; j++)
     { *t++ = test_values[i].i[j];
     }
   }

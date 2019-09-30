@@ -1,6 +1,6 @@
 /* DATA-SPEC.C - Program for specifying data sets for training and testing. */
 
-/* Copyright (c) 1995, 1996 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1999 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -35,13 +35,20 @@ void main
   static data_specifications data_spec; /* Static so it's zeroed, just in case*/
   data_specifications *ds = &data_spec;
 
-  numin_source ns;
+  /* The following variables are static so that the total size of local 
+     variables on the stack is kept down, just in case a compiler might have 
+     problems with more that 64K bytes in a stack frame. */
 
-  double iv[Max_inputs];
-  double tv[Max_targets];
+  static numin_source ns;
 
-  double imean[Max_inputs],  ivar[Max_inputs];
-  double tmean[Max_targets], tvar[Max_targets];
+  static double iv[Max_inputs];
+  static double tv[Max_targets];
+
+  static double imean[Max_inputs];
+  static double ivar[Max_inputs];
+
+  static double tmean[Max_targets];
+  static double tvar[Max_targets];
 
   log_file logf;
   log_gobbled logg;
@@ -270,7 +277,7 @@ void main
     { ds->input_trans[j].shift = -imean[j];
     }
     if (ds->input_trans[j].data_scale)
-    { ds->input_trans[j].scale = 1/sqrt(ivar[j]);
+    { ds->input_trans[j].scale = ivar[j]<=0 ? 1 : 1/sqrt(ivar[j]);
     }
   }
 

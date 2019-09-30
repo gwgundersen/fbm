@@ -332,7 +332,7 @@ void main
   ograd.param_block  = chk_alloc (params.total_params, sizeof (net_param));
   net_setup_param_pointers (&ograd, arch);
 
-  it = logg.data['i']==0 ? &it0 : logg.data['i'];
+  it = logg.data['i']==0 ? &it0 : (mc_iter *) logg.data['i'];
 
   old_clock = clock();
 

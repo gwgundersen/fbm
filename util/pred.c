@@ -1,6 +1,6 @@
 /* PRED.C - Skeleton for programs that make predictions for test cases. */
 
-/* Copyright (c) 1995, 1996, 1998 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1998, 1999 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -632,8 +632,7 @@ void main
  
     if (!op_a && op_i)
     { printf(" ");
-      for (j = m!=0 && m->type=='V' && sv->hazard_type!='C' ? 1 : 0; 
-               j<data_spec->N_inputs; j++)
+      for (j = 0; j<data_spec->N_inputs; j++)
       { printf(op_b ? " %+.8e" : " %6.2f",test_inputs[data_spec->N_inputs*i+j]);
       }
     }
