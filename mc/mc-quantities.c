@@ -69,6 +69,10 @@ void mc_available
       if (strchr("QEKHDdfmrekjJ",letter)!=0)
       { qd[i].available = 
           low==-1 && (mod==-1 || letter=='E' && (mod==0 || mod==1)
+                              || letter=='m' && mod<=5
+#if 0
+                              || letter=='H' && mod==0
+#endif
                               || letter=='D' || letter=='Q')
           ? 1 : -1;
       }
@@ -176,6 +180,16 @@ void mc_evaluate
             ds.know_kinetic = 1;
           }
           *qh->value[i] = ds.pot_energy + ds.kinetic_energy;
+#if 0
+          if (mod==0)
+          { mc_therm_state *h;
+            h = logg->data['h'];
+            if (h!=0 && logg->index['h']==logg->last_index)
+            { *qh->value[i] += 0.5 * h->tp * h->tp;
+              *qh->value[i] += log (h->tq>0 ? h->tq : -h->tq);
+            }
+          }
+#endif 
           qh->updated[i] = 1;
           break;
         }
@@ -292,9 +306,50 @@ void mc_evaluate
   
         case 'm':
         { if (it==0 || logg->index['i']!=logg->last_index) break;
-          *qh->value[i] = it->move_point;
+          switch (mod)
+          { case -1:
+            { *qh->value[i] = it->move_point;
+              break;
+            }
+            case 0:
+            { *qh->value[i] = it->move_point + it->spiral_offset;
+              break;
+            }
+            case 1:
+            { *qh->value[i] = it->spiral_offset;
+              break;
+            }
+            case 2:
+            { *qh->value[i] = it->spiral_switch;
+              break;
+            }
+            case 3:
+            { *qh->value[i] = it->move_point + it->spiral_offset 
+                                      - it->spiral_switch;
+              break;
+            }
+            case 4:
+            { *qh->value[i] = it->spiral_offset - it->spiral_switch;
+              break;
+            }
+            case 5:
+            { *qh->value[i] = 
+                 abs(it->move_point + it->spiral_offset - it->spiral_switch)
+               - abs(it->spiral_offset - it->spiral_switch);
+              break;
+            }
+            default: abort();
+          }
           qh->updated[i] = 1;
           break;
+#if 0
+          { mc_therm_state *h;
+            h = logg->data['h'];
+            if (h==0 || logg->index['h']!=logg->last_index) break;
+            *qh->value[i] = mod==0 ? h->tq : h->tp;
+            qh->updated[i] = 1;
+          }
+#endif
         }
   
         case 'r':

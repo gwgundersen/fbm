@@ -62,6 +62,28 @@ double mc_kinetic_energy
 }
 
 
+/* ENSURE THERMOSTAT IS PRESENT.  Currently disabled. */
+
+#if 0
+
+void mc_therm_present
+( mc_dynamic_state *ds	/* State to update */
+)
+{
+  static mc_therm_state thm;
+
+  if (ds->therm_state==0)
+  {
+    ds->therm_state = &thm;
+
+    ds->therm_state->tq = 1;
+    ds->therm_state->tp = 0;
+  }
+}
+
+#endif
+
+
 /* ENSURE TEMPERING RECORD IS PRESENT. */
 
 void mc_temp_present

@@ -100,14 +100,14 @@ be irrelevant (developed with David MacKay).
 For problems and networks of moderate size (eg, 200 training cases, 10
 inputs, 20 hidden units), fully training a neural network model (to
 the point where one can be reasonably sure that the correct Bayesian
-answer has been found) typically takes several hours to a day on our
-SGI machine.  However, quite good results, competitive with other
-methods, are often obtained after training for under an hour.  The
-time required to train the Gaussian process models depends a lot on
-the number of training cases.  For 100 cases, these models may take
-only a few minutes to train (again, to the point where one can be
-reasonably sure that convergence to the correct answer has occurred).
-For 1000 cases, however, training might well take a day.
+answer has been found) typically takes several hours to a day on a
+modern personal computer.  However, quite good results, competitive
+with other methods, are often obtained after training for under an
+hour.  The time required to train the Gaussian process models depends
+a lot on the number of training cases.  For 100 cases, these models
+may take only a few minutes to train (again, to the point where one
+can be reasonably sure that convergence to the correct answer has
+occurred).  For 1000 cases, however, training might well take a day.
 
 The software also implements neural network training using early
 stopping, as described in my paper on "Assessing relevance
@@ -200,17 +200,22 @@ directory contains all the documentation.
 Portability of the software.
 
 The software is written in ANSI C, and is meant to be run in a UNIX
-environment.  Specifically, it was developed on an SGI machine running
-IRIX Release 6.5.  It also seems to run OK on a SPARC machine running
-SunOS 5, using the 'gcc' C compiler, on Linius systems, and on DEC
-Alpha machines, provided that the -ieee and -std options are given to
-the C compiler.  As far as I know, the software does not depend on any
-peculiarities of these environments (except perhaps for the use of the
-drand48 pseudo-random number generator, and the lgamma function), but
-you may nevertheless have problems getting it to work in substantially
-different environments, and I can offer little or no assistance in
-this regard.  There is no dependence on any particular graphics
-package or graphical user interface.  (The 'xxx-plt' programs are
-designed to allow their output to be piped directly into the 'xgraph'
-plotting program, but other plotting programs can be used instead, or
-the numbers can be examined directly.)
+environment.  It is known to work on a Linux system (Redhat 6.0) with
+a Pentium processor, and on an SGI machine running IRIX Release 6.5.
+It also seems to run OK on a SPARC machine running SunOS 5, using the
+'gcc' C compiler, and on DEC Alpha machines, provided that the -ieee
+and -std options are given to the DEC C compiler.  As far as I know,
+the software does not depend on any peculiarities of these
+environments (except perhaps for the use of the drand48 pseudo-random
+number generator, and the lgamma function), but you may nevertheless
+have problems getting it to work in substantially different
+environments, and I can offer little or no assistance in this regard.
+
+There is no dependence on any particular graphics package or graphical
+user interface.  The 'xxx-plt' programs are designed to allow their
+output to be piped directly into the 'xgraph' plotting program, but
+other plotting programs can be used instead, or the numbers can be
+examined directly.  The 'xxx-tbl' programs output the same information
+in a different format, which is useful when plotting or analysing data
+wiht S-Plus, since this format is convenient for the S-Plus read.table
+command.

@@ -27,7 +27,7 @@
 
 /* MAIN PROGRAM. */
 
-void main
+main
 ( int argc,
   char **argv
 )

@@ -27,7 +27,7 @@ static void usage(void);
 
 /* MAIN PROGRAM. */
 
-void main
+main
 ( int argc,
   char **argv
 )
@@ -320,7 +320,7 @@ void main
     { ds->target_trans[j].shift = -tmean[j];
     }
     if (ds->target_trans[j].data_scale)
-    { ds->target_trans[j].scale = 1/sqrt(tvar[j]);
+    { ds->target_trans[j].scale = tvar[j]<=0 ? 1 : 1/sqrt(tvar[j]);
     }
   }
 
@@ -340,7 +340,7 @@ void main
     for (i = 0; i<n; i++)
     { numin_read(&ns,iv);
       for (j = 0; j<ds->N_targets; j++)
-      { iv[j] = data_trans (iv[j], ds->target_trans[j]);
+      { iv[j] = data_trans (iv[j], ds->input_trans[j]);
       } /* Above done just so errors will be reported at this time */
     }
 

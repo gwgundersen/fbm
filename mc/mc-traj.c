@@ -1,6 +1,6 @@
 /* MC-TRAJ.C - Procedures for computing dynamical trajectories. */
 
-/* Copyright (c) 1995 by Radford M. Neal 
+/* Copyright (c) 1995, 1999 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -45,7 +45,11 @@ void mc_traj_init
   tj = tj0;
   it = it0;
 
-  if (tj->N_approx>0)
+  if (tj->type!='L')
+  { na = 1;
+    ta = 1;
+  }
+  else if (tj->N_approx>0)
   { na = tj->N_approx;
     ta = na;
   }
@@ -122,6 +126,238 @@ void mc_trajectory
 
   switch (tj->type)
   { 
+    case '2': case 'G':
+    { 
+      double a1, a2, b1, b2;
+
+      if (tj->rev_sym==1) sf /= 2;
+
+      a2 = tj->param;
+      a1 = 1-a2;
+      b2 = 0.5/a1;
+      b1 = 1-b2;
+
+      a1 *= sf; a2 *= sf; b1 *= sf; b2 *= sf;
+
+      if (tj->halfp)
+      {
+        /* Compute trajectory with initial step for momentum (in non-reversed
+           form). */
+
+        while (n>0)
+        {
+          if (tj->rev_sym!=-1)
+          { 
+            if (ds->know_grad!=1)
+            { mc_app_energy(ds,1,0,0,ds->grad);
+            }
+  
+            for (k = 0; k<ds->dim; k++)
+            { ds->p[k] -= b1 * ds->stepsize[k] * ds->grad[k];
+              ds->q[k] += a1 * ds->stepsize[k] * ds->p[k];
+            }
+  
+            mc_app_energy(ds,1,0,0,ds->grad);
+  
+            for (k = 0; k<ds->dim; k++)
+            { ds->p[k] -= b2 * ds->stepsize[k] * ds->grad[k];
+              ds->q[k] += a2 * ds->stepsize[k] * ds->p[k];
+            }
+
+            ds->know_grad = 0;
+            ds->know_pot = 0;
+          }
+
+          if (tj->rev_sym!=0)
+          {
+            for (k = 0; k<ds->dim; k++)
+            { ds->q[k] += a2 * ds->stepsize[k] * ds->p[k];
+            }
+
+            mc_app_energy(ds,1,0,0,ds->grad);
+
+            for (k = 0; k<ds->dim; k++)
+            { ds->p[k] -= b2 * ds->stepsize[k] * ds->grad[k];
+              ds->q[k] += a1 * ds->stepsize[k] * ds->p[k];
+            }
+
+            mc_app_energy (ds, 1, 0, 
+                           need_pot && n==1 ? &ds->pot_energy : 0,
+                           ds->grad);
+
+            for (k = 0; k<ds->dim; k++)
+            { ds->p[k] -= b1 * ds->stepsize[k] * ds->grad[k];
+            }
+
+            ds->know_grad = 1;
+            ds->know_pot = need_pot && n==1;
+          }
+  
+          n -= 1;
+        }
+      }
+      else
+      {
+        /* Compute trajectory with initial step for position (in non-reversed
+           form). */
+
+        while (n>0)
+        {
+          if (tj->rev_sym!=-1)
+          {
+            for (k = 0; k<ds->dim; k++)
+            { ds->q[k] += b1 * ds->stepsize[k] * ds->p[k];
+            }
+    
+            mc_app_energy(ds,1,0,0,ds->grad);
+  
+            for (k = 0; k<ds->dim; k++)
+            { ds->p[k] -= a1 * ds->stepsize[k] * ds->grad[k];
+              ds->q[k] += b2 * ds->stepsize[k] * ds->p[k];
+            }
+    
+            mc_app_energy (ds, 1, 0, 
+                        need_pot && n==1 && tj->rev_sym==0? &ds->pot_energy : 0,
+                        ds->grad);
+  
+            for (k = 0; k<ds->dim; k++)
+            { ds->p[k] -= a2 * ds->stepsize[k] * ds->grad[k];
+            }
+    
+            ds->know_grad = 1;
+            ds->know_pot  = need_pot && n==1 && tj->rev_sym==0;
+          }
+
+          if (tj->rev_sym!=0)
+          {
+            if (ds->know_grad!=1)
+            { mc_app_energy(ds,1,0,0,ds->grad);
+            }
+
+            for (k = 0; k<ds->dim; k++)
+            { ds->p[k] -= a2 * ds->stepsize[k] * ds->grad[k];
+              ds->q[k] += b2 * ds->stepsize[k] * ds->p[k];
+            }
+
+            mc_app_energy(ds,1,0,0,ds->grad);
+  
+            for (k = 0; k<ds->dim; k++)
+            { ds->p[k] -= a1 * ds->stepsize[k] * ds->grad[k];
+              ds->q[k] += b1 * ds->stepsize[k] * ds->p[k];
+            }
+
+            ds->know_grad = 0;
+            ds->know_pot = 0;
+          }
+
+          n -= 1;
+        }
+      }
+
+      break;
+    }
+
+    case '4':
+    {
+      static double a[4] =
+      {  0.5153528374311229364,
+        -0.085782019412973646,
+         0.4415830236164665242,
+         0.1288461583653841854
+      };
+
+      static double b[4] =
+      {  0.1344961992774310892,
+        -0.2248198030794208058,
+         0.7563200005156682911,
+         0.3340036032863214255
+      };
+
+      if (tj->rev_sym==1) sf /= 2;
+
+      while (n>0)
+      {
+        if (tj->rev_sym!=-1)
+        {
+          if (ds->know_grad!=1)
+          { mc_app_energy(ds,1,0,0,ds->grad);
+          }
+
+          for (k = 0; k<ds->dim; k++)
+          { ds->p[k] -= sf * b[0] * ds->stepsize[k] * ds->grad[k];
+            ds->q[k] += sf * a[0] * ds->stepsize[k] * ds->p[k];
+          }
+  
+          mc_app_energy(ds,1,0,0,ds->grad);
+  
+          for (k = 0; k<ds->dim; k++)
+          { ds->p[k] -= sf * b[1] * ds->stepsize[k] * ds->grad[k];
+            ds->q[k] += sf * a[1] * ds->stepsize[k] * ds->p[k];
+          }
+  
+          mc_app_energy(ds,1,0,0,ds->grad);
+  
+          for (k = 0; k<ds->dim; k++)
+          { ds->p[k] -= sf * b[2] * ds->stepsize[k] * ds->grad[k];
+            ds->q[k] += sf * a[2] * ds->stepsize[k] * ds->p[k];
+          }
+  
+          mc_app_energy(ds,1,0,0,ds->grad);
+  
+          for (k = 0; k<ds->dim; k++)
+          { ds->p[k] -= sf * b[3] * ds->stepsize[k] * ds->grad[k];
+            ds->q[k] += sf * a[3] * ds->stepsize[k] * ds->p[k];
+          }
+
+          ds->know_grad = 0;
+          ds->know_pot  = 0;
+        }
+
+        if (tj->rev_sym!=0)
+        {
+          for (k = 0; k<ds->dim; k++)
+          { ds->q[k] += sf * a[3] * ds->stepsize[k] * ds->p[k]; 
+          }
+
+          mc_app_energy(ds,1,0,0,ds->grad);
+
+          for (k = 0; k<ds->dim; k++)
+          { ds->p[k] -= sf * b[3] * ds->stepsize[k] * ds->grad[k];
+            ds->q[k] += sf * a[2] * ds->stepsize[k] * ds->p[k];
+          }
+
+          mc_app_energy(ds,1,0,0,ds->grad);
+
+          for (k = 0; k<ds->dim; k++)
+          { ds->p[k] -= sf * b[2] * ds->stepsize[k] * ds->grad[k];
+            ds->q[k] += sf * a[1] * ds->stepsize[k] * ds->p[k];
+          }
+
+          mc_app_energy(ds,1,0,0,ds->grad);
+
+          for (k = 0; k<ds->dim; k++)
+          { ds->p[k] -= sf * b[1] * ds->stepsize[k] * ds->grad[k];
+            ds->q[k] += sf * a[0] * ds->stepsize[k] * ds->p[k];
+          }
+
+          mc_app_energy (ds, 1, 0, 
+                         need_pot && n==1 ? &ds->pot_energy : 0,
+                         ds->grad);
+
+          for (k = 0; k<ds->dim; k++)
+          { ds->p[k] -= sf * b[0] * ds->stepsize[k] * ds->grad[k];
+          }
+
+          ds->know_grad = 1;
+          ds->know_pot = need_pot && n==1;
+        }
+
+        n -= 1;
+      }
+
+      break;
+    }
+
     case 'L':
     { 
       if (tj->halfp)
@@ -215,3 +451,146 @@ void mc_trajectory
 
   ds->know_kinetic = 0;
 }
+
+
+/* TERMOSTATED DYNAMICS.  Currently disabled. */
+
+#if 0
+
+#define S 0.5
+#define K 100
+
+#if 0
+#define f(x) (S*(x))
+#define Df(x) (S)
+#endif
+
+#if 1
+#define f(x) (S * sin((x)+1))
+#define Df(x) (S * cos((x)+1))
+#endif
+
+#define sqrt2pi 2.5066282746310005024
+
+static void therm_step (double *q, double *p, double dt)
+{
+  extern double phi(double), Phi(double), Phi_inverse(double);
+  double q0, t;
+
+  if (*q<0) 
+  { dt = -dt;
+    *q = - *q;
+  }
+  
+  q0 = *q * exp (*p * *p / 2);
+  t = q0 * sqrt2pi * (0.5 - Phi(*p));
+  
+  t += dt;
+
+  if (t>q0*sqrt2pi/2)
+  { t = q0*sqrt2pi - t;
+    dt = -dt;
+  }
+  else if (t<-q0*sqrt2pi/2)
+  { t = -q0*sqrt2pi - t;
+    dt = -dt;
+  }
+
+  *p = Phi_inverse (0.5 - t / (sqrt2pi * q0));
+  *q = q0 * exp ( - *p * *p / 2);
+
+  if (dt<0)
+  { *q = -*q;
+  }
+
+}
+
+void mc_therm_trajectory
+( mc_dynamic_state *ds,	/* Dynamical state to update */
+  int n,		/* Number of steps to compute */
+  int need_pot		/* Need potential energy for last state? */
+)
+{
+  double sf, sfh, d, dd;
+  int k, a, x, o, i;
+
+  if (n==0) return;
+
+  sf = it->stepsize_factor;
+
+  x = +1; 
+
+  if (n<0)
+  { n = -n;
+    sf = -sf;
+    x = -1;
+  }
+
+  sfh = sf / 2;
+
+  switch (tj->type)
+  { 
+    case 'L':
+    { 
+      if (tj->halfp)
+      {
+        if (ds->know_grad!=1)
+        { mc_app_energy (ds, 1, 0, 0, ds->grad);
+        }
+
+        for ( ; n>0; n--)
+        {  
+          for (k = 0; k<ds->dim; k++)
+          { ds->p[k] -= sfh * ds->stepsize[k] * ds->grad[k];
+          }
+  
+          for (k = 0; k<ds->dim; k++)
+          { ds->q[k] += sf * ds->stepsize[k] * ds->p[k];
+          }
+
+          mc_app_energy (ds, 1, 0, 0, ds->grad);
+
+          for (i = 0; i<K; i++)
+          {
+            dd = f(ds->therm_state->tp);
+            therm_step (&ds->therm_state->tq, &ds->therm_state->tp, sfh/K);
+            dd -= f(ds->therm_state->tp);
+            for (k = 0; k<ds->dim; k++) ds->p[k] += dd;
+
+            dd = Df(ds->therm_state->tp);
+            for (k = 0; k<ds->dim; k++)
+            { ds->therm_state->tq -= sf * ds->p[k] * dd / K; 
+            }
+
+            dd = f(ds->therm_state->tp);
+            therm_step (&ds->therm_state->tq, &ds->therm_state->tp, sfh/K);
+            dd -= f(ds->therm_state->tp);
+            for (k = 0; k<ds->dim; k++) ds->p[k] += dd;
+          }
+
+          for (k = 0; k<ds->dim; k++)
+          { ds->p[k] -= sfh * ds->stepsize[k] * ds->grad[k];
+          }
+        }
+
+        ds->know_grad = 0;
+        ds->know_pot  = 0;
+      }
+      else  
+      { abort();
+      }
+  
+      break;
+    }
+
+    default:
+    { abort();
+    }
+  }
+
+  /* Since momentum has changed, we don't know kinetic energy anymore. */
+
+  ds->know_kinetic = 0;
+}
+
+#endif

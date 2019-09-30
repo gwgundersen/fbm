@@ -17,6 +17,6 @@ main()
     x = rand_gaussian();
     y = 0.3 + 0.4*x + 0.5*sin(2.7*x) + 1.1/(1+x*x) + 0.1*rand_gaussian();
 
-    printf(" %+8.5lf %+10.5lf\n",x,y);
+    printf(" %+8.5f %+10.5f\n",x,y);
   }
 }

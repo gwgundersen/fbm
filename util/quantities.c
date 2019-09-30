@@ -187,19 +187,21 @@ quantities_held *quantities_storage
 )
 { 
   quantities_held *qh;
+  int s, t, i;
   double *b;
-  char *v;
-  int t, i;
+  void *v;
 
   t = 0;
 
   for (i = 0; i<Max_quantities; i++)
   { if (qd[i].letter)
-    { t += qd[i].high - qd[i].low + 1;
+    { if (qd[i].high<qd[i].low) abort();
+      t += qd[i].high - qd[i].low + 1;
     }
   }
 
-  v = malloc (sizeof(quantities_held) + t*sizeof(double));
+  s = sizeof(quantities_held) + t*sizeof(double);
+  v = malloc(s);
 
   if (v==0)
   { fprintf(stderr,"Not enough memory!\n");
@@ -207,7 +209,7 @@ quantities_held *quantities_storage
   }
 
   qh = (quantities_held*) v;
-  b  = (double*) (v + sizeof(quantities_held));
+  b  = (double*) (qh+1);
 
   for (i = 0; i<Max_quantities; i++)
   { if (qd[i].letter)

@@ -46,7 +46,7 @@ static void usage(void);
 
 /* MAIN PROGRAM. */
 
-void main
+main
 ( int argc,
   char **argv
 )
@@ -193,6 +193,12 @@ void main
   { ds.temp_index = mc_temp_index (sch, ds.temp_state->inv_temp);
   }
 
+#if 0
+
+  ds.therm_state = logg.data['h'];
+ 
+#endif
+
   /* Initialize for performing iterations. */
 
   ds.grad = 0;
@@ -266,7 +272,14 @@ void main
         logf.header.size = sizeof (mc_temp_state);
         log_file_append (&logf, ds.temp_state);
       }
-
+#if 0
+      if (ds.therm_state!=0)
+      { logf.header.type = 'h';
+        logf.header.index = index;
+        logf.header.size = sizeof (mc_therm_state);
+        log_file_append (&logf, ds.therm_state);
+      }
+#endif
       logf.header.type = 'i';
       logf.header.index = index;
       logf.header.size = sizeof *it;

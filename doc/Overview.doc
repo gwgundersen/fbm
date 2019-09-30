@@ -22,6 +22,13 @@ to create a directory for each project you are working on, and change
 to that directory before issuing these commands, so that the files
 pertaining to that project will be separate.
 
+Since I've gotten e-mail from people who were quite confused by the
+simplicity of this concept, let me say it again.  YOU USE THE SOFTWARE
+BY TYPING UNIX COMMANDS TO RUN THE VARIOUS PROGRAMS.  There is NO
+master program that you run and type commands to - or to put it
+another way, that master program is the Unix command interpreter (the
+shell).
+
 If you're doing serious work, you will probably want to create Unix
 command files holding the main commands, so that you won't forget what
 you did.
@@ -46,6 +53,8 @@ and contains the complete state of the program at that time (eg, all
 the parameters and hyperparameters of the network being trained).
 
 Note that log files contain binary data; they are not human-readable.
+They may also not be readable on a different type of machine from the
+one on which they were written.
 
 After an iterative program finishes, the user may decide to let the
 run continue for more iterations.  This is easily done by just

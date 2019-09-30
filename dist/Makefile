@@ -48,7 +48,7 @@ dist-stepsizes:	dist-stepsizes.o dist-mc.o dist-util.o dist-plt.o digamma.o \
 				rand.o quantities.o dist-data.o numin.o \
 				mc-iter.o mc-heatbath.o mc-metropolis.o \
 				mc-hybrid.o mc-slice.o mc-traj.o mc-util.o \
-				mc-quantities.o data-trans.o
+				mc-quantities.o data-trans.o 
 		$(CC) $(LFLAGS) dist-stepsizes.o dist-mc.o dist-util.o \
 		  dist-quantities.o formula.o misc.o log.o rand.o quantities.o \
 		  dist-data.o numin.o mc-traj.o mc-iter.o mc-heatbath.o \

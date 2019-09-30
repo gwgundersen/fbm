@@ -28,7 +28,7 @@ static void display_sched (log_gobbled *);
 
 /* MAIN PROGRAM. */
 
-void main
+main
 ( int argc,
   char **argv
 )

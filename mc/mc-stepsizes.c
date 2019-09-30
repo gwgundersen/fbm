@@ -30,7 +30,7 @@ enum { PLT, TBL, HIST } program_type;
 
 /* MAIN PROGRAM. */
 
-void main
+main
 ( int argc,
   char **argv
 )
@@ -64,7 +64,7 @@ void main
 
   /* Open log file and read records with indexes less than zero. */
 
-  log_file_open (&logf, 1);
+  log_file_open (&logf, 0);
 
   log_gobble_init(&logg,0);
   mc_record_sizes(&logg);

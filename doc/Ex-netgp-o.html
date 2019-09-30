@@ -57,8 +57,8 @@ of the way the noise was actually generated, but its fairly heavy
 tails are enough to prevent the model from paying undue attention to
 the outliers.
 
-The above commands take about two minutes on our machine.  The
-resulting model can be tested on data from the same source using
+The above commands take about one minute on our 550MHz Pentium III.
+The resulting model can be tested on data from the same source using
 net-pred:
 
     &gt; net-pred na olog.net 31:
@@ -67,7 +67,7 @@ net-pred:
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.01943+-0.01129
+    Average squared error guessing mean:   0.02129+-0.01336
 
 One can also see how well the model does on the uncorrupted data that
 was used originally:
@@ -78,11 +78,10 @@ was used originally:
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.00881+-0.00120
+    Average squared error guessing mean:   0.01201+-0.00209
 
-This is actually better than the results obtained earlier with the
-model trained on uncorrupted data, though the observed difference is
-probably not statistically significant.
+This is not much different than the results obtained earlier with the
+model trained on uncorrupted data.
 
 In contrast, the results are substantially worse when the data with
 outliers is used to train a standard model where the noise is
@@ -107,9 +106,10 @@ be sampled.  The following commands illustrate how this is done:
     &gt; mc-spec olog.gpt sample-variances heatbath hybrid 20:4 0.5
     &gt; gp-mc olog.gpt 200
 
-This takes less than two minutes on our SGI machine.  The progress of
-the run can be monitored by examining the case-by-case noise standard
-deviations in (say) the first 8 training cases, as follows:
+This takes a bit over a minute on our 550MHz Pentium III.  The
+progress of the run can be monitored by examining the case-by-case
+noise standard deviations in (say) the first 8 training cases, as
+follows:
 
     &gt; gp-plt t v@0:7 olog.gpt | plot
 

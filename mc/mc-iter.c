@@ -80,6 +80,8 @@ void mc_hybrid (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int, double,
   int, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *);
 void mc_hybrid2 (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int, 
                  mc_value *, mc_value *);
+void mc_spiral (mc_dynamic_state *, mc_iter *, mc_traj *, int, double, int,
+                mc_value *, mc_value *, mc_value *, mc_value *);
 
 
 /* LOCAL PROCEDURES.  Tempering procedures are included in this module
@@ -149,22 +151,23 @@ void mc_iter_init
       endp[i] = stack[depth];
     }
 
-    if (type=='B' || type=='N' || type=='D' || type=='P' 
-     || type=='H' || type=='T' || type=='i' || type=='o'
-     || type=='r')
+    if (type=='B' || type=='N' || type=='D' || type=='P' || type=='h'
+     || type=='H' || type=='T' || type=='@' || type=='^' || type=='i' 
+     || type=='o' || type=='r' || type=='*' || type=='=')
     { need_p = 1;
     }
 
-    if (type=='D' || type=='P' || type=='H' || type=='T' 
-     || type=='i' || type=='o')
+    if (type=='D' || type=='P' || type=='H' || type=='T' || type=='@'
+     || type=='^' || type=='h' || type=='i' || type=='o')
     { need_grad = 1;
     }
 
-    if (type=='M' || type=='H' || type=='T' || type=='i' || type=='o')
+    if (type=='M' || type=='H' || type=='T' || type=='@' || type=='^'
+     || type=='i' || type=='o')
     { need_save = 1;
     }
 
-    if (type=='H' || type=='T')
+    if (type=='H' || type=='T' || type=='@' || type=='^')
     { need_arsv = 1;
     }
 
@@ -313,7 +316,7 @@ static void do_group
 
     if (type=='M' || type=='m' || type=='S' || type=='O' 
      || type=='D' || type=='P' || type=='H' || type=='T'
-     || type=='i' || type=='o')
+     || type=='@' || type=='^' || type=='i' || type=='o' || type=='h')
     { 
       stepsize_adjust = ops->op[i].stepsize_adjust;
       alpha = ops->op[i].stepsize_alpha;
@@ -387,7 +390,14 @@ static void do_group
         mc_trajectory(ds,ops->op[i].steps,0);
         break;
       }
-
+#if 0
+      case 'h':
+      { mc_therm_present(ds);
+        mc_traj_init(tj,it);
+        mc_therm_trajectory(ds,ops->op[i].steps,0);
+        break;
+      }
+#endif
       case 'P':
       { mc_traj_init(tj,it);
         mc_traj_permute();
@@ -405,6 +415,12 @@ static void do_group
         { mc_hybrid2 (ds, it, tj, ops->op[i].steps, ops->op[i].in_steps,
                 ops->op[i].jump, q_save, p_save);
         }
+        break;
+      }
+
+      case '@': case '^':
+      { mc_spiral (ds, it, tj, ops->op[i].steps, ops->op[i].temper_factor, 
+                   type=='^', q_save, p_save, q_asv, p_asv);
         break;
       }
 
@@ -452,6 +468,28 @@ static void do_group
       case 'b':
       { mc_temp_present(ds,sch);
         ds->temp_state->temp_dir = rand_int(2) ? -1 : +1;
+        break;
+      }
+
+      case '*':
+      { int j;
+        double f;
+        f = ops->op[i].heatbath_decay+1;
+        for (j = 0; j<ds->dim; j++)
+        { ds->p[j] *= f;
+        }
+        ds->know_kinetic = 0;
+        break;
+      }
+
+      case '=':
+      { int j;
+        double v;
+        v = ops->op[i].heatbath_decay;
+        for (j = 0; j<ds->dim; j++)
+        { ds->p[j] = v;
+        }
+        ds->know_kinetic = 0;
         break;
       }
 

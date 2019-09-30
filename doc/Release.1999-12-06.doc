@@ -1,0 +1,85 @@
+
+
+NOTES ON THE VERSION OF 1999-12-06
+
+This is a fairly minor release, with a few bug fixes, a couple of
+which might be important, some new experimental facilities that aren't
+of general interest (at least not yet), and a few added conveniences
+and other minor updates.
+
+
+Changes in this version:
+
+1) Several new ways of computing trajectories have been implemented,
+   in addition to the old leapfrog method.  See mc-spec.doc for details.
+   The new methods may be better for some applications, but they aren't
+   uniformly better than the leapfrog method, and they are not recommended
+   for general use.
+
+2) New "spiral" and "double-spiral" operations were added.  See 
+   mc-spec.doc for details.  These are experimental.  Quantities
+   m0, m1, m2, m3, m4, and m5 were added to support this feature.  
+   See mc-quantities.doc for details.
+
+3) The mc-spec program now lets you see all the specifications in 
+   the log file, at any iteration, with "mc-spec log-file all".  See 
+   mc-spec.doc for details.
+
+4) New "multiply-momentum" and "set-momentum" operations were added, for
+   testing and research purposes.  See mc-spec.doc for details.  These
+   are probably of no interest to most users.
+
+5) An install-arch shell file for conveniently maintaining separate
+   versions of the compiled programs for different machine architectures
+   has been added.
+
+6) The documentation has been updated and corrected in various fairly
+   minor ways.
+
+7) Compute times quoted for the demos are now for a Linux system with
+   a 550MHz Pentium III processor.
+
+
+Bug fixes.
+
+1) A bug was fixed that caused derivatives to sometimes be calculated 
+   incorrectly when the "omit" option was used with Gaussian process
+   models.  The effect was to increase the rejection rate for "hybrid"
+   operations, but the final answer (if convergence was reached) would 
+   still be correct.
+
+2) A bug was fixed that caused the "first:last" option of the met-1
+   operation to be ignored.
+
+3) A bug was fixed that sometime caused data-spec to report spurious
+   errors when targets were log-transformed.
+
+4) A bug was fixed that caused problems with automatic scaling of target
+   variables when they were all the same (ie, had standard deviation of 0).
+
+5) The xxx-stepsizes and xxx-grad-test programs were changed to not try
+   to open the log file for writing (which might not be allowed), seeing
+   as they only need to read it.
+
+
+Known bugs and other deficiencies.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The latent value update operations for Gaussian processes may recompute 
+   the inverse covariance matrix even when an up-to-date version was 
+   computed for the previous Monte Carlo operation.
+
+4) Covariance matrices are stored in full, even though they are symmetric,
+   which sometimes costs a factor of two in memory usage.
+
+5) The "p" option of net-pred isn't allowed for survival models with
+   piecewise-constant hazard.  There's no big reason for this - I just
+   haven't gotten around to it.

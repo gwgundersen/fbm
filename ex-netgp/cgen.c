@@ -23,7 +23,7 @@ main()
 
     c = d<0.35 ? 0 : 0.8*x1+1.8*x2<0.6 ? 1 : 2;
 
-    printf(" %8.5lf %8.5lf %8.5lf %8.5lf %d\n",
+    printf(" %8.5f %8.5f %8.5f %8.5f %d\n",
       x1+0.1*rand_gaussian(), x2+0.1*rand_gaussian(), 
       x3+0.1*rand_gaussian(), x4+0.1*rand_gaussian(), 
       c);

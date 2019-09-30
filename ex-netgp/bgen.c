@@ -21,6 +21,6 @@ main()
 
     b = rand_uniform()<exp(-d*d);
 
-    printf(" %+8.5lf %+8.5lf %d\n",x1,x2,b);
+    printf(" %+8.5f %+8.5f %d\n",x1,x2,b);
   }
 }

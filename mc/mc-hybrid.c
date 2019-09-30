@@ -348,3 +348,189 @@ void mc_hybrid2
     ds->know_grad    = 0;
   }
 }
+  
+
+/* PERFORM SPIRAL DYNAMICS OPERATION. */
+
+#define Spiral_debug 0
+ 
+void mc_spiral
+( mc_dynamic_state *ds,	/* State to update */
+  mc_iter *it,		/* Description of this iteration */
+  mc_traj *tj,		/* Trajectory specification */
+  int steps,		/* Total number of steps to do */
+  double temper_factor,	/* Temper factor */
+  int dbl,		/* Use a double spiral? */
+  mc_value *q_save,	/* Place to save original q */
+  mc_value *p_save,	/* Place to save original p */
+  mc_value *q_asv,	/* Place to save q values for accept state */
+  mc_value *p_asv	/* Place to save p values for accept state */
+)
+{ 
+  double acc_pot_energy, acc_kinetic_energy, acc_free_energy;
+  double old_pot_energy, old_kinetic_energy;
+  int offset, switch_point, acc_point;
+  int n, k, dir;
+  double A, sqtf, lgf;
+
+  sqtf = sqrt(temper_factor);
+  lgf  = log (temper_factor);
+
+  /* Choose the offset of the start state, and the point to switch to
+     a contracting spiral. */
+
+  offset = rand_int(steps+1);
+  switch_point = dbl ? rand_int(steps+1) : steps;
+
+  /* Save the start state, also make it the accept state at the beginning. */
+
+  mc_value_copy (q_save, ds->q, ds->dim);
+  mc_value_copy (q_asv, ds->q, ds->dim);
+
+  mc_value_copy (p_save, ds->p, ds->dim);
+  mc_value_copy (p_asv, ds->p, ds->dim);
+
+  if (!ds->know_pot)
+  { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
+    ds->know_pot = 1;
+  }
+  
+  if (!ds->know_kinetic)
+  { ds->kinetic_energy = mc_kinetic_energy(ds);
+    ds->know_kinetic = 1;
+  }
+
+  old_pot_energy = ds->pot_energy;
+  old_kinetic_energy = ds->kinetic_energy;
+
+  acc_pot_energy = ds->pot_energy;
+  acc_kinetic_energy = ds->kinetic_energy;
+
+  acc_free_energy = ds->pot_energy + ds->kinetic_energy 
+                      + fabs(offset-switch_point)*lgf*ds->dim;
+
+  acc_point = offset;
+
+  /* Set up for travelling about trajectory. */
+
+  mc_traj_init(tj,it);
+  mc_traj_permute();
+
+  n = offset;
+  dir = -1;
+
+  if (Spiral_debug)
+  { printf(" n dir q p E K F T pr\n");
+    printf("%4d %+d %+10.3e %+6.3f %+6.2f %+6.2f %+6.2f %+6.2f %.3f\n",
+      n, dir, ds->q[0], ds->p[0],
+      ds->pot_energy, ds->kinetic_energy, fabs(n-switch_point)*lgf*ds->dim, 
+      ds->pot_energy + ds->kinetic_energy + fabs(n-switch_point)*lgf*ds->dim,
+      1.0);
+  }
+
+  /* Loop that looks at one new state each iteration. */
+
+  for (;;)
+  {
+    /* Restore if next state should be a step from the original start state. */
+
+    if (dir==-1 && n==0)
+    { 
+      mc_value_copy (ds->q, q_save, ds->dim);
+      mc_value_copy (ds->p, p_save, ds->dim);
+ 
+      ds->pot_energy = old_pot_energy;
+      ds->kinetic_energy = old_kinetic_energy;
+
+      ds->know_pot     = 1;
+      ds->know_kinetic = 1;
+      ds->know_grad    = 0;
+
+      n = offset;
+      dir = 1;
+    }
+
+    /* See if we're done. */
+
+    if (dir==1 && n==steps) break;
+
+    /* Multiply/divide, do trajectory step, and multiply/divide again. */
+
+    if (dir==1 ? n>=switch_point : n<switch_point)
+    { for (k = 0; k<ds->dim; k++)
+      { ds->p[k] /= sqtf;
+      } 
+    }
+    else
+    { for (k = 0; k<ds->dim; k++)
+      { ds->p[k] *= sqtf;
+      } 
+    }
+
+    mc_trajectory (ds, dir, 1);
+
+    if (dir==1 ? n>=switch_point : n<switch_point)
+    { for (k = 0; k<ds->dim; k++)
+      { ds->p[k] /= sqtf;
+      } 
+    }
+    else
+    { for (k = 0; k<ds->dim; k++)
+      { ds->p[k] *= sqtf;
+      } 
+    }
+
+    /* Make sure we know energy. */
+
+    if (!ds->know_pot)
+    { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
+      ds->know_pot = 1;
+    }
+   
+    ds->kinetic_energy = mc_kinetic_energy(ds);
+    ds->know_kinetic = 1;
+
+    /* Advance to next position. */
+
+    n += dir;
+
+    /* Update accepted point and accept free energy accounting for this state.*/
+
+    A = ds->pot_energy + ds->kinetic_energy + fabs(n-switch_point)*lgf*ds->dim;
+
+    acc_free_energy = - addlogs (-acc_free_energy, -A);
+
+    if (Spiral_debug)
+    { printf("%4d %+d %+10.3e %+6.3f %+6.2f %+6.2f %+6.2f %+6.2f %.3f\n",
+        n, dir, ds->q[0], ds->p[0],
+        ds->pot_energy, ds->kinetic_energy, fabs(n-switch_point)*lgf*ds->dim, 
+        A, exp(acc_free_energy-A));
+    }
+
+    if (rand_uniform() < exp(acc_free_energy-A))
+    { 
+      mc_value_copy (q_asv, ds->q, ds->dim);
+      mc_value_copy (p_asv, ds->p, ds->dim);
+  
+      acc_pot_energy = ds->pot_energy;
+      acc_kinetic_energy = ds->kinetic_energy;
+  
+      acc_point = n;
+    }
+  }
+
+  /* Go to the point that was accepted in the end. */
+
+  it->move_point = acc_point - offset;
+  it->spiral_offset = offset;
+  it->spiral_switch = switch_point;
+
+  mc_value_copy (ds->q, q_asv, ds->dim);
+  mc_value_copy (ds->p, p_asv, ds->dim);
+
+  ds->pot_energy     = acc_pot_energy;
+  ds->kinetic_energy = acc_kinetic_energy;
+  ds->know_pot     = 1;
+  ds->know_kinetic = 1;
+  ds->know_grad    = 0;
+}

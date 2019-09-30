@@ -66,9 +66,9 @@ rejection rate must be quite small.  This alternative method has the
 advantage that it allows for more frequent hyperparameter updates
 (with 'sample-sigmas').
 
-On our machine, the 200 iterations requested above take about twenty
-minutes.  During this time, one can monitor the simulation, for
-instance with the command:
+On our 550MHz Pentium III, the 200 iterations requested above take
+about eleven minutes.  During this time, one can monitor the
+simulation, for instance with the command:
 
     > net-plt t h1h2h3 blog.net | plot
 
@@ -93,25 +93,25 @@ right.  We can get such predictions as follows:
 
     Case  Inputs        Targets  Log Prob  Guesses  Wrong?
 
-       1   -1.56   0.90    0.00    -0.002      0       0
-       2    0.09  -0.13    1.00    -0.051      1       0
+       1   -1.56   0.90    0.00    -0.001      0       0
+       2    0.09  -0.13    1.00    -0.054      1       0
        3   -0.79   0.85    0.00    -0.003      0       0
 
                      (some lines omitted )
 
-      99    0.14   0.86    1.00    -2.737      0       1
-     100    0.21   0.18    1.00    -0.099      1       0
+      99    0.14   0.86    1.00    -2.590      0       1
+     100    0.21   0.18    1.00    -0.097      1       0
      101   -1.32  -0.19    0.00    -0.008      0       0
 
                      (some lines omitted )
 
-     198    1.49   0.70    0.00    -0.029      0       0
+     198    1.49   0.70    0.00    -0.028      0       0
      199   -2.23  -0.28    0.00    -0.002      0       0
-     200   -0.91  -0.03    0.00    -0.064      0       0
+     200   -0.91  -0.03    0.00    -0.055      0       0
 
-    Average log probability of targets:    -0.246+-0.035
+    Average log probability of targets:    -0.245+-0.034
 
-    Fraction of guesses that were wrong:  0.0900+-0.0203
+    Fraction of guesses that were wrong:  0.0850+-0.0198
 
 The "itmp" options ask for output listing the inputs, the targets, the
 the guesses based on the mode of the predictive distribution, and the
@@ -176,9 +176,9 @@ Unfortunately, for the very same reason, the direct "sample-values"
 operation is not available, so one must use Gibbs sampling or
 Metropolis-Hastings updates (the met-values or mh-values operations).
 
-The 50 sampling iterations take about 20 minutes on our machine.
-While you wait, you can check the progress of the hyperparameters
-using gp-display:
+The 50 sampling iterations take about thirteen minutes on our 550MHz
+Pentium III.  While you wait, you can check the progress of the
+hyperparameters using gp-display:
 
     > gp-display blog.gpl
 
@@ -218,7 +218,7 @@ classification performance:
 
     Fraction of guesses that were wrong:  0.0950+-0.0208
 
-This takes about about seven seconds on our machine.  This is slower
+This takes about about five seconds on our machine.  This is slower
 than prediction using a network model, since the Cholesky
 decomposition of the covariance matrix must be found for each
 iteration used (saving these would take up lots of disk space).  The

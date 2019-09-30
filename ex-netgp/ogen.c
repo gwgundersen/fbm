@@ -23,6 +23,6 @@ main()
     { y += 0.1*rand_gaussian();
     }
 
-    printf(" %+8.5lf %+10.5lf\n",x,y);
+    printf(" %+8.5f %+10.5f\n",x,y);
   }
 }

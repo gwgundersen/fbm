@@ -28,7 +28,7 @@ static void display_specs (log_gobbled *);
 
 /* MAIN PROGRAM. */
 
-void main
+main
 ( int argc,
   char **argv
 )
@@ -55,9 +55,10 @@ void main
 
   /* See if we are to display existing specifications. */
 
-  if (argc==2 || argc==3 && *argv[2]>='0' && *argv[2]<='9')
+  if (argc==2 
+   || argc==3 && (*argv[2]>='0' && *argv[2]<='9' || strcmp(argv[2],"all")==0))
   {
-    index = argc==2 ? -1 : atoi(argv[2]);
+    index = argc==2 ? -1 : strcmp(argv[2],"all")==0 ? -2 : atoi(argv[2]);
 
     log_file_open(&logf,0);
 
@@ -79,6 +80,20 @@ void main
         any_specs = 1;
       }
   
+    }
+    else if (index==-2)
+    {
+      while (!logf.at_end)
+      { 
+        log_gobble(&logf,&logg);
+  
+        if (logg.data['o']!=0 && logg.index['o']==logg.last_index
+         || logg.data['t']!=0 && logg.index['t']==logg.last_index)
+        { printf("\nSPECIFICATIONS AT INDEX %d IN LOG FILE:\n",logg.last_index);
+          display_specs(&logg);
+          any_specs = 1;
+        }
+      }
     }
     else
     {
@@ -207,7 +222,7 @@ void main
         ap += 1;
       }
 
-      if (*ap && strchr("-0123456789",**ap))
+      if (ops->op[o].type!='m' && *ap && strchr("-0123456789",**ap))
       { ops->op[o].steps = atoi(*ap);
         ap += 1;
       }
@@ -225,11 +240,16 @@ void main
     }
 
     else if (strcmp(*ap,"dynamic")==0 || strcmp(*ap,"permuted-dynamic")==0
-          || strcmp(*ap,"slice-inside")==0 || strcmp(*ap,"slice-outside")==0)
+          || strcmp(*ap,"slice-inside")==0 || strcmp(*ap,"slice-outside")==0
+#if 0
+          || strcmp(*ap,"therm-dynamic")==0
+#endif
+    )
     {
       ops->op[o].type = strcmp(*ap,"dynamic")==0 ? 'D' 
                       : strcmp(*ap,"permuted-dynamic")==0 ? 'P'
-                      : strcmp(*ap,"slice-inside")==0 ? 'i' : 'o';
+                      : strcmp(*ap,"slice-inside")==0 ? 'i' 
+                      : strcmp(*ap,"slice-outside")==0 ? 'o' : 'h';
 
       ops->op[o].stepsize_adjust = 1;
       ops->op[o].stepsize_alpha = 0;
@@ -259,7 +279,8 @@ void main
       }
     }
 
-    else if (strcmp(*ap,"hybrid")==0 || strcmp(*ap,"tempered-hybrid")==0)
+    else if (strcmp(*ap,"hybrid")==0 || strcmp(*ap,"tempered-hybrid")==0
+          || strcmp(*ap,"spiral")==0 || strcmp(*ap,"double-spiral")==0)
     {
       if (strcmp(*ap,"hybrid")==0)
       {
@@ -267,7 +288,8 @@ void main
       }
       else
       {
-        ops->op[o].type = 'T';
+        ops->op[o].type = strcmp(*ap,"tempered-hybrid")==0 ? 'T'
+                        : strcmp(*ap,"spiral")==0 ? '@' : '^';
 
         ap += 1;
         if (!*ap || !strchr("0123456789+-.",**ap)) usage();
@@ -322,6 +344,27 @@ void main
         }
         ap += 1;
       }
+
+      if (ops->op[o].type=='T' || ops->op[o].type=='@' || ops->op[o].type=='^')
+      { if (ops->op[o].in_steps!=0)
+        { fprintf(stderr,
+ "The max-steps/max-ok form is allowed only for plain hybrid Monte Carlo\n");
+          exit(1);
+        }
+      }      
+
+      if (ops->op[o].type=='@' || ops->op[o].type=='^')
+      { if (ops->op[o].jump!=1)
+        { fprintf(stderr,
+           "Jump must be one for spiral and double-spiral operations\n");
+          exit(1);
+        }
+        if (ops->op[o].window!=1)
+        { fprintf(stderr,
+           "Window size must be one for spiral and double-spiral operations\n");
+          exit(1);
+        }
+      }
     }
 
     else if (strcmp(*ap,"repeat")==0)
@@ -330,7 +373,7 @@ void main
 
       ap += 1;
 
-      if (!*ap || !strchr("0123456789+-.",**ap)) usage();
+      if (!*ap || !strchr("0123456789",**ap)) usage();
 
       if ((ops->op[o].repeat_count = atoi(*ap++))<=0) usage();
 
@@ -374,6 +417,29 @@ void main
       ap += 1;
     }
 
+    else if (strcmp(*ap,"multiply-momentum")==0)
+    { 
+      double d;
+
+      ops->op[o].type = '*';
+      ap += 1;
+
+      if (!*ap || !strchr("0123456789.",**ap)) usage();
+      if ((d = atof(*ap++))<=0) usage();
+      ops->op[o].heatbath_decay = d-1;
+    }
+
+    else if (strcmp(*ap,"set-momentum")==0)
+    { 
+      double d;
+
+      ops->op[o].type = '=';
+      ap += 1;
+
+      if (!*ap || !strchr("0123456789.",**ap)) usage();
+      ops->op[o].heatbath_decay = atof(*ap++);
+    }
+
     else if (**ap>='a' && **ap<='z' || **ap>='A' && **ap<='Z') 
     {                                       /* Application-specific operation */
       ops->op[o].type = 'A';
@@ -408,8 +474,10 @@ void main
   {
     have_traj = 1;
     ap += 1;
+ 
+    if (*ap==0) usage();
   
-    if (*ap && strcmp(*ap,"leapfrog")==0)
+    if (strcmp(*ap,"leapfrog")==0)
     {
       traj->type = 'L';
       traj->halfp = 1;
@@ -417,11 +485,11 @@ void main
 
       ap += 1;
 
-      if (strcmp(*ap,"halfp")==0)
+      if (*ap && (strcmp(*ap,"halfp")==0 || strcmp(*ap,"firstp")==0))
       { traj->halfp = 1;
         ap += 1;
       }
-      else if (strcmp(*ap,"halfq")==0)
+      else if (*ap && (strcmp(*ap,"halfq")==0 || strcmp(*ap,"firstq")==0))
       { traj->halfp = 0;
         ap += 1;
       }
@@ -429,8 +497,89 @@ void main
       if (*ap && (traj->N_approx = atoi(*ap++))==0) usage();
     }
 
+    else if (strcmp(*ap,"opt2")==0)
+    { 
+      traj->type = '2';
+      traj->rev_sym = 0;
+      traj->halfp = 0;
+
+      ap += 1;
+
+      if (*ap && strcmp(*ap,"rev")==0)
+      { traj->rev_sym = -1;
+        ap += 1;
+      }
+      else if (*ap && strcmp(*ap,"sym")==0)
+      { traj->rev_sym = 1;
+        ap += 1;
+      }
+
+      if (*ap && strcmp(*ap,"firstp")==0)
+      { traj->halfp = 1;
+        ap += 1;
+      }
+      else if (*ap && strcmp(*ap,"firstq")==0)
+      { traj->halfp = 0;
+        ap += 1;
+      }
+
+      traj->param = 1 - sqrt(2.0)/2;
+    }
+
+    else if (strcmp(*ap,"gen2")==0)
+    { 
+      traj->type = 'G';
+      traj->rev_sym = 0;
+      traj->halfp = 0;
+
+      ap += 1;
+
+      if (*ap && strcmp(*ap,"rev")==0)
+      { traj->rev_sym = -1;
+        ap += 1;
+      }
+      else if (*ap && strcmp(*ap,"sym")==0)
+      { traj->rev_sym = 1;
+        ap += 1;
+      }
+
+      if (*ap && strcmp(*ap,"firstp")==0)
+      { traj->halfp = 1;
+        ap += 1;
+      }
+      else if (*ap && strcmp(*ap,"firstq")==0)
+      { traj->halfp = 0;
+        ap += 1;
+      }
+
+      if (!*ap || !strchr("0123456789.+-",**ap)) usage();
+
+      traj->param = atof(*ap);
+
+      ap += 1;
+    }
+
+    else if (strcmp(*ap,"opt4")==0)
+    { 
+      traj->type = '4';
+      traj->rev_sym = 0;
+      traj->halfp = 0; /* Not used, but set here to something definite to allow
+                          possible later use without invalidating log files. */
+      ap += 1;
+
+      if (*ap && strcmp(*ap,"rev")==0)
+      { traj->rev_sym = -1;
+        ap += 1;
+      }
+      else if (*ap && strcmp(*ap,"sym")==0)
+      { traj->rev_sym = 1;
+        ap += 1;
+      }
+    }
+
     else 
-    { usage();
+    { fprintf(stderr,"Unknown trajectory type: %s\n",*ap);
+      exit(1);
     }
 
     if (*ap) usage();
@@ -516,8 +665,8 @@ static void display_specs
           break;
         }
   
-        case 'M': case 'C':
-        { printf (ops->op[o].type=='M' ? " metropolis" : " slice-all");
+        case 'M': 
+        { printf (" metropolis");
           if (ops->op[o].stepsize_alpha!=0)
           { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
                                   ops->op[o].stepsize_alpha);
@@ -548,11 +697,12 @@ static void display_specs
           break;
         }
   
-        case 'D': case 'P': case 'i': case 'o':
+        case 'D': case 'P': case 'i': case 'o': case 'h':
         { printf (" %s", ops->op[o].type=='D' ? "dynamic" 
                        : ops->op[o].type=='P' ? "permuted-dynamic"
                        : ops->op[o].type=='i' ? "slice-inside" 
-                                              : "slice-outside");
+                       : ops->op[o].type=='o' ? "slice-outside" 
+                       :                        "therm-dynamic");
           printf (" %d", ops->op[o].steps);
           if (ops->op[o].type=='o' && ops->op[o].in_steps!=ops->op[o].steps)
           { printf ("/%d", ops->op[o].in_steps);
@@ -654,9 +804,11 @@ static void display_specs
           break;
         }
   
-        case 'T': 
-        { printf(" tempered-hybrid %.6f %d",ops->op[o].temper_factor,
-                                            ops->op[o].steps);
+        case 'T': case '@': case '^':
+        { printf (" %s %.6f %d",
+                  ops->op[o].type=='T' ? "tempered-hybrid" 
+                   : ops->op[o].type=='@' ? "spiral" : "double-spiral",
+                  ops->op[o].temper_factor, ops->op[o].steps);
           if (ops->op[o].window!=1)
           { printf(":%d",ops->op[o].window);
             if (ops->op[o].jump!=0)
@@ -715,6 +867,18 @@ static void display_specs
           break;
         }
 
+        case '*':
+        { printf(" multiply-momentum %.8f\n",
+             (double)ops->op[o].heatbath_decay+1);
+          break;
+        }
+
+        case '=':
+        { printf(" set-momentum %.4f\n",
+             (double)ops->op[o].heatbath_decay);
+          break;
+        }
+
         case 'p':
         { printf(" plot\n");
           break;
@@ -742,6 +906,26 @@ static void display_specs
         break;
       }
 
+      case '2':
+      { printf ("  opt2 %s%s\n", 
+          traj->rev_sym==-1 ? "rev " : traj->rev_sym==1 ? "sym " : "",
+          traj->halfp ? "firstp" : "firstq");
+        break;
+      }
+
+      case 'G':
+      { printf ("  gen2 %s%s %.15e\n", 
+          traj->rev_sym==-1 ? "rev " : traj->rev_sym==1 ? "sym " : "",
+          traj->halfp ? "firstp" : "firstq", traj->param);
+        break;
+      }
+
+      case '4':
+      { printf ("  opt4 %s\n",
+          traj->rev_sym==-1 ? "rev " : traj->rev_sym==1 ? "sym " : "");
+        break;
+      }
+
       default:
       { printf("  unknown method: %c\n",traj->type);
         break;
@@ -758,10 +942,10 @@ static void display_specs
 static void usage(void)
 {
   fprintf(stderr, 
-    "Usage: mc-spec log-file { operation-spec } [ / trajectory-spec ]\n");
+"Usage: mc-spec log-file { operation-spec } [ / trajectory-spec ]\n");
 
   fprintf(stderr,
-    "   or: mc-spec log-file [ index ] (to display stored specifications)\n");
+"   or: mc-spec log-file [ index | \"all\" ] (to display stored specifications)\n");
 
   exit(1);
 }

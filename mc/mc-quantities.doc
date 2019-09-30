@@ -27,10 +27,17 @@ application being used.
 
     d   Heatbath decay factor used in this iteration
     f   Stepsize factor used in this iteration
-    m   Point last moved to (zero is starting point)
     r   Rejection rate for this iteration
     e   Average number of evaluations per slice sampling update this iteration
     k   Cumulative cpu usage in minutes.
+
+    m   Point last moved to relative to starting point
+    m0  Point moved to relative to lowest point for spiral and double-spiral
+    m1  Starting point relative to lowest point for spiral and double-spiral
+    m2  Switch point for double-spiral operations
+    m3  Equal to m0-m2 (double-spiral only)
+    m4  Equal to m1-m2 (double-spiral only)
+    m5  Equal to |m3|-|m4|
 
     qn  Component n of position
     pn  Component n of momentum

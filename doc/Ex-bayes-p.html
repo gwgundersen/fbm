@@ -93,8 +93,8 @@ algorithm:
     &gt; mc-spec plog.met repeat 10 metropolis 1
     &gt; dist-mc plog.met 1000
 
-This takes about eight seconds on our machine.  Convergence is quite
-rapid, and the sampling efficiency is reasonably good.
+This takes about three seconds on our 550MHz Pentium III.  Convergence
+is quite rapid, and the sampling efficiency is reasonably good.
 
 We can estimate the probabilities of the three possible values as
 follows:
@@ -186,12 +186,12 @@ Otherwise, you must provide a separate program to do the sampling.
 For how this is done, see the documentation on the -read-prior option
 in <A HREF="dist-spec.html">dist-spec.doc</A> and also the information in <A HREF="dist-mc.html">dist-mc.doc</A>.
 
-The commands above take about nine seconds on our machine.  Once they
-have finished, we can estimate functions of state with 'dist-est',
-which will automatically look at only the iterations that pertain to
-the final distribution of interest.  It also computes weighted
-estimates using the weights found during the annealing runs.  Here is
-an example:
+The commands above take about three seconds on 550MHz Pentium III.
+Once they have finished, we can estimate functions of state with
+'dist-est', which will automatically look at only the iterations that
+pertain to the final distribution of interest.  It also computes
+weighted estimates using the weights found during the annealing runs.
+Here is an example:
 
     &gt; dist-est "Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.ais
     
@@ -289,15 +289,15 @@ found using 'dist-est'.  For example:
     
     NOTE: The standard errors assume points are independent
     
-Doing importance sampling takes only a second on our machine, which is
-faster than Annealed Importance Sampling.  However, importance
-sampling quickly becomes infeasible for problems with more parameters
-or with more data.  Annealed Importance Sampling is more feasible for
-realistic problems, though some work is needed to set up a good
-tempering schedule, which may have to include many more distributions
-than were needed for this easy problem (often hundreds or more).  See
-<A HREF="mc-ais.html">mc-ais.doc</A> for documentation on how to obtain information that is
-helpful in adjusting the tempering schedule.
+Doing importance sampling takes less than half a second on our 550MHz
+Pentium III, which is faster than Annealed Importance Sampling.
+However, importance sampling quickly becomes infeasible for problems
+with more parameters or with more data.  Annealed Importance Sampling
+is more feasible for realistic problems, though some work is needed to
+set up a good tempering schedule, which may have to include many more
+distributions than were needed for this easy problem (often hundreds
+or more).  See <A HREF="mc-ais.html">mc-ais.doc</A> for documentation on how to obtain
+information that is helpful in adjusting the tempering schedule.
 
 The software also supports the related methods of simulated tempering,
 tempered transitions, and tempered hybrid Monte Carlo.  Annealed

@@ -12,7 +12,7 @@
 
       Copyright (c) 1995, 1996, 1997, 1998, 1999 by Radford M. Neal 
 
-                         Version of 1999-03-13
+                         Version of 1999-12-06
 
 Permission is granted for anyone to copy, use, or modify these
 programs and accompanying documents for purposes of research or
@@ -194,14 +194,14 @@ be irrelevant (developed with David MacKay).
 For problems and networks of moderate size (eg, 200 training cases, 10
 inputs, 20 hidden units), fully training a neural network model (to
 the point where one can be reasonably sure that the correct Bayesian
-answer has been found) typically takes several hours to a day on our
-SGI machine.  However, quite good results, competitive with other
-methods, are often obtained after training for under an hour.  The
-time required to train the Gaussian process models depends a lot on
-the number of training cases.  For 100 cases, these models may take
-only a few minutes to train (again, to the point where one can be
-reasonably sure that convergence to the correct answer has occurred).
-For 1000 cases, however, training might well take a day.
+answer has been found) typically takes several hours to a day on a
+modern personal computer.  However, quite good results, competitive
+with other methods, are often obtained after training for under an
+hour.  The time required to train the Gaussian process models depends
+a lot on the number of training cases.  For 100 cases, these models
+may take only a few minutes to train (again, to the point where one
+can be reasonably sure that convergence to the correct answer has
+occurred).  For 1000 cases, however, training might well take a day.
 
 The software also implements neural network training using early
 stopping, as described in my paper on "Assessing relevance
@@ -294,20 +294,25 @@ directory contains all the documentation.
 Portability of the software.
 
 The software is written in ANSI C, and is meant to be run in a UNIX
-environment.  Specifically, it was developed on an SGI machine running
-IRIX Release 6.5.  It also seems to run OK on a SPARC machine running
-SunOS 5, using the 'gcc' C compiler, on Linius systems, and on DEC
-Alpha machines, provided that the -ieee and -std options are given to
-the C compiler.  As far as I know, the software does not depend on any
-peculiarities of these environments (except perhaps for the use of the
-drand48 pseudo-random number generator, and the lgamma function), but
-you may nevertheless have problems getting it to work in substantially
-different environments, and I can offer little or no assistance in
-this regard.  There is no dependence on any particular graphics
-package or graphical user interface.  (The 'xxx-plt' programs are
-designed to allow their output to be piped directly into the 'xgraph'
-plotting program, but other plotting programs can be used instead, or
-the numbers can be examined directly.)
+environment.  It is known to work on a Linux system (Redhat 6.0) with
+a Pentium processor, and on an SGI machine running IRIX Release 6.5.
+It also seems to run OK on a SPARC machine running SunOS 5, using the
+'gcc' C compiler, and on DEC Alpha machines, provided that the -ieee
+and -std options are given to the DEC C compiler.  As far as I know,
+the software does not depend on any peculiarities of these
+environments (except perhaps for the use of the drand48 pseudo-random
+number generator, and the lgamma function), but you may nevertheless
+have problems getting it to work in substantially different
+environments, and I can offer little or no assistance in this regard.
+
+There is no dependence on any particular graphics package or graphical
+user interface.  The 'xxx-plt' programs are designed to allow their
+output to be piped directly into the 'xgraph' plotting program, but
+other plotting programs can be used instead, or the numbers can be
+examined directly.  The 'xxx-tbl' programs output the same information
+in a different format, which is useful when plotting or analysing data
+wiht S-Plus, since this format is convenient for the S-Plus read.table
+command.
 
 
 
@@ -339,6 +344,11 @@ and sub-directories in this directory.  If this seems to have worked,
 you can remove the file 'fbm.YYYY-MM-DD.tar'.  You should now change
 into the 'fbm.YYYY-MM-DD' directory, as the following instructions
 assumed that you are there.
+
+If you prefer that this directory be called something other than
+'fbm.YYYY-MM-DD', change the name now, BEFORE compiling the programs,
+since the programs look for a file of random numbers in the directory
+under the name it had when they were compiled.
 
 
 Looking at the documentation.
@@ -422,6 +432,18 @@ contains symbolic links to all the programs making up this software.
 Subsequent instructions assume that you have this 'bin' directory in
 your search path.
 
+The above is the simple version of how to use the programs.  However,
+if you want to use the programs on more than one type of machine, you
+will need to compile them several times, once for each machine
+architecture, and you will need to set your search path to a directory
+that contains the versions of the programs compiled for the machine
+you are currently using.  By convention, these directories should be
+called "bin.ARCH", where ARCH is the name of the machine architecture.
+The shell file install-arch creates such a directory (if necessary)
+and copies the programs from the "bin" directory to the "bin.ARCH"
+directory for the current architecture.  It is assumed that a program
+called 'arch' exists that returns the name of the architecture.
+
 
 Cleaning things up.
 
@@ -436,7 +458,8 @@ programs by using the command
     make-clean
 
 when in the main directory.  Of course, you then won't be able to use
-the programs until you do another make-all to recompile them.
+the programs until you do another make-all to recompile them, unless
+you had copied them to a "bin.ARCH" directory.
 
 
 
@@ -462,6 +485,13 @@ to create a directory for each project you are working on, and change
 to that directory before issuing these commands, so that the files
 pertaining to that project will be separate.
 
+Since I've gotten e-mail from people who were quite confused by the
+simplicity of this concept, let me say it again.  YOU USE THE SOFTWARE
+BY TYPING UNIX COMMANDS TO RUN THE VARIOUS PROGRAMS.  There is NO
+master program that you run and type commands to - or to put it
+another way, that master program is the Unix command interpreter (the
+shell).
+
 If you're doing serious work, you will probably want to create Unix
 command files holding the main commands, so that you won't forget what
 you did.
@@ -486,6 +516,8 @@ and contains the complete state of the program at that time (eg, all
 the parameters and hyperparameters of the network being trained).
 
 Note that log files contain binary data; they are not human-readable.
+They may also not be readable on a different type of machine from the
+one on which they were written.
 
 After an iterative program finishes, the user may decide to let the
 run continue for more iterations.  This is easily done by just
@@ -775,8 +807,8 @@ names like 'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.  The
 used for examples in my papers.
 
 Computation times are given for many of the examples.  These are all
-for the current version of the software, run on our computer, which is
-an SGI machine with 194 MHz MIPS R10000 processors, running IRIX 6.5.
+for the current version of the software, run on a Linux system with a
+550MHz Pentium III processor.
 
 
 
@@ -1148,7 +1180,7 @@ metropolis updates) with the following command:
 
     > dist-mc glog.met,1 500
 
-This takes about two seconds on our machine.  
+This takes less than a second on our 550MHz Pentium III.
 
 We can look at what happened to the three state variables during these
 500 iterations with a command such as
@@ -1305,8 +1337,8 @@ As before, can now sample for 500 iterations using a 'dist-mc' command:
 
     > dist-mc glog.met1,1 500
 
-On our machine, this also takes about two seconds (as will all such
-commands in this section).
+On our 550MHz Pentium III, this also takes less than a second (as will
+all the dist-mc commands in this section).
 
 You can see how well this method samples in the same ways as discussed
 above.  You could also try sampling using "met-1" with a stepsize of
@@ -1348,9 +1380,9 @@ a command such as
 
     Number of realizations: 1  Total points: 500
 
-    Mean: 5.406000  
+    Mean: 5.473667  
 
-Note that 5.406 is the average number of evaluations for updating one
+Note that 5.47 is the average number of evaluations for updating one
 variable, not for updating all three of them.
 
 As with the Metropolis methods, performance varies with the stepsize
@@ -1493,10 +1525,10 @@ The "persistent" form of hybrid Monte Carlo (described in Bayesian
 Learning for Neural Networks) is also implemented.  Here are the
 appropriate commands:
 
-    > mc-spec glog.phmc,0.3 repeat 50 metropolis 1
-    > dist-mc glog.phmc,0.3 1
-    > mc-spec glog.phmc,0.3 repeat 35 heatbath 0.99 hybrid 1 0.3 negate end
-    > dist-mc glog.phmc,0.3 500
+    > mc-spec glog.phmc,0.18 repeat 50 metropolis 1
+    > dist-mc glog.phmc,0.18 1
+    > mc-spec glog.phmc,0.18 repeat 35 heatbath 0.99 hybrid 1 0.18 negate end
+    > dist-mc glog.phmc,0.18 500
 
 The use of a "heatbath" operation with a non-zero "decay" causes the
 momentum to change only slowly.  Because of this, even though only a
@@ -1506,7 +1538,8 @@ normally undoes a negation at the end of the "hybrid" operation.  If
 the "hybrid" update was rejected, however, the first negation will not
 have been done, and movement will be reversed, undermining the random
 walk suppression.  To avoid this, a smaller stepsize is used, to keep
-the rejection rate very small.
+the rejection rate very small.  Performance is a bit worse than for
+the standard hybrid Monte Carlo method.
 
 
 Reflective slice sampling.
@@ -1589,7 +1622,7 @@ the expectation of the "x" variable using the various methods (the
 autocorrelation time), determined from estimates of the cumulative
 correlations up to when the autocorrelations are near zero.  The
 repetition counts for the methods were set so that they all required
-about 2 seconds of computation time for 500 iterations.
+about 0.8 seconds of computation time for 500 iterations.
 
   METHOD      STEPSIZE   AUTOCORR.  NOTES
                            TIME
@@ -1780,7 +1813,7 @@ Each iteration will consist of 45 Metropolis updates, done using a
 proposal distribution that adds a normally-distributed offset to each
 variable with standard deviation 0.02.  The 'dist-mc' command does 500
 such iterations (for a total of 22500 Metropolis updates).  This takes
-about 30 seconds on our machine.
+about 8 seconds on our 550MHz Pentium III.
 
 We can see what the average rejection rate was for these updates as
 follows:
@@ -1906,7 +1939,8 @@ stepsize of 0.01.  This stepsize was picked by trial and error, and
 results in a rejection rate of about 0.13.  In general, the stepsize
 for this standard form of hybrid Monte Carlo should chosen so that the
 rejection rate is somewhere between about 0.05 and 0.25.  The 500
-iterations take about 30 seconds, the same as the Metropolis run.
+iterations take about 11 seconds, about the same as the Metropolis
+run above.
 
 From examining plots of the state variables over time, it seems that
 the hybrid Monte Carlo chain reaches equilibrium much more quickly
@@ -1930,7 +1964,7 @@ Metropolis chain:
         5  -0.071308    0.722244
 
 The estimated autocorrelations above do not differ significantly from
-zero.  It therefore appears that hybrid Monte Carlo is about 14 times
+zero.  It therefore appears that hybrid Monte Carlo is about ten times
 more efficient than the simple Metropolis algorithm for this problem.
 
 
@@ -2039,8 +2073,8 @@ of 1, repeated 10 times each iteration:
     > mc-spec tlog1 repeat 10 metropolis 1
     > dist-mc tlog1 5000
 
-This takes about 12 seconds on our machine.  We can look at plots such
-as the following to assess convergence:
+This takes about 5 seconds on our 550MHz Pentium III.  We can look at
+plots such as the following to assess convergence:
 
     > dist-plt t uw tlog1 | plot
 
@@ -2258,8 +2292,8 @@ algorithm:
     > mc-spec plog.met repeat 10 metropolis 1
     > dist-mc plog.met 1000
 
-This takes about eight seconds on our machine.  Convergence is quite
-rapid, and the sampling efficiency is reasonably good.
+This takes about three seconds on our 550MHz Pentium III.  Convergence
+is quite rapid, and the sampling efficiency is reasonably good.
 
 We can estimate the probabilities of the three possible values as
 follows:
@@ -2351,12 +2385,12 @@ Otherwise, you must provide a separate program to do the sampling.
 For how this is done, see the documentation on the -read-prior option
 in dist-spec.doc and also the information in dist-mc.doc.
 
-The commands above take about nine seconds on our machine.  Once they
-have finished, we can estimate functions of state with 'dist-est',
-which will automatically look at only the iterations that pertain to
-the final distribution of interest.  It also computes weighted
-estimates using the weights found during the annealing runs.  Here is
-an example:
+The commands above take about three seconds on 550MHz Pentium III.
+Once they have finished, we can estimate functions of state with
+'dist-est', which will automatically look at only the iterations that
+pertain to the final distribution of interest.  It also computes
+weighted estimates using the weights found during the annealing runs.
+Here is an example:
 
     > dist-est "Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.ais
     
@@ -2454,15 +2488,15 @@ found using 'dist-est'.  For example:
     
     NOTE: The standard errors assume points are independent
     
-Doing importance sampling takes only a second on our machine, which is
-faster than Annealed Importance Sampling.  However, importance
-sampling quickly becomes infeasible for problems with more parameters
-or with more data.  Annealed Importance Sampling is more feasible for
-realistic problems, though some work is needed to set up a good
-tempering schedule, which may have to include many more distributions
-than were needed for this easy problem (often hundreds or more).  See
-mc-ais.doc for documentation on how to obtain information that is
-helpful in adjusting the tempering schedule.
+Doing importance sampling takes less than half a second on our 550MHz
+Pentium III, which is faster than Annealed Importance Sampling.
+However, importance sampling quickly becomes infeasible for problems
+with more parameters or with more data.  Annealed Importance Sampling
+is more feasible for realistic problems, though some work is needed to
+set up a good tempering schedule, which may have to include many more
+distributions than were needed for this easy problem (often hundreds
+or more).  See mc-ais.doc for documentation on how to obtain
+information that is helpful in adjusting the tempering schedule.
 
 The software also supports the related methods of simulated tempering,
 tempered transitions, and tempered hybrid Monte Carlo.  Annealed
@@ -2581,7 +2615,7 @@ We can now sample for 10000 iterations with the following command:
 
     > dist-mc elog.met 10000
 
-This takes about three and a half minutes on our machine.
+This takes a bit over a minute on our 550MHz Pentium III.
 
 A scatterplot of the posterior distribution for v1 and v2 can be
 obtained using a command such as
@@ -2861,8 +2895,8 @@ keeping the rejection rate low.  The use of a "window" of around 10
 states costs little and is often beneficial.
 
 The 100 iterations of the sampling phase started with the command
-'net-mc rlog.net 100' will take a little while to complete (about two
-minutes on our current SGI machine).  If you put the command in the
+'net-mc rlog.net 100' will take a little while to complete (about one
+minute on our 550MHz Pentium III).  If you put the command in the
 background (or add a '&' to the end of the 'net-mc' command), you will
 be able to monitor progress while you wait.  For example, you can look
 at the last network saved in the log file (or any earlier one) using
@@ -2871,36 +2905,36 @@ at the last network saved in the log file (or any earlier one) using
     > net-display rlog.net
   
     Network in file "rlog.net" with index 15
-    
+
     Input to Hidden Layer 0 Weights [1]
     
-     3.36 3.36: -1.24  +1.73  -4.04  -0.24  +2.49  -2.95  -1.56  -3.21
+     3.57 3.57: -2.75  +2.66  +4.67  +1.67  -2.99  +3.42  -0.94  +2.69
     
     Hidden Layer 0 Biases [2]
     
-          1.90: -1.58  -3.59  +4.42  +0.85  -4.59  -3.69  +2.03  -0.40
+          3.66: -0.40  +2.96  +9.48  +2.35  -2.66  -3.74  +8.69  -6.43
     
     Hidden Layer 0 to Output Weights [3]
     
-     0.76 0.76: -1.23
+     0.57 0.57: -0.73
     
-          0.76: +1.04
+          0.57: -0.59
     
-          0.76: +0.34
+          0.57: +0.26
     
-          0.76: -0.38
+          0.57: +0.07
     
-          0.76: -0.24
+          0.57: -0.51
     
-          0.76: +0.80
+          0.57: -0.57
     
-          0.76: +0.52
+          0.57: +0.64
     
-          0.76: -0.56
+          0.57: +0.82
     
     Output Biases [4]
     
-        100.00: +1.10
+        100.00: +0.51
     
     Noise levels
     
@@ -2964,17 +2998,17 @@ report the average squared error:
 
     Case  Inputs Targets   Means Error^2
 
-       1    0.92    1.49    1.59  0.0093
-       2    0.71    1.83    1.79  0.0012
-       3    0.20    1.72    1.67  0.0021
-       
+       1    0.92    1.49    1.58  0.0075
+       2    0.71    1.83    1.79  0.0014
+       3    0.20    1.72    1.68  0.0016
+ 
             ( middle lines omitted )
 
       98   -0.69    0.35    0.35  0.0000
-      99   -1.33    0.19    0.36  0.0277
-     100   -0.09    1.31    1.24  0.0052
+      99   -1.33    0.19    0.37  0.0306
+     100   -0.09    1.31    1.24  0.0056
 
-    Average squared error guessing mean:   0.01035+-0.00147
+    Average squared error guessing mean:   0.00937+-0.00123
 
 The options "itn" specified ask for a listing of the inputs ("i") and
 targets ("t") for each case, along with the mean ("n") output for that
@@ -2991,7 +3025,7 @@ It is also possible to get predictions for cases that are not in the
 test set that was specified with 'data-spec'.  For example:
 
     > net-pred nb rlog.net 11: / "%echo 2.3"
-      +1.36611484e+00
+      +1.36491809e+00
 
 Here, the options "nb" ask for only the predictive mean, with "bare"
 output (no headings, also higher precision, in exponential format).
@@ -3008,27 +3042,34 @@ quantiles of the predictive distribution, as illustrated below:
     
     Case  Inputs Targets Medians |Error| 10% Qnt 90% Qnt
 
-       1    0.92    1.49    1.59  0.0985    1.47    1.70
-       2    0.71    1.83    1.79  0.0337    1.67    1.91
-       3    0.20    1.72    1.67  0.0446    1.55    1.79
-       4    0.19    1.76    1.65  0.1145    1.53    1.76
-       5    1.18    1.18    1.20  0.0236    1.08    1.32
-       6   -2.10    0.05    0.05  0.0025   -0.08    0.21
-       7   -1.34    0.30    0.37  0.0621    0.24    0.48
-       8   -1.62    0.48    0.40  0.0790    0.27    0.53
-       9   -2.29   -0.41   -0.17  0.2371   -0.40    0.09
-      10   -0.23    0.89    0.98  0.0878    0.86    1.09
+       1    0.92    1.49    1.58  0.0901    1.46    1.70
+       2    0.71    1.83    1.79  0.0359    1.66    1.91
+       3    0.20    1.72    1.68  0.0376    1.56    1.80
+       4    0.19    1.76    1.65  0.1093    1.54    1.77
+       5    1.18    1.18    1.21  0.0297    1.08    1.34
+       6   -2.10    0.05    0.05  0.0052   -0.10    0.20
+       7   -1.34    0.30    0.37  0.0639    0.25    0.49
+       8   -1.62    0.48    0.42  0.0589    0.28    0.55
+       9   -2.29   -0.41   -0.27  0.1434   -0.54    0.05
+      10   -0.23    0.89    0.98  0.0841    0.86    1.09
 
                         (some lines omitted)
 
-      98   -0.69    0.35    0.35  0.0011    0.23    0.46
-      99   -1.33    0.19    0.36  0.1684    0.24    0.49
-     100   -0.09    1.31    1.24  0.0709    1.13    1.36
+      91   -0.16    1.21    1.10  0.1058    0.99    1.22
+      92    0.79    1.70    1.72  0.0254    1.60    1.84
+      93   -1.99    0.19    0.18  0.0099    0.05    0.32
+      94    0.18    1.71    1.65  0.0608    1.53    1.77
+      95    1.56    0.84    0.82  0.0167    0.68    0.94
+      96   -0.32    0.80    0.82  0.0217    0.69    0.95
+      97   -0.12    1.23    1.17  0.0588    1.05    1.29
+      98   -0.69    0.35    0.35  0.0021    0.23    0.48
+      99   -1.33    0.19    0.37  0.1810    0.24    0.50
+     100   -0.09    1.31    1.24  0.0749    1.12    1.36
+    
+    Average abs. error guessing median:    0.07723+-0.00581
 
-    Average abs. error guessing median:    0.08004+-0.00631
-
-We see here that all but one of the actual targets for the first ten
-test cases lie between the 10% and 90% quantiles.  When the median is
+We see here that all but one of the actual targets for the twenty test
+cases shown lie between the 10% and 90% quantiles.  When the median is
 used as the "best guess", performance is judged by the average
 absolute error, not squared error, since this is the error measure
 that is minimized by the true median.
@@ -3148,12 +3189,12 @@ time to compute (the 'E' and 'H' quantities, defined in the "mc"
 module, may also take a long time).  See gp-quantities.doc for
 details.
 
-Once the gp-mc run has completed (which takes about 45 seconds on our
-SGI machine), the iterations from the latter part of the run can be
-used to make predictions for test cases.  This is done using
-'gp-pred', which operates much like 'net-pred'.  The following command
-makes predictions for the test cases based on the last 80 of the 100
-iterations, and reports the average squared error:
+Once the gp-mc run has completed (which takes about half a minute on
+our 550MHz Pentium III), the iterations from the latter part of the
+run can be used to make predictions for test cases.  This is done
+using 'gp-pred', which operates much like 'net-pred'.  The following
+command makes predictions for the test cases based on the last 80 of
+the 100 iterations, and reports the average squared error:
 
     > gp-pred na rlog.gp 21:
 
@@ -3163,13 +3204,13 @@ iterations, and reports the average squared error:
 
     Average squared error guessing mean:   0.00952+-0.00126
 
-This takes only a couple seconds on our machine.  Predictions will
-take longer when the number of training cases is larger, or if the
-median or log probability are to be found (options "d" or "p" of
-'gp-pred').  As can be seen, the performance of the Gaussian process
-model is quite similar to that of the neural network model for this
-problem.  (The difference in average performance seen is probably not
-significant, considering the standard errors.)
+This takes less than a second on our machine.  Predictions will take
+longer when the number of training cases is larger, or if the median
+or log probability are to be found (options "d" or "p" of 'gp-pred').
+As can be seen, the performance of the Gaussian process model is quite
+similar to that of the neural network model for this problem.  (The
+difference in average performance seen is probably not significant,
+considering the standard errors.)
 
 The predictions for test cases made above are found directly from the
 covariances between the targets in the training cases and the unknown
@@ -3298,9 +3339,9 @@ rejection rate must be quite small.  This alternative method has the
 advantage that it allows for more frequent hyperparameter updates
 (with 'sample-sigmas').
 
-On our machine, the 200 iterations requested above take about twenty
-minutes.  During this time, one can monitor the simulation, for
-instance with the command:
+On our 550MHz Pentium III, the 200 iterations requested above take
+about eleven minutes.  During this time, one can monitor the
+simulation, for instance with the command:
 
     > net-plt t h1h2h3 blog.net | plot
 
@@ -3325,25 +3366,25 @@ right.  We can get such predictions as follows:
 
     Case  Inputs        Targets  Log Prob  Guesses  Wrong?
 
-       1   -1.56   0.90    0.00    -0.002      0       0
-       2    0.09  -0.13    1.00    -0.051      1       0
+       1   -1.56   0.90    0.00    -0.001      0       0
+       2    0.09  -0.13    1.00    -0.054      1       0
        3   -0.79   0.85    0.00    -0.003      0       0
 
                      (some lines omitted )
 
-      99    0.14   0.86    1.00    -2.737      0       1
-     100    0.21   0.18    1.00    -0.099      1       0
+      99    0.14   0.86    1.00    -2.590      0       1
+     100    0.21   0.18    1.00    -0.097      1       0
      101   -1.32  -0.19    0.00    -0.008      0       0
 
                      (some lines omitted )
 
-     198    1.49   0.70    0.00    -0.029      0       0
+     198    1.49   0.70    0.00    -0.028      0       0
      199   -2.23  -0.28    0.00    -0.002      0       0
-     200   -0.91  -0.03    0.00    -0.064      0       0
+     200   -0.91  -0.03    0.00    -0.055      0       0
 
-    Average log probability of targets:    -0.246+-0.035
+    Average log probability of targets:    -0.245+-0.034
 
-    Fraction of guesses that were wrong:  0.0900+-0.0203
+    Fraction of guesses that were wrong:  0.0850+-0.0198
 
 The "itmp" options ask for output listing the inputs, the targets, the
 the guesses based on the mode of the predictive distribution, and the
@@ -3408,9 +3449,9 @@ Unfortunately, for the very same reason, the direct "sample-values"
 operation is not available, so one must use Gibbs sampling or
 Metropolis-Hastings updates (the met-values or mh-values operations).
 
-The 50 sampling iterations take about 20 minutes on our machine.
-While you wait, you can check the progress of the hyperparameters
-using gp-display:
+The 50 sampling iterations take about thirteen minutes on our 550MHz
+Pentium III.  While you wait, you can check the progress of the
+hyperparameters using gp-display:
 
     > gp-display blog.gpl
 
@@ -3450,7 +3491,7 @@ classification performance:
 
     Fraction of guesses that were wrong:  0.0950+-0.0208
 
-This takes about about seven seconds on our machine.  This is slower
+This takes about about five seconds on our machine.  This is slower
 than prediction using a network model, since the Cholesky
 decomposition of the covariance matrix must be found for each
 iteration used (saving these would take up lots of disk space).  The
@@ -3546,7 +3587,7 @@ the same approach as was used above for the binary data set (but the
                                  hybrid 100:10 0.3 negate
     > net-mc clog.net 200
 
-This takes about 25 minutes on our machine.
+This takes about thirteen minutes on our 550MHz Pentium III.
 
 We can see the effect of the ARD model by looking at the values of
 the low-level input-hidden hyperparameters over the course of the
@@ -3568,7 +3609,7 @@ use the following command:
 
     Number of test cases: 600
 
-    Fraction of guesses that were wrong:  0.1367+-0.0140
+    Fraction of guesses that were wrong:  0.1400+-0.0142
 
 Here, the "a" option is used to suppress everything except the summary.
 
@@ -3595,10 +3636,10 @@ classification problem, using "persistent" hybrid Monte Carlo:
 For the first five iterations, the persistence is fairly small (0.9),
 so that the high initial energy will be dissipated rapidly.  The
 remaining iterations use a larger persistence (0.98) to suppress
-random walks.  The run takes about 80 minutes on our machine.  The
-cubic scaling of the computations for the Gaussian process models
-leads to their becoming slower relative to neural network models as
-the number of training cases increases.
+random walks.  The run takes about fifty minutes on our 550MHz Pentium
+III.  The cubic scaling of the computations for the Gaussian process
+models leads to their becoming slower relative to neural network
+models as the number of training cases increases.
 
 One can observe how the relevance hyperparameters change during the
 run as follows, assuming that the "plot" program can display four
@@ -3627,9 +3668,9 @@ as illustrated below:
      599    0.66   0.79   0.03   0.09    0.00       2       1
      600    0.76   0.90   0.73  -0.03    2.00       2       0
     
-    Fraction of guesses that were wrong:  0.1400+-0.0142
+    Fraction of guesses that were wrong:  0.1350+-0.0140
     
-This takes about 90 seconds on our machine.
+This takes about eighty seconds on our machine.
 
 A "logistic" style model can be obtained by decreasing the jitter,
 using a 'gp-spec' command such as the following:
@@ -3694,8 +3735,8 @@ of the way the noise was actually generated, but its fairly heavy
 tails are enough to prevent the model from paying undue attention to
 the outliers.
 
-The above commands take about two minutes on our machine.  The
-resulting model can be tested on data from the same source using
+The above commands take about one minute on our 550MHz Pentium III.
+The resulting model can be tested on data from the same source using
 net-pred:
 
     > net-pred na olog.net 31:
@@ -3704,7 +3745,7 @@ net-pred:
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.01943+-0.01129
+    Average squared error guessing mean:   0.02129+-0.01336
 
 One can also see how well the model does on the uncorrupted data that
 was used originally:
@@ -3715,11 +3756,10 @@ was used originally:
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.00881+-0.00120
+    Average squared error guessing mean:   0.01201+-0.00209
 
-This is actually better than the results obtained earlier with the
-model trained on uncorrupted data, though the observed difference is
-probably not statistically significant.
+This is not much different than the results obtained earlier with the
+model trained on uncorrupted data.
 
 In contrast, the results are substantially worse when the data with
 outliers is used to train a standard model where the noise is
@@ -3744,9 +3784,10 @@ be sampled.  The following commands illustrate how this is done:
     > mc-spec olog.gpt sample-variances heatbath hybrid 20:4 0.5
     > gp-mc olog.gpt 200
 
-This takes less than two minutes on our SGI machine.  The progress of
-the run can be monitored by examining the case-by-case noise standard
-deviations in (say) the first 8 training cases, as follows:
+This takes a bit over a minute on our 550MHz Pentium III.  The
+progress of the run can be monitored by examining the case-by-case
+noise standard deviations in (say) the first 8 training cases, as
+follows:
 
     > gp-plt t v@0:7 olog.gpt | plot
 
@@ -3937,44 +3978,44 @@ means, as specified by hyperparameter values that are also set to
 their prior means.  The 'mix-gen' program could be used to initialize
 things differently (see mix-gen.doc).
 
-The above run takes a bit over one minute on our machine.  It can be
-run in the background, in which case progress can be monitored with
-the 'mix-display' and 'mix-plt' programs.  For example, after a few
-seconds, we might see the following:
+The above run takes about half a minute on our 550MHz Pentium III.  It
+can be run in the background, in which case progress can be monitored
+with the 'mix-display' and 'mix-plt' programs.  For example, after a
+while, we might see the following:
 
     > mix-display blog.4
 
-    MIXTURE MODEL IN FILE "blog.4" WITH INDEX 17
-
+    MIXTURE MODEL IN FILE "blog.4" WITH INDEX 50
+    
     HYPERPARAMETERS
-
+    
     Standard deviations for component offsets:
-
-        0.198:     4.056    0.718    1.579    1.702    1.830
-                   1.548    2.504    1.957    4.120    0.184
-
+    
+        0.326:     1.407    1.159    1.213    3.331    1.417
+                   1.557    3.433    2.203    4.990    0.192
+    
     Means for component offsets:
-
-                  +1.816   +0.022   +0.182   +0.037   +0.500
-                  +1.322   -0.018   +1.375   +2.802   +0.990
-
-
+    
+                  -0.370   -0.126   -0.538   +0.521   -0.620
+                  -1.642   +1.510   -1.206   -1.502   +0.941
+    
+    
     PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
-
-       1: 0.310   -2.451   +0.738   +1.342   +1.093   +0.605
-                  -0.960   -1.146   -0.441   -0.798   +0.903
-
-       2: 0.250   -2.121   -1.530   -1.999   -0.917   -1.393
-                  +1.727   +1.862   +1.603   +3.118   +1.101
-
-       3: 0.238   +3.950   +0.915   +1.372   -1.960   -0.940
-                  +1.307   +1.793   -1.268   -2.102   +1.035
-
-       4: 0.202   +2.710   -0.978   -1.015   +1.900   +1.915
-                  -1.802   -2.903   +1.268   +1.452   +0.827
+    
+       1: 0.286   -1.799   +0.931   +1.753   +1.481   +0.853
+                  -1.503   -1.433   -0.942   -1.245   +1.165
+    
+       2: 0.252   +1.905   +1.054   +1.749   -2.588   -1.594
+                  +1.062   +1.625   -1.532   -1.227   +1.252
+    
+       3: 0.250   -2.109   -1.505   -2.220   -0.961   -1.402
+                  +2.265   +1.635   +1.463   +2.015   +1.082
+    
+       4: 0.212   +1.743   -1.050   -1.470   +1.502   +1.553
+                  -1.593   -1.376   +1.569   +1.025   +0.864
 
 This displays the state at the last iteration computed so far (here
-iteration 17).  The hyperparameter values are shown first, with
+iteration 50).  The hyperparameter values are shown first, with
 top-level hyperparameters on the left, before the colon.  The
 lower-level hyperparameters follow, ordered by the target attribute
 that they pertain to.  Values for the component parameters follow,
@@ -4085,50 +4126,53 @@ We can examine the states with 'mix-display'.  For example, once the
 following:
 
     > mix-display blog.inf
-
+    
     MIXTURE MODEL IN FILE "blog.inf" WITH INDEX 100
     
     HYPERPARAMETERS
     
     Standard deviations for component offsets:
     
-        0.294:     2.090    1.637    2.191    2.686    2.195
-                   2.299    3.737    2.555    1.565    0.133
+        0.359:     2.747    4.294    1.280    3.530    1.353
+                   2.461    5.661    2.928    1.506    0.080
     
     Means for component offsets:
     
-                  +1.456   -0.883   -0.760   -0.798   -0.455
-                  -0.482   -1.981   -0.859   +0.352   +0.943
+                  +0.023   +0.452   +0.792   +0.507   -0.084
+                  -0.634   -4.794   +4.560   -0.293   +1.124
     
     
     PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
     
-       1: 0.328   -1.592   +0.810   +0.710   +1.011   +0.551
-                  -0.881   -1.333   -0.470   -0.783   +1.147
+       1: 0.310   -1.565   +0.617   +1.467   +1.191   +0.468
+                  -0.569   -1.192   -0.397   -0.749   +1.003
     
-       2: 0.262   +1.549   +1.284   +1.459   -2.410   -1.312
-                  +2.129   +2.131   -1.709   -1.162   +0.768
+       2: 0.254   -1.374   -1.134   -2.009   -1.008   -1.825
+                  +2.384   +2.377   +1.579   +2.553   +1.080
     
-       3: 0.212   -1.539   -1.378   -2.675   -1.357   -1.244
-                  +1.930   +2.561   +1.802   +1.866   +0.942
+       3: 0.238   +2.949   +0.979   +2.419   -2.694   -1.331
+                  +1.597   +1.590   -1.689   -1.190   +1.124
     
-       4: 0.170   +2.130   -1.917   -1.421   +1.789   +1.926
-                  -1.626   -2.642   +1.403   +1.302   +0.841
+       4: 0.168   +1.565   -1.687   -1.958   +1.762   +1.633
+                  -1.365   -6.917   +1.001   +1.180   +0.919
     
-       5: 0.018   -3.048   -1.125   -3.540   -0.104   -2.428
-                  +0.796   -6.877   +3.549   +0.400   +1.079
+       5: 0.012   +1.780   -3.038   -0.664   +5.257   -3.499
+                  -8.315   -5.443   +0.816   -0.774   +1.143
     
-       6: 0.006   +1.207   -4.213   -0.463   +1.713   +4.755
-                  -1.497   +0.838   +3.890   +0.436   +1.154
+       6: 0.012   +1.892   -0.991   +3.387   +0.513   +1.287
+                  -4.129   +1.283   +8.346   +1.452   +0.882
     
-       7: 0.004   +2.252   -4.192   +0.727   +2.935   -5.049
-                  -4.338   -3.355   +1.462   -0.389   +0.886
+       7: 0.004   +5.850   +1.412   +0.295   -5.867   +0.701
+                  -0.403   -9.392   +7.748   -2.211   +1.163
+    
+       8: 0.002   +1.028   -3.102   +2.383   -1.070   +1.691
+                  +0.497   +0.062   +0.505   -0.762   +1.226
     
 The output is similar to that seen for the mixture model with four
-components, except that seven components are associated with at least
+components, except that eight components are associated with at least
 one training case at iteration 100, as shown above.  (The infinite
 number of remaining components are not explicitly represented, and are
-not displayed by 'mix-display'.)  Several of these components are
+not displayed by 'mix-display'.)  Four of these components are
 associated with very few training cases, however (as seen from the
 fractions of the training set after the component number).  This is to
 be expected when the true distribution can be expressed using only
@@ -4228,10 +4272,10 @@ Finally, we run the Markov chain simulation for 100 iterations:
 
     > mix-mc rlog.2 100
 
-This takes less than 10 seconds on our machine.  Once it has finished,
-we can look at the hyperparameters and component parameters at various
-iterations.  The last iteration should look something like the
-following:
+This takes about three seconds on our 550MHz Pentium III.  Once it has
+finished, we can look at the hyperparameters and component parameters
+at various iterations.  The last iteration should look something like
+the following:
 
     > mix-display rlog.2
 
@@ -4241,26 +4285,26 @@ following:
     
     Standard deviations for component offsets:
     
-        0.585:     4.108   40.500
+        0.068:     3.259    7.159
     
     Means for component offsets:
     
-                  -0.549   -2.258
+                  -1.408  +17.102
     
     Standard deviations for Gaussian target distributions:
     
-        1.464:     0.959    3.693
+        0.173:     0.201    4.680
     
     
     PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
     
-       1: 0.712   -2.046  +11.371
+       1: 0.706   -2.052  +11.597
     
-                   1.068    5.440
+                   1.034    5.355
     
-       2: 0.288   +1.757  +20.956
+       2: 0.294   +1.751  +20.920
     
-                   0.949    7.198
+                   1.115    6.476
 
 We see above that the two components are associated with fractions of
 approximately 0.7 and 0.3 of the training cases, as expected from the
@@ -4300,8 +4344,8 @@ used instead, with 10 changes being proposed to every indicator:
 
     > mc-spec rlog.inf repeat 20 met-indicators 10 gibbs-params gibbs-hypers
 
-We can now run the simulation for 100 iterations (which takes about a
-minute and a half on our machine):
+We can now run the simulation for 100 iterations (which takes about
+half a minute our 550MHz Pentium III):
 
     > mix-mc rlog.inf 100
 
@@ -4381,7 +4425,7 @@ other models.  Here is one set of commands that work reasonably well:
     > mc-spec clog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     > net-mc clog.net 100
 
-This takes about 13 minutes of computing time on our SGI machine.
+This takes about ten minutes of computing time on our 550MHz Pentium III.
 
 Predictions for test cases can now be made using net-pred.  For
 example, the following command produces the 10% and 90% quantiles of
@@ -4396,19 +4440,18 @@ of death (the "targets"):
     Case  Inputs Targets 10% Qnt 90% Qnt
 
        1   -0.01    0.29    0.05    1.05
-       2   -1.43    0.04    0.02    0.40
-       3   -0.68    0.03    0.03    0.53
-       4    0.47    0.11    0.08    1.66
-       5    0.63    0.97    0.08    1.78
+       2   -1.43    0.04    0.02    0.37
+       3   -0.68    0.03    0.02    0.52
+       4    0.47    0.11    0.09    1.67
+       5    0.63    0.97    0.07    1.74
 
             ( middle lines omitted )
 
-     196    1.39    0.21    0.09    1.98
-     197    0.04    0.07    0.05    1.10
-     198    1.66    0.56    0.10    1.79
-     199    1.33    1.48    0.07    1.78
-     200   -1.41    0.08    0.02    0.42
-
+     196    1.39    0.21    0.08    1.99
+     197    0.04    0.07    0.06    1.11
+     198    1.66    0.56    0.09    1.61
+     199    1.33    1.48    0.07    1.76
+     200   -1.41    0.08    0.01    0.39
 
 Since there is only one input for this model, we can easily look at
 the posterior distribution of the log of the hazard function with the
@@ -4501,7 +4544,7 @@ The following commands sample from the posterior distribution:
     > mc-spec vlog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     > net-mc vlog.net 100
 
-This takes about two hours on our SGI machine.
+This takes about 100 minutes on our 550MHz Pentium III.
 
 The net-pred command can be used to make predictions for test cases.
 Here is a command to display the median of the predictive distribution
@@ -4514,22 +4557,22 @@ test cases:
     Number of iterations used: 76
     
     Case  Inputs Targets Medians |Error|
-    
-       1    0.00    0.07    0.86  0.7898
-       2   -0.22    0.42    0.75  0.3271
-       3   -2.24    0.04    0.38  0.3385
-       4   -0.81    0.26    0.58  0.3151
-       5    1.02    3.12    1.05  2.0644
+
+       1    0.00    0.07    0.84  0.7711
+       2   -0.22    0.42    0.74  0.3155
+       3   -2.24    0.04    0.39  0.3480
+       4   -0.81    0.26    0.58  0.3172
+       5    1.02    3.12    1.04  2.0784
  
              ( middle lines omitted )
 
-     296   -0.81    0.28    0.58  0.2995
-     297    1.19    1.60    1.07  0.5305
-     298   -1.53    0.57    0.47  0.0973
-     299    0.99    2.67    1.09  1.5800
-     300    0.28    1.13    0.94  0.1857
+     296   -0.81    0.28    0.58  0.2966
+     297    1.19    1.60    1.05  0.5503
+     298   -1.53    0.57    0.48  0.0940
+     299    0.99    2.67    1.09  1.5773
+     300    0.28    1.13    0.92  0.2030
 
-Average abs. error guessing median:    0.32971+-0.01645
+    Average abs. error guessing median:    0.32997+-0.01644
 
 The predictive medians can be plotted against the inputs as follows:
 
@@ -4572,9 +4615,9 @@ number of leapfrog steps is increased to compensate):
     > net-mc v2log.net 1
 
     > mc-spec v2log.net repeat 4 sample-sigmas heatbath hybrid 1000:10 0.25
-    > net-mc v2log.net 100
+    > net-mc v2log.net 400
 
-This takes about seven hours to run on our SGI machine.  
+This takes about 24 hours to run on our 550MHz Pentium III.
 
 The model does in fact discover that an additive form for the log
 hazard is appropriate, as can be seen by examining the hyperparameters
@@ -4701,9 +4744,9 @@ sometimes goes up rather than down), the stepsize will have to be
 reduced.  Net-gd does not try to determine relative stepsizes itself,
 but stepsizes for groups of parameters can be set individually.
 
-The above command takes about 10 minutes on our machine.  While
-waiting, you can monitor progress using net-plt.  For example, the
-progress of the training error can be viewed with the command:
+The above command takes about five minutes on our 550MHz Pentium III.
+While waiting, you can monitor progress using net-plt.  For example,
+the progress of the training error can be viewed with the command:
 
     > net-plt t l blog.gd | plot
 

@@ -65,7 +65,7 @@ metropolis updates) with the following command:
 
     > dist-mc glog.met,1 500
 
-This takes about two seconds on our machine.  
+This takes less than a second on our 550MHz Pentium III.
 
 We can look at what happened to the three state variables during these
 500 iterations with a command such as
@@ -222,8 +222,8 @@ As before, can now sample for 500 iterations using a 'dist-mc' command:
 
     > dist-mc glog.met1,1 500
 
-On our machine, this also takes about two seconds (as will all such
-commands in this section).
+On our 550MHz Pentium III, this also takes less than a second (as will
+all the dist-mc commands in this section).
 
 You can see how well this method samples in the same ways as discussed
 above.  You could also try sampling using "met-1" with a stepsize of
@@ -265,9 +265,9 @@ a command such as
 
     Number of realizations: 1  Total points: 500
 
-    Mean: 5.406000  
+    Mean: 5.473667  
 
-Note that 5.406 is the average number of evaluations for updating one
+Note that 5.47 is the average number of evaluations for updating one
 variable, not for updating all three of them.
 
 As with the Metropolis methods, performance varies with the stepsize
@@ -410,10 +410,10 @@ The "persistent" form of hybrid Monte Carlo (described in Bayesian
 Learning for Neural Networks) is also implemented.  Here are the
 appropriate commands:
 
-    > mc-spec glog.phmc,0.3 repeat 50 metropolis 1
-    > dist-mc glog.phmc,0.3 1
-    > mc-spec glog.phmc,0.3 repeat 35 heatbath 0.99 hybrid 1 0.3 negate end
-    > dist-mc glog.phmc,0.3 500
+    > mc-spec glog.phmc,0.18 repeat 50 metropolis 1
+    > dist-mc glog.phmc,0.18 1
+    > mc-spec glog.phmc,0.18 repeat 35 heatbath 0.99 hybrid 1 0.18 negate end
+    > dist-mc glog.phmc,0.18 500
 
 The use of a "heatbath" operation with a non-zero "decay" causes the
 momentum to change only slowly.  Because of this, even though only a
@@ -423,7 +423,8 @@ normally undoes a negation at the end of the "hybrid" operation.  If
 the "hybrid" update was rejected, however, the first negation will not
 have been done, and movement will be reversed, undermining the random
 walk suppression.  To avoid this, a smaller stepsize is used, to keep
-the rejection rate very small.
+the rejection rate very small.  Performance is a bit worse than for
+the standard hybrid Monte Carlo method.
 
 
 Reflective slice sampling.
@@ -506,7 +507,7 @@ the expectation of the "x" variable using the various methods (the
 autocorrelation time), determined from estimates of the cumulative
 correlations up to when the autocorrelations are near zero.  The
 repetition counts for the methods were set so that they all required
-about 2 seconds of computation time for 500 iterations.
+about 0.8 seconds of computation time for 500 iterations.
 
   METHOD      STEPSIZE   AUTOCORR.  NOTES
                            TIME

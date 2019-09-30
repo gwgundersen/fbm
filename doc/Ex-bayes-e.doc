@@ -107,7 +107,7 @@ We can now sample for 10000 iterations with the following command:
 
     > dist-mc elog.met 10000
 
-This takes about three and a half minutes on our machine.
+This takes a bit over a minute on our 550MHz Pentium III.
 
 A scatterplot of the posterior distribution for v1 and v2 can be
 obtained using a command such as

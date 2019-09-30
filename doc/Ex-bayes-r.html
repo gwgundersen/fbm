@@ -120,7 +120,7 @@ Each iteration will consist of 45 Metropolis updates, done using a
 proposal distribution that adds a normally-distributed offset to each
 variable with standard deviation 0.02.  The 'dist-mc' command does 500
 such iterations (for a total of 22500 Metropolis updates).  This takes
-about 30 seconds on our machine.
+about 8 seconds on our 550MHz Pentium III.
 
 We can see what the average rejection rate was for these updates as
 follows:
@@ -246,7 +246,8 @@ stepsize of 0.01.  This stepsize was picked by trial and error, and
 results in a rejection rate of about 0.13.  In general, the stepsize
 for this standard form of hybrid Monte Carlo should chosen so that the
 rejection rate is somewhere between about 0.05 and 0.25.  The 500
-iterations take about 30 seconds, the same as the Metropolis run.
+iterations take about 11 seconds, about the same as the Metropolis
+run above.
 
 From examining plots of the state variables over time, it seems that
 the hybrid Monte Carlo chain reaches equilibrium much more quickly
@@ -270,7 +271,7 @@ Metropolis chain:
         5  -0.071308    0.722244
 
 The estimated autocorrelations above do not differ significantly from
-zero.  It therefore appears that hybrid Monte Carlo is about 14 times
+zero.  It therefore appears that hybrid Monte Carlo is about ten times
 more efficient than the simple Metropolis algorithm for this problem.
 
 

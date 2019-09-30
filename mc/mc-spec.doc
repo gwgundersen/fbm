@@ -17,7 +17,7 @@ Usage:
   
 or:
 
-    mc-spec log-file [ index ]
+    mc-spec log-file [ index | "all" ]
 
 The log file must already exist.  For the first form, specifications
 are appended to the log file with index equal that of the last record
@@ -26,7 +26,8 @@ in the file, or 0 if the log file has no non-negative records.
 For the second form, with no index specified, the last specifications
 stored in the log file are displayed.  If an index is specified in the
 second form, the specifications in the record with the given index are
-displayed.
+displayed.  If the string "all" (no quotes) is given after the log
+file, specifications at all indexes are displayed.
 
 The allowed operations can be grouped in the categories general,
 metropolis, dynamical, tempering, and slicing:
@@ -135,6 +136,10 @@ Dynamical operations:
         of the trajectory outside any windows, and by 1/temper-factor
         in the second half.
 
+    spiral temper-factor steps [ stepsize-adjust[:stepsize-alpha] ] 
+
+    double-spiral temper-factor steps [ stepsize-adjust[:stepsize-alpha] ] 
+
 Slicing operations:
 
     slice-1 [ stepsize-adjust[:stepsize-alpha] [ max-steps [ first[:last] ] ] ]
@@ -187,6 +192,9 @@ Slicing operations:
 
 Tempering/annealing operations:
 
+See also the descriptions under "dynamical operations" of the spiral,
+double-spiral, and tempered-hybrid operations.
+
     sim-temp
 
         Do a metropolis update of the simulated tempering inverse
@@ -209,7 +217,7 @@ Tempering/annealing operations:
         following operations (terminated by 'end').  The components
         are done in forward order for the first half of the tempered
         transition, in reverse order for the second.  For this to  
-        work, the components must be reversible in themselves.  
+        work correctly, the components must be reversible in themselves.  
 
     AIS
 
@@ -221,6 +229,20 @@ Tempering/annealing operations:
         temperature zero, and the tempering index is set to the beginning
         of the tempering schedule.
 
+Test operations: 
+
+    The following operations are used for testing and research only.
+    They do not leave the desired distribution invariant, and hence
+    should not be used as part of a sampling scheme.
+
+    multiply-momentum factor
+
+        All momentum variables are multiplied by the given factor.
+
+    set-momentum value
+
+        All momentum variables are set to the given value.
+
 Certain of these operations are normally used in standard combinations, 
 in particular the following:
 
@@ -231,9 +253,9 @@ in particular the following:
 
 All operations are reversible (other than 'ais', 'repeat', and 'end'
 for which the concept is not applicable), except for 'dynamic',
-'permuted-dynamic', and perhaps the application-specific operations.
-However, note that in general sequential combinations of reversible
-operations are not reversible.
+'permuted-dynamic', 'multiply-momentum', 'set-momentum', and perhaps
+the application-specific operations.  However, note that in general
+sequential combinations of reversible operations are not reversible.
 
 Defaults are decay of zero, stepsize-adjust of one, stepsize-alpha of
 infinity, window of one, and jump of one.  A minus sign before a
@@ -245,8 +267,7 @@ distribution for stepsizes, a distribution over 'alpha' orders of
 magnitude, uniform in the log domain, centred at the value found using
 stepsize-adjust, is used.
 
-Currently, the trajectory specification can have only the following
-form:
+The trajectory specification can have one of the following forms:
 
     leapfrog [ halfp | halfq ] [ N-approx ]
 
@@ -257,9 +278,37 @@ form:
         at the beginning and end of the trajectory are for p (momentum)
         or q (position).  The default is "halfp".
 
-The default if no specification is given is "leapfrog halfp 1".
+    opt2 [ rev | sym ] [ firstq | firstp ]
+
+        Apply McLachlan and Atela's "optimal" two stage method, with the
+        first step being done for the position (firstq) or momentum
+        (firstp) variables.  The default is "firstq".  This method is
+        not symmetrical.  The "rev" option gives the reversed version.
+        The "sym" option gives the ordinary followed by the reversed
+        version, with half the stepsize for each, thereby producing 
+        a symmetrical method.  Only the symmetrical method should be
+        used in conjuntion with "hybrid" and "tempered hybrid" operations.  
+
+    gen2 [ rev | sym ] [ firstq | firstp ] a2
+
+        Apply a two stage second-order method with parameter a2, as
+        described by McLachlan and Atela.  Firstq and firstp are as for
+        opt2.  This is probably only interesting for research, since the
+        most useful values for a2 are covered by "leapfrog" and "opt2".
+        The "rev" and "sym" options are as for opt2.
+
+    opt4 
+
+        Apply McLachlan and Atela's "optimal" four stage method for
+        quadratic kinetic energy. The "rev" and "sym" options are as for opt2.
+
+The default if no specification is given is "leapfrog halfp 1".  The
+opt2, gen2, and opt4 methods are taken from a paper by Robert
+I. McLachlan and Pau Atela, "The accuracy of symplectic integrators",
+Nonlinearity, vol. 5, pp. 541-562, 1992.  (Note: there is a typo in
+their description of opt2 in table 2. b1=1-b2 should be 1-1/sqrt(2).)
 
 The list of operations is stored in a record of type 'o'; the
 trajectory specification in a record of type 't'.
 
-            Copyright (c) 1995, 1998 by Radford M. Neal
+            Copyright (c) 1995, 1998, 1999 by Radford M. Neal

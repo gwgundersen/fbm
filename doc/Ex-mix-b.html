@@ -156,44 +156,44 @@ means, as specified by hyperparameter values that are also set to
 their prior means.  The 'mix-gen' program could be used to initialize
 things differently (see <A HREF="mix-gen.html">mix-gen.doc</A>).
 
-The above run takes a bit over one minute on our machine.  It can be
-run in the background, in which case progress can be monitored with
-the 'mix-display' and 'mix-plt' programs.  For example, after a few
-seconds, we might see the following:
+The above run takes about half a minute on our 550MHz Pentium III.  It
+can be run in the background, in which case progress can be monitored
+with the 'mix-display' and 'mix-plt' programs.  For example, after a
+while, we might see the following:
 
     &gt; mix-display blog.4
 
-    MIXTURE MODEL IN FILE "blog.4" WITH INDEX 17
-
+    MIXTURE MODEL IN FILE "blog.4" WITH INDEX 50
+    
     HYPERPARAMETERS
-
+    
     Standard deviations for component offsets:
-
-        0.198:     4.056    0.718    1.579    1.702    1.830
-                   1.548    2.504    1.957    4.120    0.184
-
+    
+        0.326:     1.407    1.159    1.213    3.331    1.417
+                   1.557    3.433    2.203    4.990    0.192
+    
     Means for component offsets:
-
-                  +1.816   +0.022   +0.182   +0.037   +0.500
-                  +1.322   -0.018   +1.375   +2.802   +0.990
-
-
+    
+                  -0.370   -0.126   -0.538   +0.521   -0.620
+                  -1.642   +1.510   -1.206   -1.502   +0.941
+    
+    
     PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
-
-       1: 0.310   -2.451   +0.738   +1.342   +1.093   +0.605
-                  -0.960   -1.146   -0.441   -0.798   +0.903
-
-       2: 0.250   -2.121   -1.530   -1.999   -0.917   -1.393
-                  +1.727   +1.862   +1.603   +3.118   +1.101
-
-       3: 0.238   +3.950   +0.915   +1.372   -1.960   -0.940
-                  +1.307   +1.793   -1.268   -2.102   +1.035
-
-       4: 0.202   +2.710   -0.978   -1.015   +1.900   +1.915
-                  -1.802   -2.903   +1.268   +1.452   +0.827
+    
+       1: 0.286   -1.799   +0.931   +1.753   +1.481   +0.853
+                  -1.503   -1.433   -0.942   -1.245   +1.165
+    
+       2: 0.252   +1.905   +1.054   +1.749   -2.588   -1.594
+                  +1.062   +1.625   -1.532   -1.227   +1.252
+    
+       3: 0.250   -2.109   -1.505   -2.220   -0.961   -1.402
+                  +2.265   +1.635   +1.463   +2.015   +1.082
+    
+       4: 0.212   +1.743   -1.050   -1.470   +1.502   +1.553
+                  -1.593   -1.376   +1.569   +1.025   +0.864
 
 This displays the state at the last iteration computed so far (here
-iteration 17).  The hyperparameter values are shown first, with
+iteration 50).  The hyperparameter values are shown first, with
 top-level hyperparameters on the left, before the colon.  The
 lower-level hyperparameters follow, ordered by the target attribute
 that they pertain to.  Values for the component parameters follow,
@@ -304,50 +304,53 @@ We can examine the states with 'mix-display'.  For example, once the
 following:
 
     &gt; mix-display blog.inf
-
+    
     MIXTURE MODEL IN FILE "blog.inf" WITH INDEX 100
     
     HYPERPARAMETERS
     
     Standard deviations for component offsets:
     
-        0.294:     2.090    1.637    2.191    2.686    2.195
-                   2.299    3.737    2.555    1.565    0.133
+        0.359:     2.747    4.294    1.280    3.530    1.353
+                   2.461    5.661    2.928    1.506    0.080
     
     Means for component offsets:
     
-                  +1.456   -0.883   -0.760   -0.798   -0.455
-                  -0.482   -1.981   -0.859   +0.352   +0.943
+                  +0.023   +0.452   +0.792   +0.507   -0.084
+                  -0.634   -4.794   +4.560   -0.293   +1.124
     
     
     PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
     
-       1: 0.328   -1.592   +0.810   +0.710   +1.011   +0.551
-                  -0.881   -1.333   -0.470   -0.783   +1.147
+       1: 0.310   -1.565   +0.617   +1.467   +1.191   +0.468
+                  -0.569   -1.192   -0.397   -0.749   +1.003
     
-       2: 0.262   +1.549   +1.284   +1.459   -2.410   -1.312
-                  +2.129   +2.131   -1.709   -1.162   +0.768
+       2: 0.254   -1.374   -1.134   -2.009   -1.008   -1.825
+                  +2.384   +2.377   +1.579   +2.553   +1.080
     
-       3: 0.212   -1.539   -1.378   -2.675   -1.357   -1.244
-                  +1.930   +2.561   +1.802   +1.866   +0.942
+       3: 0.238   +2.949   +0.979   +2.419   -2.694   -1.331
+                  +1.597   +1.590   -1.689   -1.190   +1.124
     
-       4: 0.170   +2.130   -1.917   -1.421   +1.789   +1.926
-                  -1.626   -2.642   +1.403   +1.302   +0.841
+       4: 0.168   +1.565   -1.687   -1.958   +1.762   +1.633
+                  -1.365   -6.917   +1.001   +1.180   +0.919
     
-       5: 0.018   -3.048   -1.125   -3.540   -0.104   -2.428
-                  +0.796   -6.877   +3.549   +0.400   +1.079
+       5: 0.012   +1.780   -3.038   -0.664   +5.257   -3.499
+                  -8.315   -5.443   +0.816   -0.774   +1.143
     
-       6: 0.006   +1.207   -4.213   -0.463   +1.713   +4.755
-                  -1.497   +0.838   +3.890   +0.436   +1.154
+       6: 0.012   +1.892   -0.991   +3.387   +0.513   +1.287
+                  -4.129   +1.283   +8.346   +1.452   +0.882
     
-       7: 0.004   +2.252   -4.192   +0.727   +2.935   -5.049
-                  -4.338   -3.355   +1.462   -0.389   +0.886
+       7: 0.004   +5.850   +1.412   +0.295   -5.867   +0.701
+                  -0.403   -9.392   +7.748   -2.211   +1.163
+    
+       8: 0.002   +1.028   -3.102   +2.383   -1.070   +1.691
+                  +0.497   +0.062   +0.505   -0.762   +1.226
     
 The output is similar to that seen for the mixture model with four
-components, except that seven components are associated with at least
+components, except that eight components are associated with at least
 one training case at iteration 100, as shown above.  (The infinite
 number of remaining components are not explicitly represented, and are
-not displayed by 'mix-display'.)  Several of these components are
+not displayed by 'mix-display'.)  Four of these components are
 associated with very few training cases, however (as seen from the
 fractions of the training set after the component number).  This is to
 be expected when the true distribution can be expressed using only

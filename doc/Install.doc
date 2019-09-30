@@ -29,6 +29,11 @@ you can remove the file 'fbm.YYYY-MM-DD.tar'.  You should now change
 into the 'fbm.YYYY-MM-DD' directory, as the following instructions
 assumed that you are there.
 
+If you prefer that this directory be called something other than
+'fbm.YYYY-MM-DD', change the name now, BEFORE compiling the programs,
+since the programs look for a file of random numbers in the directory
+under the name it had when they were compiled.
+
 
 Looking at the documentation.
 
@@ -111,6 +116,18 @@ contains symbolic links to all the programs making up this software.
 Subsequent instructions assume that you have this 'bin' directory in
 your search path.
 
+The above is the simple version of how to use the programs.  However,
+if you want to use the programs on more than one type of machine, you
+will need to compile them several times, once for each machine
+architecture, and you will need to set your search path to a directory
+that contains the versions of the programs compiled for the machine
+you are currently using.  By convention, these directories should be
+called "bin.ARCH", where ARCH is the name of the machine architecture.
+The shell file install-arch creates such a directory (if necessary)
+and copies the programs from the "bin" directory to the "bin.ARCH"
+directory for the current architecture.  It is assumed that a program
+called 'arch' exists that returns the name of the architecture.
+
 
 Cleaning things up.
 
@@ -125,4 +142,5 @@ programs by using the command
     make-clean
 
 when in the main directory.  Of course, you then won't be able to use
-the programs until you do another make-all to recompile them.
+the programs until you do another make-all to recompile them, unless
+you had copied them to a "bin.ARCH" directory.

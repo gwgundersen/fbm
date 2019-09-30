@@ -1200,7 +1200,7 @@ static void mh_values
   /* Find Cholesky decomposition for use in generating correlated noise. */
 
   if (!cholesky(latent_cov,N_train,0))
-  { fprintf(stderr,"Couldn't find Cholesky decomposition in met-values!\n");
+  { fprintf(stderr,"Couldn't find Cholesky decomposition in mh-values!\n");
     exit(1);
   }
 

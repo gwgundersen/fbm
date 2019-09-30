@@ -51,7 +51,7 @@ other models.  Here is one set of commands that work reasonably well:
     &gt; mc-spec clog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     &gt; net-mc clog.net 100
 
-This takes about 13 minutes of computing time on our SGI machine.
+This takes about ten minutes of computing time on our 550MHz Pentium III.
 
 Predictions for test cases can now be made using net-pred.  For
 example, the following command produces the 10% and 90% quantiles of
@@ -66,19 +66,18 @@ of death (the "targets"):
     Case  Inputs Targets 10% Qnt 90% Qnt
 
        1   -0.01    0.29    0.05    1.05
-       2   -1.43    0.04    0.02    0.40
-       3   -0.68    0.03    0.03    0.53
-       4    0.47    0.11    0.08    1.66
-       5    0.63    0.97    0.08    1.78
+       2   -1.43    0.04    0.02    0.37
+       3   -0.68    0.03    0.02    0.52
+       4    0.47    0.11    0.09    1.67
+       5    0.63    0.97    0.07    1.74
 
             ( middle lines omitted )
 
-     196    1.39    0.21    0.09    1.98
-     197    0.04    0.07    0.05    1.10
-     198    1.66    0.56    0.10    1.79
-     199    1.33    1.48    0.07    1.78
-     200   -1.41    0.08    0.02    0.42
-
+     196    1.39    0.21    0.08    1.99
+     197    0.04    0.07    0.06    1.11
+     198    1.66    0.56    0.09    1.61
+     199    1.33    1.48    0.07    1.76
+     200   -1.41    0.08    0.01    0.39
 
 Since there is only one input for this model, we can easily look at
 the posterior distribution of the log of the hazard function with the
@@ -171,7 +170,7 @@ The following commands sample from the posterior distribution:
     &gt; mc-spec vlog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     &gt; net-mc vlog.net 100
 
-This takes about two hours on our SGI machine.
+This takes about 100 minutes on our 550MHz Pentium III.
 
 The net-pred command can be used to make predictions for test cases.
 Here is a command to display the median of the predictive distribution
@@ -184,22 +183,22 @@ test cases:
     Number of iterations used: 76
     
     Case  Inputs Targets Medians |Error|
-    
-       1    0.00    0.07    0.86  0.7898
-       2   -0.22    0.42    0.75  0.3271
-       3   -2.24    0.04    0.38  0.3385
-       4   -0.81    0.26    0.58  0.3151
-       5    1.02    3.12    1.05  2.0644
+
+       1    0.00    0.07    0.84  0.7711
+       2   -0.22    0.42    0.74  0.3155
+       3   -2.24    0.04    0.39  0.3480
+       4   -0.81    0.26    0.58  0.3172
+       5    1.02    3.12    1.04  2.0784
  
              ( middle lines omitted )
 
-     296   -0.81    0.28    0.58  0.2995
-     297    1.19    1.60    1.07  0.5305
-     298   -1.53    0.57    0.47  0.0973
-     299    0.99    2.67    1.09  1.5800
-     300    0.28    1.13    0.94  0.1857
+     296   -0.81    0.28    0.58  0.2966
+     297    1.19    1.60    1.05  0.5503
+     298   -1.53    0.57    0.48  0.0940
+     299    0.99    2.67    1.09  1.5773
+     300    0.28    1.13    0.92  0.2030
 
-Average abs. error guessing median:    0.32971+-0.01645
+    Average abs. error guessing median:    0.32997+-0.01644
 
 The predictive medians can be plotted against the inputs as follows:
 
@@ -242,9 +241,9 @@ number of leapfrog steps is increased to compensate):
     &gt; net-mc v2log.net 1
 
     &gt; mc-spec v2log.net repeat 4 sample-sigmas heatbath hybrid 1000:10 0.25
-    &gt; net-mc v2log.net 100
+    &gt; net-mc v2log.net 400
 
-This takes about seven hours to run on our SGI machine.  
+This takes about 24 hours to run on our 550MHz Pentium III.
 
 The model does in fact discover that an additive form for the log
 hazard is appropriate, as can be seen by examining the hyperparameters

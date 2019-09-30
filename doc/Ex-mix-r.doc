@@ -78,10 +78,10 @@ Finally, we run the Markov chain simulation for 100 iterations:
 
     > mix-mc rlog.2 100
 
-This takes less than 10 seconds on our machine.  Once it has finished,
-we can look at the hyperparameters and component parameters at various
-iterations.  The last iteration should look something like the
-following:
+This takes about three seconds on our 550MHz Pentium III.  Once it has
+finished, we can look at the hyperparameters and component parameters
+at various iterations.  The last iteration should look something like
+the following:
 
     > mix-display rlog.2
 
@@ -91,26 +91,26 @@ following:
     
     Standard deviations for component offsets:
     
-        0.585:     4.108   40.500
+        0.068:     3.259    7.159
     
     Means for component offsets:
     
-                  -0.549   -2.258
+                  -1.408  +17.102
     
     Standard deviations for Gaussian target distributions:
     
-        1.464:     0.959    3.693
+        0.173:     0.201    4.680
     
     
     PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
     
-       1: 0.712   -2.046  +11.371
+       1: 0.706   -2.052  +11.597
     
-                   1.068    5.440
+                   1.034    5.355
     
-       2: 0.288   +1.757  +20.956
+       2: 0.294   +1.751  +20.920
     
-                   0.949    7.198
+                   1.115    6.476
 
 We see above that the two components are associated with fractions of
 approximately 0.7 and 0.3 of the training cases, as expected from the
@@ -150,8 +150,8 @@ used instead, with 10 changes being proposed to every indicator:
 
     > mc-spec rlog.inf repeat 20 met-indicators 10 gibbs-params gibbs-hypers
 
-We can now run the simulation for 100 iterations (which takes about a
-minute and a half on our machine):
+We can now run the simulation for 100 iterations (which takes about
+half a minute our 550MHz Pentium III):
 
     > mix-mc rlog.inf 100
 

@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# Install compiled programs in the bin sub-directory for the architecture
+# of the machine we're running on now.  It is assumed without checking that
+# the programs were last compiled for this architecture.  A program called
+# "arch" that returns the name of the architecture is assumed to exist.
+
+a=`arch`
+mkdir -p bin.$a
+cp bin/* bin.$a

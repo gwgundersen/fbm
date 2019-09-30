@@ -59,7 +59,7 @@ static void usage(void)
 
 /* MAIN PROGRAM. */
 
-void main
+main
 ( int argc,
   char **argv
 )

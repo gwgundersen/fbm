@@ -491,32 +491,40 @@ int gp_cov_deriv
           { if (pw==2)
             { s = 0;
               for (i = 0; i<ni; i++)
-              { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
-                s += d * d;
+              { if (!(flags[i]&Flag_omit))
+                { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
+                  s += d * d;
+                }
               }
             }
             else if (pw==1)
             { s = 0;
               for (i = 0; i<ni; i++)
-              { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
-                if (d<0) d = -d;
-                s += d;
+              { if (!(flags[i]&Flag_omit))
+                { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
+                  if (d<0) d = -d;
+                  s += d;
+                }
               }
             }
             else if (pw<0)
             { if (pw!=-1) abort();
               s = 0;
               for (i = 0; i<ni; i++)
-              { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
-                s += log (1 + d * d);
+              { if (!(flags[i]&Flag_omit))
+                { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
+                  s += log (1 + d * d);
+                }
               }
             }
             else
             { s = 0;
               for (i = 0; i<ni; i++)
-              { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
-                if (d<0) d = -d;
-                s += pow(d,pw);
+              { if (!(flags[i]&Flag_omit))
+                { d = r[i] * (flags[i]&Flag_delta ? p1[i]!=p2[i] : p1[i]-p2[i]);
+                  if (d<0) d = -d;
+                  s += pow(d,pw);
+                }
               }
             }
             *pd++ += 2 * exp(c-s);

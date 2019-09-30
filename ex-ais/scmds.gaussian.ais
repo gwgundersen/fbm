@@ -7,4 +7,4 @@ model-spec slog.gaussian.ais real 0.1:1
 data-spec slog.gaussian.ais 10 1 / sdata .
 mc-temp-sched slog.gaussian.ais 1e-8:49 1e-6:450 0.05:500
 mc-spec slog.gaussian.ais repeat 100 AIS heatbath hybrid 20:2 0.2 sample-sigmas 
-net-mc slog.gaussian.ais 5000
+net-mc slog.gaussian.ais 10000

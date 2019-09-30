@@ -68,6 +68,8 @@ pred.c:
 	ln -s ../util/pred.c .
 digamma.c:
 	ln -s ../util/digamma.c .
+phi.c:
+	ln -s ../util/phi.c .
 
 
 misc.o:		misc.c		misc.h
@@ -85,6 +87,7 @@ formula.o:	formula.c	formula.h rand.h
 pred.o:		pred.c		misc.h rand.h log.h prior.h model.h data.h \
 				mc.h pred.h
 digamma.o:	digamma.c
+phi.o:		phi.c
 
 rand.o:		rand.c		rand.h
 	$(CC) $(CFLAGS) -DRAND_FILE=\"`pwd`/../util/randfile\" -c rand.c

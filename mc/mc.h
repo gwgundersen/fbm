@@ -1,6 +1,6 @@
 /* MC.H - Interface to Markov chain Monte Carlo module. */
 
-/* Copyright (c) 1995, 1996, 1998 by Radford M. Neal 
+/* Copyright (c) 1995, 1996, 1998, 1999 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, or modify this program 
  * for purposes of research or education, provided this copyright notice 
@@ -43,7 +43,9 @@ typedef struct
     int window; 	  /* Window size for hybrid Monte Carlo updates */
     int jump;	  	  /* Steps in each jump for hybrid Monte Carlo */
 
-    float heatbath_decay; /* Momentum decay for heatbath step */
+    float heatbath_decay; /* Momentum decay for heatbath step, also factor
+                             for multiply-momentum operation minus 1, and
+			     value for set-momentum operation. */
 
     float temper_factor;  /* Tempering factor for tempered hybrid Monte Carlo */
     float app_param;	  /* Parameter for application-specific procedure */
@@ -78,12 +80,20 @@ typedef struct
 
 typedef struct
 { 
-  int type;		/* Type of discretization, currently always 'L' */
-  int halfp;		/* Should first and last half steps be for p? */
-  int N_approx;		/* Number of approximations to the energy function;
-			     when negative, each is used twice, symmetrically */
+  int type;		/* Type of discretization, 'L'=leapfrog, etc. */
 
-  int reserved[5];	/* Reserved for future use */
+  int halfp;		/* Should first and last half steps be for p? 
+			   Also used to store the similar firstp flag */
+
+  int N_approx;		/* Number of approximations to the energy function;
+			   when negative, each is used twice, symmetrically */
+
+  int rev_sym;		/* For non-symmetric methods: 0 = use in original form,
+			   -1 = reverse, 1 = symmetrize (original, reversed) */
+
+  int reserved[2];	/* Reserved for future use */
+
+  double param;		/* Parameter of gen2 method, also of opt2 method */
 
 } mc_traj;
 
@@ -131,6 +141,22 @@ typedef struct
 } mc_temp_state;
 
 
+/* THERMOSTAT STATE.  Currently disabled.
+
+   Stored in log files under type 'h'.  Changes may invalidate old log files. */
+
+#if 0
+
+typedef struct
+{
+  double tq;		/* Thermostat variable */
+  double tp;		/* Corresponding momentum variable */
+
+} mc_therm_state;
+
+#endif
+
+
 /* INFO ON MONTE CARLO ITERATION.  This structure records various bits of 
    information concerning the current iteration.  The temperature and decay
    values are derived from user specifications; the approx_order field is
@@ -161,7 +187,8 @@ typedef struct
   float log_tt_weight;	/* Log of weight from last tempered transition */
   float log_tt_weight2;	/* Log of combined weight from last tempered trans. */
 
-  int reserved[1];	/* Reserved for future use */
+  unsigned short spiral_offset; /* Offset of initial state for last [dbl]spiral*/
+  unsigned short spiral_switch; /* Switch point for last double-spiral */
 
 } mc_iter;
 
@@ -185,7 +212,9 @@ typedef struct
 
   mc_temp_state *temp_state; /* State for simulated tempering */
   int temp_index;	/* Index of inverse temperature in schedule */
-
+#if 0
+  mc_therm_state *therm_state; /* State of thermostat when doing that */
+#endif
   mc_value *grad;	/* Gradient of potential energy w.r.t. position */
   mc_value *stepsize;	/* Stepsizes to use for each component */
 
@@ -223,11 +252,13 @@ void mc_iteration  (mc_dynamic_state *, mc_iter *, log_gobbled *, void *, int);
 void mc_traj_init    (mc_traj *, mc_iter *);
 void mc_traj_permute (void);
 void mc_trajectory   (mc_dynamic_state *, int, int);
+void mc_therm_trajectory (mc_dynamic_state *, int, int);
 
 void mc_record_sizes     (log_gobbled *);
 void mc_heatbath         (mc_dynamic_state *, float, float);
 void mc_radial_heatbath  (mc_dynamic_state *, float);
 double mc_kinetic_energy (mc_dynamic_state *);
+void mc_therm_present    (mc_dynamic_state *);
 void mc_temp_present     (mc_dynamic_state *, mc_temp_sched *);
 int mc_temp_index        (mc_temp_sched *, float);
 double mc_energy_diff    (mc_dynamic_state *, mc_temp_sched *, int);

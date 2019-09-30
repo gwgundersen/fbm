@@ -16,7 +16,7 @@
 
 #define Maxfiles 20
 
-void main(argc,argv)
+main(argc,argv)
   int argc;
   char **argv;
 { 
