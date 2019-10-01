@@ -25,9 +25,9 @@
 
 typedef struct
 { 
-  int type;		/* Model used for observed data, zero if no model */
-			/* 'B' = binary, 'C' = class, 'R' = real,         */
-			/* 'V' = survival data                            */
+  int type;		/* Model used for observed data, zero if no model     */
+			/* 'B' = binary, 'C' = class, 'R' = real, 'N' = count */
+			/* 'V' = survival data                                */
 
   prior_spec noise;	/* Prior for noise level in model of real targets */
 
@@ -66,4 +66,14 @@ typedef struct
 
 /* PROCEDURES. */
 
-int model_targets (model_specification *, int);
+int model_values_check (model_specification *, data_specifications *,
+                        int, char *);
+
+void model_gen (model_specification *, data_specifications *,
+                double *, double *, int, double *);
+
+double model_likelihood (model_specification *, data_specifications *,
+                         double *, double *, int, double *);
+
+double *model_values (model_specification *, data_specifications *,
+                      double *, int);

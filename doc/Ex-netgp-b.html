@@ -29,7 +29,7 @@ the logistic function, f(x)=1/(1+exp(-x)).
 The network, model, and data specification commands needed are quite
 similar to those used in the regression problem (see <A HREF="Ex-netgp-r.html">Ex-netgp-r.doc</A>):
 
-    &gt; net-spec blog.net 2 15 1 / - 0.05:0.5 0.05:0.5 - x0.05:0.5 - 100 
+    &gt; net-spec blog.net 2 15 1 / ih=0.05:0.5 bh=0.05:0.5 ho=x0.05:0.5 bo=100 
     &gt; model-spec blog.net binary
     &gt; data-spec blog.net 2 1 2 / bdata@1:300 . bdata@301:500 .
     Number of training cases: 300

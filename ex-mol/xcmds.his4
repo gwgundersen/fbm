@@ -1,0 +1,2 @@
+mol-spec      xlog.his4 3 4 1 30 NVT 13 10
+mol-his       xlog.his4 50 0 4999 50 / 0.0008 40 / 0.1 0.999 0.2

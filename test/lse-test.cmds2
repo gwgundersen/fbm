@@ -1,0 +1,5 @@
+gp-spec lse-test.log2 1 1 1 - 0.01 / 0.2:1 0.2:1 / 0.2:1 0.2:1 
+model-spec lse-test.log2 real 0.1:1
+data-spec lse-test.log2 1 1 / lse-trn . lse-tst .
+mc-spec lse-test.log2 repeat 10 mh-values 0.04 400 slice-1 2 1
+gp-mc lse-test.log2 250

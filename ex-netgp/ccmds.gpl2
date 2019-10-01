@@ -13,3 +13,5 @@ mc-spec clog.gpl2 repeat 5 mh-values 0.15 100 heatbath 0.9 hybrid 1 0.15 negate
 gp-mc clog.gpl2 5
 mc-spec clog.gpl2 repeat 5 mh-values 0.15 100 heatbath 0.98 hybrid 1 0.15 negate
 gp-mc clog.gpl2 100
+
+gp-pred mpa clog.gpl2 21:%5

@@ -13,3 +13,5 @@ mc-spec clog.gpl repeat 5 scan-values 100 heatbath 0.9 hybrid 1 0.15 negate
 gp-mc clog.gpl 5
 mc-spec clog.gpl repeat 5 scan-values 100 heatbath 0.98 hybrid 1 0.15 negate
 gp-mc clog.gpl 100
+
+gp-pred mpa clog.gpl 21:%5

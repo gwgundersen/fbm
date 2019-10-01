@@ -16,8 +16,8 @@ This software is meant to support research and education regarding:
 
 These facilities might be useful for actual problems, but you should
 note that many features that might be needed for real problems have
-not been implemented, that the programs have not been tested to the
-extent that would be desirable for important applications.
+not been implemented, and that the programs have not been tested to
+the extent that would be desirable for important applications.
 
 The complete source code (in C) is provided, allowing researchers to
 modify the program to test new ideas.  It is not necessary to know C

@@ -20,9 +20,9 @@ argument is given, the covariance matrix for latent values is used,
 without the noise variance being added to the diagonal.  If the extra
 argument is the string "+noise", the noise is added.  This is valid
 only for a regression model, and only if the noise variances do not
-vary on a case-by-case basis.  If there is more than one target
-variable, the noise added is that for the first target.  If the extra
-argument is a positive number, that number is added to the diagonal.
+vary on a case-by-case basis.  If the extra argument is a positive
+number, that number is added to the diagonal.  If there is more than
+one output/target, the covariance and added noise is for the first.
 
 By default, the covariance matrix is for the set of training inputs,
 but this can be overridden by specifying a file of inputs at the end

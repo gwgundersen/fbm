@@ -205,7 +205,7 @@ void mc_iter_init
     p_savet = chk_alloc (ds->dim, sizeof *p_savet);
     if (ds->aux_dim<0)
     { fprintf(stderr,
-        "Saving of auxiliary state isn't implemented (temp-trans won't work)\n");
+       "Saving of auxiliary state isn't implemented (temp-trans won't work)\n");
       exit(1);
     }
     if (ds->aux_dim>0) aux_savet = chk_alloc (ds->aux_dim, sizeof *p_savet);
@@ -550,6 +550,26 @@ static void do_group
         { ds->p[j] = v;
         }
         ds->know_kinetic = 0;
+        break;
+      }
+
+      case ':':
+      { int j, firsti, lasti;
+        double v;
+        v = ops->op[i].heatbath_decay;
+        firsti = ops->op[i].firsti;
+        lasti = ops->op[i].lasti;
+        if (firsti==-1) 
+        { firsti = 0;
+          lasti = ds->dim-1;
+        }
+        if (lasti>=ds->dim-1) lasti = ds->dim-1;
+        if (firsti>lasti) firsti = lasti;
+        for (j = firsti; j<=lasti; j++)
+        { ds->q[j] = v;
+        }
+        ds->know_pot = 0;
+        ds->know_grad = 0;
         break;
       }
 

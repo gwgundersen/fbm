@@ -1095,7 +1095,7 @@ static double expgamma
    where v1, v2, etc. are variables starting with letters in the state
    variables parameter, and D1, D2, etc. are distributions known to this
    module.  State variables that are to be generated must exist beforehand,
-   the must be generated exactly once (ie, appear once in the list above),
+   they must be generated exactly once (ie, appear once in the list above),
    and their values cannot be referred to before they are generated. 
 
    The formula should have been checked for syntax errors already.  It is

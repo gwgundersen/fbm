@@ -2,7 +2,7 @@
 # Commands to apply a Bayesian neural network to the simple regression problem
 # with outliers, using a t-distribution with 4 df for the noise.
 
-net-spec olog.net 1 8 1 / - 0.05:0.5 0.05:0.5 - x0.05:0.5 - 100 
+net-spec olog.net 1 8 1 / ih=0.05:0.5 bh=0.05:0.5 ho=x0.05:0.5 bo=100 
 model-spec olog.net real 0.05:0.5::4
 
 data-spec olog.net 1 1 / odata@1:100 . odata@101:200 .
@@ -13,3 +13,5 @@ net-mc olog.net 1
 
 mc-spec olog.net sample-sigmas heatbath hybrid 1000:10 0.4
 net-mc olog.net 400
+
+net-pred npa olog.net 101:

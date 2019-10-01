@@ -22,8 +22,8 @@
 #include "log.h"
 #include "quantities.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "net.h"
 #include "net-data.h"
 

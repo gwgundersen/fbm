@@ -41,18 +41,16 @@ file containing the specifications for the network architecture and
 the priors to use for the network parameters.  This can be done using
 the following command:
 
-    > net-spec rlog.net 1 8 1 / - 0.05:0.5 0.05:0.5 - x0.05:0.5 - 100
+    > net-spec rlog.net 1 8 1 / ih=0.05:0.5 bh=0.05:0.5 ho=x0.05:0.5 bo=100
 
 Here, "rlog.net" is the name of the new log file, and the arguments
 "1", "8", and "1", specify the numbers of input, hidden, and output
 units.  Following the "/", the priors for the various groups of
-network parameters are given, with a "-" indicating that a parameter
-group should be omitted (equivalent to the parameters being zero).
-The order of the groups is a bit hard to remember, but you can get a
-summary easily by just invoking 'net-spec' with no arguments.  The
-groups in the above command that are not omitted are the input-hidden
-weights, the hidden biases, the hidden-output weights, and the output
-bias.
+network parameters are given, with the groups identified by
+abbreviations such as "ih" for "input-to-hidden" weights (see
+net-spec.doc for the complete list).  The groups in the above command
+that are for the input-hidden weights, the hidden biases, the
+hidden-to-output weights, and the output bias.
 
 In general, the prior specifications used in the net-spec command
 consist of a "width" value followed by up to three "alpha" values,

@@ -27,8 +27,8 @@
 #include "matrix.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "numin.h"
 #include "gp.h"
 #include "gp-data.h"
@@ -88,13 +88,6 @@ void pred_app_init (void)
     exit(1);
   } 
  
-  if (op_N && keep[0])
-  { fprintf(stderr,
-"Option '0' not allowed: Non-linear components are numbered starting with '1'\n"
-     );
-    exit(1);
-  }
-
   if (m!=0 && m->type=='V')
   { fprintf(stderr,"Can't handle survival models in gp-pred\n");
     exit(1);
@@ -129,8 +122,9 @@ void pred_app_init (void)
 
 int pred_app_use_index (void)
 {    
+  int N_outputs, N_targets;
   int want_variance;
-  int i, j, k;
+  int i, j, k, q;
 
   /* See if there's really something here. */
 
@@ -150,7 +144,7 @@ int pred_app_use_index (void)
   have_variances = logg.data['N']!=0 
                      && logg.index['N']==logg.last_index;
 
-  if (m!=0 && m->type=='R' && !op_l) 
+  if (m!=0 && m->type=='R' && gp->N_outputs==data_spec->N_targets && !op_l) 
   { have_values = 0;
   }
 
@@ -169,22 +163,36 @@ int pred_app_use_index (void)
     exit(1);
   }
 
+  N_outputs = gp->N_outputs;
+  N_targets = data_spec->N_targets;
+
   /* Find predictive means and (maybe) variances for each output
      of every test case, storing them in meanp and varp. */
 
-  for (j = 0; j<gp->N_outputs; j++)
+  for (j = 0; j<N_outputs; j++)
   {
+    /* See if we should ignore this output, since it's being omitted from
+       a log-sum-exp model. */
+
+    q = N_outputs / M_targets;
+    k = j % q;
+
+    if (op_W && (k>3 || !retain[k]))
+    { continue;
+    }
+
     /* See if we want the variance for this output. */
 
-    want_variance = op_p || op_d || op_q 
+    want_variance = !op_z && 
+                    (op_p || op_d || op_q 
                      || op_r && data_spec->trans[data_spec->N_inputs+j].take_log
-                     || m!=0 && m->type!='R';
+                     || m!=0 && m->type!='R');
 
     /* Compute covariance matrix for training cases, and its Cholesky
        decomposition and maybe from that its inverse. Don't redo computations 
        if previous matrix is still applicable.*/
 
-    if (j==0 || m!=0 && m->type=='R' && !have_values
+    if (j==0 || gp_any_dropped(gp) || m!=0 && m->type=='R' && !have_values
       && (m->noise.alpha[2]!=0 || *hypers.noise[j]!=*hypers.noise[j-1]))
     {
       gp_train_cov (gp, m, h, j, noise_variances, 
@@ -216,19 +224,19 @@ int pred_app_use_index (void)
 
     if (alt_mean)
     { forward_solve (train_cov, scr1, 1, 
-              have_values ? latent_values+j : train_targets+j, gp->N_outputs, 
+              have_values ? latent_values+j : train_targets+j, N_outputs, 
               N_train);
     }
     else if (use_inverse)
     { for (i = 0; i<N_train; i++)
       { scr1[i] = inner_product (train_cov+i*N_train, 1, 
                      have_values ? latent_values+j : train_targets+j, 
-                     gp->N_outputs, N_train);
+                     N_outputs, N_train);
       }
     }
     else 
     { forward_solve (train_cov, scr2, 1, 
-              have_values ? latent_values+j : train_targets+j, gp->N_outputs, 
+              have_values ? latent_values+j : train_targets+j, N_outputs, 
               N_train);
       backward_solve (train_cov, scr1, 1, scr2, 1, N_train);
     }
@@ -240,8 +248,8 @@ int pred_app_use_index (void)
     {
       /* Find covariances between training cases and test case.  Put in scr2. */
 
-      gp_cov (gp, h, test_inputs+gp->N_inputs*i, 1, 
-              train_inputs, N_train, scr2, 0, op_N ? keep+1 : 0);
+      gp_cov (gp, h, j, test_inputs+gp->N_inputs*i, 1, 
+              train_inputs, N_train, scr2, 0, op_N ? keep : 0);
 
       /* If needed, find product of these covariances with inverse of Cholesky
          decomposition, unless we're using the actual inverse.  Put in scr3. */
@@ -253,45 +261,84 @@ int pred_app_use_index (void)
       /* Find predictive mean using the vectors precomputed above. */
 
       if (alt_mean)
-      { meanp[i*gp->N_outputs+j] = inner_product (scr1, 1, scr3, 1, N_train);
+      { meanp[i*N_outputs+j] = inner_product (scr1, 1, scr3, 1, N_train);
       }
       else
-      { meanp[i*gp->N_outputs+j] = inner_product (scr1, 1, scr2, 1, N_train);
+      { meanp[i*N_outputs+j] = inner_product (scr1, 1, scr2, 1, N_train);
       }
 
       /* Find the predictive variance if it will be needed. */
 
       if (want_variance)
       { 
-        gp_cov (gp, h, test_inputs+gp->N_inputs*i, 1,
-                       test_inputs+gp->N_inputs*i, 1, 
-                       &varp[i*gp->N_outputs+j], 0, op_N ? keep+1 : 0);
+        gp_cov (gp, h, j, test_inputs+gp->N_inputs*i, 1,
+                          test_inputs+gp->N_inputs*i, 1, 
+                          &varp[i*N_outputs+j], 0, op_N ? keep : 0);
 
-        if (gp->has_jitter)
-        { varp[i*gp->N_outputs+j] += exp(2 * *h->jitter);
+        if (gp->has_jitter && !(gp->lin.flags[j]&Flag_drop))
+        { varp[i*N_outputs+j] += exp(2 * *h->jitter);
         }
 
         if (use_inverse)
         { matrix_product (scr2, train_cov, scr3, 1, N_train, N_train);
-          varp[i*gp->N_outputs+j] -= inner_product (scr3, 1, scr2, 1, N_train);
+          varp[i*N_outputs+j] -= inner_product (scr3, 1, scr2, 1, N_train);
         }
         else
-        { varp[i*gp->N_outputs+j] -= squared_norm (scr3, 1, N_train);
+        { varp[i*N_outputs+j] -= squared_norm (scr3, 1, N_train);
         }
 
-        if (varp[i*gp->N_outputs+j]<=0)
+        if (varp[i*N_outputs+j]<=0)
         { fprintf(stderr,
-   "WARNING: Predicted variance not positive (case %d, output %d, var %.1le)\n",
-           i, j, varp[i*gp->N_outputs+j]);
-          varp[i*gp->N_outputs+j] = 1e-30;
+   "WARNING: Predicted variance not positive (case %d, output %d, var %.2e)\n",
+           i, j, varp[i*N_outputs+j]);
+          varp[i*N_outputs+j] = 1e-30;
           fprintf(stderr,"          - replaced by 1e-30\n");
+        }
+      }
+      else
+      { 
+        varp[i*N_outputs+j] = 0;
+      }
+    }
+  }
+
+  /* Come up with final values for use in log-sum-exp models. */
+
+  if (N_outputs!=M_targets)
+  { 
+    int q;
+
+    q = N_outputs/M_targets;
+
+    for (i = 0; i<N_test; i++)
+    { 
+      for (j = 0; j<N_outputs; j++)
+      { if (varp[i*N_outputs+j]!=0)
+        { meanp[i*N_outputs+j] += 
+             rand_gaussian() * sqrt(varp[i*N_outputs+j]);
+          varp[i*N_outputs+j] = 0;
+        }
+      }
+
+      for (j = 0; j<M_targets; j++)
+      { for (k = 0; k<q; k++)
+        { if (!op_W || k<=3 && retain[k])
+          { meanp[i*N_outputs+j] = meanp[i*N_outputs+j*q+k];
+            break;
+          }
+        }
+        for (k = k+1; k<q; k++)
+        { if (!op_W || k<=3 && retain[k])
+          { meanp[i*N_outputs+j] = addlogs (meanp[i*N_outputs+j],
+                                            meanp[i*N_outputs+j*q+k]); 
+          }
         }
       }
     }
   }
 
-  /* Use the predictive means and variances to make predictions
-     for each test case. */
+  /* Use the predictive means and variances of outputs to make predictions
+     for the targets in each test case. */
 
   for (i = 0; i<N_test; i++) 
   { 
@@ -299,16 +346,16 @@ int pred_app_use_index (void)
     {
       test_log_prob[i] = 0;
 
-      for (j = 0; j<gp->N_outputs; j++)
+      for (j = 0; j<N_targets; j++)
       { 
         if (m!=0)
         { if (m->noise.alpha[2]!=0)
           { double n;
             n = prior_pick_sigma(exp(*h->noise[j]),m->noise.alpha[2]);
-            varp[i*gp->N_outputs+j] += n*n;
+            varp[i*N_outputs+j] += n*n;
           }
           else
-          { varp[i*gp->N_outputs+j] += exp(2 * *h->noise[j]);
+          { varp[i*N_outputs+j] += exp(2 * *h->noise[j]);
           }
         }
 
@@ -316,8 +363,8 @@ int pred_app_use_index (void)
         { 
           tr = &data_spec->trans[data_spec->N_inputs+j];
 
-          meanp[i*gp->N_outputs+j] = 
-            data_inv_trans(meanp[i*gp->N_outputs+j], *tr);
+          meanp[i*N_outputs+j] = 
+            data_inv_trans(meanp[i*N_outputs+j], *tr);
 
           if (tr->take_log)
           {
@@ -327,32 +374,31 @@ int pred_app_use_index (void)
               exit(1);
             }
   
-            meanp[i*gp->N_outputs+j] 
-              *= exp (varp[i*gp->N_outputs+j]/(tr->scale*tr->scale*2));
+            meanp[i*N_outputs+j] 
+              *= exp (varp[i*N_outputs+j]/(tr->scale*tr->scale*2));
           }
         }
 
-        test_targ_pred[M_targets*i+j] = meanp[i*gp->N_outputs+j];
+        test_targ_pred[M_targets*i+j] = meanp[i*N_outputs+j];
 
         if (op_D)
-        { test_targ_med[M_targets*i+j] = meanp[i*gp->N_outputs+j];
+        { test_targ_med[M_targets*i+j] = meanp[i*N_outputs+j];
         }
       
         if (have_targets && op_p) 
         { 
-          targ = test_targets[gp->N_outputs*i+j];
+          targ = test_targets[N_targets*i+j];
 
-          test_log_prob[i] += - log(2*M_PI*varp[i*gp->N_outputs+j])/2 
-            - ((targ-meanp[i*gp->N_outputs+j])
-               * (targ-meanp[i*gp->N_outputs+j])) 
-                 / (2*varp[i*gp->N_outputs+j]);
+          test_log_prob[i] += - log(2*M_PI*varp[i*N_outputs+j])/2 
+            - ((targ-meanp[i*N_outputs+j]) * (targ-meanp[i*N_outputs+j])) 
+                 / (2*varp[i*N_outputs+j]);
 
           if (op_r)
           { tr = &data_spec->trans[data_spec->N_inputs+j];
             test_log_prob[i] += log(tr->scale);
             if (tr->take_log)
             { test_log_prob[i] -= log (data_inv_trans 
-                (test_targets[data_spec->N_targets*i+j], *tr));
+                       (test_targets[data_spec->N_targets*i+j], *tr));
             }
           }
         }
@@ -361,8 +407,8 @@ int pred_app_use_index (void)
         {
           for (k = 0; k<Median_sample; k++)
           {
-            guessp = meanp[i*gp->N_outputs+j] 
-                      + sqrt(varp[i*gp->N_outputs+j])*rand_gaussian();
+            guessp = meanp[i*N_outputs+j] 
+                      + sqrt(varp[i*N_outputs+j])*rand_gaussian();
 
             if (op_r)
             { guessp = data_inv_trans (guessp, 
@@ -379,13 +425,13 @@ int pred_app_use_index (void)
     {
       test_log_prob[i] = 0;
  
-      for (j = 0; j<gp->N_outputs; j++)
+      for (j = 0; j<N_targets; j++)
       {
         double mean, sd, av0, av1, pr0;
         int n0, n1;
 
-        mean = meanp[i*gp->N_outputs+j];
-        sd   = sqrt(varp[i*gp->N_outputs+j]);
+        mean = meanp[i*N_outputs+j];
+        sd   = sqrt(varp[i*N_outputs+j]);
 
         av0 = 0;
         av1 = 0.1;
@@ -409,7 +455,7 @@ int pred_app_use_index (void)
         test_targ_pred[M_targets*i+j] = prb;
 
         if (have_targets && op_p)
-        { targ = test_targets[gp->N_outputs*i+j];
+        { targ = test_targets[N_targets*i+j];
           test_log_prob[i] += targ==1 ? log(prb) : log(1-prb);
         }
       }
@@ -419,16 +465,16 @@ int pred_app_use_index (void)
     {
       test_log_prob[i] = 0;
  
-      for (j = 0; j<gp->N_outputs; j++)
+      for (j = 0; j<N_targets; j++)
       {
         double mean, sd, tfact, prb;
         int targ;
 
-        mean = meanp[i*gp->N_outputs+j];
-        sd   = sqrt(varp[i*gp->N_outputs+j]);
+        mean = meanp[i*N_outputs+j];
+        sd   = sqrt(varp[i*N_outputs+j]);
 
         if (have_targets && op_p)
-        { targ = test_targets[gp->N_outputs*i+j];
+        { targ = test_targets[N_targets*i+j];
           tfact = lgamma(targ+1);
           prb = 0;
         }
@@ -469,26 +515,26 @@ int pred_app_use_index (void)
     {
       test_log_prob[i] = 0;
  
-      for (j = 0; j<gp->N_outputs; j++) 
+      for (j = 0; j<M_targets; j++) 
       { prb_dist1[j] = 0;
       }
 
       for (k = 0; k<Prediction_sample; k++)
       { double v, s;
         s = 0;
-        for (j = 0; j<gp->N_outputs; j++)
-        { v = exp (meanp[i*gp->N_outputs+j] 
-                    + rand_gaussian() * sqrt(varp[i*gp->N_outputs+j]));
+        for (j = 0; j<M_targets; j++)
+        { v = exp (meanp[i*N_outputs+j] 
+                    + rand_gaussian() * sqrt(varp[i*N_outputs+j]));
           prb_dist2[j] = v;
           s += v;
         }
-        for (j = 0; j<gp->N_outputs; j++)
+        for (j = 0; j<M_targets; j++)
         { prb_dist2[j] /= s;
           prb_dist1[j] += prb_dist2[j];
         }
       }
 
-      for (j = 0; j<gp->N_outputs; j++) 
+      for (j = 0; j<M_targets; j++) 
       { prb_dist1[j] /= Prediction_sample;
       }
 

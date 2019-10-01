@@ -31,11 +31,30 @@ specified, see <A HREF="gp-spec.html">gp-spec.doc</A>.
 The models based on these Gaussian processes are described using a
 general scheme that is also used for neural network models, see
 <A HREF="model-spec.html">model-spec.doc</A> for details.  Survival models are not allowed.  The
-function from the Gaussian process is the conditonal mean for models
-of "real" data, the logit of the probability of class 1 for "binary"
-data, the log of the probability of a class (plus an arbitrary
-constant) for "class" data, and the log of the Poisson mean for
-"count" data.
+conditional distribution of the targets is specified in terms of
+values derived from the outputs of the Gaussian process.  For "real",
+"binary", and "count" models, the number of values needed is the same
+as the number of targets.  These values define the conditional means
+for "real" targets, the logit of the probability of class 1 for
+"binary" targets, and the log of the Poisson mean for "count" targets.
+For "class" models, there must be only one target, and the number of
+values needed is the same as the number of classes.  These values are
+equal to the logs of the probabilities of the various classes, plus an
+arbitrary constant.
+
+The values used to define the target distributions can simply be equal
+to the outputs of the Gaussian process, if the number of outputs
+matches the number of required values.  Alternatively, there can be
+more outputs than required values, provided the number of outputs is
+an integer multiple of the number of required values.  These outputs
+are taken to define the required values by taking the log of the sum
+of the exponentials of all outputs in a group associated with that
+value.  Specifically, if the model requires k values, v_0,...,v_{k-1}
+(eg, for the conditional means of k real targets), and there are kq
+outputs of the Gaussian process, o_0, ... o_{kq-1}, then v_i will be
+computed as
+
+    v_i = log (exp(v_{iq}) + exp(v_{iq+1} + ... + exp(v_{iq+q-1}) )
 
             Copyright (c) 1995-2004 by Radford M. Neal
 </pre>

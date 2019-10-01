@@ -21,6 +21,8 @@ cat Ex-netgp-r.doc Ex-netgp-b.doc Ex-netgp-c.doc Ex-netgp-o.doc
 catff Ex-mixdft.doc
 cat Ex-mixdft-b.doc Ex-mixdft-r.doc Ex-dft-a.doc
 
+catff Ex-jclass.doc
+
 catff Ex-surv.doc
 
 catff Ex-gdes.doc

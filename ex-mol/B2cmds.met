@@ -1,0 +1,3 @@
+mol-spec B2log.met 3 0.5 10 30 NPT 100 0.0028
+mc-spec  B2log.met repeat 25 repeat 10 met-mol 0.1 end met-len 0.1 wrap end
+mol-mc   B2log.met 500

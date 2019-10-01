@@ -21,8 +21,8 @@
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "dft.h"
 
 
@@ -36,7 +36,7 @@ void dft_print_hypers
 {
   int i, j;
 
-  if (m && m->type=='R')
+  if (dft_real_model(m))
   { 
     printf("\nNOISE HYPERPARAMETERS\n\n");
 
@@ -44,7 +44,7 @@ void dft_print_hypers
 
     j = dft->N_trees * dft->N_targets;
 
-    for (i = 0; i<dft->N_targets; i++)
+    for (i = 0; i<dft_real_targets(dft,m); i++)
     { if (i>0 && i%5==0)
       { printf("\n           ");
       }

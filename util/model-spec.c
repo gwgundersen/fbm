@@ -20,6 +20,7 @@
 
 #include "log.h"
 #include "prior.h"
+#include "data.h"
 #include "model.h"
 #include "matrix.h"
 
@@ -40,6 +41,7 @@ main
   log_file logf;
   log_gobbled logg;
 
+  int last_binary;
   char ps[100];
   char **ap;
   int i;
@@ -93,12 +95,15 @@ main
         break;
       }
 
-      case 'R': 
+      case 'R': case 'r':
       { printf("real %s", prior_show(ps,m->noise));
         if (m->autocorr==1)
         { int i;
           printf(" acf");
           for (i = 0; i<m->n_autocorr; i++) printf(" %f",m->acf[i]);
+        }
+        if (m->type=='r')
+        { printf(" last-binary");
         }
         break;
       }
@@ -171,6 +176,11 @@ main
   }
   else if (strcmp(*ap,"real")==0)
   { m->type = 'R';
+    if (strcmp(argv[argc-1],"last-binary")==0)
+    { m->type = 'r';
+      argv[argc-1] = 0;
+      argc -= 1;
+    }
     if (*++ap==0 || !prior_parse(&m->noise,*ap)) usage();
     if (m->noise.scale || m->noise.two_point)
     { fprintf(stderr,"Illegal prior for noise level\n");

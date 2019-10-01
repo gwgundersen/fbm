@@ -15,17 +15,28 @@ tree produces a real-valued vector for each training case; these are
 added together to produce real-valued "latent" vectors associated with
 each training case.  The latent vector for a case is used to define a
 probability distribution for the case's data.  The data vector for a
-case can be real or binary, but it cannot at present be partly real
-and partly binary.  The model for binary data is that the probability
-of data items being 1 is found by applying the logistic function to
-the corresponding latent value.  Real data is modeled as being
-Gaussian distributed with mean given by the latent vector, or as being
-t-distributed with location parameter given by the latent vector.  A
-t-distribution for the noise is obtained using a hierarhical prior
-specification for Gaussian noise variances that includes a level
-allowing for different noise variances for each variable and for each
-training case, which produces a t-distribution once the case-by-case
-variances are integrated over.
+case can consist entirely of real value, or entirely of binary, or it
+can consist of all real values except for the last, which is binary.
+This last option allows binary classification problems to be solved
+using a model for the joint distribution of the binary class and the
+real-valued features, from which the conditional distribution of the
+class given the features can be found (albeit somewhat clumsily with
+the present version of the software).
+
+The model for binary data is that the probability of data items being
+1 is found by applying the logistic function to the corresponding
+latent value.  Real data is modeled as being Gaussian distributed with
+mean given by the latent vector, or as being t-distributed with
+location parameter given by the latent vector.  A t-distribution for
+the noise is obtained using a hierarhical prior specification for
+Gaussian noise variances that includes a level allowing for different
+noise variances for each variable and for each training case, which
+produces a t-distribution once the case-by-case variances are
+integrated over.
+
+Targets may be missing for some cases (written as "?"), in which case
+they are ignored when computing the likelihood (as is appropriate if
+they are "missing at random").
 
 The Markov chain used for sampling from the posterior distribution
 over trees has as its state the structures of the trees, the

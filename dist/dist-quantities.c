@@ -25,6 +25,7 @@
 #include "formula.h"
 #include "data.h"
 #include "dist.h"
+#include "numin.h"
 #include "dist-data.h"
 
 

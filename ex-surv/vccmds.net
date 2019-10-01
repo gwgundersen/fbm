@@ -2,7 +2,7 @@
 # Commands for neural network survival model with piecewise-constant hazard,
 # applied to the data for which the hazard is actually constant.
 
-net-spec vclog.net 2 8 1 / - 0.05:1:1 0.05:1 - x0.05:1 - 100 
+net-spec vclog.net 2 8 1 / ih=0.05:1:1 bh=0.05:1 ho=x0.05:1 bo=100 
 model-spec vclog.net survival pw-const-hazard 0.05 0.1 0.2 0.35 0.5 0.7 1.0 1.5
 
 data-spec vclog.net 1 1 / cdata@1:500 . cdata@-1:500 .

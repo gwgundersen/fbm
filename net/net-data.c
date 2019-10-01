@@ -100,22 +100,17 @@ void net_data_read
   if (train_values!=0) want_train = 0;
   if (test_values!=0)  want_test = 0;
 
-  if (model_targets(model,arch->N_outputs) != data_spec->N_targets
-   || arch->N_inputs != data_spec->N_inputs 
-                    + (model!=0 && model->type=='V' && surv->hazard_type!='C'))
-  { fprintf(stderr,
-     "Number of inputs/targets in data specification doesn't match network\n");
+  if (model!=0 && model->type=='C' && data_spec->N_targets!=1)
+  { fprintf(stderr,"Only one target is allowed for 'class' models\n");
     exit(1);
   }
 
-  if (model!=0 && model->type=='C' && arch->N_outputs!=data_spec->int_target)
-  { fprintf(stderr,
-"Integer range for targets does not match number of outputs for class model\n");
-    exit(1);
-  }
+  model_values_check(model,data_spec,arch->N_outputs,"");
 
-  if (model!=0 && model->type=='B' && data_spec->int_target!=2)
-  { fprintf(stderr,"Data for binary targets must be specified to be binary\n");
+  if (arch->N_inputs!=data_spec->N_inputs 
+                     + (model!=0 && model->type=='V' && surv->hazard_type!='C'))
+  { fprintf(stderr,
+     "Number of inputs in data specification doesn't match network inputs\n");
     exit(1);
   }
 

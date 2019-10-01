@@ -460,7 +460,13 @@ void dft_terminal_likelihood
   }
   else
   { *mean = train_targets[N_targets*(x-1) + t];
-    *var = st->noise ? st->noise[t]*st->noise[t] / inv_temp : 0;
+    if (isnan(*mean))
+    { *mean = 0;
+      *var = 1e30;  /* Effectively infinity */
+    }
+    else
+    { *var = st->noise ? st->noise[t]*st->noise[t] / inv_temp : 0;
+    }
   }
   
   for (dt2 = 0; dt2<dft->N_trees; dt2++)

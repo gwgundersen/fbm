@@ -104,15 +104,22 @@ The 'dist' programs know how to sample from the prior distribution
 only when it is specified as a sum of terms of the form v~D(...),
 where D is one of the parameterized distributions as described in
 formula.doc, and where the parameters of the distribution refer only
-to variables whose distributions are given in earlier terms.  Sampling
-from the prior is needed to perform Annealed Importance Sampling, and
-for sampling initial states in xxx-circ.  Sampling from the prior can
-also be done just for its own interest, or to initialize an ordinary
-Markov chain sampling run.  See dist-gen.doc for how to do this.  If
-the prior does not have the form that allows automatic sampling, prior
+to variables whose distributions are given in earlier terms.  Each
+state variable must occur on the left side only once.  Sampling from
+the prior is needed to perform Annealed Importance Sampling, and for
+sampling initial states in xxx-circ.  Sampling from the prior can also
+be done just for its own interest, or to initialize an ordinary Markov
+chain sampling run.  See dist-gen.doc for how to do this.  If the
+prior does not have the form that allows automatic sampling, prior
 generation can be done only if the -read-prior option is given, in
 which case points from the prior are obtained by reading from standard
 input, which must be a file of points, or a pipe from a separate
 program for sampling from the prior.  See dist-mc.doc for details.
+
+Similarly, the 'dist-dgen' program knows how to sample from the
+distribution of target variables when it is specified as a sum of
+terms of the form v~D(...), with v being one of t, t0, ..., t9.  Each
+target variable must occur on the left side exactly once (noting that
+t and t0 are actually the same target variable).
 
             Copyright (c) 1995-2004 by Radford M. Neal

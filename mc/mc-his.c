@@ -26,7 +26,6 @@
 
 
 #define ECHO_ARGS 1	/* Set to 1 for debugging, normally 0 */
-#define DIRECT_SUM 1	/* Set to 1 to disable fast summation, normally 0 */
 
 
 /* CLOCKS_PER_SEC should be defined by <time.h>, but it seems that it
@@ -64,7 +63,7 @@ main
   char **ap;
   char junk;
 
-  double level, E0, E1, H0, H1;
+  double level, ipr, E0, E1, H0, H1;
   double *kinetic;
 
   int index;
@@ -308,7 +307,7 @@ main
         ds.temp_state->inv_temp = 0;
         mc_app_energy(&ds,1,1,&E1,0);
 
-        if (E1>level || (H1-H0)>1000 || (H0-H1)>1000)
+        if (E1>level || (H1-H0)>10000 || (H0-H1)>10000)
         { mc_value_copy (ds.q, save_q, ds.dim);
           for (k = 0; k<ds.dim; k++)
           { ds.p[k] = -save_p[k];
@@ -348,20 +347,16 @@ main
         }
         else 
         { 
-          it->log_weight = - inv_temp * kinetic[j-min_steps];
-          for (k = 1; k<=max_steps-min_steps; k++)
-          { it->log_weight = addlogs (it->log_weight,
-              - inv_temp * kinetic[j-min_steps-k] - k*ds.dim*log(decay));
+          for (k = min_steps; k<=max_steps; k++)
+          { ipr = k==min_steps ? -inv_temp*kinetic[j-k] - k*ds.dim*log(decay)
+                  : addlogs(ipr, -inv_temp*kinetic[j-k] - k*ds.dim*log(decay));
           } 
-          it->log_weight = - it->log_weight
-                           - 0.5*ds.dim*log(inv_temp)
-                           + min_steps*ds.dim*log(decay)
-                           + log(max_steps-min_steps+1.0);
-  
+          ipr += 0.5*ds.dim*log(inv_temp) - log(max_steps-min_steps+1.0);
+
           ds.temp_state->inv_temp = -1;
           mc_app_energy(&ds,1,1,&ds.pot_energy,0);
           ds.kinetic_energy = mc_kinetic_energy(&ds);
-          it->log_weight -= ds.pot_energy + ds.kinetic_energy;
+          it->log_weight = - (ds.pot_energy + ds.kinetic_energy) - ipr;
         }
   
         /* Record position along trajectory for this state. */

@@ -13,7 +13,9 @@ distributions will require more than two components in the mixture.
 For the exact distribution used, see the source of the generation
 program, in rgen.c.  I generated 1000 cases with this program, stored
 in 'rdata', of which the first 500 are used for training, and the rest
-for testing.
+for testing.  The data files also contain a third number on each line,
+which indicates which underlying component was used.  These indicators
+are ignored in the examples below of bivariate density estimation.
 
 
 A two-component mixture model for the density estimation problem.
@@ -376,7 +378,7 @@ predictive performance is nearly identical to that above.
 One can also use a model with a different divergence function, as in
 the following specification:
 
-    > dft-spec  rlog.dft2a 0 2 / 0.5:0.5:0.5 0.01:0.5 - 0.01:0.5
+    > dft-spec  rlog.dft1b 0 2 / 0.5:0.5:0.5 0.01:0.5 - 0.01:0.5
 
 The last three arguments of this command give priors for the c0 and c2
 parameters of the divergence function, and specify that the c1

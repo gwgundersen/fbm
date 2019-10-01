@@ -34,7 +34,6 @@ void mix_record_sizes
 )
 {
   logg->req_size['P'] = sizeof (mix_spec);
-  logg->req_size['S'] = sizeof (mix_hypers);
   logg->req_size['M'] = sizeof (model_specification);
   logg->req_size['V'] = sizeof (model_survival);
 }
@@ -76,11 +75,11 @@ void mix_hyper_init
   h->SD_cm = prior_width_scaled (&mx->SD_prior, mx->N_targets);
 
   for (t = 0; t<mx->N_targets; t++) 
-  { h->SD[t] = h->SD_cm;
+  { h->tg[t].SD = h->SD_cm;
   }
 
   for (t = 0; t<mx->N_targets; t++)
-  { h->mean[t] = 0;
+  { h->tg[t].mean = 0;
   }
 
   if (m!=0 && m->type=='R')
@@ -88,7 +87,7 @@ void mix_hyper_init
     h->noise_cm = m->noise.width;
 
     for (t = 0; t<mx->N_targets; t++)
-    { h->noise[t] = h->noise_cm;
+    { h->tg[t].noise = h->noise_cm;
     }
   }
 }

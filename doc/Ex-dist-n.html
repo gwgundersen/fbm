@@ -112,7 +112,7 @@ run above might look like this:
 
     STATE VARIABLES IN FILE "nlog" WITH INDEX 10
 
-        x = 1.45784   
+        x = 2.53664
 
 However, what you see might not be exactly the same as this, due to
 differences in random number generators or in floating-point roundoff
@@ -178,8 +178,8 @@ following command estimates the expectation of the "x" itself:
 
     Estimates for x:
 
-      Mean:    10.1496  (standard error 0.0336591)
-      Std.dev: 1.03744
+      Mean:    9.81553  (standard error 0.0315052)
+      Std.dev: 0.971056
 
     NOTE: The standard errors assume points are independent
 
@@ -193,7 +193,7 @@ estimated standard deviation.
 A standard error is also given for the estimated mean, but it is valid
 only if the points are independent, which is generally not true if
 they were obtained using Markov chain sampling.  In the output above,
-the estimate differs from the true mean of 10 by over four times the
+the estimate differs from the true mean of 10 by almost six times the
 standard error, which illustrates that the standard error cannot be
 trusted when the points are not independent.
 
@@ -209,27 +209,27 @@ illustrates the procedure:
 
     Number of realizations: 1  Total points: 950
     
-    Mean: 10.149550  S.E. from correlations: 0.096872
+    Mean: 9.815530  S.E. from correlations: 0.091114
     
-    Standard deviation: 1.037442  
+    Standard deviation: 0.971056  
     
       Lag  Autocorr.  Cum. Corr.
     
-        1   0.793346    2.586691
-        2   0.620884    3.828460
-        3   0.492481    4.813421
-        4   0.406282    5.625986
-        5   0.332223    6.290432
-        6   0.261235    6.812903
-        7   0.195664    7.204231
-        8   0.162258    7.528748
-        9   0.129544    7.787835
-       10   0.104300    7.996435
-       11   0.079715    8.155866
-       12   0.055909    8.267684
-       13   0.032055    8.331795
-       14   0.011870    8.355534
-       15  -0.020351    8.314831
+        1   0.736905    2.473811
+        2   0.542432    3.558675
+        3   0.415767    4.390208
+        4   0.317866    5.025941
+        5   0.248658    5.523257
+        6   0.225521    5.974299
+        7   0.195526    6.365350
+        8   0.186829    6.739008
+        9   0.160685    7.060378
+       10   0.159264    7.378906
+       11   0.148583    7.676073
+       12   0.134523    7.945119
+       13   0.115941    8.177001
+       14   0.072718    8.322437
+       15   0.040891    8.404219
 
 The 'dist-tbl' command produces a list of values for "x" at iterations
 from 51 on.  This list is piped into the 'series' program.  With the
@@ -256,26 +256,48 @@ are close to zero, but not too much larger than this, since including
 autocorrelations at many lags introduces extra noise into the estimate
 of the autocorrelation time.
 
-An alternative approach is to use 'series' to find out the lag past
+A different way to get a standard error that accounts for correlations
+is to divide the run (once equilibrium is reached) into "batches" of
+iterations, and look at the variance of the batch means.  If the size
+of a batch is several times the lag past which autocorrelations are
+nearly zero, the batch means will be almost independent, and the
+standard errors with this approach will be realistic (provided there
+are enough batches to estimate the variance of batch means well).  The
+'mean' program can estimate expectations using batch means.  For this
+example, we could estimate the expectation of x as follows:
+
+    &gt; dist-tbl x nlog 51: | mean 50
+
+    Number of batches: 19
+    Number of lines per batch: 50
+
+             Mean        Standard error
+
+           9.8155298       0.0902573
+
+The standard error found using this method is similar to that found
+above using autocorrelations.
+
+Finally, another approach is to use 'series' to find out the lag past
 which the autocorrelations are almost zero, and then use 'dist-est' to
 find the expectation, telling it to look at iterations separated by
 that lag.  This is somewhat wasteful of data, but is at present the
 only easy way to get correct standard errors when estimating some
 function of state rather than a state variable itself.  For example,
 from the output of 'series' above, it seems that autocorrelations for
-"x" are almost zero at about lag 10.  This is consistent with states
+"x" are almost zero at about lag 15.  This is consistent with states
 at that lag being almost independent (although lack of correlation
 does not guarantee independence).  On that basis, we might estimate
 the expectation of Sin(x) with the following command:
 
-    &gt; dist-est "Sin(x)" nlog 51:%10
+    &gt; dist-est "Sin(x)" nlog 51:%15
 
-    Number of sample points: 95
+    Number of sample points: 63
 
     Estimates for Sin(x):
 
-      Mean:    -0.358403  (standard error 0.0654498)
-      Std.dev: 0.637926
+      Mean:    -0.235189  (standard error 0.0778972)
+      Std.dev: 0.61829
 
     NOTE: The standard errors assume points are independent
 

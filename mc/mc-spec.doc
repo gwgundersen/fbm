@@ -56,12 +56,13 @@ General operations:
     multiply-stepsizes factor [ first[:last] ] ]
 
         Multiplies the stepsizes for coordinates in the range first:last
-        (default is all if first:last is omitted, just first if last is 
-        omitted) by the given factor.  This modification persists for 
-        the remainder of the operations in the current iteraton, unless 
+        (from 0, default is all if first:last is omitted, just first if 
+        last is omitted) by the given factor.  This modification persists 
+        for the remainder of the operations in the current iteraton, unless 
         modified again, or unless the automatic stepsizes are overridden
-        by a stepsize specification starting with "-".  (This last provision
-        is just to make implementation easier.)
+        by a stepsize specification starting with "-", or unless an 
+        application-specific operation is done.  (These last provisions
+        are just to make implementation easier.)
 
         If a multiply-stepsizes operation is inside a "repeat", it will 
         be done repeatedly.  In particular, if factor is less than one, 
@@ -91,10 +92,11 @@ For descriptionsof the stepsize and the "-b" argument, see below.
     met-1 [ -b ] [ -r ] [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ]
 
         Do single-component Metropolis updates, for the range of components 
-        given.  The default if no components are given is all components. 
-        The default for last if first alone is given is last=first.  If no
-        -r argument is given, the components are all updated in order; with
-        the -r option, just one randomly-chosen component is updated.
+        given.  Components are numberred from 0.  The default if no components 
+        are given is all components.  The default for last if first alone is 
+        given is last=first.  If no -r argument is given, the components are 
+        all updated in order; with the -r option, just one randomly-chosen 
+        component is updated.
 
     rgrid-met [ -b ] [ stepsize-adjust[:stepsize-alpha] ]
 
@@ -349,9 +351,11 @@ double-spiral, and tempered-hybrid operations.
 
 Test operations: 
 
-    The following operations are used for testing and research only.
-    They do not leave the desired distribution invariant, and hence
-    should not be used as part of a sampling scheme.
+    The following operations are useful for testing and research only,
+    or possibly when trying to manually get your Markov chain started
+    in a reasonable place.  They do not leave the desired distribution
+    invariant, and hence should not be used as part of any final sampling 
+    scheme.
 
     multiply-momentum factor
 
@@ -360,6 +364,12 @@ Test operations:
     set-momentum value
 
         All momentum variables are set to the given value.
+
+    set-value value [ first[:last] ]
+
+        Sets the "position" variable from first to last to the specified
+        value.  All variables are set if first:last is omitted, just 
+        first is set if last is omitted.  Variable indexes start at 0.
 
 Certain of these operations are normally used in standard combinations, 
 in particular the following:
@@ -393,16 +403,20 @@ whereas the Metropolis form is min(1,R).
 
 The trajectory specification can have one of the following forms:
 
-    leapfrog [ halfp | halfq ] [ N-approx ]
+    leapfrog [ halfp | halfq ] [ N-approx | frac ]
 
-        Use the leapfrog method, repeated N-approx times using a randomly
-        selected ordering of that number of energy approximations (whose
-        average must be the true value).  The default for N-approx is one.
-        The "halfp" or "halfq" option specifies whether the half-steps
-        at the beginning and end of the trajectory are for p (momentum)
-        or q (position).  The default is "halfp".
+        Use the leapfrog method.  The "halfp" or "halfq" option specifies 
+        whether the half-steps at the beginning and end of the trajectory 
+        are for p (momentum) or q (position).  The default is "halfp".
+        The N-approx option results in N-approx leapfrog steps for each
+        overall step, which use successive approximations to the energy 
+        (whose average must be the true value), in an order randomly selected 
+        at the start of the trajectory. The default for N-approx is one.
+        The frac option causes the gradient of the energy use to be based
+        on that fraction of some set of terms (eg, training cases).  The
+        default is to use all terms (ie, frac of 1).
 
-    opt2 [ rev | sym ] [ firstq | firstp ]
+    opt2 [ rev | sym ] [ firstq | firstp ] [ frac ]
 
         Apply McLachlan and Atela's "optimal" two stage method, with the
         first step being done for the position (firstq) or momentum
@@ -413,7 +427,7 @@ The trajectory specification can have one of the following forms:
         a symmetrical method.  Only the symmetrical method should be
         used in conjuntion with "hybrid" and "tempered hybrid" operations.  
 
-    gen2 [ rev | sym ] [ firstq | firstp ] a2
+    gen2 [ rev | sym ] [ firstq | firstp ] a2 [ frac ]
 
         Apply a two stage second-order method with parameter a2, as
         described by McLachlan and Atela.  Firstq and firstp are as for
@@ -421,14 +435,14 @@ The trajectory specification can have one of the following forms:
         most useful values for a2 are covered by "leapfrog" and "opt2".
         The "rev" and "sym" options are as for opt2.
 
-    opt4 [ rev | sym ]
+    opt4 [ rev | sym ] [ frac ]
 
         Apply McLachlan and Atela's "optimal" four stage method for
         quadratic kinetic energy. The "rev" and "sym" options are as for opt2.
 
-The default if no specification is given is "leapfrog halfp 1".  The
-opt2, gen2, and opt4 methods are taken from a paper by Robert
-I. McLachlan and Pau Atela, "The accuracy of symplectic integrators",
+The default if no specification is given is "leapfrog halfp".  The
+opt2, gen2, and opt4 methods are taken from a paper by Robert I. 
+McLachlan and Pau Atela, "The accuracy of symplectic integrators",
 Nonlinearity, vol. 5, pp. 541-562, 1992.  (Note: there is a typo in
 their description of opt2 in table 2. b1=1-b2 should be 1-1/sqrt(2).)
 

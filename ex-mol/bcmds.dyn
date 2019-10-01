@@ -1,0 +1,3 @@
+mol-spec blog.dyn 3 0.5 1 30 NVT 100 5
+mc-spec  blog.dyn repeat 100 heatbath 0.9 dynamic 10 0.004 end wrap
+mol-mc   blog.dyn 500

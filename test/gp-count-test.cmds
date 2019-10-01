@@ -1,0 +1,4 @@
+gp-spec log 2 3 2 - 0.01 / 1:1.5 0.5:1 drop:-1 / 0.5:1.5 1:1 drop:-2
+model-spec log count
+data-spec log 2 1 + -n / gp-count-test.dat gp-count-test.targ
+gp-mc-test log 50 100 mh-values 0.1 50 slice-1 4 1

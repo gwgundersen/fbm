@@ -17,6 +17,8 @@ application being used.
     H   Total energy at end of iteration (sum of E and K)
     D[n] Change in total energy for last state proposed (up to max of n)
          (for Metropolis, hybrid, and multivariate slice sampling operations)
+    h   Current value of the thermostat variable (only for use with  
+        Metropolis importance sampling, xxx-mis.doc)
 
     i   Inverse temperature being used (from the tempering schedule)
     I   Index of current inverse temperature value in schedule

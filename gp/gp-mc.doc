@@ -77,7 +77,15 @@ The following application-specific sampling procedures are implemented:
        If latent values do not exist beforehand, this procedure operates 
        as if the previous values were all zero.  
 
-   sample-values
+   init-values
+
+       Initialize latent values associated with training cases by setting
+       them to values determined by the target(s) associated with that
+       case and by the distribution of values for all training cases.
+       Details vary with the model; some models may not implement this
+       operation.  This operation is ignored if latent values already exist.
+
+   sample-values [ old ]
 
        Samples latent values associated with training cases given the 
        current values of the hyperparameters, ignoring the current latent
@@ -88,6 +96,12 @@ The following application-specific sampling procedures are implemented:
        noted above, in this context, they will probably have to be 
        discarded before doing anything else (and hence are useful only 
        in allowing quantities such as "b" to be evaluated).
+
+       If the optional "old" argument is present and is non-zero, an 
+       older, slower, version is used.  This version is also used when
+       the model has autocorrelated noise.  The two versions sample from
+       the same distribution, but don't produce the same values with the
+       same seed.
 
    discard-values
 

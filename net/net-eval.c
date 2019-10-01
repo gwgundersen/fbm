@@ -142,7 +142,7 @@ main
       exit(1);
     }
 
-    N_targets = model_targets(m,a->N_outputs);
+    N_targets = m->type=='C' ? 1 : a->N_outputs;
   }
 
   if (a->N_inputs!=ng)

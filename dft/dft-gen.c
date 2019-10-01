@@ -21,8 +21,8 @@
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "dft.h"
 #include "rand.h"
 
@@ -132,13 +132,13 @@ main
           }
         }
 
-        if (m!=0 && m->type=='R')
+        if (dft_real_model(m))
         {
           if (m->noise.alpha[0]!=0)
           { h->noise_cm = SD_value;
           }
 
-          for (t = 0; t<dft->N_targets; t++)
+          for (t = 0; t<dft_real_targets(dft,m); t++)
           { h->SD[j++] = m->noise.alpha[1]!=0 ? SD_value : h->noise_cm;
           }
         }

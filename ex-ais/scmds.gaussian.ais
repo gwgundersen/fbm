@@ -2,7 +2,7 @@
 # Linear regression example with Gaussian prior, using Annealed Importance
 # Sampling.
 
-net-spec slog.gaussian.ais 10 1 / - 0.05:0.5 -
+net-spec slog.gaussian.ais 10 1 / ih=0.05:0.5 
 model-spec slog.gaussian.ais real 0.1:1
 data-spec slog.gaussian.ais 10 1 / sdata .
 mc-temp-sched slog.gaussian.ais 1e-8:49 1e-6:450 0.05:500

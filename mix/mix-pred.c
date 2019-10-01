@@ -22,8 +22,8 @@
 #include "rand.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "numin.h"
 #include "mix.h"
 #include "mix-data.h"
@@ -132,6 +132,13 @@ int pred_app_use_index (void)
   /* See what we have sitting in the log file for this iteration. */
 
   hyp = logg.data['S'];
+
+  if (hyp!=0 && logg.actual_size['S'] != mix_hypers_size(mx->N_targets))
+  { fprintf(stderr,
+      "Record has wrong size: Type S, Actual size %d, Required size %d\n",
+      logg.actual_size['S'], mix_hypers_size(mx->N_targets));
+    exit(1);
+  }
 
   have_indicators = logg.data['I']!=0 && logg.index['I']==logg.last_index;
   have_offsets    = logg.data['O']!=0 && logg.index['O']==logg.last_index;
@@ -268,10 +275,10 @@ int pred_app_use_index (void)
 
     for (i = 0; i<N_new_params; i++)
     { for (t = 0; t<N_targets; t++)
-      { noff[N_targets*i+t] = hyp->mean[t] + hyp->SD[t] * rand_gaussian();
+      { noff[N_targets*i+t] = hyp->tg[t].mean + hyp->tg[t].SD * rand_gaussian();
         if (m->type=='R') 
         { nnsd[N_targets*i+t] 
-            = prior_pick_sigma (hyp->noise[t], m->noise.alpha[2]);
+            = prior_pick_sigma (hyp->tg[t].noise, m->noise.alpha[2]);
         }
       } 
     }

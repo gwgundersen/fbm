@@ -1,0 +1,5 @@
+grid -1:1%0.2 >data
+gp-spec log 1 1 - - 0.01 / 2:3 0.5:3
+model-spec log real 0.1:3
+data-spec log 1 1 -n / data targets
+time gp-mc-test log 20 40 repeat 10 sample-values slice-1 1

@@ -7,3 +7,6 @@ you'll need to recompile the programs, which is done with a command
 such as the following:
 
    cc rgen.c rand.c -DRAND_FILE=\"../util/randfile\" -lm -o rgen
+
+The command files ending with ".old-style" do the same things using
+the old syntax for net-spec (which still works).

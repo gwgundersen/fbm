@@ -16,12 +16,12 @@ include ../make.include
 
 programs:	gp-spec gp-gen gp-display gp-eval gp-plt gp-hist gp-mc \
 		gp-pred gp-cov gp-eigen gp-stepsizes gp-grad-test gp-tbl \
-		gp-genp
+		gp-dgen gp-genp 
 
 clean:
 	rm -f *.o gp-spec gp-gen gp-display gp-eval gp-plt gp-hist gp-mc \
 	          gp-pred gp-cov gp-eigen gp-stepsizes gp-grad-test gp-tbl \
-		  gp-genp
+		  gp-dgen gp-genp 
 
 
 include ../util/util.make
@@ -34,12 +34,23 @@ gp-spec:	gp-spec.o	gp-util.o prior.o misc.o log.o rand.o ars.o
 
 gp-spec.o:	gp-spec.c	misc.h prior.h model.h log.h data.h gp.h
 
-gp-gen:		gp-gen.o	gp-util.o gp-prior.o prior.o misc.o log.o \
-				rand.o ars.o
-		$(CC) $(LFLAGS) gp-gen.o gp-util.o gp-prior.o \
-		  prior.o misc.o log.o rand.o ars.o -lm -o gp-gen
+gp-gen:		gp-gen.o	gp-util.o gp-data.o gp-prior.o gp-covm.o \
+				prior.o misc.o matrix.o \
+				log.o rand.o ars.o numin.o data-trans.o model.o
+		$(CC) $(LFLAGS) gp-gen.o gp-util.o gp-data.o gp-prior.o gp-covm.o\
+		  prior.o misc.o log.o rand.o ars.o numin.o data-trans.o model.o \
+		  matrix.o -lm -o gp-gen
 
-gp-gen.o:	gp-gen.c	misc.h prior.h model.h log.h data.h gp.h
+gp-gen.o:	gp-gen.c	misc.h prior.h model.h log.h data.h gp-data.h \
+				rand.h matrix.h gp.h
+
+gp-dgen:	gp-dgen.o	gp-util.o prior.o ars.o misc.o log.o rand.o \
+				model.o
+		$(CC) $(LFLAGS) gp-dgen.o gp-util.o prior.o ars.o \
+		  misc.o log.o rand.o model.o -lm -o gp-dgen
+
+gp-dgen.o:	gp-dgen.c	misc.h log.h prior.h rand.h data.h model.h \
+				gp.h gp-data.h
 
 gp-display:	gp-display.o	gp-util.o prior.o misc.o log.o rand.o ars.o
 		$(CC) $(LFLAGS) gp-display.o gp-util.o \
@@ -78,35 +89,35 @@ gp-cov.o:	gp-cov.c	misc.h prior.h model.h log.h data.h matrix.h \
 				gp.h gp-data.h
 
 gp-plt:		gp-plt.o	gp-mc.o prior.o gp-data.o gp-covm.o model.o \
-				gp-quantities.o gp-util.o gp-prior.o gp-like.o \
+				gp-quantities.o gp-util.o gp-prior.o \
 				mc-quantities.o mc-util.o plt.o quantities.o \
 				misc.o log.o rand.o numin.o data-trans.o \
-				matrix.o ars.o
-		$(CC) $(LFLAGS) gp-plt.o gp-mc.o gp-covm.o gp-like.o prior.o \
+				matrix.o ars.o mc-traj.o
+		$(CC) $(LFLAGS) gp-plt.o gp-mc.o gp-covm.o prior.o \
 		  gp-data.o model.o gp-quantities.o gp-util.o gp-prior.o \
-		  mc-quantities.o mc-util.o plt.o quantities.o \
+		  mc-quantities.o mc-util.o plt.o quantities.o mc-traj.o \
 		  misc.o log.o rand.o numin.o data-trans.o matrix.o ars.o \
 		  -lm -o gp-plt
 
 gp-tbl:		gp-plt.o	gp-mc.o prior.o gp-data.o gp-covm.o model.o \
-				gp-quantities.o gp-util.o gp-prior.o gp-like.o \
+				gp-quantities.o gp-util.o gp-prior.o \
 				mc-quantities.o mc-util.o tbl.o quantities.o \
 				misc.o log.o rand.o numin.o data-trans.o \
-				matrix.o ars.o
-		$(CC) $(LFLAGS) gp-plt.o gp-mc.o gp-covm.o gp-like.o prior.o \
+				matrix.o ars.o mc-traj.o
+		$(CC) $(LFLAGS) gp-plt.o gp-mc.o gp-covm.o prior.o \
 		  gp-data.o model.o gp-quantities.o gp-util.o gp-prior.o \
-		  mc-quantities.o mc-util.o tbl.o quantities.o \
+		  mc-quantities.o mc-util.o tbl.o quantities.o mc-traj.o \
 		  misc.o log.o rand.o numin.o data-trans.o matrix.o ars.o \
 		  -lm -o gp-tbl
 
 gp-hist:	gp-plt.o	gp-mc.o prior.o gp-data.o gp-covm.o model.o \
-				gp-quantities.o gp-util.o gp-prior.o gp-like.o \
+				gp-quantities.o gp-util.o gp-prior.o \
 				mc-quantities.o mc-util.o hist.o quantities.o \
 				misc.o log.o rand.o numin.o data-trans.o \
-				matrix.o ars.o
-		$(CC) $(LFLAGS) gp-plt.o gp-mc.o gp-covm.o gp-like.o prior.o \
+				matrix.o ars.o mc-traj.o
+		$(CC) $(LFLAGS) gp-plt.o gp-mc.o gp-covm.o prior.o \
 		  gp-data.o model.o gp-quantities.o gp-util.o gp-prior.o \
-		  mc-quantities.o mc-util.o hist.o quantities.o \
+		  mc-quantities.o mc-util.o hist.o quantities.o mc-traj.o \
 		  misc.o log.o rand.o numin.o data-trans.o matrix.o ars.o \
 		  -lm -o gp-hist
 
@@ -127,12 +138,12 @@ gp-stepsizes:	mc-stepsizes.o	gp-mc.o gp-plt.o misc.o log.o rand.o \
 				mc-util.o mc-heatbath.o matrix.o ars.o \
 				mc-metropolis.o mc-hybrid.o mc-slice.o \
 				prior.o gp-prior.o gp-data.o gp-covm.o \
-				model.o gp-util.o gp-quantities.o gp-like.o \
+				model.o gp-util.o gp-quantities.o \
 				mc-quantities.o quantities.o prior.o 
 		$(CC) $(LFLAGS) mc-stepsizes.o gp-mc.o misc.o log.o \
 		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
-		  prior.o gp-prior.o gp-data.o model.o gp-util.o gp-like.o \
+		  prior.o gp-prior.o gp-data.o model.o gp-util.o \
 		  gp-plt.o gp-quantities.o mc-quantities.o quantities.o \
 		  matrix.o ars.o gp-covm.o -lm -o gp-stepsizes
 
@@ -141,12 +152,12 @@ gp-genp:	mc-genp.o	gp-mc.o gp-plt.o misc.o log.o rand.o \
 				mc-util.o mc-heatbath.o matrix.o ars.o \
 				mc-metropolis.o mc-hybrid.o mc-slice.o \
 				prior.o gp-prior.o gp-data.o gp-covm.o \
-				model.o gp-util.o gp-quantities.o gp-like.o \
+				model.o gp-util.o gp-quantities.o \
 				mc-quantities.o quantities.o prior.o 
 		$(CC) $(LFLAGS) mc-genp.o gp-mc.o misc.o log.o \
 		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
-		  prior.o gp-prior.o gp-data.o model.o gp-util.o gp-like.o \
+		  prior.o gp-prior.o gp-data.o model.o gp-util.o \
 		  gp-plt.o gp-quantities.o mc-quantities.o quantities.o \
 		  matrix.o ars.o gp-covm.o -lm -o gp-genp
 
@@ -155,12 +166,12 @@ gp-grad-test:	mc-grad-test.o	gp-mc.o gp-plt.o misc.o log.o rand.o \
 				mc-util.o mc-heatbath.o matrix.o ars.o \
 				mc-metropolis.o mc-hybrid.o mc-slice.o \
 				prior.o gp-prior.o gp-data.o gp-covm.o \
-				model.o gp-util.o gp-quantities.o gp-like.o \
+				model.o gp-util.o gp-quantities.o \
 				mc-quantities.o quantities.o prior.o
 		$(CC) $(LFLAGS) mc-grad-test.o gp-mc.o misc.o log.o \
 		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
-		  prior.o gp-prior.o gp-data.o model.o gp-util.o gp-like.o \
+		  prior.o gp-prior.o gp-data.o model.o gp-util.o \
 		  gp-plt.o gp-quantities.o mc-quantities.o quantities.o \
 		  matrix.o ars.o gp-covm.o -lm -o gp-grad-test
 
@@ -168,14 +179,14 @@ gp-mc:		mc.o gp-mc.o	misc.o log.o rand.o numin.o data-trans.o \
 				gp-plt.o mc-iter.o mc-traj.o mc-util.o \
 				mc-metropolis.o mc-hybrid.o mc-slice.o \
 				prior.o gp-prior.o gp-data.o gp-covm.o \
-				model.o gp-util.o gp-quantities.o gp-like.o \
+				model.o gp-util.o gp-quantities.o \
 				mc-quantities.o quantities.o mc-heatbath.o \
 				matrix.o ars.o prior.o
 		$(CC) $(LFLAGS) mc.o gp-mc.o misc.o log.o rand.o numin.o\
 		  data-trans.o mc-iter.o mc-traj.o mc-util.o matrix.o ars.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
 		  prior.o gp-prior.o gp-plt.o gp-quantities.o mc-quantities.o \
-		  quantities.o gp-data.o model.o gp-util.o gp-covm.o gp-like.o \
+		  quantities.o gp-data.o model.o gp-util.o gp-covm.o \
 		  -lm -o gp-mc
 
 gp-mc.o:	gp-mc.c		misc.h rand.h log.h mc.h data.h prior.h ars.h \
@@ -187,6 +198,5 @@ gp-covm.o:	gp-covm.c	misc.h log.h prior.h model.h data.h gp.h
 gp-data.o:	gp-data.c	misc.h log.h data.h prior.h model.h numin.h \
 				gp.h gp-data.h
 gp-prior.o:	gp-prior.c	misc.h log.h prior.h model.h data.h gp.h rand.h
-gp-like.o:	gp-like.c	misc.h log.h prior.h model.h data.h gp.h rand.h
 gp-quantities.o: gp-quantities.c misc.h log.h prior.h model.h gp.h data.h \
 				gp-data.h quantities.h

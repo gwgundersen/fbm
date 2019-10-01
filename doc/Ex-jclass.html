@@ -1,0 +1,94 @@
+<html>
+<body>
+<pre>
+
+
+EXAMPLE OF CLASSIFICATION WITH A DIRICHLET DIFFUSION TREE JOINT MODEL.
+
+Rather than classify items with a neural network or Gaussian process
+model for the conditional distribution of the class given inputs, we
+can instead model the joint distribution of the inputs and the class,
+from which we can then derive the conditional distribution of the
+class given the inputs.  Here, this is done using a Dirichlet
+diffusion tree model for the joint distribution.  One advantage of
+this approach is that unlabelled data (with the class missing) can be
+used to help learn the classifier.
+
+The data is the same as that used for the example of modeling a
+bivariate density (see <A HREF="Ex-mixdft-r.html">Ex-mixdft-r.doc</A>), except that we now also look
+at the 0/1 indicator of which component each data point was generated
+from, which was previously ignored.  The full data file (in ex-mixdft)
+can be used to create a training set of 500 cases in which only the
+last 10 cases have class labels, as follows:
+
+    &gt; head -500 rdata | sed "1,490s/.\$/?/" &gt;rdata.t
+
+Don't worry if this is gibberish to you - all that matters is the
+final result, in which the first 490 cases have the class indicator
+replaced by "?", which indicates a missing value.
+
+The following specifications set up a Dirichlet diffusion tree model
+for the two inputs and the class (all regarded as "targets" for this
+model):
+
+    &gt; dft-spec   rblog.dft 0 3 / 0.5:0.5:0.5 0.01:0.5 - 0.01:0.5
+    &gt; model-spec rblog.dft real 0.1 last-binary
+    &gt; data-spec  rblog.dft 0 3 / rdata.t@1:500 .
+
+Note that "last-binary" option of model-spec.  This says that although
+the targets are generally real-valued, the very last target is binary.
+
+We can now sample from the posterior distribution for the tree and the
+parameters of the model as follows:
+
+    &gt; mc-spec    rblog.dft repeat 15 gibbs-latent slice-positions \
+                                     met-terminals gibbs-sigmas slice-div
+    &gt; dft-mc     rblog.dft 1000
+
+This takes about 45 minutes on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
+
+We can use iterations from the end of this run to evaluate the
+predictive density for some new vector of targets.  In order to make a
+prediction for the class of some test case in which only the two
+real-valued targets are known, we need to evaluate the predictive
+density for the test case with 0 filled in for the class and for the
+test case with 1 filled in for the class.  Two files of test cases
+(the last 500 in rdata) with the actual classes replaced by 0 and by 1
+can be created as follows (again, don't worry if the details don't
+make sense to you):
+
+    &gt; tail -500 rdata | sed "1,\$s/.\$/0/" &gt;rdata.0
+    &gt; tail -500 rdata | sed "1,\$s/.\$/1/" &gt;rdata.1
+
+The following commands find the log probability densities for these
+test cases, based on every fifth iteration after iteration 400 from
+the log file:
+
+    &gt; dft-pred pb rblog.dft 405:%5 / rdata.0 . &gt;rdata.lp0
+    &gt; dft-pred pb rblog.dft 405:%5 / rdata.1 . &gt;rdata.lp1
+
+The following commands convert the log probability densities into
+probability densities:
+
+    &gt; sed "s/e/E/" &lt;rdata.lp0 | sed "s/.*/calc \"Exp(&amp;)\"/" \
+        | bash | sed "s/ */p0=/" &gt;rdata.up0
+    &gt; sed "s/e/E/" &lt;rdata.lp1 | sed "s/.*/calc \"Exp(&amp;)\"/" \
+        | bash | sed "s/ */p1=/" &gt;rdata.up1
+
+The ratio of the probability density of a test case with the class set
+to 1 to the probability density of the same test case with the class
+set to 0 can be used to find the conditional probability of class 1,
+as follows:
+
+    &gt; combine rdata.up0 rdata.up1 | sed "s/.*/calc &amp; \"p1\\/(p0+p1)\"/" \
+        | bash &gt;rdata.p1
+
+The final result, in the file rdata.p1, is the predictive probability
+of class 1 for each of the 500 test cases.  If we now guess that the
+class is 1 if this probability is greater than 0.5, the resulting
+error rate is 2.6%.  This is much better than we would be likely to
+achieve with any method that looks only at the 10 training cases for
+which the class is known.
+</pre>
+</body>
+</html>

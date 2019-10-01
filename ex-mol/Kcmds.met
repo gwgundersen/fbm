@@ -1,0 +1,3 @@
+mol-spec Klog.met 3 0.001 1 0.3 NPT 2 0.001
+mc-spec  Klog.met repeat 25 repeat 10 met-mol 0.1 end met-len 0.1 wrap end
+mol-mc   Klog.met 1000

@@ -1,0 +1,95 @@
+<html>
+<body>
+<pre>
+
+
+XXX-MC-TEST:  Do a joint distribution test of MCMC correctness.
+
+There is a version of this program for each 'mc' application that
+implements this facility (eg, dist-mc-test).  Each version allows one
+to test the correctness of a set of Markov chain operations, as
+applied to a particular model, with particular values for the inputs
+in a set of cases.  The method is based on the joint distribution
+technique of John Geweke (see "Getting it right: Joint distribution
+tests of posterior simulators", to appear in the Journal of the
+American Statistical Association).
+
+Usage:
+
+    xxx-mc-test log-file repeats length { operation-spec }
+
+The log-file should already contain model specifications (from
+xxx-spec, model-spec, etc.), along with a data specification (see
+<A HREF="data-spec.html">data-spec.doc</A>).  The targets in the data specification must come from
+a separate file (not including the inputs), in order within each line,
+with no transformations applied - ie, the target specification must
+consist of nothing but the name of this file.  The initial contents of
+the targets file are ignored.  Indeed, this targets file need not even
+exist, provided the -n option of data-spec was used to prevent
+data-spec from trying to read it.
+
+Parameter values sampled directly from the prior are stored in
+'repeats' log files with the names log-file:p1, log-file:p2, etc.
+Each such log file contains 'length' parameter vectors sampled
+independently using xxx-gen.
+
+Parameters values sampled from the prior by means of Markov chain
+updates for the joint parameter/data distribution are stored in
+'repeats' log files with the names log-file:j1, log-file:j2, etc.
+Each such log file is initialized by sampling a parameter vector from
+the prior using xxx-gen (stored at iteration 0 of the log file), and
+then sampling a corresponding set of target values using xxx-dgen
+(stored in the targets file that was specified with data-spec).
+Further parameter vectors are stored in each of the log files under
+indexes 1 through 'length', with each parameter vector obtained from
+the previous one by applying the specified Markov chain operations,
+using the current targets.  New targets are then generated using
+xxx-dgen, based on the updated parameter vector.  In other words, the
+joint distribution for parameters and data is sampled from using a
+Gibbs-like scheme, in which the parameters are updated with the
+specified operations, and the data is updated by sampling from its
+conditional distribution given the data.
+
+If all aspects of the software are working correctly, the points in
+log-file:p1, log-file:p2, etc. and those in log-file:j1, log-file;j2,
+etc. should come from exactly the same distribution (the prior).  The
+points in the ":j" log files will be dependent within a log file, but
+independent between log files.  Various statistical tests can be
+applied to parameter values in these log files to check whether they
+in fact come from the same distribution.  If they don't, there is a
+bug somewhere, unless the Markov chain operations specified are
+documented as being only approximate (such as the uncorrected dynamic
+updates).
+
+One can also check whether things look OK visually.  One check looks
+only at the ":j" log files.  For example, when testing the 'dist'
+module, one might do the following:
+
+  (for log in log-file:j*; do dist-plt t u $log 0:; done) | plot-points
+
+Here "u" is one of the parameters.  Since the parameters stored at
+index 0 are sampled from the prior, and the data is then sampled from
+the correct conditional distribution given these parameters, the
+Markov chain that samples from the joint parameter/data distribution
+should be started in equilibrium.  Any systematic tendency for the
+distribution at indexes greater than 0 to differ from the distribution
+at index 0 is therefore a sign that something is not correct.
+
+Another check compares scatterplots from the ":j" log files with those
+from the ":p" log files.  For example:
+
+  (dist-tbl uv log-file:p*; echo " "; dist-tbl uv log-file:j*) | plot-points
+
+Here "u" and "v" are two of the parameters.  If plot-points is xgraph
+with options -nl and -P, this should produce a scatterplot in which
+points from the ":p" log files and those from the ":j" log files are
+in different colours, allowing one to visually see whether they are
+from the same distribution.
+
+Of course, quantitative tests may reveal small discrepancies that
+would not be apparent in these visual tests.
+
+            Copyright (c) 1995-2004 by Radford M. Neal
+</pre>
+</body>
+</html>

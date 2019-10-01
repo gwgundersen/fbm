@@ -21,8 +21,8 @@
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "rand.h"
 #include "dft.h"
 #include "dft-data.h"
@@ -438,13 +438,13 @@ main
     { if (m==0)
       { if (!only_tree) fprintf (output, " %+.6e", latent[N*N_targets+t]);
       }
-      else if (m->type=='R')
+      else if (m->type=='R' || m->type=='r' && t<N_targets-1)
       { double n, x;
         n = prior_pick_sigma (st->noise[t], m->noise.alpha[2]);
         x = latent[N*N_targets+t] + n*rand_gaussian();
         if (!only_tree) fprintf (output, " %+.6e", x);
       }
-      else if (m->type=='B')
+      else if (m->type=='B'|| m->type=='r' && t==N_targets-1)
       { int b;
         b = rand_uniform() < 1/(1+exp(-latent[N*N_targets+t]));
         if (!only_tree) fprintf (output, " %d", b);

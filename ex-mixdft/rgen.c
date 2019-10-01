@@ -10,7 +10,7 @@
 main()
 {
   double s, x, y;
-  int i, j;
+  int i, j, b;
 
   for (i = 0; i<N_cases; i++)
   {
@@ -22,6 +22,7 @@ main()
       { s = rand_gaussian();
         y += s*s;
       }
+      b = 0;
     }
     else
     { s = rand_gaussian();
@@ -31,8 +32,9 @@ main()
       { s = 0.3 + rand_gaussian();
         y += s*s;
       }
+      b = 1;
     }
 
-    printf(" %+8.5lf %+10.5lf\n",x,y);
+    printf(" %+8.5lf %+10.5lf %d\n",x,y,b);
   }
 }

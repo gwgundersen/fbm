@@ -1,0 +1,5 @@
+tar cvf $1.tar \
+ $1/util $1/mc $1/dist $1/bvg $1/net $1/gp $1/mix $1/dft \
+ $1/ex-dist $1/ex-bayes $1/ex-netgp $1/ex-mixdft $1/ex-surv $1/ex-gdes $1/ex-ais \
+ $1/ex-circ $1/bin $1/doc $1/make.include $1/make-all $1/make-clean \
+ $1/install-arch $1/README

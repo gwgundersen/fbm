@@ -100,22 +100,17 @@ void gp_data_read
   if (train_inputs!=0) want_train = 0;
   if (test_inputs!=0)  want_test = 0;
 
-  if (model_targets(model,gp->N_outputs) != data_spec->N_targets
-   || gp->N_inputs != data_spec->N_inputs 
+  if (model!=0 && model->type=='C' && data_spec->N_targets!=1)
+  { fprintf(stderr,"Only one target is allowed for 'class' models\n");
+    exit(1);
+  }
+
+  model_values_check(model,data_spec,gp->N_outputs,0);
+
+  if (gp->N_inputs!=data_spec->N_inputs 
                      + (model!=0 && model->type=='V' && surv->hazard_type!='C'))
   { fprintf(stderr,
-     "Number of inputs/targets in data specification doesn't match GP model\n");
-    exit(1);
-  }
-
-  if (model!=0 && model->type=='C' && gp->N_outputs!=data_spec->int_target)
-  { fprintf(stderr,
-"Integer range for targets does not match number of outputs for class model\n");
-    exit(1);
-  }
-
-  if (model!=0 && model->type=='B' && data_spec->int_target!=2)
-  { fprintf(stderr,"Data for binary targets must be specified to be binary\n");
+     "Number of inputs in data specification doesn't match GP inputs\n");
     exit(1);
   }
 

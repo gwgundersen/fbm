@@ -33,9 +33,14 @@ a full array or as a single-valued quantity.
 The following quantity specifications are universally known (unless
 redefined):
 
-    t   The index of the current iteration.  No modifier or range allowed.
+    t[n]  The index of the current iteration if no modifier is given.
+          With modifier of n, equal to one plus the index minus one 
+          modulo n.  (Unfortunately, the usage with a modifier is 
+          masked by another definition for all except the 'bvg' and 
+          'mol' modules.)
 
-    #   An array with values equal to indexes.
+    #[n]  An array with values equal to indexes, or equal to indexes
+          modulo n if a modifier is specified.
 
 Other quantities are as defined by the application, or by other
 higher-level modules.  For documentation, see <A HREF="mc-quantities.html">mc-quantities.doc</A>,

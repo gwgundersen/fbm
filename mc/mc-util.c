@@ -38,6 +38,7 @@ void mc_record_sizes
   logg->req_size['t'] = sizeof (mc_traj);
   logg->req_size['b'] = sizeof (mc_temp_state);
   logg->req_size['m'] = sizeof (mc_temp_sched);
+  logg->req_size['h'] = sizeof (mc_therm_state);
 }
 
 

@@ -106,7 +106,7 @@ void mc_app_initialize
     N_targets = mx->N_targets;
   
     /* Locate existing state records. */
-  
+
     hyp = logg->data['S'];
 
     have_indicators = logg->data['I']!=0;
@@ -115,6 +115,13 @@ void mc_app_initialize
   
     if (hyp==0 && (have_indicators || have_offsets || have_noise_SD))
     { fprintf(stderr,"Missing hyperparameter record\n");
+      exit(1);
+    }
+  
+    if (hyp!=0 && logg->actual_size['S'] != mix_hypers_size(mx->N_targets))
+    { fprintf(stderr,
+        "Record has wrong size: Type S, Actual size %d, Required size %d\n",
+        logg->actual_size['S'], mix_hypers_size(mx->N_targets));
       exit(1);
     }
 
@@ -233,7 +240,7 @@ void mc_app_initialize
     if (N_train>0 && !have_offsets)
     { for (i = 0; i<N_active; i++)
       { for (t = 0; t<N_targets; t++)
-        { offsets[i*N_targets+t] = hyp->mean[t];
+        { offsets[i*N_targets+t] = hyp->tg[t].mean;
         }
       }
       have_offsets = 1;
@@ -242,7 +249,7 @@ void mc_app_initialize
     if (N_train>0 && model!=0 && model->type=='R' && !have_noise_SD)
     { for (i = 0; i<N_active; i++)
       { for (t = 0; t<N_targets; t++)
-        { noise_SD[i*N_targets+t] = hyp->noise[t];
+        { noise_SD[i*N_targets+t] = hyp->tg[t].noise;
         }
       }
       have_noise_SD = 1;
@@ -297,7 +304,7 @@ void mc_app_save
 { 
   logf->header.type = 'S';
   logf->header.index = index;
-  logf->header.size = sizeof *hyp;
+  logf->header.size = mix_hypers_size(mx->N_targets);
   log_file_append (logf, hyp);
 
   if (have_indicators)
@@ -477,12 +484,12 @@ static void gibbs_hypers (void)
     }
 
     if (mx->mean_prior.width==0)
-    { hyp->mean[t] = 0;
+    { hyp->tg[t].mean = 0;
     }
     else
     { p = 1 / (mx->mean_prior.width * mx->mean_prior.width);
-      d = 1 / (hyp->SD[t] * hyp->SD[t]);
-      hyp->mean[t] = (d*m) / (N_active*d+p)  
+      d = 1 / (hyp->tg[t].SD * hyp->tg[t].SD);
+      hyp->tg[t].mean = (d*m) / (N_active*d+p)  
                        + sqrt(1/(N_active*d+p)) * rand_gaussian();
     }
 
@@ -492,13 +499,13 @@ static void gibbs_hypers (void)
     { 
       v = 0;
       for (x = 0; x<N_active; x++)
-      { v += (offsets[x*N_targets+t] - hyp->mean[t]) 
-              * (offsets[x*N_targets+t] - hyp->mean[t]);
+      { v += (offsets[x*N_targets+t] - hyp->tg[t].mean) 
+              * (offsets[x*N_targets+t] - hyp->tg[t].mean);
       }
 
       a = mx->SD_prior.alpha[1] + N_active;
       p = a / (mx->SD_prior.alpha[1] * hyp->SD_cm*hyp->SD_cm + v);
-      hyp->SD[t] = prior_pick_sigma (1/sqrt(p), a);
+      hyp->tg[t].SD = prior_pick_sigma (1/sqrt(p), a);
     }
 
     if (model->type=='R')
@@ -520,10 +527,10 @@ static void gibbs_hypers (void)
         a = model->noise.alpha[1] + n;
         p = a / (model->noise.alpha[1] * hyp->noise_cm * hyp->noise_cm + v);
       
-        hyp->noise[t] = prior_pick_sigma (1/sqrt(p), a);
+        hyp->tg[t].noise = prior_pick_sigma (1/sqrt(p), a);
 
         for (x = 0; x<N_active; x++)
-        { noise_SD[x*N_targets+t] = hyp->noise[t];
+        { noise_SD[x*N_targets+t] = hyp->tg[t].noise;
         }
       }
 
@@ -542,7 +549,7 @@ static void gibbs_hypers (void)
         { info.s += 1 / (noise_SD[x*N_targets+t]*noise_SD[x*N_targets+t]);
         }
 
-        hyp->noise[t] = exp(-0.5 * ars(log(info.w), log(1+1/sqrt(info.a0)),
+        hyp->tg[t].noise = exp(-0.5 * ars(log(info.w), log(1+1/sqrt(info.a0)),
                                        gibbs_hypers_logp, &info));
       }
     }
@@ -556,8 +563,8 @@ static void gibbs_hypers (void)
     v = 0;
     for (t = 0; t<N_targets; t++)
     { for (x = 0; x<N_active; x++)
-      { v += (offsets[x*N_targets+t] - hyp->mean[t]) 
-              * (offsets[x*N_targets+t] - hyp->mean[t]);
+      { v += (offsets[x*N_targets+t] - hyp->tg[t].mean) 
+              * (offsets[x*N_targets+t] - hyp->tg[t].mean);
       }
     }
 
@@ -568,7 +575,7 @@ static void gibbs_hypers (void)
     hyp->SD_cm = prior_pick_sigma (1/sqrt(p), a);
 
     for (t = 0; t<N_targets; t++) 
-    { hyp->SD[t] = hyp->SD_cm;
+    { hyp->tg[t].SD = hyp->SD_cm;
     }
   }
 
@@ -586,7 +593,7 @@ static void gibbs_hypers (void)
 
     info.s  = 0;
     for (t = 0; t<N_targets; t++)
-    { info.s += 1 / (hyp->SD[t]*hyp->SD[t]);
+    { info.s += 1 / (hyp->tg[t].SD*hyp->tg[t].SD);
     }
 
     hyp->SD_cm = exp(-0.5 * ars(log(info.w), log(1+1/sqrt(info.a0)),
@@ -621,9 +628,9 @@ static void gibbs_hypers (void)
       hyp->noise_cm = prior_pick_sigma (1/sqrt(p), a);
 
       for (t = 0; t<N_targets; t++)
-      { hyp->noise[t] = hyp->noise_cm;
+      { hyp->tg[t].noise = hyp->noise_cm;
         for (x = 0; x<N_active; x++)
-        { noise_SD[x*N_targets+t] = hyp->noise[t];
+        { noise_SD[x*N_targets+t] = hyp->tg[t].noise;
         }
       }
     }
@@ -654,7 +661,7 @@ static void gibbs_hypers (void)
                                      gibbs_hypers_logp, &info));
 
       for (t = 0; t<N_targets; t++)
-      { hyp->noise[t] = hyp->noise_cm;
+      { hyp->tg[t].noise = hyp->noise_cm;
       }
     }
 
@@ -672,7 +679,7 @@ static void gibbs_hypers (void)
 
       info.s  = 0;
       for (t = 0; t<N_targets; t++)
-      { info.s += 1 / (hyp->noise[t]*hyp->noise[t]);
+      { info.s += 1 / (hyp->tg[t].noise*hyp->tg[t].noise);
       }
 
       hyp->noise_cm = exp(-0.5 * ars(log(info.w), log(1+1/sqrt(info.a0)),
@@ -738,18 +745,18 @@ static void gibbs_params (void)
     {
       if (model->type=='R')
       {
-        p = 1 / (hyp->SD[t]*hyp->SD[t]);
+        p = 1 / (hyp->tg[t].SD*hyp->tg[t].SD);
         d = scount[x] / (noise_SD[x*N_targets+t]*noise_SD[x*N_targets+t]);
 
-        offsets[x*N_targets+t] = (p*hyp->mean[t] + d*smean[x]) / (p + d)
+        offsets[x*N_targets+t] = (p*hyp->tg[t].mean + d*smean[x]) / (p + d)
                                        + sqrt(1/(p+d)) * rand_gaussian();
       }
       else if (model->type=='B')
       { 
         info.freq = smean[x];
         info.n    = scount[x];
-        info.pmu  = hyp->mean[t];
-        info.pvar = hyp->SD[t]*hyp->SD[t];
+        info.pmu  = hyp->tg[t].mean;
+        info.pvar = hyp->tg[t].SD*hyp->tg[t].SD;
 
         offsets[x*N_targets+t] = ars (0.0, 1.0, gibbs_params_logp, &info);
       }
@@ -778,7 +785,7 @@ static void gibbs_params (void)
       for (x = 0; x<N_active; x++)
       {
         a = model->noise.alpha[2] + scount[x];
-        p = a / (model->noise.alpha[2] * hyp->noise[t] * hyp->noise[t]
+        p = a / (model->noise.alpha[2] * hyp->tg[t].noise * hyp->tg[t].noise
                    + scount[x] * svar[x]);
       
         noise_SD[x*N_targets+t] = prior_pick_sigma (1/sqrt(p), a);
@@ -815,11 +822,11 @@ static void gibbs_indicators
       for (t = 0; t<N_targets; t++)
       {
         offsets[N_active*N_targets+t] = 
-          hyp->mean[t] + hyp->SD[t]*rand_gaussian();
+          hyp->tg[t].mean + hyp->tg[t].SD*rand_gaussian();
   
         if (model->type=='R')
         { noise_SD[N_active*N_targets+t] = 
-            prior_pick_sigma (hyp->noise[t], model->noise.alpha[2]);
+            prior_pick_sigma (hyp->tg[t].noise, model->noise.alpha[2]);
         }
       }
   
@@ -937,11 +944,11 @@ static void gibbs_ext_indicators
       for (t = 0; t<N_targets; t++)
       {
         offsets[x*N_targets+t] = 
-          hyp->mean[t] + hyp->SD[t]*rand_gaussian();
+          hyp->tg[t].mean + hyp->tg[t].SD*rand_gaussian();
   
         if (model->type=='R')
         { noise_SD[x*N_targets+t] = 
-            prior_pick_sigma (hyp->noise[t], model->noise.alpha[2]);
+            prior_pick_sigma (hyp->tg[t].noise, model->noise.alpha[2]);
         }
       }
     }  
@@ -1084,11 +1091,11 @@ static void met_indicators
         for (t = 0; t<N_targets; t++)
         {
           offsets[N_active*N_targets+t] 
-            = hyp->mean[t] + hyp->SD[t]*rand_gaussian();
+            = hyp->tg[t].mean + hyp->tg[t].SD*rand_gaussian();
   
           if (model->type=='R')
           { noise_SD[N_active*N_targets+t] = 
-              prior_pick_sigma (hyp->noise[t], model->noise.alpha[2]);
+              prior_pick_sigma (hyp->tg[t].noise, model->noise.alpha[2]);
           }
         }
       }  

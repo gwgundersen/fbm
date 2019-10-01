@@ -183,6 +183,15 @@ typedef struct
 #define log_sqrt_2pi 0.918938533204672741780329736405
 
 
+/* MACROS. */
+
+#define dft_real_model(m) \
+  ((m)!=0 && ((m)->type=='R' || (m)->type=='r')) /* Whether model is "real" with
+                                                    or without "last-binary" */
+#define dft_real_targets(d,m) \
+  ((d)->N_targets-((m)->type=='r')) /* Number of real-valued targets accounting
+                                       for possible "last-binary" option */
+
 /* PROCEDURES. */
 
 void dft_record_sizes (log_gobbled *);

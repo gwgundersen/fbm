@@ -18,7 +18,7 @@ all:		programs modules
 
 programs:	data-spec model-spec log-records log-copy log-append log-last \
 		log-equal rand-seed grid series extract combine find-min calc \
-		case-indicators
+		case-indicators zeros mean
 
 modules:	misc.o matrix.o log.o quantities.o plt.o hist.o rand.o numin.o \
 		data-trans.o model.o prior.o ars.o digamma.o 
@@ -26,7 +26,7 @@ modules:	misc.o matrix.o log.o quantities.o plt.o hist.o rand.o numin.o \
 clean:
 	rm -f *.o data-spec model-spec log-records log-copy log-append log-last\
 	          log-equal rand-seed grid series extract combine find-min calc\
-		  case-indicators
+		  case-indicators zeros
 
 
 include util.make
@@ -48,6 +48,18 @@ case-indicators:	case-indicators.o
 		$(CC) $(LFLAGS) case-indicators.o -lm -o case-indicators
 
 case-indicators.o:	case-indicators.c
+
+
+zeros:		zeros.o
+		$(CC) $(LFLAGS) zeros.o -lm -o zeros
+
+zeros.o:	zeros.c
+
+
+mean:		mean.o
+		$(CC) $(LFLAGS) mean.o -lm -o mean
+
+mean.o:		mean.c		misc.h
 
 
 series:		series.o	misc.o

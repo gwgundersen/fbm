@@ -21,8 +21,8 @@
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "gp.h"
 
 
@@ -87,14 +87,17 @@ main
     
     if (gp->has_linear)
     { printf("\nLinear part of covariance:   %s",prior_show(ps,gp->linear));
-      if (list_flags(gp->linear_flags,gp->N_inputs,Flag_omit,s))
+      if (list_flags(gp->lin.flags,gp->N_inputs,Flag_omit,s))
       { printf("  omit%s",s);
       }
-      if (list_flags(gp->linear_flags,gp->N_inputs,Flag_spread,s))
+      if (list_flags(gp->lin.flags,gp->N_outputs,Flag_drop,s))
+      { printf("  drop%s",s);
+      }
+      if (list_flags(gp->lin.flags,gp->N_inputs,Flag_spread,s))
       { printf("  spread%s",s);
       }
-      if (gp->linear_spread)
-      { printf("  %d",gp->linear_spread);
+      if (gp->lin.spread)
+      { printf("  %d",gp->lin.spread);
       }
       printf("\n");
     }
@@ -115,6 +118,12 @@ main
         }
         if (list_flags(gp->exp[l].flags,gp->N_inputs,Flag_omit,s))
         { printf("  omit%s",s);
+        }
+        if (list_flags(gp->exp[l].flags,gp->N_outputs,Flag_drop,s))
+        { printf("  drop%s",s);
+        }
+        if (list_flags(gp->exp[l].flags,gp->N_inputs,Flag_mulprod,s))
+        { printf("  mulprod%s",s);
         }
         if (list_flags(gp->exp[l].flags,gp->N_inputs,Flag_spread,s))
         { printf("  spread%s",s);
@@ -145,6 +154,15 @@ main
   if (*ap==0 || (gp->N_inputs = atoi(*ap++))<=0) usage();
   if (*ap==0 || (gp->N_outputs = atoi(*ap++))<=0) usage();
 
+  if (gp->N_inputs>Max_inputs)
+  { fprintf(stderr,"Too many inputs (max %d)\n",Max_inputs);
+    exit(1);
+  } 
+  if (gp->N_outputs>Max_outputs)
+  { fprintf(stderr,"Too many outputs (max %d)\n",Max_outputs);
+    exit(1);
+  }
+
   if (*ap!=0 && strchr("/abcdefghijklmnopqrstuvwxyz",**ap)==0)
   { if (strcmp(*ap,"-")!=0)
     { gp->has_constant = 1;
@@ -174,10 +192,13 @@ main
   while (*ap!=0 && strchr("abcdefghijklmnopqrstuvwxyz",**ap))
   {
     if (*ap!=0 && strncmp(*ap,"omit",4)==0)
-    { parse_flags (*ap+4, gp->linear_flags, gp->N_inputs, Flag_omit);
+    { parse_flags (*ap+4, gp->lin.flags, gp->N_inputs, Flag_omit);
     }
-    else if (*ap!=0 && strncmp(*ap,"spread",4)==0)
-    { parse_flags (*ap+6, gp->linear_flags, gp->N_inputs, Flag_spread);
+    else if (*ap!=0 && strncmp(*ap,"drop",4)==0)
+    { parse_flags (*ap+4, gp->lin.flags, gp->N_outputs, Flag_drop);
+    }
+    else if (*ap!=0 && strncmp(*ap,"spread",6)==0)
+    { parse_flags (*ap+6, gp->lin.flags, gp->N_inputs, Flag_spread);
       need_spread = 1;
     }
     else
@@ -189,8 +210,8 @@ main
   }
 
   if (need_spread)
-  { gp->linear_spread = atoi(*ap);
-    if (gp->linear_spread<=0) 
+  { gp->lin.spread = atoi(*ap);
+    if (gp->lin.spread<=0) 
     { fprintf(stderr,"Need to specify spread width for linear part\n");
       exit(1);
     }
@@ -233,7 +254,13 @@ main
       else if (*ap!=0 && strncmp(*ap,"omit",4)==0)
       { parse_flags (*ap+4, gp->exp[l].flags, gp->N_inputs, Flag_omit);
       }
-      else if (*ap!=0 && strncmp(*ap,"spread",4)==0 && 0) /* Disabled */
+      else if (*ap!=0 && strncmp(*ap,"drop",4)==0)
+      { parse_flags (*ap+4, gp->exp[l].flags, gp->N_outputs, Flag_drop);
+      }
+      else if (*ap!=0 && strncmp(*ap,"mulprod",7)==0)
+      { parse_flags (*ap+7, gp->exp[l].flags, gp->N_inputs, Flag_mulprod);
+      }
+      else if (*ap!=0 && strncmp(*ap,"spread",6)==0 && 0) /* Disabled */
       { parse_flags (*ap+6, gp->exp[l].flags, gp->N_inputs, Flag_spread);
         need_spread = 1;
       }
@@ -247,7 +274,7 @@ main
 
     if (need_spread)
     { gp->exp[l].spread = atoi(*ap);
-      if (gp->linear_spread<=0) 
+      if (gp->lin.spread<=0) 
       { fprintf(stderr,"Need to specify spread width\n");
         exit(1);
       }
@@ -324,8 +351,9 @@ static void usage(void)
   fprintf(stderr,
    "   or: gp-spec log-file (to display stored specifications)\n");
   fprintf(stderr,
+   "Flags: flag:[-]number{,number}, flag is delta, omit, drop, or spread\n");
+  fprintf(stderr,
    "Prior: [x]Width[:[Alpha-high][:[Alpha-low]]]\n");
 
   exit(1);
 }
-

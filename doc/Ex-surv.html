@@ -39,7 +39,7 @@ which was interpreted as log h(x).  One layer of eight hidden units
 was used.  The following commands specify the network, model, and data
 source:
 
-    &gt; net-spec clog.net 1 8 1 / - 0.05:1 0.05:1 - x0.05:1 - 100 
+    &gt; net-spec clog.net 1 8 1 / ih=0.05:1 bh=0.05:1 ho=x0.05:1 bo=100 
     &gt; model-spec clog.net survival const-hazard
     &gt; data-spec clog.net 1 1 / cdata@1:500 . cdata@-1:500 .
 
@@ -113,7 +113,7 @@ There is a single output unit, whose value will be interpreted as the
 log of the hazard function.  If we decide to use one layer of eight
 hidden units, we might specify the network as follows:
 
-    &gt; net-spec vlog.net 2 8 1 / - 0.05:1:1 0.05:1 - x0.05:1 - 100 
+    &gt; net-spec vlog.net 2 8 1 / ih=0.05:1:1 bh=0.05:1 ho=x0.05:1 bo=100 
 
 The prior for the input-hidden weights uses separate hyperparameters
 for the two input units (representing time, t, and the covariate, x),
@@ -219,8 +219,9 @@ function of x only and a function of t only - what is called a
 "proportional hazards" model.  A network model specified as follows
 can discover this:
 
-    &gt; net-spec v2log.net 2 8 8 1 / - 0.05:1:1 0.05:1 - - 0.05:1:1 0.05:1 - \
-                                   x0.05:1 x0.05:1 - 100 
+    &gt; net-spec v2log.net 2 8 8 1 / ih0=0.05:1:1 bh0=0.05:1 \
+                                   ih1=0.05:1:1 bh1=0.05:1 \
+                                   ho1=x0.05:1 ho0=x0.05:1 bo=100 
 
 The input-hidden weights for the two hidden layers have hierarchical
 priors that allow one of them to look at only the time input and the

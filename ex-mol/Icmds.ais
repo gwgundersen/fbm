@@ -1,0 +1,5 @@
+mol-spec      Ilog.ais 3 0.01 1 30 NPT 100 0.11 0.009
+mc-temp-sched Ilog.ais 0.01:1999
+mc-spec       Ilog.ais repeat 20 AIS \
+                 repeat 10 met-mol 0.5 end repeat 3 met-len 0.25 end wrap end
+mol-mc        Ilog.ais 5000

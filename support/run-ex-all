@@ -1,0 +1,47 @@
+( cd ex-dist
+  ../run-ex2 ncmds 1 \
+             gcmds.met 1 gcmds.met 0.2 gcmds.met 5 \
+             gcmds.met1 1 \
+             gcmds1.slc1 0.2 gcmds2.slc1 1 gcmds2.slc1 5 \
+             gcmds.slcg 5 \
+             gcmds.sgau 5 \
+             gcmds.dyn 0.3 \
+             gcmds.hmc 0.3 \
+             gcmds.phmc 0.18 \
+             gcmds.slci 0.3 \
+             gcmds.slco 0.3 \
+             gcmds.slcv 0.3 \
+             fcmds.met 1 fcmds.met1 1 fcmds.metv 1 fcmds.slc1 1 fcmds.slc 1
+)
+
+( cd ex-circ
+  ../run-ex ccmds.wrap ccmds.circ ncmds.circ mcmds.circ
+)
+
+( cd ex-bayes
+  ../run-ex rcmds.met rcmds.hmc rcmds.whmc \
+            tcmds1 tcmds2 tcmds12 \
+            pcmds.met pcmds.ais pcmds.is \
+            ecmds.met ecmds.slc
+)
+
+( cd ex-netgp
+  ../run-ex rcmds.net rcmds.gp rcmds.gp2 \
+            bcmds.net bcmds.gpl \
+            ccmds.net ccmds.gpp ccmds.gpl \
+            ocmds.net ocmds.net2 ocmds.gpt 
+)
+
+( cd ex-mixdft
+  ../run-ex bcmds.4 bcmds.inf bcmds.inf2 bcmds.inf3 bcmds.dft \
+            rcmds.2 rcmds.inf rcmds.dft1a rcmds.dft1b rcmds.dft2a \
+            acmds.dft1 acmds.dft2
+)
+
+( cd ex-gdes
+  ../run-ex bcmds.gd bcmds.gdes bcmds.gdese
+)
+
+( cd ex-surv
+  ../run-ex ccmds.net vcmds.net v2cmds.net
+)

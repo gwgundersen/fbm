@@ -1,0 +1,3 @@
+mol-spec Blog.met 3 0.5 1 30 NPT 100 2.8
+mc-spec  Blog.met repeat 25 repeat 10 met-mol 0.1 end met-len 0.1 wrap end
+mol-mc   Blog.met 500

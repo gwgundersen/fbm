@@ -87,13 +87,13 @@ The v and w hyperparameters play the same roles as described above.
 Optional flags may be appended to the specifications of the linear
 and other parts of the covariance.  They have the form:
 
-      <flag>[:[-]<input>{,<input>}]
+      <flag>[:[-]<number>{,<number>}]
 
-where <flag> is one of the flag names below, and <input> is the number
-of an input (starting with 1) that the flag applies to.  If the "-" is
-present, the flag applies to all inputs EXCEPT those mentioned.  If
-only the flag name is given, it applies to all inputs.  The possible
-flags are as follows:
+where <flag> is one of the flag names below, and <number> is the
+number of an input or output (starting with 1) that the flag applies
+to.  If the "-" is present, the flag applies to all inputs EXCEPT
+those mentioned.  If only the flag name is given, it applies to all
+inputs.  The possible flags are as follows:
 
     delta     Use a "delta" distance for these inputs, in which the
               distance is 0 if x_i=x'_i and 1 otherwise.  Not allowed
@@ -101,6 +101,9 @@ flags are as follows:
 
     omit      Ignore these inputs when computing the covariance
               (ie, don't include them in the sum above).  
+
+    drop      Do not include this term of the covariance for the
+              listed outputs.
 
     spread    Spread out the relevance parameters for these inputs.
               This is presently allowed only for the linear part, and
@@ -114,12 +117,26 @@ flags are as follows:
               spreading.  Here, "spread" is the spreading width, which 
               must be specified after the flags.
 
+    mulprod   For each input listed, multiply this term in the covariance 
+              for two cases by the product of the values of that input
+              for the two cases.  Note that this is done even for inputs
+              that are omitted, as long as they are in the mulprod list.
+              Not allowed for the linear part of the covariance.
+
 The "delta" flag is useful when the inputs are categorical.  The
 "omit" flag is useful in setting up additive models, in which
 different covariance parts correspond to additive components, with
-each component looking at only a subset of the inputs.  The "spread"
-flag is useful for data such as spectra where nearby inputs are
-likely to be of similar relevance.
+each component looking at only a subset of the inputs.  The "drop"
+flag is mostly useful when setting up models in which one target is
+explained as the log of the sum of the exponentials of several
+outputs, which one may wish to have different covariance functions.
+When "drop" appears after the const/linear/jitter arguments, it
+applies to all of these terms.  The "spread" flag is useful for data
+such as spectra where nearby inputs are likely to be of similar
+relevance.  The "mulprod" flag has the effect of producing a
+quasi-linear term in the model for which the regression coefficient is
+not a constant, but instead varies with the inputs according to a
+Gaussian process with the specified covariance function.
 
 Note that the prior for the const-part corresponds closely to the
 prior for output biases in neural network models, and that the prior
@@ -129,9 +146,11 @@ neural network models on the hidden-output and the input-hidden
 weights.  (The neural network priors can go to more levels, however.)
 
 To use a Gaussian process to model data, additional information must
-be specified as well, as described in model-spec.doc.  Depending on
-the model used, state information in addition to the hyperparameter
-values for the Gaussian process may need to be kept (case-specific
-function values and/or case-specific noise variances).
+be specified as well, as described in model-spec.doc.  See also gp.doc
+for general information on how the outputs of the Gaussian process are
+used to define the model likelihood.  Depending on the model used,
+state information in addition to the hyperparameter values for the
+Gaussian process may need to be kept (case-specific function values
+and/or case-specific noise variances).
 
             Copyright (c) 1995-2004 by Radford M. Neal

@@ -21,8 +21,8 @@
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "mix.h"
 
 
@@ -153,6 +153,13 @@ main
   }
 
   h = logg.data['S'];
+
+  if (h!=0 && logg.actual_size['S'] != mix_hypers_size(mx->N_targets))
+  { fprintf(stderr,
+      "Record has wrong size: Type S, Actual size %d, Required size %d\n",
+      logg.actual_size['S'], mix_hypers_size(mx->N_targets));
+    exit(1);
+  }
 
   /* Print title. */
 

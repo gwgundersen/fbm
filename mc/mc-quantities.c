@@ -79,7 +79,7 @@ void mc_available
           ? 1 : -1;
       }
 
-      if (strchr("iIT",letter)!=0 && mod==-1)
+      if (strchr("iITh",letter)!=0 && mod==-1)
       { qd[i].available = low==-1 ? 1 : -1;
       }
 
@@ -399,12 +399,15 @@ void mc_evaluate
           qh->updated[i] = 1;
           break;
 	}
+
+        case 'h':
+        {
+          if (logg->data['h']==0 || logg->index['h']!=logg->last_index) break;
+          *qh->value[i] = ((mc_therm_state*)logg->data['h']) -> tq;
+          qh->updated[i] = 1;
+          break;
+        }
       }
     }
   }
 }
-
-
-
-
-

@@ -8,10 +8,13 @@ DIST:  Markov chain sampling for a specified distribution.
 The 'dist' programs allow you to specify a distribution by giving an
 "energy" function (minus the log of the density, plus an arbitrary
 constant), and to then generate a sample from this distribution using
-the various Markov chain methods.  
+the various Markov chain methods.  Alternatively, a distribution can
+be specified by giving expressions for minus the log of the prior
+density for a Bayesian model and minus the log of the likelihood.
 
 These programs are primarily intended for use in demonstrating the
-Markov chain methods; using these programs to sample from many of the
+Markov chain methods.  Although some interesting Bayesian models can
+easily be specified, using these programs to sample from many of the
 distributions encountered in real Bayesian inference problems would be
 tedious or impossible.  However, the C source for the 'dist' programs,
 as well that for the demo for a bivariate Gaussian (see <A HREF="bvg.html">bvg.doc</A>), does

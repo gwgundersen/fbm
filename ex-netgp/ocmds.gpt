@@ -10,3 +10,5 @@ data-spec olog.gpt 1 1 / odata@1:100 . odata@101:200 .
 gp-gen olog.gpt fix 0.5 0.1
 mc-spec olog.gpt sample-variances heatbath hybrid 20:4 0.5
 gp-mc olog.gpt 200
+
+gp-pred npa olog.gpt 101:%5

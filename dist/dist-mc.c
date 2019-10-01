@@ -25,6 +25,7 @@
 #include "formula.h"
 #include "data.h"
 #include "dist.h"
+#include "numin.h"
 #include "dist-data.h"
 
 
@@ -67,22 +68,10 @@ void mc_app_initialize
     exit(1);
   }
 
-  a = dst->energy + strlen(dst->energy) + 1;
-  if (dst->Bayesian) a += strlen(a) + 1;
-
-  while (*a)
-  { f = formula_def(a,&c,&i);
-    formula_var[c][i] = formula(f,0,1,0);
-    formula_var_exists[c][i] = 1;
-    a += strlen(a) + 1;
-  }
-
-  (void) formula (dst->energy, 1, 0, 0);
+  dist_const_eval(dst);
 
   if (dst->Bayesian)
   { 
-    (void) formula (dst->energy + strlen(dst->energy) + 1, 1, 0, 0);
-
     uses_data = 0;
 
     for (p = "it"; *p; p++)

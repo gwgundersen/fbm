@@ -22,8 +22,8 @@
 #include "log.h"
 #include "quantities.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "gp.h"
 #include "gp-data.h"
 
@@ -91,7 +91,7 @@ void gp_initialize
     gp_data_free ();   
     gp_data_read (1, 1, gp, model, surv);
 
-    M_targets = gp->N_outputs;
+    M_targets = model->type=='C' ? data_spec->int_target : data_spec->N_targets;
   }
 }
 
@@ -124,11 +124,11 @@ void gp_available
       if (letter=='x' || letter=='i')
       { qd[v].available = mod<gp->N_inputs ? 1 : -1; 
       }
-      else if (strchr("oytz",letter)!=0)
+      else if (strchr("o",letter)!=0)
       { qd[v].available = mod<gp->N_outputs ? 1 : -1; 
       }
-      else if (strchr("ba",letter)!=0)
-      { qd[v].available = mod<gp->N_outputs ? 1 : -1;
+      else if (strchr("yztba",letter)!=0)
+      { qd[v].available = mod<M_targets ? 1 : -1;
       }
       else if (letter=='P')
       { qd[v].available = mod==-1 ? 1 : -1;
@@ -226,6 +226,7 @@ void gp_evaluate
   double *latent_values;
   double *noise_variances;
   double pw;
+  double *t;
   int N_cases;
   char letter;
   int v, i;
@@ -283,24 +284,26 @@ void gp_evaluate
           { 
             for (i = low; i<=high; i++)
             { 
+              t = model_values (model, data_spec,
+                    latent_values+i*gp->N_outputs, gp->N_outputs);
+
               if (model_type=='B')
-              { qh->value[v][i-low] = 
-                  1 / (1+exp(-latent_values[gp->N_outputs*i+mod]));
+              { qh->value[v][i-low] = 1 / (1+exp(-t[mod]));
               }
               else if (model_type=='N')
-              { qh->value[v][i-low] = exp(latent_values[gp->N_outputs*i+mod]);
+              { qh->value[v][i-low] = exp(t[mod]);
               }
               else if (model_type=='C')
               { double s;
                 int m;
                 s = 0;
-                for (m = 0; m<gp->N_outputs; m++)
-                { s += exp(latent_values[gp->N_outputs*i+m]);
+                for (m = 0; m<M_targets; m++)
+                { s += exp(t[m]);
                 }
-                qh->value[v][i-low] = exp(latent_values[gp->N_outputs*i+mod])/s;
+                qh->value[v][i-low] = exp(t[mod])/s;
               }
               else
-              { qh->value[v][i-low] = latent_values[gp->N_outputs*i+mod];
+              { qh->value[v][i-low] = t[mod];
               }
             }
 
@@ -330,7 +333,8 @@ void gp_evaluate
 
         case 'l':
         { 
-          double l, e, s, tv, fv, nv;
+          double l, e, tv;
+          double *nv;
           int m;
 
           if (latent_values==0 
@@ -338,13 +342,24 @@ void gp_evaluate
           { break;
           }
 
+          if (!noise_variances && model_type=='R')
+          { nv = chk_alloc (data_spec->N_targets, sizeof *nv);
+            for (i = 0; i<data_spec->N_targets; i++)
+            { nv[i] = exp (2 * *hypers.noise[i]);
+            }
+          }
+
           if (low==-1) e = 0;
 
           for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
           { 
-            l = - gp_likelihood (&hypers, model, data_spec, 
-              &targets[i*data_spec->N_targets], &latent_values[i*gp->N_outputs],
-              noise_variances ? &noise_variances[i*data_spec->N_targets] : 0);
+            if (noise_variances)
+            { nv = &noise_variances[i*data_spec->N_targets];
+            }
+
+            l = - model_likelihood (model, data_spec, nv,
+                    &latent_values[i*gp->N_outputs], gp->N_outputs,
+                    &targets[i*data_spec->N_targets]);
  
             if (low!=-1) 
             { qh->value[v][i-low] = l;
@@ -360,12 +375,16 @@ void gp_evaluate
 
           qh->updated[v] = 1;
 
+          if (!noise_variances && model_type=='R')
+          { free(nv);
+          }
+
           break;
         }
 
-        case 'a': 
+        case 'a': case 'b':
         { 
-          double d, e, s, tv, fv, gv;
+          double d, e, s, tv, gv;
           int m;
 
           if (latent_values==0) break;
@@ -378,101 +397,42 @@ void gp_evaluate
             { qh->value[v][i-low] = 0;
             }
 
+            t = model_values (model, data_spec,
+                  latent_values+i*gp->N_outputs, gp->N_outputs);
+
             if (model_type=='C')
             { s = 0;
-              for (m = 0; m<gp->N_outputs; m++)
-              { fv = latent_values[gp->N_outputs*i+m];
-                s += exp(fv);
+              for (m = 0; m<M_targets; m++)
+              { s += exp(t[m]);
               }
             }
 
             for (m = mod; m<=(qd[v].modifier==-1 ? M_targets-1 : mod); m++)
             { tv = model_type=='C' ? targets[i]==m : targets[M_targets*i+m];
               if (model_type=='N' && tv<0) continue;
-              fv = latent_values[M_targets*i+m];
               if (model_type=='R')
-              { gv = fv;
+              { gv = t[m];
               }
               else if (model_type=='B')
-              { gv = 1/(1+exp(-fv));
-              }
-              else if (model_type=='N')
-              { gv = exp(fv);
+              { gv = 1/(1+exp(-t[m]));
               }
               else if (model_type=='C')
-              { gv = exp(fv)/s;
+              { gv = exp(t[m])/s;
+              }
+              else if (model_type=='N')
+              { gv = exp(t[m]);
               }
               else
               { abort();
               }
               d = gv-tv;
               if (d<0) d = -d;
+              if (letter=='b') d = d*d;
               if (low==-1)
               { e += d;
               }
               else 
               { qh->value[v][i-low] += d;
-              }
-            }
-          }
- 
-          if (low==-1)
-          { *qh->value[v] = e / N_cases;
-          }
-
-          qh->updated[v] = 1;
-
-          break;
-        }
-
-        case 'b':
-        { 
-          double d, e, s, tv, fv, gv;
-          int m;
-
-          if (latent_values==0) break;
-
-          if (low==-1) e = 0;
-
-          for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
-          { 
-            if (low!=-1) 
-            { qh->value[v][i-low] = 0;
-            }
-
-            if (model_type=='C')
-            { s = 0;
-              for (m = 0; m<gp->N_outputs; m++)
-              { fv = latent_values[gp->N_outputs*i+m];
-                s += exp(fv);
-              }
-            }
-
-            for (m = mod; m<=(qd[v].modifier==-1 ? M_targets-1 : mod); m++)
-            { tv = model_type=='C' ? targets[i]==m : targets[M_targets*i+m];
-              if (model_type=='N' && tv<0) continue;
-              fv = latent_values[M_targets*i+m];
-              if (model_type=='R')
-              { gv = fv;
-              }
-              else if (model_type=='B')
-              { gv = 1/(1+exp(-fv));
-              }
-              else if (model_type=='C')
-              { gv = exp(fv)/s;
-              }
-              else if (model_type=='N')
-              { gv = exp(fv);
-              }
-              else
-              { abort();
-              }
-              d = gv-tv;
-              if (low==-1)
-              { e += d*d;
-              }
-              else 
-              { qh->value[v][i-low] += d*d;
               }
             }
           }
@@ -505,7 +465,7 @@ void gp_evaluate
           else
           { for (i = low; i<=high; i++)
             { if (mod>0 && gp->exp[mod-1].flags[i]&Flag_omit
-               || mod==0 && gp->linear_flags[i]&Flag_omit)
+               || mod==0 && gp->lin.flags[i]&Flag_omit)
               { qh->value[v][i-low] = 0;
               }
               else
@@ -528,7 +488,7 @@ void gp_evaluate
           {
             qh->value[v][i-low] = 
                qd[v].modifier>0 || !gp->has_linear 
-                 || gp->linear_flags[i]&Flag_omit ? 0
+                 || gp->lin.flags[i]&Flag_omit ? 0
                : 0.5 * exp(2 * *hypers.linear[i]);
 
             for (m = 1; m<=gp->N_exp_parts; m++)

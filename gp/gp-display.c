@@ -21,8 +21,8 @@
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "gp.h"
 
 
@@ -175,7 +175,7 @@ main
       { if (i>0 && i%5==0)
         { printf("\n             ");
         }
-        if (gp->linear_flags[i]&Flag_omit)
+        if (gp->lin.flags[i]&Flag_omit)
         { printf("       -   ");
         }
         else
@@ -186,7 +186,7 @@ main
     }
 
     if (gp->has_jitter)
-    { printf("\nJitter part:\n\n %10.3g\n",exp(*h->jitter));
+    { printf("\nJitter part:\n\n %12.5f\n",exp(*h->jitter));
     }
 
     if (gp->N_exp_parts>0)
@@ -239,7 +239,7 @@ main
         { if (l>0 && l%10==0)
           { printf("\n      ");
           }
-          printf(" %+6.2f",values[i*gp->N_outputs+l]);
+          printf(" %+6.4f",values[i*gp->N_outputs+l]);
         }
         printf("\n");
       }

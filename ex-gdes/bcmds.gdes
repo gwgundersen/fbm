@@ -2,7 +2,7 @@
 # Commands to train a neural network on the binary response problem using
 # gradent descent training, with early stopping.
 
-net-spec blog.gdes 2 15 1 / - + + - + - +
+net-spec blog.gdes 2 15 1 / ih=+ bh=+ ho=+ bo=+
 model-spec blog.gdes binary
 
 data-spec blog.gdes 2 1 2 / bdata.train@1:225 . bdata.train@226:300 .

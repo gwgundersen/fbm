@@ -63,6 +63,7 @@ main
 
   double *input_pts;
 
+  int no_latent;
   double *latent_values;
   double *noise_variances;
 
@@ -76,11 +77,10 @@ main
 
   int gen_targets;
 
-  double *train_cov, *grid_cov, *grid_cov2, *tr_gr_cov, *gr_tr_cov;
-  double *prd;
+  double *train_cov, *grid_cov, *grid_cov2, *gr_tr_cov;
 
-  double *scr1, *scr2;
   double *output, *mean, *rnd;
+  double *scr1, *p;
 
   double *g;
   char **ap;
@@ -90,13 +90,30 @@ main
   /* Look at arguments. */
 
   gen_targets = 0;
+  no_latent = 0;
 
   if (argc>1 && strcmp(argv[argc-1],"targets")==0)
-  { gen_targets = 1;
+  { gen_targets = 2;
     argc -= 1;
     argv[argc] = 0;
   }
   
+  for (;;)
+  { if (argc>1 && strcmp(argv[1],"-l")==0)
+    { no_latent = 1;
+      argc -= 1;
+      argv += 1;
+    }
+    else if (argc>1 && strcmp(argv[1],"-t")==0)
+    { gen_targets = 1;
+      argc -= 1;
+      argv += 1;
+    }
+    else
+    { break;
+    }
+  }
+
   if (argc<3) usage();
 
   logf.file_name = argv[1];
@@ -114,12 +131,12 @@ main
 
   N = 1;
 
-  if (*ap!=0 && strcmp(*ap,"/")!=0)
+  if (*ap!=0 && (*(ap+1)!=0 || gen_targets==2) && strcmp(*ap,"/")!=0)
   { if ((N = atoi(*ap))==0) usage();
     ap += 1;
   }
 
-  if (*ap==0 && gen_targets)
+  if (*ap==0 && gen_targets==2)
   { 
     gen_targets = 0;
     fname = "targets";
@@ -211,6 +228,9 @@ main
     if (m!=0 && m->type=='B') 
     { data_spec->int_target = 2;
     }
+    if (m!=0 && m->type=='N')
+    { data_spec->int_target = -1;
+    }
   }
 
   if (logg.data['D']!=0 || fname!=0)
@@ -274,14 +294,12 @@ main
   train_cov = chk_alloc (N_train*N_train, sizeof (double));
 
   scr1 = chk_alloc (N_train, sizeof(double));
-  scr2 = chk_alloc (N_train, sizeof(double));
 
   grid_cov = chk_alloc (n_points*n_points, sizeof (double));
-  if (N_train>0) grid_cov2 = chk_alloc (n_points*n_points, sizeof (double));
-
-  tr_gr_cov = chk_alloc (N_train*n_points, sizeof (double));
-  gr_tr_cov = chk_alloc (n_points*N_train, sizeof (double));
-  prd       = chk_alloc (n_points*N_train, sizeof (double));
+  if (N_train>0) 
+  { grid_cov2 = chk_alloc (n_points*n_points, sizeof (double));
+    gr_tr_cov = chk_alloc (n_points*N_train, sizeof (double));
+  }
 
   /* Draw function values for the specified iterations. */
 
@@ -317,6 +335,9 @@ main
 
     latent_values = logg.data['F']!=0 && logg.index['F']==logg.last_index
                    ? (double*) logg.data['F'] : 0;
+    if (no_latent)
+    { latent_values = 0;
+    }
 
     noise_variances = logg.data['N']!=0 && logg.index['N']==logg.last_index
                        ? (double*) logg.data['N'] : 0;
@@ -343,40 +364,39 @@ main
       exit(1);
     }
 
-    /* Compute the covariance matrix for training cases or function values, 
-       then invert it. */
-
     if (N_train>0)
     { 
-      /* Find covariance for latent or target values at training points,
-         storing in train_cov. */
+      /* Find covariance matrix for latent or target values at training points,
+         and find its Cholesky decomposition, storing in train_cov. */
 
       gp_train_cov (gp, m, h, 0, noise_variances, 
                     latent_values ? train_cov : 0,
                     latent_values ? 0 : train_cov,
                     0);
 
-      /* Invert covariance matrix computed above. */
-
-      if (!cholesky (train_cov, N_train, 0)
-       || !inverse_from_cholesky (train_cov, scr1, scr2, N_train))
-      { fprintf(stderr,"Couldn't invert covariance matrix of training cases\n");
+      if (!cholesky (train_cov, N_train, 0))
+      { fprintf(stderr,
+     "Couldn't find Choleskey decomposition of covariace for training cases\n");
         exit(1);
       }
-    }
 
-    /* Compute covariances between grid and training points, then
-       multiply by inverse covariance matrix of training points found 
-       above.  This gives the vector of regression coefficients for
-       finding the conditional means at the training points, which is
-       also used in finding the covariance. */
+      /* Compute covariances between grid and training points, storing in 
+         gr_tr_cov. */
 
-    if (N_train>0)
-    { 
-      gp_cov (gp, h, input_pts, n_points, train_inputs, N_train, 
+      gp_cov (gp, h, 0, input_pts, n_points, train_inputs, N_train, 
               gr_tr_cov, 0, 0);
 
-      matrix_product (gr_tr_cov, train_cov, prd, n_points, N_train, N_train);
+      /* Compute transpose of inverse of Cholesky times these covariances, 
+         storing the result back in gr_tr_cov. */
+
+      p = gr_tr_cov;
+      for (i = 0; i<n_points; i++)
+      { forward_solve (train_cov, scr1, 1, p, 1, N_train);
+        for (j = 0; j<N_train; j++)
+        { *p++ = scr1[j];
+        }
+      }
+
     }
 
     /* Compute the mean of the values at the grid points. */
@@ -387,17 +407,20 @@ main
     }
     else
     { 
-      matrix_product (prd, latent_values ? latent_values : train_targets,
-                      mean, n_points, 1, N_train);
+      forward_solve (train_cov, scr1, 1, 
+                     latent_values ? latent_values : train_targets,
+                     1, N_train);
+
+      matrix_product (gr_tr_cov, scr1, mean, n_points, 1, N_train);
     }
 
     /* Compute the prior covariance matrix for function values at the 
        grid points. */
 
-    gp_cov (gp, h, input_pts, n_points, input_pts, n_points, 
+    gp_cov (gp, h, 0, input_pts, n_points, input_pts, n_points, 
             grid_cov, 0, 0);
 
-    if (gp->has_jitter)
+    if (gp->has_jitter && !(gp->lin.flags[0]&Flag_drop))
     { for (i = 0; i<n_points; i++)
       { grid_cov[i*n_points+i] += exp(2 * *h->jitter);
       }
@@ -408,18 +431,16 @@ main
 
     if (N_train>0)
     { 
-      gp_cov (gp, h, train_inputs, N_train, input_pts, n_points,
-              tr_gr_cov, 0, 0);
- 
-      matrix_product (prd, tr_gr_cov, grid_cov2, n_points, n_points, 
-                      N_train);
+      matrix_trans_product (gr_tr_cov, grid_cov2, n_points, N_train);
 
-      for (j = 0; j<n_points*n_points; j++) grid_cov[j] -= grid_cov2[j];
+      for (j = 0; j<n_points*n_points; j++) 
+      { grid_cov[j] -= grid_cov2[j];
+      }
     }
 
-    /* Add the noise variance if we're generating targets. */
+    /* Add the noise variance if we're generating real targets. */
 
-    if (gen_targets)
+    if (gen_targets && m->type=='R')
     { if (m->noise.alpha[2]!=0)
       { for (i = 0; i<n_points; i++) 
         { double n;
@@ -437,7 +458,7 @@ main
     /* Add the regularization if we haven't done anything else that might
        be adequate to regularize the computation. */
 
-    if (!gp->has_jitter && !gen_targets)
+    if (!(gp->has_jitter && !(gp->lin.flags[0]&Flag_drop)) && !gen_targets)
     { for (i = 0; i<n_points; i++)
       { grid_cov[i*n_points+i] += Regularization;
       }   
@@ -497,6 +518,8 @@ main
       }
     
     }
+
+    fflush(stdout);
   }
   
   exit(0);
@@ -508,9 +531,13 @@ main
 static void usage(void)
 {
   fprintf (stderr, 
-"Usage: gp-eval log-file range [ [-]N ] { / low high grid-size } [ \"targets\" ]\n");
+    "Usage: gp-eval [ -l ] [ -t ] log-file range [ [-]N ]\n");
   fprintf (stderr, 
-"   or: gp-eval log-file range [ [-]N ] data-file [ \"targets\" ]\n");
+    "                             data-file [ \"targets\" ]\n");
+  fprintf (stderr, 
+    "   or: gp-eval [ -l ] [ -t ] log-file range [ [-]N ]\n");
+  fprintf (stderr, 
+    "                             { / low high grid-size } [ \"targets\" ]\n");
 
   exit(1);
 }

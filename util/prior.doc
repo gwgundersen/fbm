@@ -41,7 +41,7 @@ it is taken to be infinite, giving a distribution for the precision
 concentrated at the mean.
 
 A Gamma distribution with given mean and Alpha has a density
-proportional to p^{Alpha/2-1} * exp(-p*Alpha/2*mean), where p is the
+proportional to p^{Alpha/2-1} * exp(-p*Alpha/(2*mean)), where p is the
 precision (always positive).
 
 Width specifies the top-level mean for the precision as follows.  If

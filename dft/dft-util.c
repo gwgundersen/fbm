@@ -69,8 +69,8 @@ int dft_hyper_size
 
   hs = sizeof (dft_hypers) + dft->N_targets*dft->N_trees * sizeof (double);
 
-  if (m!=0 && m->type=='R')
-  { hs += dft->N_targets * sizeof (double);
+  if (dft_real_model(m))
+  { hs += dft_real_targets(dft,m) * sizeof (double);
   }
 
   hs -= sizeof (double);  /* Because SD already has one double in the struct */
@@ -194,11 +194,11 @@ void dft_hyper_init
     h->c2[dt] = dft->tree[dt].c2.width;
   }
 
-  if (m!=0 && m->type=='R')
+  if (dft_real_model(m))
   {
     h->noise_cm = m->noise.width;
 
-    for (t = 0; t<dft->N_targets; t++)
+    for (t = 0; t<dft_real_targets(dft,m); t++)
     { h->SD[j++] = h->noise_cm;
     }
   }
@@ -428,7 +428,7 @@ void dft_setup_state
 
   for (dt = 0; dt<dft->N_trees; dt++)
   { st[dt].d_SD = hyp ? hyp->SD + dft->N_targets*dt : 0;
-    st[dt].noise = hyp && model!=0 && model->type=='R' 
+    st[dt].noise = hyp && dft_real_model(model)
                     ? hyp->SD + dft->N_targets*dft->N_trees : 0;
     st[dt].parents = parents ? parents + (2*N_cases)*dt + (N_cases-1) : 0;
     st[dt].divt = divt ? divt + (N_cases-1)*dt - 1 : 0;
@@ -467,11 +467,11 @@ void dft_sample_hyper_prior
                                   dft->tree[dt].c2.alpha[0]);
   }
 
-  if (m!=0 && m->type=='R')
+  if (dft_real_model(m))
   {
     h->noise_cm = prior_pick_sigma (m->noise.width, m->noise.alpha[0]);
 
-    for (t = 0; t<dft->N_targets; t++)
+    for (t = 0; t<dft_real_targets(dft,m); t++)
     { h->SD[j++] = prior_pick_sigma (h->noise_cm, m->noise.alpha[1]);
     }
   }

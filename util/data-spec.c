@@ -101,7 +101,15 @@ main
     printf("\n");
 
     if (ds->int_target) 
-    { printf("  Targets are integers in the range [0,%d)\n",ds->int_target);
+    { if (ds->int_target==-1)
+      { printf("  Targets are non-negative integers\n");
+      }
+      else if (ds->int_target==-2)
+      { printf("  Targets are integers (positive, zero, or negative)\n");
+      }
+      else
+      { printf("  Targets are integers in the range [0,%d)\n",ds->int_target);
+      }
       printf("\n");
     }
 
@@ -198,7 +206,17 @@ main
   ds->test_targets[0] = 0;
 
   if (*ap!=0 && strcmp(*ap,"/")!=0 && strcmp(*ap,"-n")!=0)
-  { if ((ds->int_target = atoi(*ap++))<=0) usage();
+  { if (strcmp(*ap,"+")==0) 
+    { ds->int_target = -1;
+    }
+    else if (strcmp(*ap,"-")==0)
+    { ds->int_target = -2;
+    }
+    else
+    { ds->int_target = atoi(*ap);
+      if (ds->int_target<=0) usage();
+    }
+    ap += 1;
   }
 
   do_not_read_data = 0;
@@ -355,10 +373,21 @@ main
         tvar[j] += tv[j]*tv[j];
         tn[j] += 1;
         if (ds->int_target)
-        { if (tv[j]!=(int)tv[j] || tv[j]<0 || tv[j]>=ds->int_target)
-          { fprintf(stderr,"Training target out of bounds or not integer: %f\n",
-                    tv[j]);
+        { if (tv[j]!=(int)tv[j])
+          { fprintf (stderr, "Training target is not an integer: %f\n", tv[j]);
             exit(1);
+          }
+          if (ds->int_target>0)
+          { if (tv[j]<0 || tv[j]>=ds->int_target)
+            { fprintf (stderr, "Training target is out of bounds: %f\n", tv[j]);
+              exit(1);
+            }
+          }
+          if (ds->int_target==-1)
+          { if (tv[j]<0)
+            { fprintf (stderr, "Training target is negative: %f\n", tv[j]);
+              exit(1);
+            }
           }
         }
       }
@@ -416,14 +445,22 @@ main
           for (j = 0; j<ds->N_targets; j++)
           { if (isnan(tv[j])) continue;
             tv[j] = data_trans (tv[j], ds->trans[ds->N_inputs+j]);
-          }
-          if (ds->int_target)
-          { for (j = 0; j<ds->N_targets; j++)
-            { if (isnan(tv[j])) continue;
-              if (tv[j]!=(int)tv[j] || tv[j]<0 || tv[j]>=ds->int_target)
-              { fprintf(stderr,"Test target out of bounds or not integer: %f\n",
-                        tv[j]);
+            if (ds->int_target)
+            { if (tv[j]!=(int)tv[j])
+              { fprintf (stderr, "Test target is not an integer: %f\n", tv[j]);
                 exit(1);
+              }
+              if (ds->int_target>0)
+              { if (tv[j]<0 || tv[j]>=ds->int_target)
+                { fprintf (stderr, "Test target is out of bounds: %f\n", tv[j]);
+                  exit(1);
+                }
+              }
+              if (ds->int_target==-1)
+              { if (tv[j]<0)
+                { fprintf (stderr, "Test target is negative: %f\n", tv[j]);
+                  exit(1);
+                }
               }
             }
           }

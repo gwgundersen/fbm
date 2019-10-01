@@ -22,8 +22,8 @@
 #include "log.h"
 #include "quantities.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "dft.h"
 #include "dft-data.h"
 
@@ -149,9 +149,10 @@ void dft_available
 
         case 'n': case 'N':
         { qd[v].available = -1;
-          if (model_type=='R' && mod==-1 
-           && low<=dft->N_targets && high<=dft->N_targets)
-          { if (low!=-1 && high==-1) qd[v].high = dft->N_targets; 
+          if (dft_real_model(model) && mod==-1 
+           && low<=dft_real_targets(dft,model) 
+           && high<=dft_real_targets(dft,model))
+          { if (low!=-1 && high==-1) qd[v].high = dft_real_targets(dft,model);
             if (low==0) qd[v].low = 1;
             qd[v].available = 1;
           }

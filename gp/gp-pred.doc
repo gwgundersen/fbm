@@ -51,10 +51,11 @@ The 'options' argument consists of one or more of the following letters:
     Q   Display the 1% and 99% quantiles of the predictive distributions.
 
     l   Use stored latent values for predictions with a regression model
-        (if available).  Normally, predictions for regression models are 
-        done as if no latent values were stored, since this is better, 
-        but suppressing this behaviour might be of interest for testing 
-        purposes.  (Stored latent values are essential for other models.)
+        (if available).  Normally, predictions for regression models (except
+        log-sum-exp models) are done as if no latent values were stored, 
+        since this is better, but suppressing this behaviour might be of 
+        interest for testing purposes.  (Stored latent values are essential 
+        with other models, for which this option is ignored.)
 
     b   Suppress headings and averages - just bare numbers for each case.
         The numbers are printed in exponential format, to high precision.
@@ -68,14 +69,24 @@ The 'options' argument consists of one or more of the following letters:
         probabilities, as well as the actual error (if targets are known).
         Currently implemented only for "binary" data.
 
-    1-9 If any of these characters are used, only the corresponding 
-        non-linear parts of the covariance is used when computing 
-        covariances involving test cases (other non-linear parts and the 
-        constant and linear parts are ignored).  This results in predictions 
-        for just these components of the function, allowing one to see the 
-        components of an additive model.  (But note that if the identity of 
-        a component can change during a run, this option will be meaningful
-        only when the predictions are based on a single iteration.)
+    W-Z If one or more of W,X,Y,Z are present, only the corresponding
+        terms in a log-sum-exp model are used.  This allows one to see
+        the parts of such a model.  (But see the notes below.)
+
+    0-9 If one or more of these characters are present, only the 
+        corresponding linear 0) or non-linear (1-9) parts of the covariance 
+        are used when computing covariances involving test cases.  This 
+        results in predictions for just these components of the function, 
+        allowing one to see the components of an additive model.  (But see 
+        the notes below.)
+
+    x   Add ten to the number of a part specified with 0-9.  The effect
+        is cumulative, so that, for instance, options of 1x2x3 specify
+        that only terms 1, 12, and 23 of the covariance will be used.
+
+    z   Pretend that all the Gausian conditional distributions for targets
+        or latent values in test cases have zero variance.  Useful with
+        0-9 and W-Z.  (See notes below.)
 
 Some of these options are illegal for some data models.  The illegal
 combinations are marked with an 'X' in the following table:
@@ -127,6 +138,17 @@ These Monte Carlo estimates are found using a random number stream
 initialized by setting the seed to one at the start of the program.
 Accuracy can be increased by repeating the same log-file/range
 combination several times, effectively increasing the sample size use.
+
+When using the 0-9 and W-Z options, note that if the identity of a
+term or component can change during a run, these options will be
+meaningful only when predictions are based on a single iteration.
+Note also that predictions are done for each test case individually,
+for in terms of the joint distribution of all test cases.
+Consequently, the components of an additive model or terms in a
+log-sum-exp model may appear "noisy", because any jitter or ambiguity
+in the additive decomposition is resolved andomly for each case.  This
+can be avoided by using the 'z' option, but one should interpret the
+results with care.
 
 The 'D' option is implemented, but is of no real use, since models for
 survival analysis aren't supported, and individual medians for other

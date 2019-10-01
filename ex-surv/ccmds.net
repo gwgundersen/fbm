@@ -1,7 +1,7 @@
 
 # Commands for neural network survival model with constant hazard function.
 
-net-spec clog.net 1 8 1 / - 0.05:1 0.05:1 - x0.05:1 - 100 
+net-spec clog.net 1 8 1 / ih=0.05:1 bh=0.05:1 ho=x0.05:1 bo=100 
 model-spec clog.net survival const-hazard
 
 data-spec clog.net 1 1 / cdata@1:500 . cdata@-1:500 .

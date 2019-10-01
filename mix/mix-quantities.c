@@ -22,8 +22,8 @@
 #include "log.h"
 #include "quantities.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "mix.h"
 #include "mix-data.h"
 
@@ -265,7 +265,7 @@ void mix_evaluate
         case 'u':
         { if (mod>0 && offsets==0) break;
           for (i = low; i<=high; i++)
-          { qh->value[v][i-low] = mod<=0 || mod>N_active ? hyp->mean[i]
+          { qh->value[v][i-low] = mod<=0 || mod>N_active ? hyp->tg[i].mean
                                     : offsets[(mod-1)*mx->N_targets+i];
           }
           qh->updated[v] = 1;
@@ -281,7 +281,7 @@ void mix_evaluate
           }
           else
           { for (i = low; i<=high; i++)
-            { qh->value[v][i-low] = hyp->SD[i];
+            { qh->value[v][i-low] = hyp->tg[i].SD;
               if (letter=='V')
               { qh->value[v][i-low] *= qh->value[v][i-low];
               }
@@ -301,7 +301,7 @@ void mix_evaluate
             }
             else
             { for (i = low; i<=high; i++)
-              { qh->value[v][i-low] = hyp->noise[i];
+              { qh->value[v][i-low] = hyp->tg[i].noise;
                 if (letter=='N')
                 { qh->value[v][i-low] *= qh->value[v][i-low];
                 }
@@ -311,8 +311,8 @@ void mix_evaluate
           else
           { if (noise_SD==0) break;
             for (i = low; i<=high; i++)
-            { qh->value[v][i-low] = mod>N_active ? hyp->noise[i]
-                                       : noise_SD[(mod-1)*mx->N_targets+i];
+            { qh->value[v][i-low] = mod>N_active ? hyp->tg[i].noise
+                                      : noise_SD[(mod-1)*mx->N_targets+i];
               if (letter=='N')
               { qh->value[v][i-low] *= qh->value[v][i-low];
               }

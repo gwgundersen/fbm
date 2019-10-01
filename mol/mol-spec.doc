@@ -1,0 +1,58 @@
+
+
+MOL-SPEC:  Specify a molecular system.
+
+MOL-spec creates a log file with recording the specifications for a
+molecular system, or displays the specifications in an existing log
+file.
+
+Usage:
+
+   mol-spec log-file dim scale width [ maxpe ] "NVT" N length 
+
+or:
+
+   mol-spec log-file dim scale width [ maxpe ] "NPT" N pressure [ inv-temp ]
+
+or:
+
+   mol-spec log-file
+
+When called with arguments after the log file name, mol-spec creates a
+log file of that name (wiping out the contents of any previous file
+with that name), and stores in it the following specifications:
+
+   dim       Dimensionality of the space, either 1, 2, or 3
+   scale     Overall scale factor for the pair potential
+   width     Width parameter of the pair potential (divides distance)
+   maxpe     Maximum value for a pair potential (default is infinite)
+
+   N         Number of molecules
+   length    Length of each dimension of space (for NVT ensemble)
+   pressure  Pressure (for NPT ensemble)
+
+   inv-temp  The inverse temperature to use for the "infinite temperature"
+             distribution of volume, needed when using annealed importance 
+             sample, Hamiltonian importance sampline, and Metropolis 
+             importance sampling.  Has to be finite and non-zero to make
+             actual sampling possible.  May be specified directly, or as 
+             /T, where T is the temperature.  (For NPT ensemble only.)
+
+See mol.doc for the formula for the pair potential.  The "NVT" or
+"NPT" argument (which are one or the other of these strings, no quotes
+needed) determines whether the NVT ensemble is used, in which the
+length of each dimension is fixed (to the given length), or whether
+instead the NPT ensemble is used, in which length is variable but the
+pressure is fixed (to the given pressure).
+
+When called with only a log file name as an argument, mol-spec reads
+the specification record from that log file and displays the values
+stored, from the previous mol-spec command.  It also displays the
+density implied by N and length (for NVT ensemble), and the density
+(for NVT ensemble), pressure (for NPT ensemble), and temperature in
+"reduced" units, accounting for the width and scale chosen.
+
+The specifications are stored in the log file as a single record of
+type 'M' and index -1,
+
+            Copyright (c) 1995-2004 by Radford M. Neal

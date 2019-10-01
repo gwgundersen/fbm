@@ -1,0 +1,2 @@
+mol-spec      xlog.his8 3 4 1 30 NVT 13 10
+mol-his       xlog.his8 50 25000 49999 250 / 0.0008 5 / 0.1 0.9999 0.15

@@ -93,23 +93,24 @@ static double *diff_cov;	/* Derivative of covariance matrix for trn pts*/
 static double *exp_cov[Max_exp_parts]; /* Exponential terms in covariance,
 			          saved to speed up computation of diff_cov */
 
-static double *latent_cov;	/* Covariance for latent values at trn points
-				    - same storage as exp_cov[0]. */
-
 static double *reg_matrix;	/* Matrix of regression coefficients - same
-				   storage as exp_cov[1]. */
+				   storage as exp_cov[0]. */
+
+static double *latent_cov[Max_outputs];	/* Covariances for latent values at 
+                                   training points - same storage as exp_cov[1],
+                                   exp_cov[2], ... */
 
 static double *post_cov;	/* Posterior cov. for latent values underlying
 				   training points - same storage as diff_cov */
 
 static double *diag_inv;	/* Diagonal of inverse covariance (N_train) */
 
-static double *scr1, *scr2;	/* Scratch vectors (N_train long) */
+static double *scr1, *scr2, *scr3; /* Scratch vectors (N_train long) */
 
 
 /* PROCEDURES. */
 
-static void sample_values (void);
+static void sample_values (int), sample_values1 (void), sample_values2 (void);
 static void jitter_values (double, int);
 static void sample_variances (void);
 static void scan_values (int);
@@ -213,7 +214,9 @@ void mc_app_initialize
     { N_train = 0;
     }
 
-    aux = chk_alloc (2*gp->N_outputs*N_train, sizeof (double));
+    aux = chk_alloc (gp->N_outputs*N_train + 
+                       (data_spec==0 ? 0 : data_spec->N_targets*N_train), 
+                     sizeof (double));
 
     latent_values = aux;
     noise_variances = aux + gp->N_outputs*N_train;
@@ -266,8 +269,11 @@ void mc_app_initialize
 
     train_cov  = chk_alloc (N_train*N_train, sizeof(double));
     diff_cov   = chk_alloc (N_train*N_train, sizeof(double));
-    latent_cov = chk_alloc (N_train*N_train, sizeof(double));
     reg_matrix = chk_alloc (N_train*N_train, sizeof(double));
+
+    for (j = 0; j<gp->N_outputs; j++)
+    { latent_cov[j] = chk_alloc (N_train*N_train, sizeof(double));
+    }
 
     post_cov  = diff_cov;
 
@@ -279,10 +285,10 @@ void mc_app_initialize
       { exp_cov[l] = 0;
       }
       else if (l==0)
-      { exp_cov[l] = latent_cov;
-      }
-      else if (l==1)
       { exp_cov[l] = reg_matrix;
+      }
+      else if (l<=gp->N_outputs)
+      { exp_cov[l] = latent_cov[l-1];
       }
       else if (N_train*N_train*sizeof(double)<=optional_left)
       { exp_cov[l] = chk_alloc (N_train*N_train, sizeof(double));
@@ -297,6 +303,7 @@ void mc_app_initialize
 
     scr1 = chk_alloc (N_train, sizeof(double));
     scr2 = chk_alloc (N_train, sizeof(double));
+    scr3 = chk_alloc (N_train, sizeof(double));
 
     /* Make sure we don't do all this again. */
 
@@ -305,7 +312,8 @@ void mc_app_initialize
 
   /* Set up Monte Carlo state structure. */
 
-  ds->aux_dim = 2*gp->N_outputs*N_train;
+  ds->aux_dim = gp->N_outputs*N_train +
+                  (data_spec==0 ? 0 : data_spec->N_targets*N_train);
   ds->aux     = aux;
 
   ds->dim = hypers.total_hypers;
@@ -365,7 +373,9 @@ int mc_app_sample
   mc_temp_sched *sch
 )
 {
-  int i, j;
+  int i, j, k, n;
+
+  n = model_values_check(model,data_spec,gp->N_outputs,0);
 
   if (strcmp(op,"scan-values")==0)
   {
@@ -378,6 +388,12 @@ int mc_app_sample
     if (model->type=='R' && model->autocorr)
     { fprintf(stderr,
        "The scan-values operation isn't implemented for models with autocorrelated noise\n");
+      exit(1);
+    }
+
+    if (n!=gp->N_outputs)
+    { fprintf(stderr,
+        "The scan-values operation is not allowed for log-sum-exp models\n");
       exit(1);
     }
 
@@ -412,7 +428,13 @@ int mc_app_sample
       exit(1);
     }
 
-    sample_values(); 
+    if (n!=gp->N_outputs)
+    { fprintf(stderr,
+        "The sample-values operation is not allowed for log-sum-exp models\n");
+      exit(1);
+    }
+
+    sample_values(pm); 
     have_values = 1;
 
     ds->know_pot = 0;
@@ -432,6 +454,18 @@ int mc_app_sample
     if (!gp->has_jitter)
     { fprintf (stderr,
        "The jitter-values operation is not allowed when there is no jitter\n");
+      exit(1);
+    }
+
+    if (n!=gp->N_outputs)
+    { fprintf(stderr,
+        "The jitter-values operation is not allowed for log-sum-exp models\n");
+      exit(1);
+    }
+
+    if (gp_any_dropped(gp))
+    { fprintf(stderr,
+ "The jitter-values operation is not allowed when the 'drop' option is used\n");
       exit(1);
     }
 
@@ -518,6 +552,101 @@ int mc_app_sample
     return 1;
   }
 
+  else if (strcmp(op,"init-values")==0)
+  { 
+    if (!have_values)
+    { 
+      switch (model->type)
+      { 
+        case 'N':
+        {
+          double targ, val, s, s2, a, b;
+          double mean, var, xvar;
+          int m, q, w;
+
+          q = gp->N_outputs / data_spec->N_targets;
+
+          w = (int)pm;
+
+          if (w!=pm || w<0)
+          { fprintf(stderr,"Invalid arguement for init-values\n");
+            exit(1);
+          }
+
+          if (w>N_train) w = N_train;
+
+          for (j = 0; j<data_spec->N_targets; j++)
+          {
+            m = 0;
+            s = 0;
+            s2 = 0;
+
+            for (i = 0; i<N_train; i++)
+            { targ = train_targets[i*data_spec->N_targets+j];
+              if (!isnan(targ) && targ>=0)
+              { m += 1;
+                s += targ;
+                s2 += targ*targ;
+              }
+            }
+
+            mean = s/m;
+            var = s2/m - mean*mean;
+            xvar = var<mean ? 0 : var-mean;
+
+            if (xvar>0)
+            { a = mean*mean / xvar;
+              b = mean / xvar;
+            }
+
+            for (i = 0; i<N_train; i++)
+            { 
+              if (xvar>0)
+              { s = 0;
+                m = 0;
+                for (k = -w; k<=w; k++)
+                { if (i+k>=0 && i+k<N_train)
+                  { targ = train_targets[(i+k)*data_spec->N_targets+j];
+                    if (!isnan(targ))
+                    { if (targ<0) targ = -targ;
+                      s += targ;
+                      m += 1;
+                    }
+                  }
+                }
+              }
+              if (xvar<=0 || m==0)
+              { val = mean;
+              }
+              else
+              { val = (a + s) / (b + m);
+              }
+              for (k = 0; k<q; k++)
+              { latent_values[i*gp->N_outputs+j*q+k] = log(val/q);
+              }
+            }
+
+          }
+
+          break;
+        }
+
+        default:
+        { fprintf (stderr,
+            "The init-values operation is not implemented for this model\n");
+          exit(1);
+        }
+      }
+
+      have_values = 1;
+
+      ds->know_pot = 0;
+      ds->know_grad = 0;
+    }
+
+    return 1;
+  }
+
   else if (strcmp(op,"discard-values")==0)
   {
     have_values = 0;
@@ -537,7 +666,7 @@ int mc_app_sample
     }
 
     if (!have_values) 
-    { sample_values(); /* Creates values, but doesn't remember them, since  */
+    { sample_values(0);/* Creates values, but doesn't remember them, since  */
     }                  /*   have_values remains set to zero.                */
 
     sample_variances();
@@ -558,8 +687,9 @@ int mc_app_sample
    The likelihood is based on the target values for training cases if no
    latent values are stored, and on the latent values for training cases if 
    these do exist.  Note that the latent values are considered fixed at this 
-   point (they are changed by sample-values).  If case-by-case noise variances 
-   are present, they too are considered fixed when computing the likelihood. */
+   point (they are changed by sample-values, etc.).  If case-by-case noise 
+   variances are present, they too are considered fixed when computing the 
+   likelihood. */
 
 void mc_app_energy
 ( mc_dynamic_state *ds,	/* Current dynamical state */
@@ -569,12 +699,30 @@ void mc_app_energy
   mc_value *gr		/* Place to store gradient, null if not required */
 )
 {
-  double ld, lp, c, a, n, v, s;
-  int found;
+  extern float traj_frac;
+  extern int new_frac;
+
+  int true_N_train = N_train;
+  double *true_train_inputs = train_inputs;
+  double *true_train_targets = train_targets;
+
+  double ld, lp, mx, c, a, n, v, s;
+  int found, any_drop;
+  int i, j, k, q;
   double *d;
-  int i, j, k;
+
+  /* Can't directly handle both energy and gradient when using only a
+     fraction of cases, so instead we do the gradient first and then
+     compute the energy. */
+
+  if (energy && gr && traj_frac<1)
+  { mc_app_energy (ds, N_approx, w_approx, 0, gr);
+    gr = 0;
+  }
 
   /* Set things up to start. */
+
+  any_drop = gp_any_dropped(gp);
 
   if (ds->q!=hypers.hyper_block) abort();
 
@@ -625,7 +773,7 @@ void mc_app_energy
 
   /* Evaluate portion of the energy and gradient due to the likelihood
      for target values given latent values, if present.  This is relevant
-     only when it affect the noise variance hyperparameter for a regression
+     only when it affects the noise variance hyperparameter for a regression
      model. */
 
   if (N_train>0 && have_values && !have_variances 
@@ -650,10 +798,29 @@ void mc_app_energy
       }
 
       for (i = 0; i<N_train; i++)
-      { v = latent_values[gp->N_outputs*i+j] - train_targets[gp->N_outputs*i+j];
+      { 
+        if (gp->N_outputs==data_spec->N_targets)
+        { v = latent_values[gp->N_outputs*i+j]-train_targets[gp->N_outputs*i+j];
+        }
+        else /* log-sum-exp model */
+        { q = gp->N_outputs / data_spec->N_targets;
+          mx = latent_values[gp->N_outputs*i+q*j];
+          for (k = 1; k<q; k++)
+          { if (latent_values[gp->N_outputs*i+q*j+k]>mx)
+            { mx = latent_values[gp->N_outputs*i+q*j+k];
+            }
+          }
+          v = 0;
+          for (k = 0; k<q; k++)
+          { v += exp(latent_values[gp->N_outputs*i+q*j+k]-mx);
+          }
+          v = log(v) + mx - train_targets[data_spec->N_targets*i+j];
+        }
+
         if (energy) 
         { *energy += (v*v)/(2*n*n);
         }
+
         if (gr && (model->noise.alpha[0]!=0 || model->noise.alpha[1]!=0)) 
         { *grad.noise[j] += -(v*v)/(n*n);
         }
@@ -666,8 +833,61 @@ void mc_app_energy
      covariance matrix done only once if there is no change from output
      to output. */
 
-  if (N_train>0)
+  if (N_train>0 && (energy || traj_frac>0))
   {
+    /* Choose a random subset of cases if we're computing the gradient (only)
+       with a fraction of the cases.  Fiddle with N_train, etc. to temporarily
+       make it seem that these are the only cases. */
+
+    if (traj_frac<1 && !energy)
+    {  
+      static int subset_N_train = -1;
+      static double *subset_train_inputs = 0;
+      static double *subset_train_targets = 0;
+      static int *perm = 0;;
+
+      if (new_frac)
+      {
+        if (subset_N_train!=(int)(traj_frac*true_N_train))
+        {
+          if (subset_train_inputs!=0) free(subset_train_inputs);
+          if (subset_train_targets!=0) free(subset_train_targets);
+
+          subset_N_train = (int)(traj_frac*true_N_train);
+          subset_train_inputs = 
+             chk_alloc (data_spec->N_inputs * subset_N_train, sizeof (double));
+          subset_train_targets = 
+             chk_alloc (data_spec->N_targets * subset_N_train, sizeof (double));
+
+          if (perm==0) 
+          { perm = chk_alloc (true_N_train, sizeof *perm);
+          }
+
+          rand_permutation (perm, true_N_train);
+
+          for (i = 0; i<subset_N_train; i++)
+          { k = perm[i]-1;
+            for (j = 0; j<data_spec->N_inputs; j++)
+            { subset_train_inputs[i*data_spec->N_inputs+j] =
+                true_train_inputs[k*data_spec->N_inputs+j];
+            }
+            for (j = 0; j<data_spec->N_targets; j++)
+            { subset_train_targets[i*data_spec->N_targets+j] =
+                true_train_targets[k*data_spec->N_targets+j];
+            }
+          }
+        }
+
+        new_frac = 0;
+      }
+
+      N_train = subset_N_train;
+      train_inputs = subset_train_inputs;
+      train_targets = subset_train_targets;
+    }
+
+    /* Add log normalization constant to energy. */
+
     if (energy && !Cheap_energy) 
     { *energy += 0.5 * gp->N_outputs * N_train * Log2pi;
     }
@@ -680,8 +900,9 @@ void mc_app_energy
          part of diff_cov and in diag_inv).  If this process fails, go to the 
          recovery code. */
 
-      if (j==0 || model!=0 && model->type=='R' && !have_values
-        && (model->noise.alpha[2]!=0 || *hypers.noise[j]!=*hypers.noise[j-1]))
+      if (j==0 || any_drop
+       || model!=0 && model->type=='R' && !have_values
+          && (model->noise.alpha[2]!=0 || *hypers.noise[j]!=*hypers.noise[j-1]))
       {
         gp_train_cov (gp, model, &hypers, j, noise_variances, 
                       have_values ? train_cov : 0,
@@ -738,10 +959,11 @@ void mc_app_energy
              computed, and stored in diff_cov, allowing the part below the
              diagonal to still contain elements of the inverse covariance. */
 
-          found = gp_cov_deriv (gp, &hypers, exp_cov, ds->q+k, 
+          found = gp_cov_deriv (gp, &hypers, j, exp_cov, ds->q+k, 
                                 train_inputs, diff_cov, N_train);
 
-          if (gp->has_jitter && ds->q+k==hypers.jitter)
+          if (gp->has_jitter && !(gp->lin.flags[j]&Flag_drop)
+               && ds->q+k==hypers.jitter)
           { for (i = 0; i<N_train; i++)
             { diff_cov[i*N_train+i] += 2 * exp(2 * *hypers.jitter);
             }
@@ -812,7 +1034,7 @@ void mc_app_energy
     }
   }
 
-  return;
+  goto restore;
 
   /* Recovery code for when the state is apparently ridiculous.  Just 
      set the energy to a huge value (so we will reject), and set the gradient
@@ -831,6 +1053,12 @@ recover_gr:
   if (gr)
   { for (k = 0; k<ds->dim; k++) gr[k] = 0;
   }
+
+restore:
+
+  N_train = true_N_train;
+  train_inputs = true_train_inputs;
+  train_targets = true_train_targets;
 }
 
 
@@ -877,7 +1105,7 @@ void mc_app_stepsizes
       { int c;
         c = 0;
         for (i = 0; i<gp->N_inputs; i++) 
-        { c += !(gp->linear_flags[i]&Flag_omit);
+        { c += !(gp->lin.flags[i]&Flag_omit);
         }
         *stepsizes.linear_cm = 0.1/sqrt((double)c);
       }
@@ -885,7 +1113,7 @@ void mc_app_stepsizes
    
     if (gp->linear.alpha[1]!=0)
     { for (i = 0; i<gp->N_inputs; i++)
-      { if (!(gp->linear_flags[i]&Flag_omit))
+      { if (!(gp->lin.flags[i]&Flag_omit))
         { *stepsizes.linear[i] = 0.1;
         }
       }
@@ -1029,21 +1257,26 @@ static void scan_values
   double mean, prec;
   int i, j, k;
   int N_outputs;
+  int any_drop;
 
   N_outputs = gp->N_outputs;
+  any_drop = gp_any_dropped(gp);
 
-  /* Compute the covariance matrix for latent values at training points. 
-     This will be the same for all outputs, since it doesn't include any
-     noise part. */
+  for (j = 0; j<N_outputs; j++)
+  {
+    /* Compute the covariance matrix for latent values at training points. */
 
-  gp_train_cov (gp, 0, &hypers, 0, 0, latent_cov, 0, 0);
+    gp_train_cov (gp, 0, &hypers, j, 0, latent_cov[j], 0, 0);
 
-  /* Invert this covariance matrix. */
+    /* Invert this covariance matrix. */
 
-  if (!cholesky(latent_cov,N_train,0)
-   || !inverse_from_cholesky (latent_cov, scr1, scr2, N_train))
-  { fprintf(stderr,"Couldn't find inverse of covariance in scan-values!\n");
-    exit(1);
+    if (!cholesky(latent_cov[j],N_train,0)
+     || !inverse_from_cholesky (latent_cov[j], scr1, scr2, N_train))
+    { fprintf(stderr,"Couldn't find inverse of covariance in scan-values!\n");
+      exit(1);
+    }
+
+    if (!any_drop) break;
   }
 
   /* Do Gibbs sampling scans for latent values. */
@@ -1060,9 +1293,10 @@ static void scan_values
         latent_values[i*N_outputs+j] = 0;
 
         mean = - inner_product (latent_values+j, N_outputs, 
-                   latent_cov+N_train*i, 1, N_train) / latent_cov[i*N_train+i];
+                   latent_cov[j*any_drop]+N_train*i, 1, N_train) 
+                 / latent_cov[j*any_drop][i*N_train+i];
 
-        prec = latent_cov[i*N_train+i];
+        prec = latent_cov[j*any_drop][i*N_train+i];
 
         /* Combine this with the likelihood from the target value and
            sample from the resulting distribution. */
@@ -1128,24 +1362,40 @@ static void met_values
   mc_iter *it
 )
 {  
-  int i, j, k;
+  double *nv, nvs[1000];
+  int i, j, k, n;
   int N_outputs;
+  int any_drop;
 
   double new_E, old_E;
 
   N_outputs = gp->N_outputs;
+  any_drop = gp_any_dropped(gp);
+  n = model_values_check(model,data_spec,N_outputs,0);
 
-  /* Compute the covariance matrix for latent values at training points. 
-     This will be the same for all outputs. */
+  if (model->type=='R' && !have_variances)
+  { nv = data_spec->N_targets<=1000 ? nvs
+          : chk_alloc (data_spec->N_targets, sizeof *nv);
+    for (i = 0; i<data_spec->N_targets; i++)
+    { nv[i] = exp (2 * *hypers.noise[i]);
+    }
+  }
 
-  gp_train_cov (gp, 0, &hypers, 0, 0, latent_cov, 0, 0);
+  for (j = 0; j<N_outputs; j++)
+  {
+    /* Compute the covariance matrix for latent values at training points. */
 
-  /* Find Cholesky decomposition for use in evaluating energy, and in 
-     generating correlated proposals. */
+    gp_train_cov (gp, 0, &hypers, j, 0, latent_cov[j], 0, 0);
 
-  if (!cholesky(latent_cov,N_train,0))
-  { fprintf(stderr,"Couldn't find Cholesky decomposition in met-values!\n");
-    exit(1);
+    /* Find Cholesky decomposition for use in evaluating energy, and in 
+       generating correlated proposals. */
+
+    if (!cholesky(latent_cov[j],N_train,0))
+    { fprintf(stderr,"Couldn't find Cholesky decomposition in met-values!\n");
+      exit(1);
+    }
+
+    if (!any_drop) break;
   }
 
   /* Do Metropolis updates. */
@@ -1156,16 +1406,16 @@ static void met_values
     { 
       /* Find initial "energy", from prior and likelihood. */
 
-      forward_solve (latent_cov, scr1, 1, latent_values+j, gp->N_outputs, 
-                     N_train);
+      forward_solve (latent_cov[j*any_drop], scr1, 1, latent_values+j, 
+                     gp->N_outputs, N_train);
   
       old_E = squared_norm (scr1, 1, N_train) / 2;
 
       for (i = 0; i<N_train; i++)
-      { old_E -= gp_likelihood (&hypers, model, data_spec, 
-                  train_targets+i*data_spec->N_targets, 
-                  latent_values+i*gp->N_outputs, 
-                  have_variances ? noise_variances+i*data_spec->N_targets : 0);
+      { old_E -= model_likelihood (model, data_spec, 
+                  have_variances ? noise_variances+i*data_spec->N_targets : nv,
+                  latent_values+i*N_outputs, N_outputs,
+                  train_targets+i*data_spec->N_targets);
       }
 
       /* Save current latent variables in scr2. */
@@ -1183,28 +1433,29 @@ static void met_values
       if (scale>0)
       { for (i = 0; i<N_train; i++)
         { latent_values[i*N_outputs+j] += 
-            scale * inner_product (scr1, 1, latent_cov+i*N_train, 1, i+1);
+            scale * inner_product 
+                      (scr1, 1, latent_cov[j*any_drop]+i*N_train, 1, i+1);
         }
       }
       else
       { for (i = 0; i<N_train; i++)
         { latent_values[i*N_outputs+j] += 
-            scale * sqrt(latent_cov[i*N_train+i]) * scr1[i];
+            scale * sqrt(latent_cov[j*any_drop][i*N_train+i]) * scr1[i];
         }
       }
 
       /* Find new "energy", from prior and likelihood. */
 
-      forward_solve (latent_cov, scr1, 1, latent_values+j, gp->N_outputs, 
-                     N_train);
+      forward_solve (latent_cov[j*any_drop], scr1, 1, latent_values+j, 
+                     gp->N_outputs, N_train);
 
       new_E = squared_norm (scr1, 1, N_train) / 2;
 
       for (i = 0; i<N_train; i++)
-      { new_E -= gp_likelihood (&hypers, model, data_spec, 
-                  train_targets+i*data_spec->N_targets, 
-                  latent_values+i*gp->N_outputs, 
-                  have_variances ? noise_variances+i*data_spec->N_targets : 0);
+      { new_E -= model_likelihood (model, data_spec, 
+                  have_variances ? noise_variances+i*data_spec->N_targets : nv,
+                  latent_values+i*N_outputs, N_outputs,
+                  train_targets+i*data_spec->N_targets);
       }   
 
       /* Accept or reject proposed change based on delta. */
@@ -1223,6 +1474,10 @@ static void met_values
         it->move_point = 0;
       }
     }
+  }
+
+  if (model->type=='R' && !have_variances && data_spec->N_targets>1000)
+  { free(nv);
   }
 }
 
@@ -1241,26 +1496,42 @@ static void mh_values
   mc_iter *it
 )
 {  
-  int i, j, k;
+  double *nv, nvs[1000];
+  int i, j, k, n;
   int N_outputs;
+  int any_drop;
 
   double new_E, old_E;
   double alpha;
 
   N_outputs = gp->N_outputs;
+  any_drop = gp_any_dropped(gp);
+  n = model_values_check(model,data_spec,N_outputs,0);
+
+  if (model->type=='R' && !have_variances)
+  { nv = data_spec->N_targets<=1000 ? nvs
+          : chk_alloc (data_spec->N_targets, sizeof *nv);
+    for (i = 0; i<data_spec->N_targets; i++)
+    { nv[i] = exp (2 * *hypers.noise[i]);
+    }
+  }
  
   alpha = sqrt(1-scale*scale);
 
-  /* Compute the covariance matrix for latent values at training points. 
-     This will be the same for all outputs. */
+  for (j = 0; j<N_outputs; j++)
+  {
+    /* Compute the covariance matrix for latent values at training points. */
 
-  gp_train_cov (gp, 0, &hypers, 0, 0, latent_cov, 0, 0);
+    gp_train_cov (gp, 0, &hypers, j, 0, latent_cov[j], 0, 0);
 
-  /* Find Cholesky decomposition for use in generating correlated noise. */
+    /* Find Cholesky decomposition for use in generating correlated noise. */
 
-  if (!cholesky(latent_cov,N_train,0))
-  { fprintf(stderr,"Couldn't find Cholesky decomposition in mh-values!\n");
-    exit(1);
+    if (!cholesky(latent_cov[j],N_train,0))
+    { fprintf(stderr,"Couldn't find Cholesky decomposition in mh-values!\n");
+      exit(1);
+    }
+
+    if (!any_drop) break;
   }
 
   /* Do Metropolis-Hastings updates. */
@@ -1274,10 +1545,10 @@ static void mh_values
       old_E = 0;
 
       for (i = 0; i<N_train; i++)
-      { old_E -= gp_likelihood (&hypers, model, data_spec, 
-                  train_targets+i*data_spec->N_targets, 
-                  latent_values+i*gp->N_outputs, 
-                  have_variances ? noise_variances+i*data_spec->N_targets : 0);
+      { old_E -= model_likelihood (model, data_spec, 
+                  have_variances ? noise_variances+i*data_spec->N_targets : nv,
+                  latent_values+i*N_outputs, N_outputs,
+                  train_targets+i*data_spec->N_targets);
       }
 
       /* Save current latent variables in scr2. */
@@ -1294,7 +1565,8 @@ static void mh_values
 
       for (i = 0; i<N_train; i++)
       { latent_values[i*N_outputs+j] = alpha * latent_values[i*N_outputs+j]
-              + scale * inner_product (scr1, 1, latent_cov+i*N_train, 1, i+1);
+          + scale * inner_product 
+                      (scr1, 1, latent_cov[j*any_drop]+i*N_train, 1, i+1);
       }
 
       /* Find new "energy" from likelihood. */
@@ -1302,10 +1574,10 @@ static void mh_values
       new_E = 0;
 
       for (i = 0; i<N_train; i++)
-      { new_E -= gp_likelihood (&hypers, model, data_spec, 
-                  train_targets+i*data_spec->N_targets, 
-                  latent_values+i*gp->N_outputs, 
-                  have_variances ? noise_variances+i*data_spec->N_targets : 0);
+      { new_E -= model_likelihood (model, data_spec, 
+                  have_variances ? noise_variances+i*data_spec->N_targets : nv,
+                  latent_values+i*N_outputs, N_outputs,
+                  train_targets+i*data_spec->N_targets);
       }   
 
       /* Accept or reject proposed change based on delta. */
@@ -1325,17 +1597,36 @@ static void mh_values
       }
     }
   }
+
+  if (model->type=='R' && !have_variances && nv!=nvs)
+  { free(nv);
+  }
 }
 
 
 /* SAMPLE LATENT VALUES FOR A REGRESSION MODEL. */
 
-static void sample_values(void)
+static void sample_values 
+( int use_old		/* Use older version? */
+)
+{
+  if (use_old || model->autocorr) 
+  { sample_values1();	/* Older version (slower, but handles autocorrelation)*/
+  }
+  else
+  { sample_values2();	/* Newer, faster, version */
+  }
+
+}
+
+static void sample_values1()
 {
   int N_outputs;
+  int any_drop;
   int i, j;
 
   N_outputs = gp->N_outputs;
+  any_drop = gp_any_dropped(gp);
 
   for (j = 0; j<N_outputs; j++)
   { 
@@ -1343,13 +1634,13 @@ static void sample_values(void)
        regression matrix for this output, if it's not the same as 
        for the last output. */
 
-    if (j==0 || model->noise.alpha[2]!=0 
-             || *hypers.noise[j]!=*hypers.noise[j-1])
+    if (j==0 || any_drop 
+      || model->noise.alpha[2]!=0 || *hypers.noise[j]!=*hypers.noise[j-1])
     {
       /* Compute covariance matrix for both latent and target values. */
 
       gp_train_cov (gp, model, &hypers, j, noise_variances, 
-                    latent_cov, train_cov, 0);
+                    latent_cov[0], train_cov, 0);
       
       /* Find Cholesky decomposition of train_cov and compute its inverse. */
     
@@ -1362,17 +1653,17 @@ static void sample_values(void)
       /* Find the matrix of coefficients for computing the posterior mean from
          the targets. */
     
-      matrix_product (latent_cov, train_cov, reg_matrix, 
+      matrix_product (latent_cov[0], train_cov, reg_matrix, 
                       N_train, N_train, N_train);
     
       /* Find the posterior covariance for latent values underlying training 
          cases, using various matrices computed above. */
     
-      matrix_product (reg_matrix, latent_cov, post_cov,
+      matrix_product (reg_matrix, latent_cov[0], post_cov,
                       N_train, N_train, N_train);
     
       for (i = N_train*N_train - 1; i>=0; i--) 
-      { post_cov[i] = latent_cov[i] - post_cov[i];
+      { post_cov[i] = latent_cov[0][i] - post_cov[i];
       }
 
       /* Find the Cholesky decomposition of the posterior covariance. */
@@ -1399,8 +1690,92 @@ static void sample_values(void)
   }
 }
 
+static void sample_values2(void)
+{
+  int N_outputs;
+  int any_drop;
+  double n;
+  int i, j;
 
-/* UPDATE LATENT VALUES BY PLAYING WITH JITTER-REDUCED VERSIONS. */
+  N_outputs = gp->N_outputs;
+  any_drop = gp_any_dropped(gp);
+
+  for (j = 0; j<N_outputs; j++)
+  { 
+    if (j==0 || any_drop 
+      || model->noise.alpha[2]!=0 || *hypers.noise[j]!=*hypers.noise[j-1])
+    {
+      /* Compute covariance matrix for both latent and target values. */
+
+      gp_train_cov (gp, model, &hypers, j, noise_variances, 
+                    latent_cov[0], train_cov, 0);
+      
+      /* Find Cholesky decomposition of train_cov and use it to compute the
+         mean of the distribution of latent values for this output (in scr1). */
+    
+      if (!cholesky (train_cov,N_train,0))
+      { fprintf (stderr, 
+                "Couldn't find Cholesky decomposition (1) in sample-values!\n");
+        exit(1);
+      }
+
+      forward_solve (train_cov,scr1,1,train_targets+j,N_outputs,N_train);
+      backward_solve (train_cov,scr2,1,scr1,1,N_train);
+      matrix_product (latent_cov[0],scr2,scr1,N_train,1,N_train);
+
+      /* Find the prior inverse covariance of latent values. */ 
+
+      if (!cholesky(latent_cov[0],N_train,0))
+      { fprintf(stderr,
+               "Couldn't find Cholesky decomposition (2) in sample-values!\n");
+         exit(1);
+      }
+      if (!inverse_from_cholesky(latent_cov[0],scr2,scr3,N_train))
+      { fprintf(stderr,
+               "Couldn't find inverse from Cholesky in sample-values!\n");
+         exit(1);
+      }
+
+      /* Find the posterior inverse covariance matrix of the latent values
+         by adding the precision of the observations to the diagonal, and
+         then find its Cholesky decomposition. */
+
+      if (model->noise.alpha[2]!=0)
+      { for (i = 0; i<N_train; i++)
+        { latent_cov[0][N_train*i+i] += 1/noise_variances[i];
+        }
+      }
+      else
+      { n = 1 / exp (2 * *hypers.noise[j]);
+        for (i = 0; i<N_train; i++)
+        { latent_cov[0][N_train*i+i] += n;
+        }
+      }
+
+      if (!cholesky(latent_cov[0],N_train,0))
+      { fprintf(stderr,
+               "Couldn't find Cholesky decomposition (3) in sample-values!\n");
+         exit(1);
+      }
+    }
+
+    /* Sample latent values for this output for each training case. */
+
+    for (i = 0; i<N_train; i++) 
+    { scr2[i] = rand_gaussian();
+    }
+
+    backward_solve (latent_cov[0], scr3, 1, scr2, 1, N_train);
+    
+    for (i = 0; i<N_train; i++)
+    { latent_values[i*N_outputs+j] = scr1[i] + scr3[i];
+    }
+  }
+}
+
+
+/* UPDATE LATENT VALUES BY PLAYING WITH JITTER-REDUCED VERSIONS.  Note:
+   Doesn't work if there are any "drop" options. */
 
 static void jitter_values
 ( double jp,
@@ -1419,13 +1794,13 @@ static void jitter_values
      and store in latent_cov.  This will be the same for all outputs, since 
      it doesn't include any noise part. */
 
-  gp_train_cov (gp, 0, &hypers, 0, 0, latent_cov, 0, 0);
+  gp_train_cov (gp, 0, &hypers, 0, 0, latent_cov[0], 0, 0);
 
   /* Find covariance matrix of jitter-reduced latent variables, and store
      in train_cov. */
 
   for (i = N_train*N_train - 1; i>=0; i--) 
-  { train_cov[i] = latent_cov[i];
+  { train_cov[i] = latent_cov[0][i];
   }
 
   for (i = 0; i<N_train; i++)
@@ -1435,8 +1810,8 @@ static void jitter_values
   /* Find Cholesky decomposition of the covariance of the full latent 
      variables and compute its inverse. */
     
-  if (!cholesky (latent_cov,N_train,0)
-   || !inverse_from_cholesky (latent_cov, scr1, scr2, N_train))
+  if (!cholesky (latent_cov[0],N_train,0)
+   || !inverse_from_cholesky (latent_cov[0], scr1, scr2, N_train))
   { fprintf (stderr, "Couldn't invert covariance in jitter-values!\n");
     exit(1);
   }
@@ -1444,7 +1819,8 @@ static void jitter_values
   /* Find the matrix of coefficients for computing the mean of the 
      jitter-reduced latent variables from the full latent variables. */
     
-  matrix_product (train_cov, latent_cov, reg_matrix, N_train, N_train, N_train);
+  matrix_product (train_cov, latent_cov[0], reg_matrix, 
+                  N_train, N_train, N_train);
     
   /* Find the covariance for jitter-reduced latent values conditional on
      the full latent variables, using various matrices computed above. */
@@ -1546,23 +1922,23 @@ static void jitter_values
 static void sample_variances(void)
 {
   double a, n, d, s;
-  int N_outputs;
+  int N_targets;
   int i, j;
 
-  N_outputs = gp->N_outputs;
+  N_targets = data_spec->N_targets;
 
   a = model->noise.alpha[2];
 
-  for (j = 0; j<N_outputs; j++)
+  for (j = 0; j<N_targets; j++)
   { 
     n = exp (2 * *hypers.noise[j]);
 
     for (i = 0; i<N_train; i++)
     {
-      d = latent_values[N_outputs*i+j] - train_targets[N_outputs*i+j];
+      d = latent_values[N_targets*i+j] - train_targets[N_targets*i+j];
       s = rand_gamma((a+1)/2) / ((a*n+d*d)/2);
 
-      noise_variances[N_outputs*i+j] = 1/s;
+      noise_variances[N_targets*i+j] = 1/s;
     }
   }
 }

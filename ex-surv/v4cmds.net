@@ -4,7 +4,9 @@
 # (proportional hazard) model, using log of time as input.
 
 net-spec v4log.net 2 8 omit:1 8 omit:2 1 \
-          / - 0.05:1:1 0.05:1 - - 0.05:1:1 0.05:1 - x0.05:1 x0.05:1 - 100 
+          / ih0=0.05:1:1 bh0=0.05:1 ih1=0.05:1:1 bh1=0.05:1 \
+            ho1=x0.05:1 ho0=x0.05:1 bo=100 
+
 model-spec v4log.net survival pw-const-hazard log 0.05 0.1 0.2 0.35 0.5 0.7 1.0 1.5
 
 data-spec v4log.net 1 1 / vdata@1:700 . vdata@-1:700 .

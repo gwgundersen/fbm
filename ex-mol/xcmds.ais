@@ -1,0 +1,5 @@
+mol-spec      xlog.ais 3 4 1 30 NVT 13 10
+mc-temp-sched xlog.ais 0.01:100 0.4:1999 0.7:900
+mc-spec       xlog.ais repeat 30 AIS \
+                         repeat 5 met-mol 0.2 met-mol 0.02 end wrap end
+mol-mc        xlog.ais 20000

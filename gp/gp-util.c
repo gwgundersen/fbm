@@ -39,6 +39,26 @@ void gp_record_sizes
 }
 
 
+/* SEE IF ANY TERMS IN THE COVARIANCE ARE DROPPED FOR ANY OUTPUTS. */
+
+int gp_any_dropped 
+( gp_spec *gp			/* GP specifications */
+)
+{
+  int i, j, d;
+
+  d = 0;
+  for (j = 0; j<gp->N_outputs; j++)
+  { d |= gp->lin.flags[j]&Flag_drop;
+    for (i = 0; i<gp->N_exp_parts; i++)
+    { d |= gp->exp[i].flags[j]&Flag_drop;
+    }
+  }
+
+  return d!=0;
+}
+
+
 /* REPORT ERROR IF GP SPECS, DATA MODEL, ETC. ARE MISSING. */
 
 void gp_check_specs_present
@@ -87,7 +107,7 @@ int gp_hyper_count
   { if (gp->linear.alpha[0]!=0) count += 1;
     if (gp->linear.alpha[1]!=0) 
     { for (i = 0; i<gp->N_inputs; i++)
-      { if (!(gp->linear_flags[i]&Flag_omit))
+      { if (!(gp->lin.flags[i]&Flag_omit))
         { count += 1;
         }
       }
@@ -168,7 +188,7 @@ void gp_hyper_pointers
       h->const_linear = log(prior_width_scaled(&gp->linear,gp->N_inputs));
     }
     for (i = 0; i<gp->N_inputs; i++)
-    { if (gp->linear_flags[i]&Flag_omit)
+    { if (gp->lin.flags[i]&Flag_omit)
       { h->linear[i] = 0;
       }
       else if (gp->linear.alpha[1]!=0)

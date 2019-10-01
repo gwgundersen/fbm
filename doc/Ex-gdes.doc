@@ -65,7 +65,7 @@ following command creates a network with two inputs, one layer of 15
 hidden units, and one output unit, with input-hidden weights, hidden
 biases, hidden-output weights, and an output bias:
 
-    > net-spec blog.gd 2 15 1 / - + + - + - +
+    > net-spec blog.gd 2 15 1 / ih=+ bh=+ ho=+ bo=+
 
 The "+" is actually translated to a very large number, with the result
 that the "prior" for these parameters has virtually no effect.
@@ -164,7 +164,7 @@ available training cases that we have excluded from the set used for
 the gradient descent training.  This training scheme can be
 implemented using the following commands:
 
-    > net-spec blog.gdes 2 15 1 / - + + - + - +
+    > net-spec blog.gdes 2 15 1 / ih=+ bh=+ ho=+ bo=+
     > model-spec blog.gdes binary
 
     > data-spec blog.gdes 2 1 2 / bdata.train@1:225 . bdata.train@226:300 .
@@ -224,7 +224,7 @@ this idea for early stopping, by averaging over both the choice of
 which quarter of the data to use for validation, and over the random
 choice of initial weights:
 
-    > net-spec blog.gdese1 2 15 1 / - + + - + - +
+    > net-spec blog.gdese1 2 15 1 / ih=+ bh=+ ho=+ bo=+
     > model-spec blog.gdese1 binary
     > data-spec blog.gdese1 2 1 2 / bdata.train@-226:300 . bdata.train@226:300 .
 
@@ -236,7 +236,7 @@ choice of initial weights:
 
     > net-plt t L blog.gdese1 | find-min
 
-    > net-spec blog.gdese2 2 15 1 / - + + - + - +
+    > net-spec blog.gdese2 2 15 1 / ih=+ bh=+ ho=+ bo=+
     > model-spec blog.gdese2 binary
     > data-spec blog.gdese2 2 1 2 / bdata.train@-151:225 . bdata.train@151:225 .
 
@@ -248,7 +248,7 @@ choice of initial weights:
 
     > net-plt t L blog.gdese2 | find-min
 
-    > net-spec blog.gdese3 2 15 1 / - + + - + - +
+    > net-spec blog.gdese3 2 15 1 / ih=+ bh=+ ho=+ bo=+
     > model-spec blog.gdese3 binary
     > data-spec blog.gdese3 2 1 2 / bdata.train@-76:150 . bdata.train@75:150 .
 
@@ -260,7 +260,7 @@ choice of initial weights:
 
     > net-plt t L blog.gdese3 | find-min
 
-    > net-spec blog.gdese4 2 15 1 / - + + - + - +
+    > net-spec blog.gdese4 2 15 1 / ih=+ bh=+ ho=+ bo=+
     > model-spec blog.gdese4 binary
     > data-spec blog.gdese4 2 1 2 / bdata.train@-1:75 . bdata.train@1:75 .
 

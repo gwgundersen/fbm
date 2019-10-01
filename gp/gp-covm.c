@@ -36,10 +36,11 @@
    points).
 
    The 'keep' argument should be zero to get the usual covariances.  It may
-   be instead set to a pointer to an array of flags indicating which non-linear
-   terms of the covariance should be kept; the constant and linear parts are
-   never kept if 'keep' is not zero.  This is useful for separating the 
-   various components of an additive model.
+   be instead set to a pointer to an array of flags indicating which terms
+   of the covariance should be kept; the constant and linear parts are
+   kept if keep[0] is non-zero; exponential part l is kept if keep[l+1] is
+   non-zero.  This is useful for separating the various components of an 
+   additive model.
 
    The covariances are stored in 'cov', as an array with n1 rows and n2
    columns.  The terms in the covariances for non-linear components may also 
@@ -56,6 +57,7 @@
 void gp_cov
 ( gp_spec *gp,		/* Specification for Gaussian process model */
   gp_hypers *h,		/* Values of hyperparameters */
+  int wh,		/* Which output we are looking at (from 0) */
   double *x1,		/* First set of inputs points */
   int n1,		/* Number of points in first set */
   double *x2,		/* Second set of input points */
@@ -63,8 +65,8 @@ void gp_cov
   double *cov,		/* Place to store covariances (n1 by n2 array) */
   double **exp_cov,	/* Places to store exponential terms of covariance;
 			   may be zero, or contain zeros, if not desired */
-  int *keep		/* Array of flags saying whether to keep non-linear
-			   terms in the covariance, or zero to keep them all */
+  int *keep		/* Array of flags saying whether to keep terms
+			   in the covariance, or zero to keep them all */
 )
 { 
   double r[Max_inputs];
@@ -78,7 +80,8 @@ void gp_cov
 
   /* Constant part of covariance. */
 
-  v = gp->has_constant && keep==0 ? exp(2 * *h->constant) : 0;
+  v = gp->has_constant && (keep==0 || keep[0]) && !(gp->lin.flags[wh]&Flag_drop)
+        ? exp(2 * *h->constant) : 0;
 
   pc = cov; 
 
@@ -90,10 +93,10 @@ void gp_cov
 
   /* Linear part of covariance. */
 
-  if (gp->has_linear && keep==0)
+  if (gp->has_linear && (keep==0 || keep[0]) && !(gp->lin.flags[wh]&Flag_drop))
   { 
-    flags = gp->linear_flags;
-    spread = gp->linear_spread;
+    flags = gp->lin.flags;
+    spread = gp->lin.spread;
 
     for (i = 0; i<ni; i++)
     { if (!(flags[i]&Flag_omit))
@@ -126,7 +129,9 @@ void gp_cov
 
   for (l = 0; l<gp->N_exp_parts; l++)
   { 
-    if (keep!=0 && !keep[l]) continue;
+    if (keep!=0 && !keep[l+1] || (gp->exp[l].flags[wh]&Flag_drop)) 
+    { continue;
+    }
 
     flags = gp->exp[l].flags;
     spread = gp->exp[l].spread;
@@ -188,6 +193,12 @@ void gp_cov
 
         v = exp(c-s);
 
+        for (i = 0; i<ni; i++)
+        { if (flags[i]&Flag_mulprod)
+          { v *= p1[i]*p2[i];
+          }
+        }
+
         if (ec) *ec++ = v;
         *pc++ += v;
       }
@@ -221,6 +232,7 @@ void gp_cov
 int gp_cov_deriv
 ( gp_spec *gp,		/* Specification for Gaussian process model */
   gp_hypers *h,		/* Values of hyperparameters */
+  int wh,		/* Which output we are looking at (from 0) */
   double **exp_cov,	/* Exponential parts of covariance (zeros if absent) */
   double *wrt,		/* Pointer to hyperparameter we want derivative w.r.t.*/
   double *x,		/* The set of input points (concatenated as one array)*/
@@ -241,7 +253,7 @@ int gp_cov_deriv
   found = 0;
   v = 0;
 
-  if (gp->has_constant)
+  if (gp->has_constant && !(gp->lin.flags[wh]&Flag_drop))
   { if (wrt==h->constant)
     { v = 2 * exp(2 * *h->constant);
       found = 1;
@@ -261,10 +273,10 @@ int gp_cov_deriv
 
   /* See if it's in the linear part. */
 
-  if (gp->has_linear)
+  if (gp->has_linear && !(gp->lin.flags[wh]&Flag_drop))
   {
-    flags = gp->linear_flags;
-    spread = gp->linear_spread;
+    flags = gp->lin.flags;
+    spread = gp->lin.spread;
 
     if (wrt==h->linear_cm && gp->linear.alpha[1]==0)
     { t = 2 * exp(2 * *h->linear_cm);
@@ -324,8 +336,10 @@ int gp_cov_deriv
 
   for (l = 0; l<gp->N_exp_parts; l++)
   { 
-    /* Quickly see if it's not here. */
+    if (gp->exp[l].flags[wh]&Flag_drop) continue;
 
+    /* Quickly see if it's not here. */
+ 
     for (j = 0; j<ni && wrt!=h->exp[l].rel[j]; j++) ;
 
     if (wrt!=h->exp[l].scale && j==ni) continue;
@@ -463,7 +477,15 @@ int gp_cov_deriv
               t *= pw;
             }
   
-            *pd++ += t * exp(c-s);
+            v = exp(c-s);
+
+            for (i = 0; i<ni; i++)
+            { if (flags[i]&Flag_mulprod)
+              { v *= p1[i]*p2[i];
+              }
+            }
+
+            *pd++ += t * v;
           }
         }
       }
@@ -528,7 +550,16 @@ int gp_cov_deriv
                 }
               }
             }
-            *pd++ += 2 * exp(c-s);
+
+            v = exp(c-s);
+
+            for (i = 0; i<ni; i++)
+            { if (flags[i]&Flag_mulprod)
+              { v *= p1[i]*p2[i];
+              }
+            }
+
+            *pd++ += 2 * v;
           }
         }
       }
@@ -543,7 +574,7 @@ int gp_cov_deriv
 
 /* FIND COVARIANCE MATRIX FOR TRAINING CASES.  Computes the covariance
    matrices for the latent values associated with training cases and/or
-   for the target values of training cases.  The training data taken from 
+   for the target values of training cases.  The training data is taken from 
    the standard place (see gp-data.h).  The exp_cov argument can pick up
    the exponential terms of the covariance for later use, if desired. */
 
@@ -571,10 +602,10 @@ void gp_train_cov
   /* Compute covariance matrix for the output without added noise, but
      with jitter, and store in latent_cov. */
 
-  gp_cov (gp, h, train_inputs, N_train, train_inputs, N_train,
+  gp_cov (gp, h, which_output, train_inputs, N_train, train_inputs, N_train,
           latent_cov, exp_cov, 0);
 
-  if (gp->has_jitter)
+  if (gp->has_jitter && !(gp->lin.flags[which_output]&Flag_drop))
   { for (i = 0; i<N_train; i++)
     { latent_cov[i*N_train+i] += exp(2 * *h->jitter);
     }
@@ -585,7 +616,7 @@ void gp_train_cov
 
   if (target_cov==0) return;
 
-  if (m!=0 && m->type!='R')
+  if (m!=0 && m->type!='R' || gp->N_outputs!=data_spec->N_targets)
   { fprintf(stderr,
     "Finding covariance of targets is not possible - missing latent values?\n");
     exit(1);

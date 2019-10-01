@@ -19,6 +19,8 @@ double squared_norm  (double *, int, int);
 double inner_product (double *, int, double *, int, int);
 
 void matrix_product (double *, double *, double *, int, int, int);
+void matrix_sym_product (double *, double *, double *, int, int);
+void matrix_trans_product (double *, double *, int, int);
 double trace_of_product (double *, double *, int);
 
 int cholesky (double *, int, double *);

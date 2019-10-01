@@ -32,6 +32,13 @@ static mc_iter *it;	/* Description of iteration (contains approx order) */
 static int na;		/* Number of distinct approximations used */
 static int ta;		/* Total approximations, counting repeats for symmetry*/
 
+float traj_frac = 1.0;	/* Global variable giving fraction of terms (eg, case)
+			   to use when computing gradient.  Used only by 
+			   modules that know about it. */
+
+int new_frac = 0;	/* Set to 1 for a new trajectory requiring a new 
+			   random fraction. */
+
 
 /* SET UP FOR COMPUTING A TRAJECTORY.  Passed the description of how to
    compute the trajectory and the stepsizes to use.  Saves these, and
@@ -64,6 +71,9 @@ void mc_traj_init
              Max_approx);
     exit(1);
   }
+
+  traj_frac = 1-tj->frac;
+  new_frac = 1;
 }
 
 

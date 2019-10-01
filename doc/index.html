@@ -9,7 +9,7 @@
 
 <h1>Software for Flexible Bayesian Modeling</h1>
 
-Version of 2004-11-10.  Copyright (c) 1995-2004 by Radford M. Neal<P>
+Version of 2005-??-??.  Copyright (c) 1995-2005 by Radford M. Neal<P>
 
 Index to documentation for software that implements flexible Bayesian
 models based on neural networks, Gaussian processes, mixtures, and
@@ -62,6 +62,8 @@ Monte Carlo methods.
        <LI><a href="Ex-mixdft-r.html">A bivariate density estimation problem</a>
        <LI><a href="Ex-dft-a.html">Building an additive model using two diffusion trees</a>
     </UL>
+<LI><a href="Ex-jclass.html">Example of classification with a Dirichlet 
+                             diffusion tree joint model</a>
 <LI><a href="Ex-surv.html">Examples of Bayesian neural network survival models
     </a>
 <LI><a href="Ex-gdes.html">Examples of learning with gradient descent, early
@@ -75,6 +77,7 @@ Monte Carlo methods.
 <h2>Notes on the present release and past releases:</h2>
 
 <UL>
+<LI> <a href="Release.next.html">Release of 2005-??-??</a>
 <LI> <a href="Release.2004-11-10.html">Release of 2004-11-10</a>
 <LI> <a href="Release.2003-06-29.html">Release of 2003-06-29</a>
 <LI> <a href="Release.2001-08-31.html">Release of 2001-08-31</a>
@@ -94,39 +97,49 @@ Monte Carlo methods.
 <pre>
    ........ UTIL .........     ..... MC .....    .... DIST .....   ... BVG ...
 
-   <a href="calc.html">calc</a>         <a href="model-spec.html">model-spec</a>     <a href="mc.html">mc</a>                <a href="dist.html">dist</a>              <a href="bvg.html">bvg</a>
-   <a href="data-spec.html">data-spec</a>    <a href="numin.html">numin</a>          <a href="mc-ais.html">mc-ais</a>            <a href="dist-display.html">dist-display</a>      <a href="bvg-initial.html">bvg-initial</a>
-   <a href="extract.html">extract</a>      <a href="prior.html">prior</a>          <a href="mc-quantities.html">mc-quantities</a>     <a href="dist-est.html">dist-est</a>          <a href="bvg-mc.html">bvg-mc</a>
-   <a href="find-min.html">find-min</a>     <a href="quantities.html">quantities</a>     <a href="mc-spec.html">mc-spec</a>           <a href="dist-gen.html">dist-gen</a>          <a href="bvg-plt.html">bvg-plt</a>
-   <a href="formula.html">formula</a>      <a href="rand-seed.html">rand-seed</a>      <a href="mc-temp-filter.html">mc-temp-filter</a>    <a href="dist-initial.html">dist-initial</a>      <a href="bvg-spec.html">bvg-spec</a>
-   <a href="grid.html">grid</a>         <a href="series.html">series</a>         <a href="mc-temp-sched.html">mc-temp-sched</a>     <a href="dist-mc.html">dist-mc</a>
-   <a href="log.html">log</a>          <a href="xxx-hist.html">xxx-hist</a>       <a href="xxx-circ.html">xxx-circ</a>          <a href="dist-quantities.html">dist-quantities</a>
-   <a href="log-append.html">log-append</a>   <a href="xxx-plt.html">xxx-plt</a>        <a href="xxx-genp.html">xxx-genp</a>          <a href="dist-spec.html">dist-spec</a>
-   <a href="log-copy.html">log-copy</a>     <a href="xxx-tbl.html">xxx-tbl</a>        <a href="xxx-grad-test.html">xxx-grad-test</a>     <a href="dist-stepsizes.html">dist-stepsizes</a>
-   <a href="log-equal.html">log-equal</a>                   <a href="xxx-his.html">xxx-his</a>  
+   <a href="calc.html">calc</a>         <a href="mean.html">mean</a>           <a href="mc.html">mc</a>                <a href="dist.html">dist</a>              <a href="bvg.html">bvg</a>
+   <a href="data-spec.html">data-spec</a>    <a href="model-spec.html">model-spec</a>     <a href="mc-ais.html">mc-ais</a>            <a href="dist-dgen.html">dist-dgen</a>         <a href="bvg-initial.html">bvg-initial</a>
+   <a href="extract.html">extract</a>      <a href="numin.html">numin</a>          <a href="mc-quantities.html">mc-quantities</a>     <a href="dist-display.html">dist-display</a>      <a href="bvg-mc.html">bvg-mc</a>
+   <a href="find-min.html">find-min</a>     <a href="prior.html">prior</a>          <a href="mc-spec.html">mc-spec</a>           <a href="dist-est.html">dist-est</a>          <a href="bvg-plt.html">bvg-plt</a>
+   <a href="formula.html">formula</a>      <a href="quantities.html">quantities</a>     <a href="mc-temp-filter.html">mc-temp-filter</a>    <a href="dist-gen.html">dist-gen</a>          <a href="bvg-spec.html">bvg-spec</a>
+   <a href="grid.html">grid</a>         <a href="rand-seed.html">rand-seed</a>      <a href="mc-temp-sched.html">mc-temp-sched</a>     <a href="dist-initial.html">dist-initial</a>
+   <a href="log.html">log</a>          <a href="series.html">series</a>         <a href="xxx-circ.html">xxx-circ</a>          <a href="dist-mc.html">dist-mc</a>
+   <a href="log-append.html">log-append</a>   <a href="xxx-hist.html">xxx-hist</a>       <a href="xxx-genp.html">xxx-genp</a>          <a href="dist-quantities.html">dist-quantities</a>
+   <a href="log-copy.html">log-copy</a>     <a href="xxx-plt.html">xxx-plt</a>        <a href="xxx-grad-test.html">xxx-grad-test</a>     <a href="dist-spec.html">dist-spec</a>
+   <a href="log-equal.html">log-equal</a>    <a href="xxx-tbl.html">xxx-tbl</a>        <a href="xxx-his.html">xxx-his</a>           <a href="dist-stepsizes.html">dist-stepsizes</a>
    <a href="log-last.html">log-last</a>                    <a href="xxx-mc.html">xxx-mc</a>  
-   <a href="log-records.html">log-records</a>                 <a href="xxx-stepsizes.html">xxx-stepsizes</a>  
-   <a href="log-types.html">log-types</a>                   <a href="xxx-wrap.html">xxx-wrap</a>  
+   <a href="log-records.html">log-records</a>                 <a href="xxx-mc-test.html">xxx-mc-test</a>  
+   <a href="log-types.html">log-types</a>                   <a href="xxx-stepsizes.html">xxx-stepsizes</a>  
+                               <a href="xxx-wrap.html">xxx-wrap</a>  
 
 
    .... NET .....     .... GP .....    .... MIX .....    .... DFT ....
 
    <a href="net.html">net</a>                <a href="gp.html">gp</a>               <a href="mix.html">mix</a>               <a href="dft.html">dft</a>
    <a href="net-approx.html">net-approx</a>         <a href="gp-cov.html">gp-cov</a>           <a href="mix-cases.html">mix-cases</a>         <a href="dft-cases.html">dft-cases</a>
-   <a href="net-dvar.html">net-dvar</a>           <a href="gp-display.html">gp-display</a>       <a href="mix-display.html">mix-display</a>       <a href="dft-dendrogram.html">dft-dendrogram</a>
-   <a href="net-display.html">net-display</a>        <a href="gp-eigen.html">gp-eigen</a>         <a href="mix-gen.html">mix-gen</a>           <a href="dft-display.html">dft-display</a>
-   <a href="net-eval.html">net-eval</a>           <a href="gp-eval.html">gp-eval</a>          <a href="mix-mc.html">mix-mc</a>            <a href="dft-gen.html">dft-gen</a>
-   <a href="net-gd.html">net-gd</a>             <a href="gp-gen.html">gp-gen</a>           <a href="mix-pred.html">mix-pred</a>          <a href="dft-mc.html">dft-mc</a>
-   <a href="net-gen.html">net-gen</a>            <a href="gp-mc.html">gp-mc</a>            <a href="mix-quantities.html">mix-quantities</a>    <a href="dft-pred.html">dft-pred</a> 
-   <a href="net-hist.html">net-hist</a>           <a href="gp-pred.html">gp-pred</a>          <a href="mix-spec.html">mix-spec</a>          <a href="dft-quantities.html">dft-quantities</a> 
-   <a href="net-mc.html">net-mc</a>             <a href="gp-quantities.html">gp-quantities</a>                      <a href="dft-spec.html">dft-spec</a>
-   <a href="net-plt.html">net-plt</a>            <a href="gp-spec.html">gp-spec</a>
-   <a href="net-pred.html">net-pred</a>            
+   <a href="net-dvar.html">net-dvar</a>           <a href="gp-dgen.html">gp-dgen</a>          <a href="mix-display.html">mix-display</a>       <a href="dft-dendrogram.html">dft-dendrogram</a>
+   <a href="net-display.html">net-display</a>        <a href="gp-display.html">gp-display</a>       <a href="mix-gen.html">mix-gen</a>           <a href="dft-display.html">dft-display</a>
+   <a href="net-eval.html">net-eval</a>           <a href="gp-eigen.html">gp-eigen</a>         <a href="mix-mc.html">mix-mc</a>            <a href="dft-gen.html">dft-gen</a>
+   <a href="net-gd.html">net-gd</a>             <a href="gp-eval.html">gp-eval</a>          <a href="mix-pred.html">mix-pred</a>          <a href="dft-mc.html">dft-mc</a>
+   <a href="net-gen.html">net-gen</a>            <a href="gp-gen.html">gp-gen</a>           <a href="mix-quantities.html">mix-quantities</a>    <a href="dft-pred.html">dft-pred</a> 
+   <a href="net-hist.html">net-hist</a>           <a href="gp-mc.html">gp-mc</a>            <a href="mix-spec.html">mix-spec</a>          <a href="dft-quantities.html">dft-quantities</a> 
+   <a href="net-mc.html">net-mc</a>             <a href="gp-pred.html">gp-pred</a>                            <a href="dft-spec.html">dft-spec</a>
+   <a href="net-plt.html">net-plt</a>            <a href="gp-quantities.html">gp-quantities</a>
+   <a href="net-pred.html">net-pred</a>           <a href="gp-spec.html">gp-spec</a>
    <a href="net-quantities.html">net-quantities</a>
    <a href="net-rej.html">net-rej</a> 
    <a href="net-spec.html">net-spec</a> 
    <a href="net-tbl.html">net-tbl</a> 
-</pre>
+
+
+   .... MOL .....  
+
+   <a href="mol.html">mol</a>              
+   <a href="mol-display.html">mol-display</a>
+   <a href="mol-mc.html">mol-mc</a>
+   <a href="mol-quantities.html">mol-quantities</a>
+   <a href="mol-spec.html">mol-spec</a>
+ </pre>
 
 A more detailed index is given below, with the most important
 documentation files marked with an asterisk.<P>
@@ -166,6 +179,7 @@ documentation files marked with an asterisk.<P>
     <a href="xxx-hist.html">xxx-hist</a>        Build a histogram for a quantity using data from log files
 
   * <a href="series.html">series</a>          Analyse stationary time series data
+  * <a href="mean.html">mean</a>          Compute means with standard errors
 </pre>
 
 
@@ -183,11 +197,12 @@ documentation files marked with an asterisk.<P>
     <a href="mc-temp-filter.html">mc-temp-filter</a>  Copy only iterations at a given temperature
     <a href="mc-ais.html">mc-ais</a>          Monitor annealed importance sampling (AIS) runs
 
+    <a href="xxx-mc-test">xxx-mc-test</a>     Do a joint distribution test of MCMC correctness
     <a href="xxx-grad-test.html">xxx-grad-test</a>   Test the correctness of the energy gradient computations
     <a href="xxx-stepsizes.html">xxx-stepsizes</a>   Display and evaluate stepsizes used for dynamics
     <a href="xxx-genp.html">xxx-genp</a>        Generate random momentum variables
 
-    <a href="xxx-his.html">xxx-genp</a>        Do Hamiltonian importance sampling
+    <a href="xxx-his.html">xxx-his</a>         Do Hamiltonian importance sampling
 </pre>
 
 <h2>Markov chain sampling for a specified distribution [dist]:</h2>
@@ -199,6 +214,7 @@ documentation files marked with an asterisk.<P>
     <a href="dist-stepsizes.html">dist-stepsizes</a>  Display, evaluate, or set stepsizes used for dynamics
   * <a href="dist-mc.html">dist-mc</a>         Do Markov chain sampling for the specified distribution
     <a href="dist-gen.html">dist-gen</a>        Generate values for state variables from the prior
+    <a href="dist-dgen.html">dist-dgen</a>       Generate values for target variables using given parameters
 
     <a href="dist-display.html">dist-display</a>    Print state variables at a specified iteration
   * <a href="dist-quantities.html">dist-quantities</a> Quantities defined for a specified distribution
@@ -250,6 +266,7 @@ documentation files marked with an asterisk.<P>
 
   * <a href="gp-mc.html">gp-mc</a>           Use Markov chain to sample Gaussian process hyperparameters
   * <a href="gp-gen.html">gp-gen</a>          Generate GP hyperparameters randomly, or fix them
+    <a href="gp-dgen.html">gp-dgen</a>         Generate values for target variables given latent values
 
   * <a href="gp-display.html">gp-display</a>      Print Gaussian process hyperparameters & other information
   * <a href="gp-quantities.html">gp-quantities</a>   Quantities from log files relating to Gaussian processes
@@ -291,6 +308,17 @@ documentation files marked with an asterisk.<P>
   * <a href="dft-pred.html">dft-pred</a>        Make predictions for test cases using diffusion tree model
 
     <a href="dft-cases.html">dft-cases</a>       Generate cases from a diffusion tree model
+</pre>
+
+<h2> Molecular simulation with Lennard-Jones potential [mol]:</h2>
+<pre>
+  * <a href="mol.html">mol</a>             Molecular simulation with Lennard-Jones potential
+  * <a href="mol-spec.html">mol-spec</a>        Specify a molecular system
+
+  * <a href="mol-mc.html">mol-mc</a>          Do Markov chain sampling for a molecular system
+
+    <a href="mol-display.html">mol-display</a>     Print state of molecular system
+  * <a href="mol-quantities.html">mol-quantities</a>  Quantities from log files relating to molecular systems
 </pre>
 
 </body>

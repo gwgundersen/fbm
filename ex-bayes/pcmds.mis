@@ -1,0 +1,13 @@
+
+# Apply Metropolis importance sampling to the model for categorical
+# data, in order to find the marginal likelihood.  
+
+dist-spec plog.mis \
+ "w0~ExpGamma(1,1) + w1~ExpGamma(1,1) + w2~ExpGamma(1,1)" \
+ "-Delta(t-0)*(w0-LogSumExp(w0,w1,w2)) \
+  -Delta(t-1)*(w1-LogSumExp(w0,w1,w2)) \
+  -Delta(t-2)*(w2-LogSumExp(w0,w1,w2))"
+
+data-spec plog.mis 0 1 3 / pdata .
+
+dist-mis plog.mis 500 0 99 / all 0.5 10 / 0.005 0.9

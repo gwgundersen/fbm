@@ -1,13 +1,16 @@
 
 
-GP-GEN:  Generate GP hyperparameters randomly from the prior, or fix them.
+GP-GEN:  Generate GP hyperparameters / latent values randomly, or fix them.
 
 Gp-gen writes a series of independently-generated values for the
-hyperparameters of a Gaussian process model to a log file.
+hyperparameters of a Gaussian process model to a log file.  The
+hyperparameters are drawn randomly from their prior, or set to fixed
+values.  Optionally, latent values and/or individual noise variances
+for each training case are generated as well, from their priors.
 
 Usage:
 
-    gp-gen log-file [ max-index ] [ "fix" [ scale-value relevance-value ] ]
+    gp-gen [ -l ] [ -n ] log-file [ max-index ] [ "fix" [ sc-val rel-val ] ]
 
 Records of hyperparameters with indexes from zero up to the indicated
 index are generated (the default is max-index of zero).  If the log
@@ -29,5 +32,17 @@ hyperparameter for the constant part is set to the scale value given.
 
 No data model is required to use gp-gen, but if a model is specified,
 the hyperparameters associated with it are generated as well.
+
+If the -l option is specified, latent values for each training case
+are also generated, randomly from the Gaussian process prior defined
+by the generated hyperparameters.  If no jitter term is included in
+the covariance function, a small amount (1e-6) will be added to the
+diagonal of the covariance matrix when generating latent values to try
+to avoid numerical problems.
+
+If the -n option is specified, noise variances are generated for each
+training case, from their prior given the generated hyperparameter
+values.  If the targets are not real valued, or the model does not
+have case-by-case noise variances, the -n option is silently ignored.
 
             Copyright (c) 1995-2004 by Radford M. Neal

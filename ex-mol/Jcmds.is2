@@ -1,0 +1,3 @@
+mol-spec      Jlog.is2 3 0.01 1 0.3 NPT 1 0.001 0.1
+mol-his       Jlog.is2 30000 0 0 / 1 / 1 0.9
+

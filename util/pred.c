@@ -26,8 +26,8 @@
 #include "rand.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "mc.h"
 #include "pred.h"
 
@@ -53,9 +53,11 @@ int op_i, op_t, op_r, op_R,
     op_p, op_m, op_n, 
     op_d, op_l, op_b, 
     op_a, op_q, op_Q,
-    op_D, op_E, op_N;
+    op_D, op_E, op_N,
+    op_W, op_z;
 
-int keep[10];
+int keep[100];
+int retain[4];
 
 log_gobbled logg;
 
@@ -124,7 +126,7 @@ main
   int guessing;
 
   double lf, f, w;
-  int i, j, l;
+  int i, j, l, x;
   char **ap;
 
   /* Special fudge to handle computational options for gp-pred. */
@@ -188,20 +190,36 @@ main
   op_l = strchr(options,'l')!=0;
   op_b = strchr(options,'b')!=0 || strchr(options,'B')!=0;
   op_a = strchr(options,'a')!=0;
-
+  op_z = strchr(options,'z')!=0;
 
   op_N = 0;
-  for (l = 0; l<10; l++) keep[l] = 0;
+  x = 0;
+  for (l = 0; l<100; l++) keep[l] = 0;
   for (i = 0; options[i]!=0; i++)
   { if (options[i]>='0' && options[i]<='9')
     { op_N += 1;
-      if (keep[options[i]-'0']) usage();
-      keep[options[i]-'0'] = 1;
+      if (keep[x+options[i]-'0']) usage();
+      keep[x+options[i]-'0'] = 1;
+    }
+    else if (options[i]=='x')
+    { op_N += 1;
+      x += 10;
+      if (x==100) usage();
     }
   }
 
-  if (strlen(options) != op_i+op_t+op_r+op_p+op_m+op_n+op_d
-                             +op_D+op_E+op_b+op_a+op_q+op_Q+op_l+op_N)
+  op_W = 0;
+  for (l = 0; l<4; l++) retain[l] = 0;
+  for (i = 0; options[i]!=0; i++)
+  { if (options[i]>='W' && options[i]<='Z')
+    { op_W += 1;
+      if (retain[options[i]-'W']) usage();
+      retain[options[i]-'W'] = 1;
+    }
+  }
+
+  if (strlen(options) != op_i+op_t+op_r+op_p+op_m+op_n+op_d+op_D+op_E+
+                         op_b+op_a+op_q+op_Q+op_l+op_N+op_W+op_z)
   { usage();
   }
 
@@ -260,8 +278,7 @@ main
 
   if (op_a && (op_t || op_i || op_q || op_Q)
    || op_r && (m!=0 && (m->type=='B' || m->type=='C'))
-   || op_l && (m==0 || m->type!='R')
-   || op_m && (m==0 || m->type=='R' || m->type=='V')
+   || op_m && (m==0 || m->type=='R' || m->type=='r' || m->type=='V')
    || (op_d || op_D || op_q || op_Q) 
         && (m!=0 && m->type=='B' || m!=0 && m->type=='C'))
   { fprintf(stderr,"Illegal combination of options with data model\n");

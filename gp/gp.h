@@ -20,11 +20,17 @@
 
    Stored in log files under type 'P'.  Changes may invalidate old log files. */
 
-#define Max_exp_parts 10	/* Max. number of exp parts in the covariance */
+#define Max_exp_parts 15	/* Max. number of exp parts in the covariance */
+#define Max_outputs Max_targets	/* Max. number of model outputs */
+
+#define Max_in_out (Max_inputs>Max_outputs ? Max_inputs : Max_outputs)
 
 #define Flag_omit 1		/* Flag bit indicating input ignored */
 #define Flag_delta 2		/* Flag bit indicating delta distance */
 #define Flag_spread 4		/* Flag saying relevance should be spread out */
+#define Flag_drop 8		/* Flags indicating term not used for outputs */
+#define Flag_mulprod 16		/* Flags indicating covariance should be 
+				/*  multiplied by products of listed inputs */
 
 typedef struct
 {
@@ -49,16 +55,20 @@ typedef struct
     prior_spec scale;		  /* Prior for scale of this contribution */
     prior_spec relevance;	  /* Prior for relevancies of inputs */
 
-    char flags[Max_inputs];	  /* Flags saying how inputs are treated */
+    char flags[Max_in_out];	  /* Flags pertaining to inputs/outputs */
 
-    int spread;			  /* Amount to spread relevance outward by */
+    int spread;			  /* Amount to spread relevance - not used now*/
 
     int resvd[9];		  /* Reserved for future use */
 
   } exp[Max_exp_parts];
 
-  char linear_flags[Max_inputs];/* Flags for linear part */
-  int linear_spread;		/* Amount of relevance spread for linear part */
+  struct 			/* Linear term in covariance function */
+  {
+    char flags[Max_in_out];	  /* Flags for linear part */
+    int spread;			  /* Amount of relevance spread */
+
+  } lin;
 
   int reserved[49];		/* Reserved for future use */
 
@@ -117,6 +127,7 @@ void gp_record_sizes (log_gobbled *);
 void gp_check_specs_present (gp_spec *, int, model_specification *, 
                              model_survival *);
 
+int  gp_any_dropped    (gp_spec *);
 int  gp_hyper_count    (gp_spec *, model_specification *);
 void gp_hyper_pointers (gp_hypers *, gp_spec *, model_specification *);
 
@@ -129,14 +140,11 @@ void gp_prior_grad     (gp_hypers *, gp_spec *, model_specification *,
 double gp_gdens (double, double, double, int);
 void   gp_gdiff (double, double, double, double*, double*);
 
-void gp_cov (gp_spec *, gp_hypers *, double *, int, double *, int, 
+void gp_cov (gp_spec *, gp_hypers *, int, double *, int, double *, int, 
              double *, double **, int *);
 
-int gp_cov_deriv (gp_spec *, gp_hypers *, double **, double *, 
+int gp_cov_deriv (gp_spec *, gp_hypers *, int, double **, double *, 
                   double *, double *, int);
 
 void gp_train_cov (gp_spec *, model_specification *, gp_hypers *, int,
                    double *, double *, double *, double **);
-
-double gp_likelihood (gp_hypers *, model_specification *, data_specifications *,
-                      double *, double *, double *);

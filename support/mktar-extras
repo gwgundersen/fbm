@@ -1,0 +1,4 @@
+tar cvf $1-extras.tar \
+ $1/lr $1/nmr $1/hmm $1/mig $1/ising $1/mod $1/mol $1/holyoke-mix \
+ $1/util-test $1/hmm-test $1/dft-test $1/ising-test $1/mol-test $1/test \
+ $1/support

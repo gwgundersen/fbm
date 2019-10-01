@@ -16,11 +16,11 @@ include ../make.include
 
 programs:	dist-spec dist-mc dist-plt dist-tbl dist-hist dist-grad-test \
 		dist-stepsizes dist-initial dist-display dist-est dist-gen \
-		dist-genp dist-his
+		dist-dgen dist-genp dist-his dist-mis
 clean:
 	rm -f *.o dist-spec dist-mc dist-plt dist-tbl dist-hist dist-grad-test \
 	          dist-stepsizes dist-initial dist-display dist-est dist-gen \
-		  dist-genp dist-his
+		  dist-dgen dist-genp dist-his
 
 
 include ../util/util.make
@@ -98,8 +98,19 @@ dist-his:	mc-his.o dist-mc.o dist-plt.o dist-util.o dist-quantities.o \
 		  mc-quantities.o dist-data.o numin.o data-trans.o digamma.o \
 		  -lm -o dist-his
 
+dist-mis:	mc-mis.o dist-mc.o dist-plt.o dist-util.o dist-quantities.o \
+				formula.o misc.o log.o rand.o quantities.o \
+				mc-util.o mc-quantities.o dist-data.o numin.o \
+				data-trans.o digamma.o
+		$(CC) $(LFLAGS) mc-mis.o dist-mc.o dist-util.o \
+		  dist-quantities.o \
+		  formula.o dist-plt.o misc.o log.o rand.o \
+		  quantities.o mc-util.o \
+		  mc-quantities.o dist-data.o numin.o data-trans.o digamma.o \
+		  -lm -o dist-mis
+
 dist-mc.o:	dist-mc.c	misc.h log.h dist.h mc.h formula.h \
-				data.h dist-data.h
+				data.h numin.h dist-data.h
 
 dist-plt:	dist-plt.o	dist-mc.o dist-util.o dist-quantities.o \
 				formula.o mc-quantities.o mc-util.o dist-data.o\
@@ -165,9 +176,18 @@ dist-gen:	dist-gen.o	dist-util.o dist-data.o misc.o log.o formula.o \
 
 dist-gen.o:	dist-gen.c	misc.h log.h mc.h dist.h formula.h rand.h
 
+dist-dgen:	dist-dgen.o	dist-util.o dist-data.o misc.o log.o formula.o \
+				numin.o data-trans.o rand.o digamma.o
+		$(CC) $(LFLAGS) dist-dgen.o dist-util.o dist-data.o \
+		  misc.o log.o formula.o numin.o data-trans.o rand.o digamma.o \
+		  -lm -o dist-dgen
+
+dist-dgen.o:	dist-dgen.c	misc.h log.h mc.h dist.h formula.h rand.h \
+				numin.h dist-data.h
+
 
 dist-util.o:	dist-util.c	misc.h log.h mc.h formula.h dist.h \
-				data.h dist-data.h
+				data.h numin.h dist-data.h
 dist-quantities.o: dist-quantities.c misc.h log.h mc.h quantities.h formula.h \
-                                     data.h dist.h dist-data.h
+                                     data.h dist.h numin.h dist-data.h
 dist-data.o:	dist-data.c	misc.h log.h data.h numin.h dist-data.h

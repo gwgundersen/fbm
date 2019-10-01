@@ -1,0 +1,29 @@
+
+
+MOL-DISPLAY:  Print state of molecular system.
+
+Mol-display prints the coordinates of the molecules in the system.
+
+Usage:
+
+    mol-display [ -s | -l ] log-file [ index ]
+
+If no index is specified, the state in the last iteration stored in
+the log file is displayed.  
+
+If -l isn't specified, the display consists of one line for each
+molecule, giving its coordinates (as many as the dimensionality of the
+system, from mol-spec).  The coordinates are wrapped to the interval
+[0,len), where len is the length of each dimension.  Note that the
+actual stored values are in the form scaled to [0,1).
+
+If the -s option is given, len/2 is added to each coordinate before
+wrapping.  This may be useful when looking at structures that would
+otherwise be split by the arbitrary wrapping boundary.
+
+The -l option is allowed only for the NPT ensemble.  If it is
+specified, the output is a single number giving the length of each
+dimension.  Note that the actual value in the MCMC state corresponding
+to this is the log of the length.
+
+            Copyright (c) 1995-2004 by Radford M. Neal

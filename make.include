@@ -2,6 +2,6 @@
 #
 # You may wish to modify this file to fit your local installation.
 
-CC     = cc  # C compiler to use
-CFLAGS = -O  # C compiler options when compiling .c files to .o files
-LFLAGS =     # Options when linking .o files
+CC     = gcc   # C compiler to use
+CFLAGS = -O3 -m32 -g # C compiler options when compiling .c files to .o files
+LFLAGS = -m32      # Options when linking .o files

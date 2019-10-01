@@ -23,8 +23,8 @@
 #include "rand.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "numin.h"
 #include "dft.h"
 #include "dft-data.h"
@@ -97,7 +97,7 @@ void pred_app_init (void)
     exit(1);
   }
 
-  if (m!=0 && m->type!='R' && m->type!='B')
+  if (m!=0 && m->type!='R' && m->type!='r' && m->type!='B')
   { fprintf(stderr,
     "The data model used is not implemented for Dirichlet diffusion trees\n");
     exit(1);
@@ -275,8 +275,6 @@ int pred_app_use_index (void)
         }
         test_var[t] += (1-s) * (sd*sd);
 
-/*printf("i=%d dt=%d t=%d mean=%.4f var=%.4f\n",i,dt,t,test_mean[t],test_var[t]);*/
-
         if (test_var[t]<0) abort();
       }
     }
@@ -294,15 +292,16 @@ int pred_app_use_index (void)
       {
         target = test_targets[N_targets*j+t];
 
-        if (m==0 || m->type=='R') /* Model for real data */
+        if (m==0 || m->type=='R' 
+                 || m->type=='r' && t<N_targets-1) /* Model for real data */
         { double d, v;
           d = target - test_mean[t];
           v = test_var[t];
           if (m!=0) v += st->noise[t]*st->noise[t];
           lp += - (d*d) / (2*v) - log(2*M_PI*v)/2;
-/*printf("lp += %.2f\n",- (d*d) / (2*v) - log(2*M_PI*v)/2);*/
         }
-        else if (m->type=='B') /* Model for binary data */
+        else if (m->type=='B' 
+              || m->type=='r' && t==N_targets-1) /* Model for binary data */
         { double l;
           l = test_mean[t] + sqrt(test_var[t]) * rand_gaussian();
           lp += target==0 ? -log(1+exp(l)) : -log(1+exp(-l));
@@ -313,7 +312,6 @@ int pred_app_use_index (void)
       }
 
       test_log_prob[j] = i==1 ? lp : addlogs(test_log_prob[j],lp);
-/*printf("partial %d %d: %.2f %.2f\n",i,j,lp,test_log_prob[j]);*/
     }
   }
 
@@ -321,7 +319,6 @@ int pred_app_use_index (void)
 
   for (j = 0; j<N_test; j++) 
   { test_log_prob[j] -= log((double)N_train);
-/*printf("final %d: %.2f\n",j,test_log_prob[j]);*/
   }
 
   return 1;

@@ -1,0 +1,3 @@
+mol-spec Jlog.dyn 3 0.001 1 0.3 NPT 1 0.001
+mc-spec  Jlog.dyn repeat 100 heatbath 0.9 dynamic 10 0.01 end wrap
+mol-mc   Jlog.dyn 500

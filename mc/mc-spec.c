@@ -617,8 +617,30 @@ main
       ops->op[o].type = '=';
       ap += 1;
 
-      if (!*ap || !strchr("0123456789.",**ap)) usage();
+      if (!*ap || !strchr("+-0123456789.",**ap)) usage();
       ops->op[o].heatbath_decay = atof(*ap++);
+    }
+
+    else if (strcmp(*ap,"set-value")==0)
+    { 
+      double d;
+
+      ops->op[o].type = ':';
+      ap += 1;
+
+      if (!*ap || !strchr("+-0123456789.",**ap)) usage();
+      ops->op[o].heatbath_decay = atof(*ap++);
+
+      if (*ap && strchr("0123456789",**ap))
+      { ops->op[o].firsti = atoi(*ap);
+        ops->op[o].lasti = ops->op[o].firsti;
+        if (strchr(*ap,':')!=0)
+        { if ((ops->op[o].lasti = atoi(strchr(*ap,':')+1)) < ops->op[o].firsti)
+          { usage();
+          }
+        }
+        ap += 1;
+      }
     }
 
     else if (**ap>='a' && **ap<='z' || **ap>='A' && **ap<='Z') 
@@ -654,6 +676,7 @@ main
   if (*ap)
   {
     have_traj = 1;
+    traj->frac = 0;
     ap += 1;
  
     if (*ap==0) usage();
@@ -675,7 +698,9 @@ main
         ap += 1;
       }
 
-      if (*ap && (traj->N_approx = atoi(*ap++))==0) usage();
+      if (*ap && strchr(*ap,'.')==0 && (traj->N_approx = atoi(*ap++))==0) 
+      { usage();
+      }
     }
 
     else if (strcmp(*ap,"opt2")==0)
@@ -761,6 +786,15 @@ main
     else 
     { fprintf(stderr,"Unknown trajectory type: %s\n",*ap);
       exit(1);
+    }
+
+    if (*ap)
+    { traj->frac = atof(*ap);
+      if (traj->frac==0 && strcmp(*ap,"0")!=0 || traj->frac<0 || traj->frac>1)
+      { usage();
+      }
+      traj->frac = 1-traj->frac;
+      ap += 1;
     }
 
     if (*ap) usage();
@@ -1156,6 +1190,18 @@ static void display_specs
           break;
         }
 
+        case ':':
+        { printf (" set-value %.4f", (double)ops->op[o].heatbath_decay);
+          if (ops->op[o].firsti!=-1)
+          { printf(" %d",ops->op[o].firsti);
+            if (ops->op[o].lasti!=ops->op[o].firsti)
+            { printf(":%d",ops->op[o].lasti);
+            }
+          }
+          printf("\n");
+          break;
+        }
+
         case 'p':
         { printf(" plot\n");
           break;
@@ -1178,36 +1224,45 @@ static void display_specs
     switch (traj->type)
     {
       case 'L': 
-      { printf ("  leapfrog %s %d\n", traj->halfp ? "halfp" : "halfq", 
-                                      traj->N_approx);
+      { printf ("  leapfrog %s", traj->halfp ? "halfp" : "halfq");
+        if (traj->N_approx!=1)
+        { printf (" %d", traj->N_approx);
+        }
         break;
       }
 
       case '2':
-      { printf ("  opt2 %s%s\n", 
+      { printf ("  opt2 %s%s", 
           traj->rev_sym==-1 ? "rev " : traj->rev_sym==1 ? "sym " : "",
           traj->halfp ? "firstp" : "firstq");
         break;
       }
 
       case 'G':
-      { printf ("  gen2 %s%s %.15e\n", 
+      { printf ("  gen2 %s%s %.15e", 
           traj->rev_sym==-1 ? "rev " : traj->rev_sym==1 ? "sym " : "",
           traj->halfp ? "firstp" : "firstq", traj->param);
         break;
       }
 
       case '4':
-      { printf ("  opt4 %s\n",
+      { printf ("  opt4 %s",
           traj->rev_sym==-1 ? "rev " : traj->rev_sym==1 ? "sym " : "");
         break;
       }
 
       default:
-      { printf("  unknown method: %c\n",traj->type);
-        break;
+      { printf("  unknown method: %c",traj->type);
+        goto out;
       }
     }
+
+    if (traj->frac!=0)
+    { printf(" %.3f",1-traj->frac);
+    }
+
+  out:
+    printf("\n");
   }
  
   printf("\n");

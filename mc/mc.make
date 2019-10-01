@@ -40,6 +40,8 @@ mc.c:
 	ln -s ../mc/mc.c .
 mc-his.c:
 	ln -s ../mc/mc-his.c .
+mc-mis.c:
+	ln -s ../mc/mc-mis.c .
 
 mc-traj.o:	mc-traj.c	misc.h rand.h log.h mc.h
 mc-iter.o:	mc-iter.c	misc.h rand.h log.h mc.h quantities.h
@@ -53,3 +55,4 @@ mc-grad-test.o:	mc-grad-test.c	misc.h rand.h log.h mc.h
 mc-stepsizes.o:	mc-stepsizes.c	misc.h rand.h log.h mc.h
 mc.o:		mc.c		misc.h rand.h log.h mc.h quantities.h
 mc-his.o:	mc-his.c	misc.h rand.h log.h mc.h quantities.h
+mc-mis.o:	mc-mis.c	misc.h rand.h log.h mc.h quantities.h

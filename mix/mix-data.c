@@ -96,7 +96,7 @@ void mix_data_read
   if (test_inputs!=0)  want_test = 0;
 
   if (mx->N_targets!=data_spec->N_targets 
-   || mx->N_inputs != data_spec->N_inputs)
+   || mx->N_inputs !=data_spec->N_inputs)
   { fprintf(stderr,
      "Number of inputs/targets in data specification doesn't match model\n");
     exit(1);

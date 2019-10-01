@@ -1,0 +1,7 @@
+#!/bin/sh
+
+(cd util; ls *.[hc]) | (cd mc; rm -f `cat`)
+
+for d in dist bvg net gp mix dft; do
+  (cd util; ls *.[hc]) | (cd $d; rm -f `cat`; rm -f mc*.[hc])
+done

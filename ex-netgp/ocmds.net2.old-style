@@ -1,0 +1,15 @@
+
+# Commands to apply a Bayesian neural network to the simple regression problem
+# with outliers, using a Gaussian noise model.
+
+net-spec olog.net2 1 8 1 / - 0.05:0.5 0.05:0.5 - x0.05:0.5 - 100 
+model-spec olog.net2 real 0.05:0.5
+
+data-spec olog.net2 1 1 / odata@1:100 . odata@101:200 .
+
+net-gen olog.net2 fix 0.5
+mc-spec olog.net2 repeat 10 sample-noise heatbath hybrid 100:10 0.2
+net-mc olog.net2 1
+
+mc-spec olog.net2 sample-sigmas heatbath hybrid 1000:10 0.4
+net-mc olog.net2 400

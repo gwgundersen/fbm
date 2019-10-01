@@ -11,9 +11,19 @@ Usage:
 
     net-spec log-file N-inputs { N-hidden { flag } } N-outputs { flag }
              / ti [ ih bh th { hh ih bh th } ] { ho } io bo  [ / { ah } ao ] 
+
+or:
+
+    net-spec log-file N-inputs { N-hidden { flag } } N-outputs { flag }
+             / { group=prior } 
+
 or: 
 
     net-spec log-file
+
+The first two forms above are alternative ways of specifying network
+archictures.  The last form is for displaying the network architecture
+stored in the specified log file.
 
 N-inputs and N-outputs are the numbers of units in the input and
 output layers.  The sizes of zero or more hidden layers are specified
@@ -44,8 +54,19 @@ in this activation function make a network with one hidden layer of
 this type correspond in the limit of many hidden units to a Gaussian
 process model with covariance function given by exp(-distance^2).
 
-Following a "/", the priors for groups of weights, biases, and offsets
-are specified.  "ti" is the prior for the offsets of input units, "hh"
+Following a "/", the priors for groups of weights, biases, offsets,
+and adjustments are specified, in one of two forms.  For the syntax of
+a prior specification (except for adjustments), see prior.doc.  If "-"
+is given instead of a prior specification (or if a prior specification
+is omitted entirely), the parameters in question do not exist at all,
+which is equivalent to their being zero.  For adjustments, the prior
+is specified by a single "alpha" value.  A value of "-" represents
+infinity (effectively eliminating the adjustment).  Omitting a prior
+for a set of adjustments also eliminates them.
+
+The first form for the prior specifications, in which groups are
+specified by position, is kept primarily for backward compatibility.
+In this form, "ti" is the prior for the offsets of input units, "hh"
 the prior for hidden-hidden weights, "ih" the prior for input-hidden
 weights, "bh" the prior for hidden biases, "th" the prior for hidden
 unit offsets, "ho" the prior for weights from a hidden layer to the
@@ -56,18 +77,28 @@ the output layer).  All the priors relating to a network with the
 given number of hidden layers must be present, except that some or all
 of the hidden-output priors may be omitted.  The order of "ho" priors
 is last to first; if not all are present, it is the priors for
-connections from the earlier layers that are absent.
+connections from the earlier layers that are absent.  The alpha values
+that specify the prior for the "adjustments" to the distributions of
+weights and biases going into a given unit are specified following
+these priors.
 
-For the syntax of a prior specification, see prior.doc.  If "-" is
-given instead of a prior specification (or, for "ho" priors, if they
-are omitted entirely), the parameters in question do not exist at all,
-which is equivalent to their being zero.
+In the second form, groups of parameters are identified by name, as
+follows:
 
-The alpha values that specify the prior for the "adjustments" to the
-distributions of weights and biases going into a given unit are
-specified following these priors.  A value of "-" corresponds to
-infinity (effectively eliminating the adjustment).  The entire set of
-adjustments may be omitted, eliminating them all.
+    ti      offsets for the inputs
+    ih#     weights from inputs to hidden layer # (default for # is 0)
+    bh#     biases for hidden layer # (default for # is 0)
+    th#     offsets for hidden layer # (default for # is 0)
+    hh#     weights from hidden layer #-1 to hidden layer # (default 
+            for # is 1)
+    ho#     weights from hidden layer # to outputs (default for # is
+            the last hidden layer)
+    io      weights from inputs to outputs
+    bo      biases for outputs
+    ah#     adjustments for hidden layer # (default for # is 0)
+    ao      adjustments for outputs
+
+The hidden layers are numbered starting with 0.
 
 Note that a data model will also have to be specified (with model-spec)
 if any learning is to be done.  

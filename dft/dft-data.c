@@ -96,7 +96,7 @@ void dft_data_read
   if (test_inputs!=0)  want_test = 0;
 
   if (dft->N_targets!=data_spec->N_targets 
-   || dft->N_inputs != data_spec->N_inputs)
+   || dft->N_inputs !=data_spec->N_inputs)
   { fprintf(stderr,
      "Number of inputs/targets in data specification doesn't match model\n");
     exit(1);

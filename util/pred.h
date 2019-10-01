@@ -45,9 +45,11 @@ extern int op_i, op_t, op_r, 	/* Options specified in the xxx-pred command; */
            op_p, op_m, op_n, 	/*   op_N is the number of digit options      */
            op_d, op_l, op_b,    /*   op_R is the 'r' option for count data    */
            op_a, op_q, op_Q,    /*    (for which op_r has been set to 0)      */
-           op_D, op_N, op_R;
+           op_D, op_N, op_R,
+           op_W, op_z;
 
-extern int keep[10];		/* Which components to keep, when op_N != 0 */
+extern int keep[100];		/* Which components to keep, when op_N != 0 */
+extern int retain[4];		/* Which log-sum-exp parts to retain */
 
 extern log_gobbled logg;	/* Records gobbled from log file(s) */
 

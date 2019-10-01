@@ -1,0 +1,4 @@
+#!/bin/sh
+
+wc util/*.[hc] mc/mc*.[hc] dist/dist*.[hc] bvg/bvg*.[hc] \
+   net/net*.[hc] gp/gp*.[hc] mix/mix*.[hc] dft/dft*.[hc] mol/mol*.[hc]

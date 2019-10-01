@@ -1,0 +1,70 @@
+
+
+MOL-QUANTITIES:  Quantities from log files relating to molecular systems.
+
+These quantities relating to molecular systems can be obtained from
+log files (eg, for use in mol-plt).  The generic quantities documented
+in quantities.doc, and the Markov chain quantities documented in
+mc-quantities.doc, are defined as well.  The quantities specific to
+molecular systems are listed below.
+
+    x, y, z     Arrays of coordinates of molecules - eg, x@0:3 means
+                the x coordinates of the first four molecules.  The
+                values are wrapped to lie in [0,len), where len is
+                the length of a dimension of space, from mol-spec.
+
+    x1, y1, z1  Like x, y, z except that half the length of a dimension
+                is added before wrapping.  Useful when looking at 
+                structures that would otherwise be split by the arbitrary
+                wrapping boundary.
+
+    dn  Array of distances of other molecules from molecule n,  where n 
+        is the index of a molecule, starting with zero.
+
+    n   As an array, the distances from each molecule to its nearest 
+        neighbor.  As a scalar, the smallest distance between any two 
+        molecules.
+
+    N   As an array, the distances from each molecule to the molecule 
+        farthest from it.  As a scalar, the largest distance between any 
+        two molecules.
+
+    U   Potential energy (for molecular interactions only, not volume for
+        NPT ensemble) divided by the scale factor in the Lennard-Jones 
+        potential (from mol-spec).  This is the form of the potential 
+        energy that is appropriate if the scale is set to something other 
+        than one to mimic a temperature other than one.
+
+    u   U divided by the number of molecules in the system.
+
+    W   The volume.  This is a constant if the NVT ensemble is being used.
+
+    w   The length of each dimension.  This is a constant if the NVT 
+        ensemble is being used.  Note that W = w^D, where D is the number
+        of dimensions.
+
+    O   The density, equal to the number of molecules divided by W.  This
+        will be constant if the NVT ensemble is being used.
+
+    o   The reduced density, equal to O times the width parameter of the
+        Lennard-Jones potential raised to the dimensionality.
+
+    V   The "virial", equal to the sum over all pairs of distinct 
+        molecules of the force pushing the pair apart (which may be 
+        negative) times their distance.
+
+    v   V divided by the scale factor in the Lennard-Jones potential.
+
+    P   The pressure, equal to V plus the number of molecules, divided by 
+        the volume.  This assumes that the temperature is one.  Note that
+        this is a variable quantity, computed from the current state and 
+        the current volume, even if the NPT ensemble is being used.
+
+    p   P divided by the scale factor in the Lennard-Jones potential and
+        multiplied by the width factor in the potential raised to the
+        dimensionality.  This is the appropriate measure of pressure if 
+        the scale factor is set to something other than one to mimic a 
+        temperature other than one.  The adjustment according to the width
+        parameter give the pressure in "reduced" units.
+
+            Copyright (c) 1995-2004 by Radford M. Neal

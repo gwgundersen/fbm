@@ -54,8 +54,8 @@ typedef struct
 
     float heatbath_decay; /* Momentum decay for heatbath step, also factor
                              for multiply-momentum operation minus 1, value
-			     for set-momentum operation, and amount of
-                             mixing for mix-momentum. */
+			     for set-momentum and set-value operations, and 
+                             amount of mixing for mix-momentum. */
 
     float temper_factor;  /* Tempering factor for tempered hybrid Monte Carlo */
     float app_param;	  /* Parameter for application-specific procedure */
@@ -116,7 +116,8 @@ typedef struct
   int rev_sym;		/* For non-symmetric methods: 0 = use in original form,
 			   -1 = reverse, 1 = symmetrize (original, reversed) */
 
-  int reserved[2];	/* Reserved for future use */
+  float frac;		/* Fraction of terms (eg, log likelihoods for training
+                           cases) to drop when computing gradient of energy */
 
   double param;		/* Parameter of gen2 method, also of opt2 method */
 
@@ -135,7 +136,7 @@ typedef struct
    though this would perhaps be a bit silly; normally at least one of these
    temperatures would be fixed at one. */
 
-#define Max_temps 2001	/* Maximum number of temperatures in a schedule */
+#define Max_temps 4001	/* Maximum number of temperatures in a schedule */
 
 typedef struct
 {
@@ -159,18 +160,19 @@ typedef struct
 {
   float inv_temp;	/* Current inverse temperature, must correspond to an 
 			     entry in the tempering schedule, except that it's
-                             set to zero at the start of an ais run. */
+                             set to zero at the start of an ais run.  Also,
+                             gets set to -1 for Hamiltonian importance sampling
+                             to indicate that only the likelihood (not prior)
+                             is being looked at. */
 
   int temp_dir;		/* Direction in which to change inverse temperature   */
 
 } mc_temp_state;
 
 
-/* THERMOSTAT STATE.  Currently disabled.
+/* THERMOSTAT STATE.
 
    Stored in log files under type 'h'.  Changes may invalidate old log files. */
-
-#if 0
 
 typedef struct
 {
@@ -178,8 +180,6 @@ typedef struct
   double tp;		/* Corresponding momentum variable */
 
 } mc_therm_state;
-
-#endif
 
 
 /* INFO ON MONTE CARLO ITERATION.  This structure records various bits of 

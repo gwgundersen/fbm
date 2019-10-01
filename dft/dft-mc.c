@@ -127,7 +127,7 @@ void mc_app_initialize
 
     /* Check model type is OK. */
 
-    if (model!=0 && model->type!='R' && model->type!='B')
+    if (model!=0 && model->type!='R' && model->type!='r' && model->type!='B')
     { fprintf(stderr,
       "The data model used is not implemented for Dirichlet diffusion trees\n");
       exit(1);
@@ -350,7 +350,7 @@ int mc_app_sample
     { if (do_hypers)
       { gibbs_d_SD();
       }
-      if (model!=0 && model->type=='R' && do_noise) 
+      if (dft_real_model(model) && do_noise) 
       { gibbs_noise();
       }
     }
@@ -562,30 +562,27 @@ void mc_app_energy
       lat = latent[i*N_targets+t];
       targ = train_targets[i*N_targets+t];
 
-      switch (model->type)
-      {
-        case 'R':
-        { alpha = model->noise.alpha[2];
-          d = (lat-targ)/st->noise[t];
-          if (alpha==0)
-          { *energy += log(sqrt(2*M_PI)*st->noise[t]) + d*d/2;
-          }
-          else
-          { *energy += lgamma(alpha/2) - lgamma((alpha+1)/2)
-                        + log(sqrt(2*M_PI)*st->noise[t])
-                        + ((1+alpha)/2) * log(1+d*d/alpha);
-          }
-          break;
-        }
+      if (isnan(targ)) continue;
 
-        case 'B':
-        { *energy += targ==1 ? log(1+exp(-lat)) : log(1+exp(lat));
-          break;
+      if (model->type=='R' || model->type=='r' && t<N_targets-1)
+      { alpha = model->noise.alpha[2];
+        d = (lat-targ)/st->noise[t];
+        if (alpha==0)
+        { *energy += log(sqrt(2*M_PI)*st->noise[t]) + d*d/2;
         }
+        else
+        { *energy += lgamma(alpha/2) - lgamma((alpha+1)/2)
+                      + log(sqrt(2*M_PI)*st->noise[t])
+                      + ((1+alpha)/2) * log(1+d*d/alpha);
+        }
+      }
 
-        default: 
-        { abort();
-        }
+      else if (model->type=='B' || model->type=='r' && t==N_targets-1)
+      { *energy += targ==1 ? log(1+exp(-lat)) : log(1+exp(lat));
+      }
+
+      else
+      { abort();
       }
     }
   }
@@ -754,16 +751,20 @@ static void create_trees (void)
 
 static void create_latent (void)
 {
+  double targ;
   int i, j;
     
   if (have_latent) return;
 
-  for (i = 0; i<dft->N_targets; i++) 
+  for (i = 0; i<N_targets; i++) 
   { 
     for (j = 0; j<N_train; j++)
-    { latent[j*dft->N_targets+i] = 
-        model!=0 && model->type=='B' ? 2*train_targets[j*dft->N_targets+i] - 1
-                                     : train_targets[j*dft->N_targets+i];
+    { 
+      targ = train_targets[j*N_targets+i];
+
+      latent[j*dft->N_targets+i] = isnan(targ) ? 0 
+       : model!=0 && (model->type=='B' || model->type=='r'&&i==dft->N_targets-1)
+         ? 2*targ-1 : targ;
     }
   }
   
@@ -845,22 +846,30 @@ static void sample_locations (void)
 static void gibbs_noise (void)
 {
   double nalpha, nprec, sum, d, ps;
+  int N_real_targets;
   prior_spec *pr;
-  int i, j;
+  double targ;
+  int i, j, n;
 
   pr = &model->noise;
+  N_real_targets = dft_real_targets(dft,model);
 
   if (pr->alpha[1]!=0 && pr->alpha[2]==0)
   {
-    for (j = 0; j<N_targets; j++)
+    for (j = 0; j<N_real_targets; j++)
     {
       sum = pr->alpha[1] * (hyp->noise_cm * hyp->noise_cm);
+      nalpha = pr->alpha[1];
+
       for (i = 0; i<N_train; i++)
-      { d = latent[i*N_targets+j] - train_targets[i*N_targets+j];
-        sum += inv_temp * d*d;
+      { targ = train_targets[i*N_targets+j];
+        if (!isnan(targ))
+        { d = latent[i*N_targets+j] - targ;
+          sum += inv_temp * d*d;
+          nalpha += inv_temp;
+        }
       }
 
-      nalpha = pr->alpha[1] + inv_temp * N_train;
       nprec = nalpha / sum;
 
       st->noise[j] = prior_pick_sigma (1/sqrt(nprec), nalpha);
@@ -869,36 +878,46 @@ static void gibbs_noise (void)
 
   if (pr->alpha[1]!=0 && pr->alpha[2]!=0)
   {
-    for (j = 0; j<N_targets; j++)
+    for (j = 0; j<N_real_targets; j++)
     {
       ps = pr->alpha[2] * (st->noise[j] * st->noise[j]);
 
       sum = 0;
+      n = 0;
+
       for (i = 0; i<N_train; i++)
-      { d = latent[i*N_targets+j] - train_targets[i*N_targets+j];
-        sum += rand_gamma((pr->alpha[2]+inv_temp)/2) / ((ps+inv_temp*d*d)/2);
+      { targ = train_targets[i*N_targets+j];
+        if (!isnan(targ))
+        { d = latent[i*N_targets+j] - targ;
+          sum += rand_gamma((pr->alpha[2]+inv_temp)/2) / ((ps+inv_temp*d*d)/2);
+          n += 1;
+        }
       }
 
       st->noise[j] = cond_sigma (hyp->noise_cm, pr->alpha[1],
-                                    pr->alpha[2], sum, N_train);
+                                 pr->alpha[2], sum, n);
     }
   }
 
   if (pr->alpha[0]!=0 && pr->alpha[1]==0 && pr->alpha[2]==0)
   {
     sum = pr->alpha[0] * (pr->width * pr->width);
+    nalpha = pr->alpha[0];
     for (i = 0; i<N_train; i++)
-    { for (j = 0; j<N_targets; j++)
-      { d = latent[i*N_targets+j] - train_targets[i*N_targets+j];
-        sum += inv_temp * d*d;
+    { for (j = 0; j<N_real_targets; j++)
+      { targ = train_targets[i*N_targets+j];
+        if (!isnan(targ))
+        { d = latent[i*N_targets+j] - targ;
+          sum += inv_temp * d*d;
+          nalpha += inv_temp;
+        }
       }
     }
 
-    nalpha = pr->alpha[0] + inv_temp * N_train * N_targets;
     nprec = nalpha / sum;
     hyp->noise_cm = prior_pick_sigma (1/sqrt(nprec), nalpha);
 
-    for (j = 0; j<N_targets; j++)
+    for (j = 0; j<N_real_targets; j++)
     { st->noise[j] = hyp->noise_cm;
     }
   }
@@ -908,17 +927,23 @@ static void gibbs_noise (void)
     ps = pr->alpha[2] * (hyp->noise_cm * hyp->noise_cm);
 
     sum = 0;
+    n = 0;
+
     for (i = 0; i<N_train; i++)
-    { for (j = 0; j<N_targets; j++) 
-      { d = latent[i*N_targets+j] - train_targets[i*N_targets+j];
-        sum += rand_gamma((pr->alpha[2]+inv_temp)/2) / ((ps+inv_temp*d*d)/2);
+    { for (j = 0; j<N_real_targets; j++) 
+      { targ = train_targets[i*N_targets+j];
+        if (!isnan(targ))
+        { d = latent[i*N_targets+j] - targ;
+          sum += rand_gamma((pr->alpha[2]+inv_temp)/2) / ((ps+inv_temp*d*d)/2);
+          n += 1;
+        }
       }
     }
 
     hyp->noise_cm = cond_sigma (pr->width, pr->alpha[0],
-                                   pr->alpha[2], sum, N_targets*N_train);
+                                pr->alpha[2], sum, n);
 
-    for (j = 0; j<N_targets; j++)
+    for (j = 0; j<N_real_targets; j++)
     { st->noise[j] = hyp->noise_cm;
     }
   }
@@ -926,12 +951,12 @@ static void gibbs_noise (void)
   if (pr->alpha[0]!=0 && pr->alpha[1]!=0)
   {
     sum = 0;
-    for (j = 0; j<N_targets; j++) 
+    for (j = 0; j<N_real_targets; j++) 
     { sum += 1 / (st->noise[j] * st->noise[j]);
     }
 
     hyp->noise_cm = cond_sigma (pr->width, pr->alpha[0],
-                                   pr->alpha[1], sum, N_targets);
+                                pr->alpha[1], sum, N_real_targets);
   }
 }
 
@@ -1129,22 +1154,22 @@ static double latent_likelihood
   int t
 )
 { double lk;
+
+  if (isnan(target))
+  { return 0;
+  }
   
-  switch (model->type)
-  { case 'R':
-    { double d, a;
-      d = (target-value)*(target-value) / (st->noise[t]*st->noise[t]);
-      a = model->noise.alpha[2];
-      lk = a==0 ? -0.5*d : -0.5*(a+1)*log(1+d/a);
-      break;
-    }
-    case 'B':
-    { lk = target==1 ? -log(1+exp(-value)) : -log(1+exp(value));
-      break;
-    }
-    default:
-    { abort();
-    }
+  if (model->type=='R' || model->type=='r' && t<N_targets-1)
+  { double d, a;
+    d = (target-value)*(target-value) / (st->noise[t]*st->noise[t]);
+    a = model->noise.alpha[2];
+    lk = a==0 ? -0.5*d : -0.5*(a+1)*log(1+d/a);
+  }
+  else if (model->type=='B' || model->type=='r' && t==N_targets-1)
+  { lk = target==1 ? -log(1+exp(-value)) : -log(1+exp(value));
+  }
+  else
+  { abort();
   }
 
   return inv_temp * lk;

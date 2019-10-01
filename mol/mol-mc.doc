@@ -1,0 +1,64 @@
+
+
+MOL-MC:  Do Markov chain sampling for a molecular system.
+
+The mol-mc program is the specialization of xxx-mc to the task of
+sampling from the canonical distribution for the states of a molecular
+system.  See xxx-mc.doc for the generic features of this program.
+
+The Markov chain state for the system consists of the coordinates of
+all the molecules (with all coordinates for a molecule in consecutive
+positions), scaled so their range is [0,1) - in other words, the
+actual coordinates are obtained from those stored by multiplying by
+the length of a dimension.  If the NPT ensemble is being used, the log
+of the length of a dimension is stored as a final component of state.
+
+The following applications-specific sampling procedures are implemented:
+
+    wrap           
+
+        Changes the position coordinates of all the molecules so that 
+        they range from 0 to the length of a dimension, by adding the 
+        appropriate integer multiple of this length.  Wrapping the 
+        coordinates is generally not necessary, since they are wrapped 
+        before being used in any case.  Occassional wrapping will prevent 
+        them from wandering off to infinity, however, which could 
+        eventually cause problems with roundoff error.
+
+    met-mol [ stepsize ]
+
+        Does Metropolis updates for the position of each molecule in 
+        turn.  This is like the standard metropolis and met-1 operations
+        (see mc-spec.doc), except that all coordinates of one molecule 
+        are updated simultaneously, by adding independent Gaussian noise
+        with standard deviation given by the stepsize, and the result 
+        is then accepted or rejected.  In contrast, metropolis updates
+        all coordinates of all molecules at once, and met-1 updates 
+        just one coordinate of one molecule at a time.  
+
+    met-len [ stepsize ]
+
+        Does a Metropolis update for the length of a dimension (actually,
+        for the log of this length).
+
+The inverse temperature used in tempering methods is interpreted in
+the standard way, as a power to raise the (unnormalized) probability
+density to, or equivalently, a factor to multiply the energy by.
+
+The default stepsizes for updating the coordinates (in their [0,1)
+form) are all equal to N^{-1/D}, where width is the width parameter of
+the potential, N is the number of molecules and D is the
+dimensionality of the space.  This corresponds roughly to an
+appropriate stepsize if the molecules are tightly packed.  The default
+stepsize for the log of the length of a dimension (when using the NPT
+ensemble) is 1/N.  These defaults are scaled during tempering and
+annealed importance sampling by multiplying by the square root of the
+temperature.
+
+When using the NPT ensemble, the length of each dimension is
+initialized so that the reduced density is 1/2.  The positions of the
+molecules are initialized randomly, from the uniform distribution.
+Momenta (if needed) are initialized from their canonical distribution
+at (actual, not reduced) temperature one.
+
+            Copyright (c) 1995-2004 by Radford M. Neal

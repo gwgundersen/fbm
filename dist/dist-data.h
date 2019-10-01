@@ -31,3 +31,6 @@ extern double *train_targets;	/* True targets for training cases */
 
 void dist_data_read (void);
 void dist_data_free (void);
+
+double *dist_data_read_inputs  (numin_source *, int *);
+double *dist_data_read_targets (numin_source *, int);

@@ -6,5 +6,6 @@
 (cd gp;   echo " "; echo "Cleaning gp directory"; echo " "; make clean)
 (cd mix;  echo " "; echo "Cleaning mix directory"; echo " "; make clean)
 (cd dft;  echo " "; echo "Cleaning dft directory"; echo " "; make clean)
+(cd mol;  echo " "; echo "Cleaning mol directory"; echo " "; make clean)
 
 echo " "; echo "Done cleaning all directories"; echo " "

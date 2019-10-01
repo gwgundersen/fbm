@@ -2,8 +2,10 @@
 # Commands for neural network survival model with piecewise-constant hazard,
 # with two hidden layers that can find an additive (proportional hazard) model.
 
-net-spec v2log.net 2 8 8 1 / - 0.05:1:1 0.05:1 - - 0.05:1:1 0.05:1 - \
-                          x0.05:1 x0.05:1 - 100 
+net-spec v2log.net 2 8 8 1 / ih0=0.05:1:1 bh0=0.05:1 \
+                             ih1=0.05:1:1 bh1=0.05:1 \
+                             ho1=x0.05:1 ho0=x0.05:1 bo=100 
+
 model-spec v2log.net survival pw-const-hazard 0.05 0.1 0.2 0.35 0.5 0.7 1.0 1.5
 
 data-spec v2log.net 1 1 / vdata@1:700 . vdata@-1:700 .

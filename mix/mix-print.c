@@ -21,8 +21,8 @@
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "mix.h"
 
 
@@ -58,7 +58,7 @@ void mix_print_hypers
   { if (i>0 && i%5==0)
     { printf("\n           ");
     }
-    printf(" %8.3f",h->SD[i]);
+    printf(" %8.3f",h->tg[i].SD);
   }
 
   printf("\n");
@@ -69,7 +69,7 @@ void mix_print_hypers
   { if (i%5==0)
     { printf("\n           ");
     }
-    printf(" %+8.3f",h->mean[i]);
+    printf(" %+8.3f",h->tg[i].mean);
   }
 
   printf("\n");
@@ -84,7 +84,7 @@ void mix_print_hypers
     { if (i>0 && i%5==0)
       { printf("\n           ");
       }
-      printf(" %8.3f",h->noise[i]);
+      printf(" %8.3f",h->tg[i].noise);
     }
 
     printf("\n");

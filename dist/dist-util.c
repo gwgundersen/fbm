@@ -24,6 +24,7 @@
 #include "formula.h"
 #include "data.h"
 #include "dist.h"
+#include "numin.h"
 #include "dist-data.h"
 
 
@@ -100,6 +101,34 @@ void dist_unpack_vars
       { formula_var[*p-'a'][i] = *q++;
       }
     }
+  }
+}
+
+
+/* EVALUATE CONSTANT DEFINITIONS IN MODEL SPEC.  Also checks the formula(s)
+   for energy/likelihood/prior. */
+
+void dist_const_eval
+( dist_spec *dst	/* Specification of the distribution */
+)
+{ 
+  char *a, *f;
+  int c, i;
+
+  a = dst->energy + strlen(dst->energy) + 1;
+  if (dst->Bayesian) a += strlen(a) + 1;
+
+  while (*a)
+  { f = formula_def(a,&c,&i);
+    formula_var[c][i] = formula(f,0,1,0);
+    formula_var_exists[c][i] = 1;
+    a += strlen(a) + 1;
+  }
+
+  (void) formula (dst->energy, 1, 0, 0);
+
+  if (dst->Bayesian)
+  { (void) formula (dst->energy + strlen(dst->energy) + 1, 1, 0, 0);
   }
 }
 

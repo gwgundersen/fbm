@@ -1,0 +1,3 @@
+mol-spec xlog.dyn 3 4 1 30 NVT 13 10
+mc-spec  xlog.dyn repeat 40 heatbath 0.9 dynamic 10 0.004 end wrap
+mol-mc   xlog.dyn 1000

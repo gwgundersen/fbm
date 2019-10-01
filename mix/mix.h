@@ -40,10 +40,10 @@ typedef struct
 
 /* HYPERPARAMETERS FOR MIXTURE MODEL.  This structure stores the values
    of the hyperparameters for a mixture model.  Space is allocated for the 
-   maximum number of targets, even though this is a bit inefficient, and
-   would cause problems with using the standard Markov chain operations.  
+   maximum number of targets, but only as many as actually exist are stored
+   in the log file.  (This is possible because the array is at the end.)
    Space is included for possible "noise" standard deviations for Gaussian 
-   distributions as specified using model_spec. 
+   distributions as specified using model_spec, even if they're not used.
 
    The concentration parameter is stored here, even though at present it
    is fixed, since it may become variable in a future extension.
@@ -57,16 +57,24 @@ typedef struct
 				/*   (stored here in unscaled form)         */
 
   double SD_cm;			/* Common standard deviation for all targets */
-  double SD[Max_targets];	/* SD of offsets for each target */
-
-  double mean[Max_targets];	/* Mean offset for each target */
-
   double noise_cm;		/* Common SD for Gaussian distributions */
-  double noise[Max_targets];	/* Gaussian SD for each target */
   
   int reserved[10];		/* Reserved for future use */
 
+  struct			/* Hyperparameters associated with each target*/
+  { 
+    double SD;			  /* SD of offsets */
+    double mean;		  /* Mean of offsets */
+    double noise;		  /* Gaussian noise SD */
+
+  } tg[Max_targets];
+
 } mix_hypers;
+
+/* Macro for calculating size of above record given actual number of targets. */
+
+#define mix_hypers_size(n) \
+  ( sizeof(mix_hypers) - (Max_targets-(n)) * 3 * sizeof(double) )
 
 
 /* PROCEDURES. */

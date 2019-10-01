@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# DO A JOINT DISTRIBUTION TEST OF MCMC CORRECTNESS.  Linked to under names
+# like dist-joint-test, etc. to get versions for each module.
+
+# Copyright (c) 1995-2004 by Radford M. Neal 
+#
+# Permission is granted for anyone to copy, use, modify, or distribute this
+# program and accompanying programs and documents for any purpose, provided 
+# this copyright notice is retained and prominently displayed, along with
+# a note saying that the original programs are available from Radford Neal's
+# web page, and note is made of any changes made to the programs.  The
+# programs and documents are distributed without any warranty, express or
+# implied.  As the programs were written for research purposes only, they have
+# not been tested to the degree that would be advisable in any important
+# application.  All use of these programs is entirely at the user's own risk.
+
+set -e  # Exit on error.  Note that the let commands below end with an argument
+        # of 1 to avoid a zero value causing an error exit.
+
+# Check arguments.
+
+prog=`echo $0 | sed "s/.*\///"`
+module=`echo $prog | sed "s/-.*//"`
+
+if [ $# -lt 4 ]; then
+  echo >&2 \
+   "Usage: $prog log-file repeats length { operation-spec }"
+  exit -1
+fi
+
+log=$1
+rep=$2
+len=$3
+
+# Shift out initial arguments, leaving just MC operation specifications.
+
+shift
+shift
+shift
+
+# Find the name of the targets file.
+
+targets=`data-spec $log | grep "Training targets:" | sed "s/.*: *//"`
+
+# Set up any special generation options for particular modules.
+
+genop1=
+genop2=
+
+if [ $module = gp ]; then
+  genop1="-l"
+  genop2="-n"
+fi
+
+# Say what we're about to do.  Disabled at the moment.
+
+# echo JOINT DISTRIBUTION TEST OF CORRECTNESS
+# echo " "
+# echo Simulating $rep chains for $len iterations
+# echo The `data-spec $log | grep "Number of inputs:" | sed "s/.*: *//"` \
+#      "input(s) come from" \
+#      `data-spec $log | grep "Training inputs:" | sed "s/.*: *//"`
+# echo The file to hold the \
+#      `data-spec $log | grep "Number of targets:" | sed "s/.*: *//"` \
+#      "target(s) is" \"$targets\"
+
+# Generate log files containing samples directly from the prior, and from
+# the prior via a Markov chain simulation of the joint prior/data distribution.
+
+for i in `seq $rep`; do
+
+  # Generate directly from prior.
+
+  cp $log $log:p$i
+  rand-seed $log:p$i $i
+  $module-gen $genop1 $genop2 $log:p$i $len
+
+  # Generate by Markov chain simulation of joint distribution.
+
+  cp $log $log:j$i
+  rand-seed $log:j$i $i
+  $module-gen $genop1 $genop2 $log:j$i 0
+  $module-dgen $log:j$i / $targets
+  mc-spec $log:j$i $@
+
+  for j in `seq $len`; do
+    $module-mc $log:j$i $j
+    $module-dgen $log:j$i / $targets
+  done
+  
+done

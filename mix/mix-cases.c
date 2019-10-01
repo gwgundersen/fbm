@@ -21,8 +21,8 @@
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "rand.h"
 #include "mix.h"
 #include "mix-data.h"
@@ -155,6 +155,13 @@ main
   }
 
   h = logg.data['S'];
+
+  if (h!=0 && logg.actual_size['S'] != mix_hypers_size(N_targets))
+  { fprintf(stderr,
+      "Record has wrong size: Type S, Actual size %d, Required size %d\n",
+      logg.actual_size['S'], mix_hypers_size(N_targets));
+    exit(1);
+  }
 
   /* Read training data, if any, and determine maximum number of components. */
   
@@ -295,11 +302,11 @@ main
     {
       for (t = 0; t<N_targets; t++)
       { 
-        offsets[N_targets*n+t] = h->mean[t] + h->SD[t]*rand_gaussian();
+        offsets[N_targets*n+t] = h->tg[t].mean + h->tg[t].SD*rand_gaussian();
 
         if (m->type=='R')
         { noise_SD[N_targets*n+t] = 
-            prior_pick_sigma(h->noise[t],m->noise.alpha[2]);
+            prior_pick_sigma(h->tg[t].noise,m->noise.alpha[2]);
         }
       }
 

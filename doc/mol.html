@@ -1,0 +1,68 @@
+<html>
+<body>
+<pre>
+
+
+MOL:  Programs for molecular simulation with Lennard-Jones potential.
+
+The 'mol' programs implement simulation of systems of molecules
+interacting according to the artificial Lennard-Jones potential
+function.  The full range of techniques supported by this software are
+implemented for this module, including Metropolis Monte Carlo,
+molecular dynamics, simulated tempering, annealed importance sampling,
+and Hamiltonian importance sampling.
+
+The molecules are simulated in a space of 1, 2, or 3 dimensions, with
+each dimension wrapping around after some distance (ie, "periodic
+boundary conditions" are used).  The molecules interact according the
+the Lennard-Jones potential, which for each pair of molecules is given
+by
+
+    min { 4 scale [ (width/dist)^12 - (width/dist)^6 ], 
+          max (0, maxpe - 4 scale (dist/width)^2) }
+
+Here, "dist" is the distance between the two molecules (defined as the
+distance of the shortest line connecting them in the wrapped-around
+space).  The scale, width, and maxpe parameters are specified when
+setting up a simulation.  The maxpe parameter can be infinite, in
+which case there is no upper limit on the potential.  No "cut off" in
+the potential is used - the potential for all pairs is calculated,
+even when the contribution of a pair to the overall potential is tiny.
+
+The total potential energy for the system is the sum of the the pair
+potentials for each distinct pair of molecules in the system.  The
+basic task of the molecular simulation programs is to sample from the
+canonical distribution with this potential energy, at a temperature of
+one (using units in which Boltzmann's constant is one).  Sampling from
+both the NVT ensemble (constant number of molecules, volume, and
+temperature) and the NPT ensemble (constant number of molecules,
+pressure, and temperature) are supported.  
+
+For the NPT ensemble, there is an additional term in the potential
+energy relating to the current volume.  If the state were recorded in
+terms of volume, this term would be the volume times the pressure, P,
+minus the entropy for N particles in volume V, -N log(V).  However,
+what is recorded in the state is actually the log of the length of a
+dimension, L, which gives volume equal to exp(LD)), where D is the
+dimensionality.  The appropriately transformed term for the potential
+energy is then
+
+    P exp(LD) - (N+1) LD
+
+Although the simulation always proceeds as if the desired distribution
+is that at a temperature of one, the equivalent of the canonical
+distribution at a temperature other than one can be obtained by
+changing the "scale" parameter (and "maxpe" if it's not infinite) in
+the pair potential.  For the NPT ensemble, the pressure also needs to
+be changed.  One then needs to also rescale things when interpreting
+the results - in particular, one should look at the "U" quantity
+rather than "E", and "p" rather than "P" (see <A HREF="mol-quantities.html">mol-quantities.doc</A>).
+
+Some of the Monte Carlo methods involve momentum variables, with
+associated kinetic energy, for which each molecule is assumed to have
+unit mass.
+
+            Copyright (c) 1995-2004 by Radford M. Neal
+</pre>
+</body>
+</html>

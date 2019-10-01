@@ -1,0 +1,14 @@
+
+# Commands to apply a Gaussian process model to the simple regression problem,
+# with HMC done with trajectories using only a fraction of the cases.
+
+gp-spec rlog.gp4 1 1 100 / 0.05:0.5 0.05:0.5
+model-spec rlog.gp4 real 0.05:0.5
+
+data-spec rlog.gp4 1 1 / rdata@1:100 . rdata@101:200 .
+
+gp-gen rlog.gp4 fix 0.5 0.1
+mc-spec rlog.gp4 heatbath hybrid 20:4 0.5 / leapfrog 0.5
+gp-mc rlog.gp4 100
+
+gp-pred na rlog.gp4 21:

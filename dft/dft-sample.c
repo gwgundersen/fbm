@@ -21,8 +21,8 @@
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "rand.h"
 #include "ars.h"
 #include "uars.h"
@@ -138,7 +138,8 @@ static double latent_sample
 {
   double mean, var, nv;
 
-  if (m->type=='R' && m->noise.alpha[2]==0)
+  if ((m->type=='R' || m->type=='r' && t<dft->N_targets-1)
+        && m->noise.alpha[2]==0)
   { if (inv_temp==0)
     { mean = pmean;
       var = pvar;
@@ -153,7 +154,8 @@ static double latent_sample
     return mean + sqrt(var) * rand_gaussian();
   }
 
-  else if (m->type=='R' && m->noise.alpha[2]!=0)
+  else if ((m->type=='R' || m->type=='r' && t<dft->N_targets-1)
+            && m->noise.alpha[2]!=0)
   { struct uars_info info;
     info.trans = (pmean-target) / st->noise[t];
     info.scale = sqrt(pvar) / st->noise[t];
@@ -163,7 +165,7 @@ static double latent_sample
            Phi_inverse (uars(uars_logp, Phi((target-pmean)/sqrt(pvar)), &info));
   } 
 
-  else if (m->type=='B')
+  else if (m->type=='B' || m->type=='r' && t==dft->N_targets-1)
   { struct ars_info info;
     info.target = target;
     info.pmean = pmean;
@@ -187,29 +189,25 @@ void dft_sample_latent
 )
 { 
   int N_targets, N_trees, dt;
+  double pmean, pvar;
+  int t, x, px;
+  double targ;
 
   if (!st->locations) abort();
 
   N_targets = dft->N_targets;
   N_trees = dft->N_trees;
 
-  if (m==0)
-  { int i, t;
-    for (i = 0; i<N_train; i++)
-    { for (t = 0; t<N_targets; t++)
-      { latent[i*N_targets+t] = train_targets[i*N_targets+t];
+  for (t = 0; t<N_targets; t++)
+  {
+    for (x = 1; x<=N_train; x++)
+    { 
+      targ = train_targets[N_targets*(x-1)+t];
+
+      if (m==0 && !isnan(targ))
+      { latent[N_targets*(x-1)+t] = targ;
       }
-    }
-  }
-
-  else 
-  { 
-    double pmean, pvar;
-    int t, x, px;
-
-    for (t = 0; t<N_targets; t++)
-    {
-      for (x = 1; x<=N_train; x++)
+      else
       { 
         pmean = 0;
         pvar = 0;
@@ -220,8 +218,9 @@ void dft_sample_latent
           pmean += px==0 ? 0 : st[dt].locations[N_targets*(-px-1)+t];
         }
 
-        latent[N_targets*(x-1)+t] = latent_sample (dft, m, st, pmean, pvar,
-                                 train_targets[N_targets*(x-1)+t], inv_temp, t);
+        latent[N_targets*(x-1)+t] = 
+          isnan(targ) ? pmean + sqrt(pvar)*rand_gaussian()
+            : latent_sample (dft, m, st, pmean, pvar, targ, inv_temp, t);
       }
     }
   }
@@ -248,7 +247,7 @@ static void latent_gibbs
   dft_likelihood *lk
 )
 {
-  double omean, ovar, sd, d;
+  double targ, omean, ovar, sd, d;
   int N_targets, c, ch[2];
 
   if (x<-(N_train-1) || x>N_train || x==0) abort();
@@ -257,8 +256,12 @@ static void latent_gibbs
 
   if (x>0) /* Terminal node */
   {
-    latent[N_targets*(x-1)+t] = latent_sample (dft, m, st, pmean, pvar,
-                                 train_targets[N_targets*(x-1)+t], inv_temp, t);
+    targ = train_targets[N_targets*(x-1)+t];
+
+    latent[N_targets*(x-1)+t] = 
+      isnan(targ) ? pmean + sqrt(pvar)*rand_gaussian()
+                  : latent_sample (dft, m, st, pmean, pvar, targ, inv_temp, t);
+
     lk[x].mean = latent[N_targets*(x-1)+t];
     lk[x].var = 0;
     lk[x].peak = -log_sqrt_2pi;
@@ -299,7 +302,7 @@ void dft_gibbs_latent
   double *latent		/* The latent vectors */
 )
 {
-  double mean, var, peak;
+  double mean, var, peak, targ;
   int N_targets, N_trees, infp;
   dft_likelihood *lk0, *lk;
   int root, t;
@@ -315,7 +318,13 @@ void dft_gibbs_latent
   { int i, t;
     for (i = 0; i<N_train; i++)
     { for (t = 0; t<N_targets; t++)
-      { latent[i*N_targets+t] = train_targets[i*N_targets+t];
+      { targ = train_targets[i*N_targets+t];
+        if (isnan(targ))
+        { fprintf (stderr,
+           "Can't handle missing targets with no data model in this context\n");
+          exit(1);
+        }
+        latent[i*N_targets+t] = targ;
       }
     }
   }

@@ -38,17 +38,18 @@ Regression for real-valued targets.
 
 Specification:
 
-   real noise-prior [ "acf" corr { corr } ]
+   real noise-prior [ "acf" corr { corr } ] [ "last-binary" ]
 
 A regression model is specified by the argument "real", followed by a
 noise prior (see <A HREF="prior.html">prior.doc</A>).  With this model, the data for each case
-consists of the same number of input values as the network has input
-units, and the same number of target values as the network has output
-units.  The network outputs give the means of independent Gaussian
-distributions, with variances determined by the noise hyperparameters.
-(Note, however, that if there are implicit case-by-case
-hyperparameters, the noise effectively comes from a t-distribution,
-rather than a Gaussian.)
+consists of the same number input values as the model has "inputs"
+(currently always zero for mixture and Dirichlet diffusion tree
+models), along with the same number of target values as their are
+"outputs" of the model.  These outputs give the means of independent
+Gaussian distributions, with variances determined by the noise
+hyperparameters.  (Note, however, that if there are implicit
+case-by-case hyperparameters, the noise effectively comes from a
+t-distribution, rather than a Gaussian.)
 
 The noise prior may be followed by a specification of autocorrelations
 for the noise in training cases, consisting of "acf" followed by one
@@ -64,32 +65,38 @@ If the "acf" option is used, the noise prior must not specify that the
 noise variance varies from case to case.  Autocorrelated noise is
 currently implemented only for Gaussian process models.
 
+As a special fudge, if the "last-binary" option appears, the last of
+the targets is not modeled in this way, but is rather treated as a
+binary target, modeled using logistic probabilities, as described
+below.  This option is currently implemented only for Dirichlet
+diffusion tree models.
+
 
 Logistic regression for binary targets.
 
 A logistic regression model for binary data is specified by the
 argument "binary".  With this model, the data for each case consists
-of the same number of inputs values as the network has input units,
-and the same number of binary target values as the network has output
-units.  The targets must be specified to be binary using the
-int-target option of data-spec.  Each output, o, of the network is
-used to derive the probability, p, that the corresponding target will
-be '1', via the logistic function, p = 1/(1+exp(-o)).  The different
-targets are assumed to be independent.
+of the same number of inputs values as the model has "inputs", and the
+same number of binary target values as their are "outputs" for the
+model.  The targets must be specified to be binary using the
+int-target option of data-spec.  Each such output, o, is used to
+derive the probability, p, that the corresponding target will be '1',
+via the logistic function, p = 1/(1+exp(-o)).  The different targets
+are assumed to be independent.
 
 
-Poisson regressoin for count data.
+Poisson regression for count data.
 
 A Poisson regression model for integer count data is specified by the
 argument "count".  The data for each case consists of the same number
-of input values as the network has input units, and the same number of
-integer target values as the network has output units.  Checking that
-the target values are integers is will only be done (if at all) by the
-programs that actually look at the data, not by the data-spec program.
-Negative integer values represent censored data - in particular, a
-value of -a indicates that the actual value is some value between 0
-and a (inclusive).  The outputs of the network are the logs of the
-Poisson means for each target value.  The different targets are
+of input values as the model has "inputs", and the same number of
+integer target values as the model has as "outputs".  The targets must
+be specified to be non-negative integers by setting the int-target
+option of data-spec to "+" or to "-".  Negative integer values (if
+allowed by setting int-target to "-") represent censored data - in
+particular, a value of -a indicates that the actual value is some
+value between 0 and a (inclusive).  The model outputs are the logs of
+the Poisson means for each target value.  The different targets are
 assumed to be independent.
 
 
@@ -97,14 +104,14 @@ Generalized logistic regression for class targets ("softmax").
 
 The "class" data model is used to model target values representing
 some finite number of "classes".  As with the "real" and "binary"
-models, the number of input units must match the number of input
-values in each case.  There must be only one target in each case, with
-the number of possible values for this target (specified with the
-int-target option of data-spec) corresponding to the number of output
-units in the network.  The distribution over target values for a case
-is found by letting the probability of a particular target value be
-proportional to the exponential of the value of the corresponding
-output.
+models, the number of "input" for the model must match the number of
+input values in each case.  There must be only one target in each
+case, with the number of possible values for this target (specified
+with the int-target option of data-spec) corresponding to the number
+of "outputs" produced by the model.  The distribution over target
+values for a case is found by letting the probability of a particular
+target value be proportional to the exponential of the value of the
+corresponding output.
 
 
 Survival data.

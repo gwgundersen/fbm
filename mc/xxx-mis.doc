@@ -1,0 +1,129 @@
+
+
+XXX-MIS:  Do Metropolis importance sampling.
+
+There is a version of this program for each 'mc' application that
+supports Metropolis importance sampling.  These programs implement an
+importance sampling scheme in which states are randomly sampled from
+an infinite-temperature distribution (the prior, or a uniform
+distribution), and then modified by applying semi-deterministic
+Metropolis updates, in which proposals are random, but their
+acceptance is determined using a "thermostat" variable with
+exponential distribution (except that acceptance with respect to the
+prior, if any, is determined randomly in the usual way).  The
+thermostat variable is initialized at a high temperature but then
+decayed to move the system to lower temperatures.  This process
+produces a distribution over states which we hope is close to the
+desired distribution (corresponding to temperature one), and which we
+can use to estimate expectations with respect to the desired
+distribution by means of importance sampling.
+
+Usage:
+
+    xxx-mis log-file n-runs min-steps max-steps [ [-]modulus ]
+      / blocksize { stepsize count } stepsize [ count ] / inv-temp decay 
+ 
+Here 'xxx' is a prefix identifying the particular incarnation of this
+program (eg, dist-mis or mol-mis).
+
+The log file must contain appropriate specifications for the model
+before xxx-mis is run.  One or more states, with appropriate weights,
+are appended to this log file when each of n-runs runs are simulated
+using the parameters specified after the two "/" arguments.  These
+states can be used to estimate expectations of various quantities (eg,
+using dist-est), as well as the normalizing constant for the
+distribution.  After xxx-mis has finished, additional runs can be
+simulated by simply running the program again.
+
+The importance sampling distribution is an equal mixture of the
+distributions defined by first sampling the ordinary state variables
+from the infinite-temperature distribution and the special "termostat"
+variable from the exponential distribution with mean equal to the
+specified temperature (shown above in terms of its inverse, inv-temp),
+and then applying between min-steps and max-steps iterations of a
+semi-deterministic Metropolis dynamics, in conjunction with decay for
+the thermostat variable.  The inverse temperature may be specified
+directly, or as "/T", where T is the temperature.
+
+Conceptually, each of the runs simulated by xxx-mis gives rise to
+(max-steps - min-steps + 1) states from this importance sampling
+distribution, produced by overlapping portions of the run.  These
+states are written to the log file with appropriate importance
+weights, unless modulus in specified, in which case only those whose
+indexes (from 0) are multiples of modulus are written.  To find the
+appropriate importance weights, the total probability of producing
+each state under the importance sampling distribution must be found.
+This involves a sum over all possible numbers of steps (from min-steps
+to max-steps) that might have been used to produce the state.  Finding
+this sum requires simulating a backwards portion of the run for
+(max-steps - min-steps) steps.  The states from this backward portion
+of the trajectory, and from the portion before min-steps have been
+done, are not saved in the log file, unless "-" is included before
+modulus, in which case they are saved with weights that are
+effectively zero (which works OK for estimating expectations, though
+not for estimating normalizing constants).
+
+Each iteration of the Metropolis dynamics consists of one or more
+semi-deterministic Metropolis updates.  Updates are applied to
+successive blocks of consecutive variables (not including the
+thermostat variable), with the size of a block being as specified on
+the command line after the first "/".  A blocksize of "all" means all
+variables are updated in one block.  If the number of variables is not
+a multiple of blocksize, the last block will have fewer than blocksize
+variables.  Each update begins with the random selection of a proposed
+new state for the variables in the block, found by adding Gaussian
+noise to all these variables.  The standard deviations for the noise
+are given by the default stepsizes set by the application or by the
+user (see mc-stepsizes.doc) times a stepsize specified in the command
+line.  The stepsize specifications follow the blocksize, and each is
+followed by a count of how many times it is to be repeated (the count
+for the last stepsize can be omitted, and defaults to one).  Each
+repetition of each stepsize is used for a full scan through all the
+variable blocks.  The total number of Metropolis updates in an
+iteration is therefore equal to the number of blocks times the sum of
+the counts for all the stepsizes.
+
+The proposed new state for a Metropolis update is accepted or rejected
+according to two criteria.  First, if we are sampling from a Bayesian
+posterior, the ratio of the prior probability of the proposed state to
+the old state is computed, and the new state is rejected if a uniform
+(0,1) random number is not less than this ratio, in which case the
+second step is skipped.  In the second step, the difference in the log
+probabilities of the new and the old states due to factors other than
+the prior (ie, the energy difference for a physical system) is
+computed, and the new state is rejected if this difference is greater
+than the value of the "thermostat" variable.  (If the new state has
+lower energy / higher probability, then it will always be accepted.)
+If the new state is accepted, the value of the thermostat variable is
+adjusted by the amount of the energy difference, which keeps the
+energy constant, since the energy for the thermostat is just equal to
+its value.  Following each complete Metropolis iteration (which may
+consist of many updates), the thermostat variable is multiplied by the
+specified decay factor, which should be slightly less than one.
+
+These steps are reversed (with division by decay rather than
+multiplication) when simulating backwards.
+
+For good results, inv-temp should be chosen to be small enough that
+the canonical distribution at this temperature is almost the same as
+the prior (or almost uniform).  The range min-steps to max-steps
+should be chosen so that the system cools to approximately a
+temperature of one somewhere within this range of steps.  The
+stepsizes need small enough that reasonable acceptance rates are
+obtained, but not too small.  (The ideal size may vary with
+temperature, which is why several stepsizes are allowed, so that at
+least one will be appropriate at any time.)  Finally, the decay needs
+to be sufficienly slow (ie, the decay parameter needs to be only
+slightly less than one) if the importance weights are not to be highly
+variable.
+
+The value of the thermostat variable is accessible as the "h"
+quantity.  The rate of rejections of Metropolis updates is also
+recorded, and is available as the "r" quantity, with the difference in
+energy level available as the "D" quantity.  (There is no access to
+the difference in log priors.)  The position of each saved state in
+the overall run is recorded as the "m" quantity.  The overall time
+taken so far is recorded as the "k" quantity.  These are more-or-less
+analogous to the quantities documented in mc-quantities.doc.
+
+            Copyright (c) 1995-2004 by Radford M. Neal

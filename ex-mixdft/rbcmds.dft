@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Commands to use a Dirichlet diffusion tree model of the joint density
+# of two real values and a binary class in order to classify test cases.
+# The argument of this script is the number (out of 500) of the training
+# cases at the front of rdata in which the class should be made unknown.  
+# The result, stored in rdata.p1, is the probability of class 1 for the 
+# 500 test cases at the end of rdata.
+
+head -500 rdata | sed "1,$1s/.\$/?/" >rdata.t
+
+dft-spec   rblog.dft 0 3 / 0.5:0.5:0.5 0.01:0.5 - 0.01:0.5
+model-spec rblog.dft real 0.1 last-binary
+data-spec  rblog.dft 0 3 / rdata.t@1:500 . 
+mc-spec    rblog.dft repeat 15 gibbs-latent slice-positions \
+                               met-terminals gibbs-sigmas slice-div
+dft-mc     rblog.dft 1000
+
+tail -500 rdata | sed "1,\$s/.\$/0/" >rdata.0
+tail -500 rdata | sed "1,\$s/.\$/1/" >rdata.1
+
+dft-pred pb rblog.dft 405:%5 / rdata.0 . >rdata.lp0
+dft-pred pb rblog.dft 405:%5 / rdata.1 . >rdata.lp1
+
+sed "s/e/E/" <rdata.lp0 | sed "s/.*/calc \"Exp(&)\"/" \
+  | bash | sed "s/ */p0=/" >rdata.up0
+sed "s/e/E/" <rdata.lp1 | sed "s/.*/calc \"Exp(&)\"/" \
+  | bash | sed "s/ */p1=/" >rdata.up1
+
+combine rdata.up0 rdata.up1 | sed "s/.*/calc & \"p1\\/(p0+p1)\"/" \
+  | bash >rdata.p1

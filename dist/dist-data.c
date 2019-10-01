@@ -35,12 +35,6 @@ double *train_inputs;		/* Inputs for training cases */
 double *train_targets;		/* True targets for training cases */
 
 
-/* PROCEDURES. */
-
-static double *read_inputs  (numin_source *, int *);
-static double *read_targets (numin_source *, int);
-
-
 /* FREE SPACE OCCUPIED BY DATA. */
 
 void dist_data_free (void)
@@ -68,16 +62,16 @@ void dist_data_read (void)
 
   numin_spec (&ns, "data@1,0",1);
   numin_spec (&ns, data_spec->train_inputs, data_spec->N_inputs);
-  train_inputs = read_inputs (&ns, &N_train);
+  train_inputs = dist_data_read_inputs (&ns, &N_train);
 
   numin_spec (&ns, data_spec->train_targets, data_spec->N_targets);
-  train_targets = read_targets (&ns, N_train);
+  train_targets = dist_data_read_targets (&ns, N_train);
 }
 
 
 /* READ INPUTS VALUES FOR A SET OF CASES. */
 
-static double *read_inputs
+double *dist_data_read_inputs
 ( numin_source *ns,
   int *N_cases_ptr
 )
@@ -108,7 +102,7 @@ static double *read_inputs
 
 /* READ TARGET VALUES FOR A SET OF CASES. */
 
-static double *read_targets
+double *dist_data_read_targets
 ( numin_source *ns,
   int N_cases
 )

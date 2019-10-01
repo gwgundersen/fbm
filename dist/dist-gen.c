@@ -79,21 +79,10 @@ main
     exit(1);
   }
 
-  a = dst->energy + strlen(dst->energy) + 1;
-  if (dst->Bayesian) a += strlen(a) + 1;
-
-  while (*a)
-  { f = formula_def(a,&c,&i);
-    formula_var[c][i] = formula(f,0,1,0);
-    formula_var_exists[c][i] = 1;
-    a += strlen(a) + 1;
-  }
-
-  (void) formula (dst->energy, 1, 0, 0);
-  (void) formula (dst->energy + strlen(dst->energy) + 1, 1, 0, 0);
+  dist_const_eval(dst);
 
   /* Read last records in log file to see where to start, and to get random
-     number state left after last network was generated. */
+     number state left after last iteration was generated. */
 
   index = log_gobble_last(&logf,&logg);
 

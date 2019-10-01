@@ -23,7 +23,9 @@ records, only indexes greater than the last one in the log file are
 generated.  
 
 Note that if the -read-prior option was given to dist-spec, the points
-generated will be read from standard input.  If -read-prior was not
+generated will be read from standard input, in alphabetical order -
+ie, "u0","u1", ..., "u9", "u", "v0", ... (but note that "u" follows
+"u9", unlike normal alphabetical order).  If -read-prior was not
 given, the prior must be of a form allowing for automatic sampling.
 See <A HREF="dist-spec.html">dist-spec.doc</A> and <A HREF="dist-mc.html">dist-mc.doc</A> for details.
 

@@ -21,8 +21,8 @@
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
-#include "model.h"
 #include "data.h"
+#include "model.h"
 #include "mix.h"
 #include "rand.h"
 
@@ -121,11 +121,11 @@ main
         }
 
         for (t = 0; t<mx->N_targets; t++) 
-        { hypers.SD[t] = mx->SD_prior.alpha[1]!=0 ? SD_value : hypers.SD_cm;
+        { hypers.tg[t].SD = mx->SD_prior.alpha[1]!=0 ? SD_value : hypers.SD_cm;
         }
 
         for (t = 0; t<mx->N_targets; t++)
-        { hypers.mean[t] = 0;
+        { hypers.tg[t].mean = 0;
         }
 
         if (m!=0 && m->type=='R')
@@ -135,7 +135,8 @@ main
           }
 
           for (t = 0; t<mx->N_targets; t++)
-          { hypers.noise[t] = m->noise.alpha[1]!=0 ? SD_value : hypers.noise_cm;
+          { hypers.tg[t].noise = 
+              m->noise.alpha[1]!=0 ? SD_value : hypers.noise_cm;
           }
         }
       }
@@ -150,11 +151,11 @@ main
                            mx->SD_prior.alpha[0]);
 
       for (t = 0; t<mx->N_targets; t++) 
-      { hypers.SD[t] = prior_pick_sigma(hypers.SD_cm,mx->SD_prior.alpha[1]);
+      { hypers.tg[t].SD = prior_pick_sigma(hypers.SD_cm,mx->SD_prior.alpha[1]);
       }
 
       for (t = 0; t<mx->N_targets; t++)
-      { hypers.mean[t] = mx->mean_prior.width * rand_gaussian();
+      { hypers.tg[t].mean = mx->mean_prior.width * rand_gaussian();
       }
 
       if (m!=0 && m->type=='R')
@@ -162,7 +163,8 @@ main
         hypers.noise_cm = prior_pick_sigma(m->noise.width,m->noise.alpha[0]);
 
         for (t = 0; t<mx->N_targets; t++)
-        { hypers.noise[t] = prior_pick_sigma(hypers.noise_cm,m->noise.alpha[1]);
+        { hypers.tg[t].noise = 
+            prior_pick_sigma(hypers.noise_cm,m->noise.alpha[1]);
         }
       }
       
@@ -173,7 +175,7 @@ main
 
     logf.header.type = 'S';
     logf.header.index = index;
-    logf.header.size = sizeof hypers;
+    logf.header.size = mix_hypers_size(mx->N_targets);
     log_file_append (&logf, &hypers);
 
     if (!fix)

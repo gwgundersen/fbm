@@ -9,3 +9,5 @@ data-spec rlog.gp 1 1 / rdata@1:100 . rdata@101:200 .
 gp-gen rlog.gp fix 0.5 0.1
 mc-spec rlog.gp heatbath hybrid 20:4 0.5
 gp-mc rlog.gp 100
+
+gp-pred na rlog.gp 21:

@@ -18,7 +18,7 @@ programs:	mc-spec mc-temp-sched mc-temp-filter mc-ais mc-reweight
 
 modules:	mc-traj.o mc-iter.o mc-metropolis.o mc-hybrid.o mc-slice.o \
 		mc-util.o mc-quantities.o \
-		mc-grad-test.o mc-stepsizes.o mc.o mc-his.o
+		mc-grad-test.o mc-stepsizes.o mc.o mc-his.o mc-mis.o
 
 clean:
 	rm -f *.o mc-spec mc-temp-sched mc-temp-filter mc-ais

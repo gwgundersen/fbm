@@ -1,0 +1,8 @@
+while test t$1 "!=" t
+do
+  echo RUNNING $1:
+  echo " "
+  time $1
+  echo " "
+  shift
+done

@@ -198,9 +198,9 @@ main
 
   /* Compute covariance for latent values at training points.*/
 
-  gp_cov(gp, h, inputs, N_cases, inputs, N_cases, cov, 0, 0);
+  gp_cov(gp, h, 0, inputs, N_cases, inputs, N_cases, cov, 0, 0);
 
-  if (gp->has_jitter)
+  if (gp->has_jitter && !(gp->lin.flags[0]&Flag_drop))
   { for (i = 0; i<N_cases; i++)
     { cov[i*N_cases+i] += exp(2 * *h->jitter);
     }

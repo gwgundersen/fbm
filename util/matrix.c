@@ -112,6 +112,63 @@ void matrix_product
 }
 
 
+/* FIND THE PRODUCT OF TWO MATRICES WHEN THE RESULT IS KNOWN TO BE SYMMETRIC.  
+   The matrix elements are stored in contiguous locations in row-major order. */
+
+void matrix_sym_product
+( double *m1,		/* Left operand */
+  double *m2,		/* Right operand */
+  double *r,		/* Place to store result */
+  int n,		/* Number of rows and columns in result */
+  int k			/* Number of columns in left operand & rows in right */
+)
+{
+  double *s;
+  int i, j;
+
+  s = r;
+
+  for (i = 0; i<n; i++)
+  { s += i;
+    for (j = i; j<n; j++)
+    { *s++ = inner_product(m1,1,m2+j,n,k);
+    }
+    m1 += k;
+  }
+
+  fill_lower_triangle (r, n);
+}
+
+
+/* FIND THE PRODUCT OF A MATRIX AND ITS TRANSPOSE. */
+
+void matrix_trans_product
+( double *M,		/* The matrix */
+  double *R,		/* Place to store M M^T */
+  int n,		/* Number of rows in M, hence rows and columns in R */
+  int k			/* Number of columns in M */
+)
+{
+  double *s, *p, *q;
+  int i, j;
+
+  s = R;
+  p = M;
+
+  for (i = 0; i<n; i++)
+  { s += i;
+    q = p;
+    for (j = i; j<n; j++)
+    { *s++ = inner_product(p,1,q,1,k);
+      q += k;
+    }
+    p += k;
+  }
+
+  fill_lower_triangle (R, n);
+}
+
+
 /* FIND THE TRACE OF THE PRODUCT OF TWO SYMMETRIC MATRICES.  The matrix 
    elements are stored in contiguous locations in row-major order.  Space is 
    present for the full matrices, but only the lower triangles are looked at. */

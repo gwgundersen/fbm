@@ -1,0 +1,3 @@
+mol-spec xlog.met 3 4 1 30 NVT 13 10
+mc-spec  xlog.met repeat 100 met-mol 0.02 end wrap
+mol-mc   xlog.met 1000

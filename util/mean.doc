@@ -1,0 +1,70 @@
+
+
+MEAN:  Compute means with standard errors.
+
+Mean reads data concerning the values of zero or more quantities from
+standard input, and writes the means of these quantities, with
+associated standard errors, to standard output.  The values may come
+in batches, and may have associated weights, which are taken into
+account when computing the means and standard errors.  For weighted
+data, the log of the mean weight and other quantities of interest are
+also computed.  These are the only outputs if nothing but weights are
+present.
+
+Usage:
+
+    mean [ -W | -w ] [ -b ] [ batch-size ] <data
+
+The data read from standard input must be in the form of a text file
+of numbers, with the same number of numbers on each line.  If the -W
+or -w option is given, the first of these numbers is a weight (for -W)
+or the log of a weight (for -w).  The remaining numbers on each line
+are values of the quantities whose means are to be computed.  The
+lines are grouped into batches of size batch-size (default 1), with
+different batches assumed to be independent, but with possible
+dependence within a batch.  The number of lines should be a multiple
+of the batch size, excepting blank lines (which are ignored); if not,
+the partial block at the end is discarded with a warning.
+
+If the -b (for "bare") option is present, the output consists of the
+(possibly) weighted means of each quantity, with standard errors,
+written with the mean and standard error for each quantity on a
+separate line, in high-precision exponential format, with no headers.
+As a special case, if -b and either -W or -w is given when there are
+no values (only weights), the log of the mean weight and its standard
+error are written to standard output, without headers.  This "bare"
+output format is suitable for reading into some other program.
+
+If the -b option is not present, the means and standard errors are
+output in a more easily read (but perhaps less precise) form, with
+headers.  Other information is also displayed, including the number of
+batches, the lines per batch, and, if -W or -w was specified, the log
+of the mean of the weights with its associated standard error and the
+adjusted sample size accounting for the variability of the weights.
+
+Standard errors are computed by first computing means and weights for
+each batch.  The mean for a batch is simply the weighted mean of of
+values within that batch, and the weight for a batch is just the sum
+of the weights for lines within that batch.  The weighted mean of the
+batch means is then computed, along with standard errors that assume
+these batch means are independent.  The standard error for the mean of
+a quantity v with weighted mean m is given by
+
+    sqrt ( sum_i w_i^2 (v_i - m)^2 ) / sum_i w_i^2
+
+where w_i is the weight of the i'th batch, and v_i is the mean value
+of v for the i'th batch.  The standard error for the log of the mean
+of the weights is computed by finding the standard error of the mean
+of the weights in the usual way, and then dividing by the mean of the
+weights.  Note that this standard error cannot be trusted unless is it
+much less than one.
+
+The adjusted sample size is a general indication of accuracy that is
+not specific to any particular quantity.  It is equal to
+
+    (sum_i w_i)^2 / sum_i w_i^2 
+
+All the standard errors are probably not very reliable if the adjusted
+sample size is less than ten.
+
+            Copyright (c) 1995-2004 by Radford M. Neal

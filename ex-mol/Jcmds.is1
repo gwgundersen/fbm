@@ -1,0 +1,4 @@
+mol-spec      Jlog.is1 3 0.01 1 0.3 NPT 1 0.001 0.1
+mc-temp-sched Jlog.is1 -
+mc-spec       Jlog.is1 AIS
+mol-mc        Jlog.is1 1000

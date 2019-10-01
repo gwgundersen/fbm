@@ -86,6 +86,7 @@ Generic utility programs [util]:
     xxx-hist        Build a histogram for a quantity using data from log files
 
   * series          Analyse stationary time series data
+  * mean            Compute means with standard errors
 
 
 Markov chain Monte Carlo facilities [mc]:
@@ -102,6 +103,7 @@ Markov chain Monte Carlo facilities [mc]:
     mc-temp-filter  Copy only iterations at a given temperature
     mc-ais          Monitor annealed importance sampling (AIS) runs
 
+    xxx-mc-test     Do a joint distribution test of MCMC correctness
     xxx-grad-test   Test the correctness of the energy gradient computations
     xxx-stepsizes   Display and evaluate stepsizes used for dynamics
     xxx-genp        Generate random momentum variables
@@ -118,6 +120,7 @@ Markov chain sampling for a specified distribution [dist]:
     dist-stepsizes  Display, evaluate, or set stepsizes used for dynamics
   * dist-mc         Do Markov chain sampling for the specified distribution
     dist-gen        Generate values for state variables from the prior
+    dist-dgen       Generate values for target variables using given parameters
 
     dist-display    Print state variables at a specified iteration
   * dist-quantities Quantities defined for a specified distribution
@@ -168,6 +171,7 @@ Gaussian process models [gp]:
 
   * gp-mc           Use Markov chain to sample Gaussian process hyperparameters
   * gp-gen          Generate GP hyperparameters randomly, or fix them
+    gp-dgen         Generate values for target variables given latent values
 
   * gp-display      Print Gaussian process hyperparameters &amp; other information
   * gp-quantities   Quantities from log files relating to Gaussian processes
@@ -208,6 +212,17 @@ Bayesian inference for Dirichlet diffusion tree models [dft]:
 
   * dft-pred        Make predictions using Dirichlet diffusion trees
     dft-cases       Generate cases from a diffusion tree model
+
+
+Molecular simulation with Lennard-Jones potential [mol]:
+
+  * mol             Molecular simulation with Lennard-Jones potential
+  * mol-spec        Specify a molecular system
+
+  * mol-mc          Do Markov chain sampling for a molecular system
+
+    mol-display     Print state of molecular system
+  * mol-quantities  Quantities from log files relating to molecular systems
 </pre>
 </body>
 </html>

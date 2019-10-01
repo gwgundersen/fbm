@@ -1,0 +1,5 @@
+gp-spec log 1 1 / 0.2:1 0.2:1 / 0.1:1 10000 mulprod:1
+model-spec log real 0.05:1
+data-spec log 1 1 / mulprod.dat .
+mc-spec log slice-1 10 1
+gp-mc log 100

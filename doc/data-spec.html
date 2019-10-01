@@ -21,10 +21,13 @@ or:
     data-spec log-file
 
 The number of "input" and "target" values must be specified.  The
-number of inputs or targets may be zero, although other programs may
-not allow this.  The user can require the targets to be integers by
-including an 'int-target' argument.  The permitted range of these
-integer targets is from zero to 'int-target' minus one.
+number of inputs or targets may be zero, although some other programs
+may not allow this.  The user can require the targets to be integers
+by including an 'int-target' argument.  The permitted range of these
+integer targets is from zero to 'int-target' minus one, if
+'int-target' is a postive integer, or from zero on up, if 'int-target'
+is "+", or any integer (positive, zero, or negative) if 'int-target'
+is "-".
 
 The training and (optionally) test sets are given in the form of
 specifications described in <A HREF="numin.html">numin.doc</A>.  The default specification for

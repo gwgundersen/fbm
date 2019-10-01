@@ -1,0 +1,5 @@
+mol-spec      Klog.ais 3 0.01 1 0.3 NPT 2 0.001 0.0008
+mc-temp-sched Klog.ais 0.001:199
+mc-spec       Klog.ais repeat 20 AIS \
+                 met-mol 0.5 repeat 3 met-len 0.25 end wrap end
+mol-mc        Klog.ais 10000
