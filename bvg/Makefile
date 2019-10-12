@@ -18,7 +18,8 @@ programs:	bvg-spec bvg-mc bvg-plt bvg-hist bvg-grad-test bvg-stepsizes \
 		bvg-initial bvg-tbl
 
 clean:
-	rm -f *.o bvg-spec bvg-mc bvg-plt bvg-hist bvg-grad-test bvg-stepsizes \
+	rm -f *.o *.exe \
+		  bvg-spec bvg-mc bvg-plt bvg-hist bvg-grad-test bvg-stepsizes \
 	          bvg-initial bvg-tbl
 
 

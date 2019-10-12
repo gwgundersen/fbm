@@ -7,11 +7,12 @@ provides a number of general facilities, some of which may be of use
 for other purposes.  The 'mc' module provides support for Markov chain
 Monte Carlo methods, which the 'dist' module allows you to use for a
 distribution specified by a formula.  The modules 'net', 'gp', 'mix',
-and 'dft' are more specialized modules that use the Markov chain
-methods to support Bayesian inference for neural networks, Gaussian
-process models, finite and infinite mixture models, and Dirichlet
-diffision tree models.  This section provides an overview of the
-various components of the software.
+'dft', 'src', and 'mol' are more specialized modules that use the
+Markov chain methods to support Bayesian inference for neural
+networks, Gaussian process models, finite and infinite mixture models,
+Dirichlet diffision tree models, source location models, and to
+support molecular simulation.  This section provides an overview of
+the various components of the software.
 
 
 Program usage.
@@ -154,9 +155,9 @@ standard approaches, however, as described in the examples in other
 sections of this documentation.  You can also read all about the
 various methods in mc-spec.doc.  Note, however, that for each model
 there are also sampling methods specific to that model alone, which
-are documented in net-mc.doc, gp-mc.doc, and mix-mc.doc.  At present,
-sampling for mixture models is done only by the specific procedures
-described in mix-mc.doc.
+are documented in net-mc.doc, gp-mc.doc, mix-mc.doc, dft-mc.doc,
+src-mc.doc, and mol-mc.doc.  At present, sampling for mixture models
+is done only by the specific procedures described in mix-mc.doc.
 
 Tempering methods and Annealed Importance Sampling are currently
 supported for neural network models and Dirichlet diffusion tree
@@ -286,6 +287,16 @@ with 'dft-mc'.  One can then examine the resulting trees with
 'dft-pred'.
 
 
+Source location models.
+
+See src.doc for more details on this model.
+
+
+Molecular simulation.
+
+See mol.doc for more details on this model.
+
+
 Quantities obtainable from log files.
 
 The 'xxx-plt' programs (eg, 'dist-plt', 'net-plt', 'gp-plt',
@@ -314,4 +325,5 @@ of the noise standard deviation (for a regression model) - and for
 mixture models - for example, 'Cn', the total probability for the n
 largest components in the mixture.  For details, see quantities.doc
 along with mc-quantities.doc, dist-quantities.doc, net-quantities.doc,
-gp-quantities.doc, mix-quantities.doc, and dft-quantities.doc.
+gp-quantities.doc, mix-quantities.doc, dft-quantities.doc,
+src-quantities.doc, and mol-quantities.doc.

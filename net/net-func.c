@@ -174,6 +174,10 @@ static void add_connections
     {
       for (i = 0; i<ns; i++)
       { tv = v[i];
+        if (tv==0) 
+        { w += nd;
+          continue;
+        }
         j = 0;
         do { s[j] += *w++ * tv; j += 1; } while (j<nd);
       }
@@ -196,6 +200,10 @@ static void add_connections
       for (i = 0; i<ns; i++)
       { if ((omit[i]&b)==0)
         { tv = v[i];
+          if (tv==0) 
+          { w += nd;
+            continue;
+          }
           j = 0;
           do { s[j] += *w++ * tv; j += 1; } while (j<nd);
         }

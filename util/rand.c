@@ -1,6 +1,6 @@
 /* RAND.C - Random number generation module. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2007 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -13,12 +13,19 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
+/* Random generation routines at the end of this file are taken from the
+   GNU C library, see the copyright notice there. */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 
 #include "rand.h"
+
+
+static long int this_nrand48 (unsigned short int [3]);
+					/* Local version of nrand48 */
 
 
 /* This module uses the 'drand48' pseudo-random number generator found
@@ -164,7 +171,7 @@ int rand_word(void)
 
   if (!initialized) initialize();
 
-  v = nrand48(state->state48);
+  v = this_nrand48(state->state48);
 
   for (j = 0; j<N_tables; j++)
   { v ^= rn[j][state->ptr[j]];
@@ -352,6 +359,15 @@ double rand_exp (void)
 }
 
 
+/* LOGISTIC GENERATOR.  Just inverts the CDF. */
+
+double rand_logistic (void)
+{ double u;
+  u = rand_uniopen();
+  return log(u/(1-u));
+}
+
+
 /* CAUCHY GENERATOR.  See Devroye, p. 29. */
 
 double rand_cauchy (void)
@@ -431,4 +447,113 @@ double rand_beta
   } while (r<=0.0 || r>=1.0);
 
   return r;
+}
+
+
+/* ROUTINES FROM THE GNU C LIBRARY.  These were modified to make them 
+   standalone and to supercede but not conflict with any version in the 
+   library used with this software.  The following is the copyright
+   notice for these routines:
+
+   Copyright (C) 1995, 1996, 1997, 2002 Free Software Foundation, Inc.
+   This file is part of the GNU C Library.
+   Contributed by Ulrich Drepper <drepper@gnu.ai.mit.edu>, August 1995.
+
+   The GNU C Library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   The GNU C Library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with the GNU C Library; if not, write to the Free
+   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+   02111-1307 USA.  */
+
+#include <errno.h>
+#include <limits.h>
+#include <sys/types.h>
+
+struct drand48_data
+  {
+    unsigned short int x[3];	/* Current state.  */
+    unsigned short int old_x[3]; /* Old state.  */
+    unsigned short int c;	/* Additive const. in congruential formula.  */
+    unsigned short int init;	/* Flag for initializing.  */
+    unsigned long long int a;	/* Factor in congruential formula.  */
+  };
+
+/* Global state for non-reentrant functions.  */
+
+struct drand48_data libc_drand48_data;
+
+static int nrand48_r (unsigned short int xsubi[3],
+                      struct drand48_data *buffer,
+                      long int *result);
+
+/* Internal function to compute next state of the generator.  */
+
+static int drand48_iterate (unsigned short int xsubi[3],
+                            struct drand48_data *buffer);
+
+static long int this_nrand48 (xsubi)
+     unsigned short int xsubi[3];
+{
+  long int result;
+
+  (void) nrand48_r (xsubi, &libc_drand48_data, &result);
+
+  return result;
+}
+
+static int nrand48_r (xsubi, buffer, result)
+     unsigned short int xsubi[3];
+     struct drand48_data *buffer;
+     long int *result;
+{
+  /* Compute next state.  */
+  if (drand48_iterate (xsubi, buffer) < 0)
+    return -1;
+
+  /* Store the result.  */
+  if (sizeof (unsigned short int) == 2)
+    *result = xsubi[2] << 15 | xsubi[1] >> 1;
+  else
+    *result = xsubi[2] >> 1;
+
+  return 0;
+}
+
+static int drand48_iterate (xsubi, buffer)
+     unsigned short int xsubi[3];
+     struct drand48_data *buffer;
+{
+  uint64_t X;
+  uint64_t result;
+
+  /* Initialize buffer, if not yet done.  */
+  if (!buffer->init)
+    {
+      buffer->a = 0x5deece66dull;
+      buffer->c = 0xb;
+      buffer->init = 1;
+    }
+
+  /* Do the real work.  We choose a data type which contains at least
+     48 bits.  Because we compute the modulus it does not care how
+     many bits really are computed.  */
+
+  X = (uint64_t) xsubi[2] << 32 | (uint32_t) xsubi[1] << 16 | xsubi[0];
+
+  result = X * buffer->a + buffer->c;
+
+  xsubi[0] = result & 0xffff;
+  xsubi[1] = (result >> 16) & 0xffff;
+  xsubi[2] = (result >> 32) & 0xffff;
+
+  return 0;
 }

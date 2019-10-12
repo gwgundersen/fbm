@@ -1,0 +1,23 @@
+
+# Do MCMC run for data on gridA, with variable number of sources.
+
+src-spec    logvA 0:5 0:100:0.5 / 25:500 -100:100 0
+det-spec    logvA 0.001:1
+flow-spec   logvA test 1 0.08 0.0001 0.06 0.00015
+data-spec   logvA 3 1 / gridA data-gridA-0.01-1
+
+mc-spec     logvA repeat 50 \
+                     shift-intensities 5 shuffle prior-gen-unused met-1 1 N \
+                     slice-1 1 1 D slice-1 1 1 S \
+                   end
+
+src-spec    logvA
+det-spec    logvA
+flow-spec   logvA
+data-spec   logvA
+mc-spec     logvA
+
+src-initial logvA / 1
+src-mc      logvA 1000
+
+src-display logvA

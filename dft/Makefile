@@ -18,7 +18,8 @@ programs:	dft-spec dft-gen dft-display dft-cases dft-mc dft-pred \
 		dft-plt dft-tbl dft-hist dft-genp dft-dendrogram
 
 clean:
-	rm -f *.o dft-spec dft-gen dft-display dft-cases dft-mc dft-pred \
+	rm -f *.o *.exe \
+		  dft-spec dft-gen dft-display dft-cases dft-mc dft-pred \
 	          dft-plt dft-tbl dft-hist dft-genp dft-dendrogram
 
 

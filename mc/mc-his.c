@@ -46,6 +46,8 @@ main
   char **argv
 )
 {
+  extern int approx_order[Max_approx]; /* found in mc-traj.c */
+
   static mc_iter it0, *it;
   static mc_traj tj0, *tj;
   static mc_temp_state temp_state;
@@ -185,11 +187,11 @@ main
 
   if (it==0) it = &it0;
 
-  if (it->approx_order[0]==0)
+  if (approx_order[0]==0)
   { int na;
     na = tj->N_approx>0 ? tj->N_approx : -tj->N_approx;
     if (na>Max_approx) na = Max_approx;
-    for (j = 0; j<na; j++) it->approx_order[j] = j+1;
+    for (j = 0; j<na; j++) approx_order[j] = j+1;
   }
 
   ds.p = logg.data['p'];

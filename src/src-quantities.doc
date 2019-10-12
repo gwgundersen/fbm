@@ -1,0 +1,47 @@
+
+
+SRC-QUANTITIES:  Quantities from log files relating to source models.
+
+The quantities below relating to source models can be obtained from
+log files (eg, for use in src-plt).  The generic quantities documented
+in quantities.doc and the Markov chain quantities documented in
+mc-quantities.doc are also available.
+
+The quantities specific to source models are as follows (if "n" is
+present after the letter, it represents a numeric modifier):
+
+    N    Number of sources (an integer)
+    N0   Real-valued form of the number of sources (before taking floor)
+
+    x    Array of x coordinates for the sources
+    y    Array of y coordinates for the sources
+    z    Array of z (height) coordinates for the sources
+
+    Q    Array of intensities for the sources.  Includes non-active sources.
+
+    Q1   Array of intensities for the sources in decreasing order of
+         intensity, with non-active sources assigned intensity of zero.
+
+    R    Array of total amounts released by the sources (Q times duration).  
+         Not allowed for steady-state models or when sources don't stop.
+         Includes non-active sources.
+
+    R1   Array of total amounts released by sources in decreasing order of
+         amount, with non-active sources assigned amount of zero.
+
+    T0   Array of start times for the sources
+    T1   Array of stop times for the sources
+    T2   Array of durationsfor the sources (equal to T1-T0)
+
+    U    Wind speed (for test flow model)
+
+    n    Width parameter for noise
+    u    Degrees of freedom for noise
+
+    v    Array of actual measurements for detectors for training cases
+    V    Array of actual measurements for detectors for test cases
+
+    o    Array of predicted measurements for detectors for training cases
+    O    Array of predicted measurements for detectors for test cases
+
+            Copyright (c) 2007 by Radford M. Neal

@@ -1,0 +1,29 @@
+<html>
+<body>
+<pre>
+
+
+SRC-GEN:  Generate randomly from the prior for a source location model.
+
+Src-gen writes a series of independently-generated values for the
+parameters of a source location model to a log file.
+
+Usage:
+
+    src-gen log-file [ max-index ]
+
+Records containing parameters with indexes from zero up to the
+indicated index are generated (the default is max-index of zero).  If
+the log file already contains records with some of these indexes, only
+records with indexes greater than the last existing record are
+generated.
+
+The parameters are generated randomly from the prior, using the random
+number seed taken from the log file (eg, as specified by rand-seed).
+If the detector and flow models contain any unknown parameters, values
+for them are generated, as well as values for the source parameters.
+
+            Copyright (c) 2007 by Radford M. Neal
+</pre>
+</body>
+</html>

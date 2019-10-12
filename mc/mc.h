@@ -1,6 +1,6 @@
 /* MC.H - Interface to Markov chain Monte Carlo module. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2007 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -61,7 +61,9 @@ typedef struct
     float app_param;	  /* Parameter for application-specific procedure */
 
     int firsti, lasti;	  /* Indexes of first and last coordinates to apply
-                             single-variable updates to */
+                             single-variable updates to.  Initially set to
+			     -1 for default of all, or to -2 or below for an
+			     application-specific range (specified by A-Z). */
 
     float refresh_prob;	  /* Prob. of refresh in overrelaxed slice sampling */
 
@@ -101,7 +103,7 @@ typedef struct
 
    Stored in log files under type 't'.  Changes may invalidate old log files. */
 
-#define Max_approx 100	/* Maximum number of energy approximations */
+#define Max_approx 1000	/* Maximum number of energy approximations */
 
 typedef struct
 { 
@@ -112,6 +114,9 @@ typedef struct
 
   int N_approx;		/* Number of approximations to the energy function;
 			   when negative, each is used twice, symmetrically */
+
+  char approx_file[201];/* Name of file containing additional information on
+			   approximations to use, null string if none */
 
   int rev_sym;		/* For non-symmetric methods: 0 = use in original form,
 			   -1 = reverse, 1 = symmetrize (original, reversed) */
@@ -184,9 +189,8 @@ typedef struct
 
 /* INFO ON MONTE CARLO ITERATION.  This structure records various bits of 
    information concerning the current iteration.  The temperature and decay
-   values are derived from user specifications; the approx_order field is
-   part of the simulation state; the stepsize_factor field is selected at
-   random each iteration; the remaining fields reflect the results. 
+   values are derived from user specifications; the stepsize_factor field is 
+   selected at random each iteration; the remaining fields reflect the results.
 
    Stored in log files under type 'i'.  Changes may invalidate old log files. */
 
@@ -195,7 +199,7 @@ typedef struct
   float temperature;	/* Temperature used during this iteration */
   float decay;		/* Heatbath decay used during this iteration */
 
-  char approx_order[Max_approx]; /* Order in which approximations are used */
+  char reserved[100];	/* Reserved for future use */
 
   float stepsize_factor;/* Factor last used to adjust stepsizes */
 
@@ -268,6 +272,8 @@ extern int mc_app_zero_gen (mc_dynamic_state *);
 
 extern void mc_app_stepsizes (mc_dynamic_state *);
 
+extern int (*mc_app_set_range_ptr) (mc_dynamic_state *, int *, int *);
+
 
 /* MARKOV CHAIN MONTE CARLO PROCEDURES. */
 
@@ -320,3 +326,5 @@ void mc_slice_outside (mc_dynamic_state *, mc_iter *, int, int,
                        mc_value *, mc_value *);
 
 void mc_value_copy (mc_value *, mc_value *, int);
+
+void mc_set_range (mc_dynamic_state *, int *, int *, int);

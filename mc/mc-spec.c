@@ -363,6 +363,11 @@ main
         }
         ap += 1;
       }
+      else if (*ap && **ap>='A' && **ap<='Z' && *(*ap+1)==0)
+      { ops->op[o].firsti = -(**ap-'A'+2);
+        ops->op[o].lasti = 0;
+        ap += 1;
+      }
     }
 
     else if (strcmp(*ap,"gaussian-gibbs")==0)
@@ -393,6 +398,11 @@ main
           { usage();
           }
         }
+        ap += 1;
+      }
+      else if (*ap && **ap>='A' && **ap<='Z' && *(*ap+1)==0)
+      { ops->op[o].firsti = -(**ap-'A'+2);
+        ops->op[o].lasti = 0;
         ap += 1;
       }
     }
@@ -559,6 +569,11 @@ main
         }
         ap += 1;
       }
+      else if (*ap && **ap>='A' && **ap<='Z' && *(*ap+1)==0)
+      { ops->op[o].firsti = -(**ap-'A'+2);
+        ops->op[o].lasti = 0;
+        ap += 1;
+      }
     }
 
     else if (strcmp(*ap,"temp-trans")==0)
@@ -641,6 +656,11 @@ main
         }
         ap += 1;
       }
+      else if (*ap && **ap>='A' && **ap<='Z' && *(*ap+1)==0)
+      { ops->op[o].firsti = -(**ap-'A'+2);
+        ops->op[o].lasti = 0;
+        ap += 1;
+      }
     }
 
     else if (**ap>='a' && **ap<='z' || **ap>='A' && **ap<='Z') 
@@ -698,8 +718,21 @@ main
         ap += 1;
       }
 
-      if (*ap && strchr(*ap,'.')==0 && (traj->N_approx = atoi(*ap++))==0) 
-      { usage();
+      if (*ap && strchr(*ap,'.')==0)
+      { if ((traj->N_approx = atoi(*ap++))==0) 
+        { usage();
+        }
+        if (*ap)
+        { if (strlen(*ap)>200) 
+          { fprintf(stderr,"Approximation file name is too long\n");
+            exit(1);
+          }
+          strcpy(traj->approx_file,*ap);
+          ap += 1;
+        }
+        else
+        { traj->approx_file[0] = 0;
+        }
       }
     }
 
@@ -957,11 +990,14 @@ static void display_specs
           else if (ops->op[o].stepsize_adjust!=1 || ops->op[o].firsti!=-1)
           { printf(" %.4f",ops->op[o].stepsize_adjust);
           }
-          if (ops->op[o].firsti!=-1)
+          if (ops->op[o].firsti>0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);
             }
+          }
+          else if (ops->op[o].firsti<=-2)
+          { printf(" %c",'A'+(-2-ops->op[o].firsti));
           }
           printf("\n");
           break;
@@ -972,11 +1008,14 @@ static void display_specs
           if (ops->op[o].r_update)
           { printf(" -r");
           }
-          if (ops->op[o].firsti!=-1)
+          if (ops->op[o].firsti>0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);
             }
+          }
+          else if (ops->op[o].firsti<=-2)
+          { printf(" %c",'A'+(-2-ops->op[o].firsti));
           }
           printf("\n");
           break;
@@ -1053,11 +1092,14 @@ static void display_specs
           if (ops->op[o].steps!=0 || ops->op[o].firsti!=-1)
           { printf(" %d",ops->op[o].steps);
           }
-          if (ops->op[o].firsti!=-1)
+          if (ops->op[o].firsti>0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);
             }
+          }
+          else if (ops->op[o].firsti<=-2)
+          { printf(" %c",'A'+(-2-ops->op[o].firsti));
           }
           printf("\n");
           break;
@@ -1093,11 +1135,14 @@ static void display_specs
           if (ops->op[o].steps!=0 || ops->op[o].firsti!=-1)
           { printf(" %d",ops->op[o].steps);
           }
-          if (ops->op[o].firsti!=-1)
+          if (ops->op[o].firsti>0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);
             }
+          }
+          else if (ops->op[o].firsti<=-2)
+          { printf(" %c",'A'+(-2-ops->op[o].firsti));
           }
           printf("\n");
           break;
@@ -1157,11 +1202,14 @@ static void display_specs
 
         case 'x':
         { printf(" multiply-stepsizes %f",ops->op[o].stepsize_adjust);
-          if (ops->op[o].firsti!=-1)
+          if (ops->op[o].firsti>0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);
             }
+          }
+          else if (ops->op[o].firsti<=-2)
+          { printf(" %c",'A'+(-2-ops->op[o].firsti));
           }
           printf("\n");
           break;
@@ -1192,11 +1240,14 @@ static void display_specs
 
         case ':':
         { printf (" set-value %.4f", (double)ops->op[o].heatbath_decay);
-          if (ops->op[o].firsti!=-1)
+          if (ops->op[o].firsti>0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);
             }
+          }
+          else if (ops->op[o].firsti<=-2)
+          { printf(" %c",'A'+(-2-ops->op[o].firsti));
           }
           printf("\n");
           break;
@@ -1226,7 +1277,7 @@ static void display_specs
       case 'L': 
       { printf ("  leapfrog %s", traj->halfp ? "halfp" : "halfq");
         if (traj->N_approx!=1)
-        { printf (" %d", traj->N_approx);
+        { printf (" %d %s", traj->N_approx, traj->approx_file);
         }
         break;
       }

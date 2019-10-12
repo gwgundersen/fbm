@@ -1,0 +1,27 @@
+
+# Create test data with start-stop model, using file of x, y, z, t coordinates,
+# noise level, and seed.  The number, locations, and times of sources are fixed 
+# by the src-spec and src-initial commands below.
+
+set -e
+
+if [ x$1 = x -o x$2 = x -o x$3 = x -o x$4 != x ]; then
+  echo "Usage: genss-cmds location-time-file noise-level seed"
+  exit 1
+fi
+
+noise=$2
+
+if [ $noise = 0 ]; then
+  noise=1e-30
+fi
+
+src-spec    logg 2 0:5 10 20 / -10:10 -1:1 0:1
+det-spec    logg $noise
+flow-spec   logg test-start-stop 1 0.08 0.0001 0.06 0.00015
+data-spec   logg 4 1 / /dev/null .
+
+src-initial logg / / 0.5 4.5 -0.4 0.2 2 5 / 0.8 -6 0.7 0.85 9 19
+rand-seed   logg $3
+
+src-dgen    logg 0 / $1 data-$1-$2-$3

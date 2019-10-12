@@ -1,0 +1,68 @@
+<html>
+<body>
+<pre>
+
+
+SRC:  Programs to infer source locations from detector readings.
+
+The 'src' programs implement sampling from the posterior distributions
+of Bayesian models for the location of the sources of some pollutant
+carried by air.  Source locations are specified by rectangular x, y,
+and z coordinates.  Here, z is height above some reference ground
+level, and is always positive.  Each source has a non-negative
+intensity, Q, during the period it is active (and zero intensity when
+it is not active).  Inference is based on measurements made by
+detectors located at specified x, y, and z coordinates, and (except
+for steady-state models) at specified times.  A flow model relates
+emissions from the source locations to concentrations at the
+detectors.  Another model describes detector noise.
+
+The number of sources may be variable.  The current number of sources
+is represented by a real value, the floor of which gives the number of
+sources.  Parameters for the maximum number of sources are always
+represented, with unused sources having parameters determined only by
+the prior.
+
+Further information is contained in documentation for the following
+programs:
+
+    <A HREF="src-spec.html">src-spec.doc</A>        Specify priors for number/location of sources
+    <A HREF="det-spec.html">det-spec.doc</A>        Specify the detector noise model
+    <A HREF="flow-spec.html">flow-spec.doc</A>       Specify flow model
+
+    <A HREF="src-display.html">src-display.doc</A>     Display parameters for a given iteration
+    <A HREF="src-pred.html">src-pred.doc</A>        Make predictions for test measurements 
+    <A HREF="src-initial.html">src-initial.doc</A>     Set initial values for parameters
+    <A HREF="src-gen.html">src-gen.doc</A>         Generate parameters from the prior distribution
+    <A HREF="src-dgen.html">src-dgen.doc</A>        Generate measurements from the data distribution
+
+The general-purpose programs in the 'util' and 'mc' modules are also
+used, as well as the specializations of the 'xxx' programs to the
+'src' module.  Their use for the 'src' module is documented further in
+the following files:
+
+    <A HREF="src-mc.html">src-mc.doc</A>          Info on Markov chain sampling for 'src' models
+    <A HREF="src-quantities.html">src-quantities.doc</A>  Quantities that can be plotted, etc.
+
+Detector measurements are obtained from a data file (or files)
+specified using the general data-spec program (see <A HREF="data-spec.html">data-spec.doc</A>).
+There can be up to four "inputs" for each measurement, which give the
+x, y, and z coordinates for the detector, and the time of measurement.
+If there are fewer than four inputs, the remaining quantities are
+assumed to be zero.  (Some flow models may not use all of these
+quantities in any case.)  The "target" value for a measurement is the
+measured concentration.  The "training" data consists of the
+measurements used to fit the model.  Optional "test" data may also be
+specified, for which input values (detector locations/times) are
+provided, and for which predictions of target values (measurements)
+can be made (and possibly compared to known values, these are also
+specified).  The option for data-spec to log transform values must not
+be used for these target measurements.
+
+If no training data is provided, the MCMC runs will sample from the
+prior.
+
+            Copyright (c) 2007 by Radford M. Neal
+</pre>
+</body>
+</html>

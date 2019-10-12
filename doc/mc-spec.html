@@ -38,6 +38,37 @@ operations should not be used when coupling chains, since they can
 cause the random number sequence for different chains to get out of
 synchronization.
 
+Common argument types:
+
+The following optional arguments are used for many of the operations
+described below:
+
+    [ stepsize-adjust[:stepsize-alpha] ]
+
+        Specifies a stepsize to use, or a distribution of stepsizes
+        to randomly select from.  A minus sign before a stepsize-adjust 
+        value results in the adjustment being applied to uniform 
+        stepsizes of one; otherwise, the adjustment is applied to the 
+        application-specific stepsizes (which may be non-uniform).  A 
+        minus sign in front of stepsize alpha means that instead of the 
+        usual Gamma distribution for stepsizes, a distribution over 'alpha' 
+        orders of magnitude, uniform in the log domain, centred at the 
+	value found using stepsize-adjust, is used.  The default is
+        stepsize-adjust of 1 and stepsize-alpha of infinity (so that the
+        stepsize is a constant).
+
+    [ first[:last] ] ]
+
+        Specifies a range of coordinates to operate on.  The order of
+        coordinates is specified by the application.  Numbering starts
+        with 0.  If omitted, the range defaults to all components.  If
+        first is specified but last is omitted, last defaults to first.
+
+        This range can instead be specified by a single upper-case letter,
+        which is translated by the application into a range, which may
+        depend on the values of state variables not in the range.  This
+        is done at present only by the 'src' module.
+
 General operations:
 
     repeat times
@@ -58,14 +89,12 @@ General operations:
 
     multiply-stepsizes factor [ first[:last] ] ]
 
-        Multiplies the stepsizes for coordinates in the range first:last
-        (from 0, default is all if first:last is omitted, just first if 
-        last is omitted) by the given factor.  This modification persists 
-        for the remainder of the operations in the current iteraton, unless 
-        modified again, or unless the automatic stepsizes are overridden
-        by a stepsize specification starting with "-", or unless an 
-        application-specific operation is done.  (These last provisions
-        are just to make implementation easier.)
+        Multiplies the stepsizes for coordinates in the given range by the 
+        given factor.  This modification persists for the remainder of the 
+        operations in the current iteraton, unless modified again, or unless
+        the automatic stepsizes are overridden by a stepsize specification 
+        starting with "-", or unless an application-specific operation is 
+        done.  (These last provisions are just to make implementation easier.)
 
         If a multiply-stepsizes operation is inside a "repeat", it will 
         be done repeatedly.  In particular, if factor is less than one, 
@@ -81,7 +110,11 @@ General operations:
 
 Metropolis/Gibbs operations:
 
-For descriptionsof the stepsize and the "-b" argument, see below.
+The "-b" option for the Metropolis operations below causes the
+"Barker" or "Boltzmann" acceptance probability to be used, rather than
+the usual "Metropolis" form.  If R is the ratio of probability
+densities for the new and old states, the "-b" option acceptance
+probability is R/(1+R), whereas the Metropolis form is min(1,R).
 
     metropolis [ -b ] [ stepsize-adjust[:stepsize-alpha] ]
 
@@ -95,9 +128,7 @@ For descriptionsof the stepsize and the "-b" argument, see below.
     met-1 [ -b ] [ -r ] [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ]
 
         Do single-component Metropolis updates, for the range of components 
-        given.  Components are numberred from 0.  The default if no components 
-        are given is all components.  The default for last if first alone is 
-        given is last=first.  If no -r argument is given, the components are 
+        given (default all).  If no -r argument is given, the components are 
         all updated in order; with the -r option, just one randomly-chosen 
         component is updated.
 
@@ -115,19 +146,17 @@ For descriptionsof the stepsize and the "-b" argument, see below.
                                 [ first[:last] ] ]
 
         Do single-component random-grid Metropolis updates, for the range 
-        of components given.  The default if no components are given is all 
-        components. The default for last if first alone is given is last=first.
-        If no -r argument is given, the components are all updated in order;
-        with the -r option, just one randomly-chosen component is updated.
+        of components given (default all).  If no -r argument is given, the 
+        components are all updated in order; with the -r option, just one 
+        randomly-chosen component is updated.
 
     gaussian-gibbs [ -r ] [ first[:last] ] ]
 
-        Do Gibbs sampling updates for the range of corrdinates given
-        (default, is all coordinates; last defaults to first), or do a
-        Gibbs sampling update for one of these coordinates chosen at
-        random, if -r is specified.  The Gibbs sampling is done by just
-        ASSUMING that the conditional distribution is Gaussian, with
-        its mean and variance being found by evaluating the energy at
+        Do Gibbs sampling updates for the range of coordinates given
+        (default all), or do a Gibbs sampling update for one of these 
+        coordinates chosen at random, if -r is specified.  The Gibbs sampling 
+        is done by just ASSUMING that the conditional distribution is Gaussian,
+        with its mean and variance being found by evaluating the energy at
         values of -1, 0, and +1 for the coordinate being updated.  This
         WILL NOT BE VALID if the conditional distribution is not Gaussian.
 
@@ -227,11 +256,9 @@ Slicing operations:
                    [ max-steps [ first[:last] ] ] ]
 
         Do single-component slice sampling, for the range of components 
-        given.  The default for the range of components (first:last) is 
-        all components.  The default for last if first alone is given is 
-        last=first.  Components are numbered starting with zero.  If no -r 
-        argument is given, the components are all updated in order; with 
-        the -r option, just one randomly-chosen component is updated.
+        given (default all).  If no -r argument is given, the components are 
+        all updated in order; with the -r option, just one randomly-chosen 
+        component is updated.
 
         If the max-steps argument is positive, it gives the maximum number 
         of intervals to create when using the stepping out procedure to
@@ -290,9 +317,7 @@ Slicing operations:
         The endpoints are computed using the given number of refinements
         (default zero).  The refresh probability is the probability of doing 
         an ordinary slice sampling update rather than an overrelaxed one; 
-        it defaults to zero.  The default range of components if no range is 
-        given is all components. The default for last if first alone is given
-        is last=first.  The meaning of max-steps is the same as for slice-1.
+        it defaults to zero.  The meaning of max-steps is as for slice-1.
 
     slice-inside steps [ stepsize-adjust[:stepsize-alpha] ] 
 
@@ -388,25 +413,12 @@ for which the concept is not applicable), except for 'dynamic',
 the application-specific operations.  However, note that in general
 sequential combinations of reversible operations are not reversible.
 
-Defaults are decay of zero, stepsize-adjust of one, stepsize-alpha of
-infinity, window of one, and jump of one.  A minus sign before a
-stepsize-adjust value results in the adjustment being applied to
-uniform stepsizes of one; otherwise, the adjustment is applied to the
-application-specific stepsizes (which may be non-uniform).  A minus
-sign in front of stepsize alpha means that instead of the usual Gamma
-distribution for stepsizes, a distribution over 'alpha' orders of
-magnitude, uniform in the log domain, centred at the value found using
-stepsize-adjust, is used.
-
-The "-b" option for Metropolis operations causes the "Barker" or
-"Boltzmann" acceptance probability to be used, rather than the usual
-"Metropolis" form.  If R is the ratio of probability densities for the
-new and old states, the "-b" option acceptance probability is R/(1+R),
-whereas the Metropolis form is min(1,R).
+Defaults are all components, decay of zero, stepsize-adjust of one,
+stepsize-alpha of infinity, window of one, and jump of one.
 
 The trajectory specification can have one of the following forms:
 
-    leapfrog [ halfp | halfq ] [ N-approx | frac ]
+    leapfrog [ halfp | halfq ] [ N-approx | frac ] [ approx-file ]
 
         Use the leapfrog method.  The "halfp" or "halfq" option specifies 
         whether the half-steps at the beginning and end of the trajectory 
@@ -415,9 +427,9 @@ The trajectory specification can have one of the following forms:
         overall step, which use successive approximations to the energy 
         (whose average must be the true value), in an order randomly selected 
         at the start of the trajectory. The default for N-approx is one.
-        The frac option causes the gradient of the energy use to be based
-        on that fraction of some set of terms (eg, training cases).  The
-        default is to use all terms (ie, frac of 1).
+        The optional approx-file arguement gives the name of a file containing
+        further information on how the approximations are constructed, whose
+        contents are specific to the application.
 
     opt2 [ rev | sym ] [ firstq | firstp ] [ frac ]
 
@@ -443,6 +455,11 @@ The trajectory specification can have one of the following forms:
         Apply McLachlan and Atela's "optimal" four stage method for
         quadratic kinetic energy. The "rev" and "sym" options are as for opt2.
 
+The frac option for all these specifications causes the gradient of
+the energy use to be based on that fraction of some set of terms (eg,
+training cases).  The default is to use all terms (ie, frac of 1).
+This option may be ignored by some applications.
+
 The default if no specification is given is "leapfrog halfp".  The
 opt2, gen2, and opt4 methods are taken from a paper by Robert I. 
 McLachlan and Pau Atela, "The accuracy of symplectic integrators",
@@ -452,7 +469,7 @@ their description of opt2 in table 2. b1=1-b2 should be 1-1/sqrt(2).)
 The list of operations is stored in a record of type 'o'; the
 trajectory specification in a record of type 't'.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2007 by Radford M. Neal
 </pre>
 </body>
 </html>

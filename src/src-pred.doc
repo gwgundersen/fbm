@@ -1,0 +1,112 @@
+
+
+SRC-PRED:  Make predictions for measurements in test cases.
+
+Src-pred makes predictions for the target values in test cases, which
+are the concentration measurements at the locations/times specified by
+the inputs for the test cases.  It can also compare these predictions
+with the true values, if these have been provided.
+
+Usage:
+
+    src-pred options { log-file range } [ / test-inputs [ test-targets ] ]
+
+The final optional arguments give the source of inputs and targets for
+the cases to look at; they default to the test data specification in
+the first log file given.  The source, flow, and noise parameters to
+use for the predictions are taken from the records with the given
+ranges of indexes in the given log files.  Mean predictions are
+obtained by averaging the predictions from all these iterations.
+
+An index range can have one of the forms "[low][:[high]][%mod]" or
+"[low][:[high]]+num", or one of these forms preceded by "@".  When "@"
+is present, "low" and "high" are given in terms of cpu time, otherwise
+they are iteration numbers.  When just "low" is given, only that index
+is used.  If the colon is included, but "high" is not, the range
+extends to the highest index in the log file.  The "mod" form allows
+iterations to be selected whose numbers are multiples of "mod", with
+the default being "mod" of one.  The "num" form allows the total
+number of iterations used to be specified; they are distributed as
+evenly as possible within the specified range.  Note that it is
+possible that the number of iterations used in the end may not equal
+this number, if records with some indexes are missing.
+
+The 'options' argument consists of one or more of the following letters:
+
+    i   Display the input values for each case
+    t   Display the target values for each case
+
+    p   Display the log probability of the true targets (to base e)
+
+    n   Display the guess based on the mean, and its squared error
+    d   Display the guess based on the median, and its absolute error
+    D   Display the guess based on the mean of the median for each iteration.
+        Not really useful for src-pred.
+
+    q   Display the 10% and 90% quantiles of the predictive distributions
+        for the targets.  Note that these distributions include the noise.
+    Q   Display the 1% and 99% quantiles of the predictive distributions.
+
+    b   Suppress headings and averages - just bare numbers for each case.
+        The numbers are printed in exponential format, to high precision.
+    B   Bare numbers, but with blank lines whenever first input changes.
+
+    a   Display only average log probabilities and errors, suppressing 
+        the results for individual cases (makes sense only in combination 
+        with one or more of 'p', 'n', and 'd', and not with 'i' or 't')
+
+Tthe 'a' option is incompatible with 'b', 'i', 't', 'q', or 'Q', and
+the 't', 'p', and 'a' options may be used only if the true targets are
+given.  The errors for individual cases are also displayed only if the
+true targets are known.  
+
+The median and quantiles are calculated by Monte Carlo, using a sample
+consisting of 101 points from the predictive distribution for each
+Gaussian process.  A sample of 100 points for each Gaussian process is
+used to calculate predictive probabilities for binary and class
+models.  If the noise variance is not fixed, test-case variance is
+chosen randomly for each iteration (this is a bit sub-optimal, as it
+would be better to pick a new variance for each of the 101 points used
+to compute the median - but the programming was easier this way).
+
+These Monte Carlo estimates are found using a random number stream
+initialized by setting the seed to one at the start of the program.
+Accuracy can be increased by repeating the same log-file/range
+combination several times, effectively increasing the sample size use.
+Furthermore, the 'a' option is incompatible with 'b', 'i', 't', or
+'q', and the 't', 'p', and 'a' options may be used only if the true
+targets are given.  The errors for individual cases are also displayed
+only if the true targets are known.
+
+The median and quantiles are calculated by Monte Carlo, using a sample
+consisting of 101 points from the predictive distribution for each
+Gaussian process.  A sample of 100 points for each Gaussian process is
+used to calculate predictive probabilities for binary and class
+models.  If the model has case-by-case noise variances, a single
+test-case variance is chosen randomly for each Gaussian process (this
+is a bit sub-optimal, as it would be better to pick a new variance for
+each of the 101 points used to compute the median, and to integrate
+the variance away to produce a t-distribution when computing the log
+predictive probability - but the programming was easier this way).
+
+These Monte Carlo estimates are found using a random number stream
+initialized by setting the seed to one at the start of the program.
+Accuracy can be increased by repeating the same log-file/range
+combination several times, effectively increasing the sample size use.
+
+The 'D' option is implemented, but is of no real use, since models for
+survival analysis aren't supported, and individual medians for other
+models are the same as means.  It's here only because of net-pred.
+
+Each average performance figure is accompanied by +- its standard
+error (as long as there is more than one test case).
+
+If only inputs and targets are to be displayed (no predictions), one
+may give just a single log file with no range.  Otherwise, at least
+one iteration must be specified.
+
+Note that src-pred always considers there to be four inputs (x, y, z,
+and t), even for steady-state models (where t is meaningless), and
+when fewer inputs are specified in data-spec.
+
+            Copyright (c) 2007 by Radford M. Neal

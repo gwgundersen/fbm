@@ -1,7 +1,0 @@
-
-n=10
-grid -8:8%0.05 >dat-lse
-gp-spec log-lse 1 2 / 10 0.2 drop:2 / 1 5 drop:1 / 10 0.2 drop:1
-data-spec log-lse 1 1 -n / dat-lse out-lse
-gp-gen -l -n log-lse $n
-for i in `seq 1 $n`; do gp-dgen log-lse $i / out-lse$i; done

@@ -11,10 +11,6 @@
  * implied.  As the programs were written for research purposes only, they have
  * not been tested to the degree that would be advisable in any important
  * application.  All use of these programs is entirely at the user's own risk.
- *
- * Modifications to allow selection of a given number of networks and to
- * allow specification of ranges by cpu-time are adapted from modifications
- * by Carl Edward Rasmussen, 1995.
  */
 
 #include <stdlib.h>

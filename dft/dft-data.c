@@ -1,6 +1,6 @@
 /* DFT-DATA.C - Procedures for reading data for diffusion tree model. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2006 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -153,7 +153,7 @@ static double *read_inputs
 
     for (j = 0; j<dft->N_inputs; j++)
     { values[data_spec->N_inputs*i+j] =
-       data_trans (values[data_spec->N_targets*i+j], data_spec->trans[j]);
+       data_trans (values[data_spec->N_inputs*i+j], data_spec->trans[j]);
     }
   }
 

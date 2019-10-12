@@ -1,0 +1,3 @@
+cp blog.net bf3log
+mc-spec bf3log sample-sigmas heatbath hybrid 200:10 0.35 negate / leapfrog 20 ix
+net-mc bf3log 400

@@ -26,6 +26,8 @@
 
 /* HOW TO COMPUTE THE CURRENT TRAJECTORY. */
 
+int approx_order[Max_approx]; /* Order in which approximations are used */
+
 static mc_traj *tj;	/* Description of how to compute trajectory */
 static mc_iter *it;	/* Description of iteration (contains approx order) */
 
@@ -84,14 +86,14 @@ void mc_traj_permute (void)
   int i, j, t;
 
   for (i = 0; i<na; i++) 
-  { it->approx_order[i] = i+1;
+  { approx_order[i] = i+1;
   }
 
   for (i = 0; i<na; i++)
-  { t = it->approx_order[i];
+  { t = approx_order[i];
     j = i + rand_int(na-i);
-    it->approx_order[i] = it->approx_order[j];
-    it->approx_order[j] = t;
+    approx_order[i] = approx_order[j];
+    approx_order[j] = t;
   }
 }
 
@@ -375,8 +377,8 @@ void mc_trajectory
       {
         /* Compute trajectory with initial and final half-steps for momentum .*/
 
-        if (ds->know_grad!=it->approx_order[0])
-        { mc_app_energy (ds, na, it->approx_order[0], 0, ds->grad);
+        if (ds->know_grad!=approx_order[0])
+        { mc_app_energy (ds, na, approx_order[0], 0, ds->grad);
         }
   
         for (k = 0; k<ds->dim; k++)
@@ -394,7 +396,7 @@ void mc_trajectory
           a = (a+x+ta) % ta;
           o = a<na ? a : a==na ? 0 : 2*na-a;
 
-          mc_app_energy (ds, na, it->approx_order[o], 
+          mc_app_energy (ds, na, approx_order[o], 
                          need_pot && n==1 ? &ds->pot_energy : 0, 
                          ds->grad);
   
@@ -412,7 +414,7 @@ void mc_trajectory
         { ds->p[k] -= sfh * ds->stepsize[k] * ds->grad[k];
         }
 
-        ds->know_grad = it->approx_order[0];
+        ds->know_grad = approx_order[0];
         ds->know_pot  = need_pot;
       }
       else 
@@ -430,7 +432,7 @@ void mc_trajectory
           a = (a+x+ta) % ta;
           o = a<na ? a : 2*na-a-1;
 
-          mc_app_energy (ds, na, it->approx_order[o], 0, ds->grad);
+          mc_app_energy (ds, na, approx_order[o], 0, ds->grad);
 
           for (k = 0; k<ds->dim; k++)
           { ds->p[k] -= sf * ds->stepsize[k] * ds->grad[k];

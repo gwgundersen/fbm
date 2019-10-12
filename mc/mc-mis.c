@@ -361,7 +361,7 @@ main
   
         logf.header.type = 'i';
         logf.header.index = index;
-        logf.header.size = sizeof *it;
+        logf.header.size = sizeof *it - Max_approx*sizeof(int);
         log_file_append (&logf, it);
 
         it->rejects = 0;

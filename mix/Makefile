@@ -18,7 +18,8 @@ programs:	mix-spec mix-gen mix-display mix-cases mix-mc mix-pred \
 		mix-plt mix-tbl mix-hist mix-genp 
 
 clean:
-	rm -f *.o mix-spec mix-gen mix-display mix-cases mix-mc mix-pred \
+	rm -f *.o *.exe \
+		  mix-spec mix-gen mix-display mix-cases mix-mc mix-pred \
 	          mix-plt mix-tbl mix-hist mix-genp
 
 

@@ -11,10 +11,6 @@
  * implied.  As the programs were written for research purposes only, they have
  * not been tested to the degree that would be advisable in any important
  * application.  All use of these programs is entirely at the user's own risk.
- *
- * Features allowing selection of a given number of iterations and 
- * specification of ranges by cpu-time are adapted from code written
- * by Carl Edward Rasmussen, 1995.
  */
 
 #include <stdlib.h>

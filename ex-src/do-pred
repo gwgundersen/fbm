@@ -1,0 +1,12 @@
+
+# Make predictions for data on grid1 using parameters from MCMC runs on
+# data on grid2, grid3, and grid4, using models with both fixed (3) and 
+# variable numbers of sources.
+
+pred-cmds 1 logc4 100: >predc4
+pred-cmds 1 logc3 100: >predc3
+pred-cmds 1 logc2 100: >predc2
+
+pred-cmds 1 logv4 100: >predv4
+pred-cmds 1 logv3 100: >predv3
+pred-cmds 1 logv2 100: >predv2

@@ -1,6 +1,6 @@
 /* RAND.H - Interface to random number generation procedures. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2007 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -48,6 +48,7 @@ void rand_permutation (int *, int); /* Random permutation */
 int rand_poisson (double);	/* Poisson with given mean */
 double rand_gaussian (void);	/* Gaussian with mean zero and unit variance */
 double rand_exp (void);		/* Exponential with mean one */
+double rand_logistic (void);	/* Logistic centred at zero with unit width */
 double rand_cauchy (void);	/* Cauchy centred at zero with unit width */
 double rand_gamma (double);	/* Gamma with given shape parameter */
 double rand_beta (double, double); /* Beta with given parameters */

@@ -325,9 +325,12 @@ static void usage(void)
    "Usage: model-spec log-file model-specification...\n");
   fprintf(stderr,
    "   or: model-spec log-file (to display stored specifications)\n");
-  fprintf(stderr, "Model specification:\n");
-  fprintf(stderr, "   real noise-prior [ \"acf\" corr { corr } ]\n");
-  fprintf(stderr, "      | binary | count | class | survival ... \n");
+  fprintf(stderr, 
+   "Model specification:\n");
+  fprintf(stderr, 
+   "   real noise-prior [ \"acf\" corr { corr } ] [ \"last-binary\" ]\n");
+  fprintf(stderr, 
+   "      | binary | count | class | survival ... \n");
 
   exit(1);
 }

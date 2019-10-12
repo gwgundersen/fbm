@@ -58,7 +58,7 @@ main
     if (*p==0) usage();
     p += 1;
     r[i].mod = atof(p);
-    if (r[i].high<=r[i].low || r[i].mod<=0) usage();
+    if (r[i].high<r[i].low || r[i].mod<=0) usage();
   }
 
   grid(r,n,"");

@@ -1,0 +1,29 @@
+
+# Test the correctness of the MCMC methods using Geweke's technique.
+
+set -e
+
+# Specifications for MCMC scenario whose correctness is being checked.
+
+src-spec    logt 0:5 0:7:0.5 / -10:10 -3:5 0:2
+det-spec    logt 0.1:1
+flow-spec   logt test 1 0.08 0.0001 0.06 0.00015
+data-spec   logt 3 1 -n / grid4 targt
+
+# Sample from prior for parameters and data directly, and via MCMC on
+# the joint distribution of parameters and data.
+
+src-mc-test logt 20 200 \
+                 repeat 1 \
+                     repeat 10 shuffle prior-gen-unused met-1 1 N end \
+                     met-1 0.2 D met-1 0.2 S \
+                     shift-intensities 10 \
+                 end
+
+# Produce plots to compare results of the two sampling methods.
+
+for q in n N0 Q1@0 x@0 y@0 z@0; do
+  (for log in logt-j*; do src-plt t $q $log 0:; done) >plott-j-$q
+  (for log in logt-p*; do src-plt t $q $log 0:; done) >plott-p-$q
+  (src-tbl t$q logt-p*; echo " "; src-tbl t$q logt-j*) >plott-pj-$q
+done

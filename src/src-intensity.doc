@@ -1,0 +1,44 @@
+
+
+SRC-INTENSITY:  Make predictions for source intensity in grid cells.
+
+NOTE: THIS PROGRAM IS NOT IMPLEMENTED YET.
+
+Src-intensity makes predictions for the total intensity of sources
+within each cell in a grid.
+
+Usage:
+
+    src-intensity n-x [ n-y [ n-z [ n-t ] ] ] / { log-file range }
+
+The initial arguments are the grid dimensions for x, y, z, and t
+coordinates.  The value for the t dimension must be absent for steady
+state models, or when there is no maximum stop time.  These arguments
+default to one.  The total number of grid cells is the product of
+these arguments.
+
+After a "/", the remaining arguments come in pairs consisting of a log
+file name and a range of iterations to use from that log file.  A
+range is of the form "[low][:[high]][%mod]" or "[low][:[high]]+num".
+When just "low" is given, only that index is used.  If the colon is
+included, but "high" is not, the range extends to the highest index in
+the log file.  The "mod" form allows iterations to be selected whose
+numbers are multiples of "mod", with the default being "mod" of one.
+The "num" form allows the total number of iterations used to be
+specified; they are distributed as evenly as possible within the
+specified range.  Note that it is possible that the number of
+iterations used in the end may not equal this number, if records with
+some indexes are missing.
+
+The predictions (posterior expected values) for the total intensity of
+all source within each cell are written to standard output.  There is
+one line of output for each cell, containing the predicted intensity
+for the cell followed by the x, y, z, and t coordinates for the centre
+of the cell, excep that coordinates are omitted if the corresponding
+grid dimensions are not specified (and hence default to one).  For
+non-steady-state models, a source that starts and/or stops within the
+time range of a cell is counted as having an effective intensity that
+is its intensity parameter times the fraction of time it is on within
+that cell.
+
+            Copyright (c) 2007 by Radford M. Neal

@@ -1,0 +1,29 @@
+
+# Test MCMC fit to data from start-stop model, given the data grid # and the 
+# number of components.  The log file used is called "logssc#", where # is the 
+# number of the grid used.
+
+set -e
+
+if [ x$1 = x -o x$2 = x -o x$3 != x ]; then
+  echo "Usage: fitssc-cmds grid# n-components"
+  exit 1
+fi
+
+src-spec    logssc$1 $2 0:5 10 +10 / -10:10 -1:1 0:1
+det-spec    logssc$1 0.01:1
+flow-spec   logssc$1 test-start-stop 1 0.08 0.0001 0.06 0.00015
+data-spec   logssc$1 4 1 / gridss$1 data-gridss$1-0.1-1
+
+mc-spec     logssc$1 repeat 50 slice-1 1 1 D slice-1 1 1 S end
+
+src-spec    logssc$1
+det-spec    logssc$1
+flow-spec   logssc$1
+data-spec   logssc$1
+mc-spec     logssc$1
+
+src-initial logssc$1 / 1
+src-mc      logssc$1 1000
+
+src-display logssc$1

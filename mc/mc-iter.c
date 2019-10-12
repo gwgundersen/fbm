@@ -111,7 +111,7 @@ void mc_iter_init
   int stack[Max_mc_ops];
   int does_print;
 
-  ops = ops0;
+  ops = ops0;		/* Save these arguments in the static variables above */
   tj = tj0;
   sch = sch0;
 
@@ -233,6 +233,8 @@ void mc_iteration
   int N_quantities	/* Number of quantities to plot, -1 for tt plot */
 )
 { 
+  extern int approx_order[Max_approx];  /* found in mc-traj.c */
+
   int j, na;
 
   /* Create momentum variables and gradient vector if needed. */
@@ -263,7 +265,7 @@ void mc_iteration
   na = tj->N_approx>0 ? tj->N_approx : -tj->N_approx;
   if (na>Max_approx) na = Max_approx;
 
-  for (j = 0; j<na; j++) it->approx_order[j] = j+1;
+  for (j = 0; j<na; j++) approx_order[j] = j+1;
 
   /* Perform the operations. */
 
@@ -368,14 +370,15 @@ static void do_group
       }
 
       case 'x':
-      { if (!have_ss)
+      { int firsti, lasti;
+        if (!have_ss)
         { mc_app_stepsizes (ds);
           have_ss = 1;
         }
-        for (k = (ops->op[i].firsti==-1 ? 0 : ops->op[i].firsti); 
-             k <= (ops->op[i].firsti==-1 ? ds->dim : ops->op[i].lasti)
-              && k<ds->dim;
-             k++)
+        firsti = ops->op[i].firsti;
+        lasti = ops->op[i].lasti;
+        mc_set_range (ds, &firsti, &lasti, 0);
+        for (k = firsti; k<=lasti; k++)
         { ds->stepsize[k] *= ops->op[i].stepsize_adjust;
         }
         break;
@@ -559,12 +562,7 @@ static void do_group
         v = ops->op[i].heatbath_decay;
         firsti = ops->op[i].firsti;
         lasti = ops->op[i].lasti;
-        if (firsti==-1) 
-        { firsti = 0;
-          lasti = ds->dim-1;
-        }
-        if (lasti>=ds->dim-1) lasti = ds->dim-1;
-        if (firsti>lasti) firsti = lasti;
+        mc_set_range (ds, &firsti, &lasti, 0);
         for (j = firsti; j<=lasti; j++)
         { ds->q[j] = v;
         }

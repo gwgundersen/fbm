@@ -1,0 +1,39 @@
+<html>
+<body>
+<pre>
+
+
+DET-SPEC:  Specify detector noise model.
+
+The det-spec program is used to specify the parameters of the detector
+noise model.
+
+Usage:
+
+    det-spec log-file low-width[:high-width] [ low-df[:[high-df]] ]
+
+or:
+
+    det-spec log-file
+
+The first form above appends the detector specification to the log
+file named (which must already exist, see <A HREF="src-spec.html">src-spec.doc</A>).  The second
+form displays the detector specification in the log file named.
+
+The noise in detector measurements has either a Gaussian distribution
+or a t distribution.  The log of the width parameter of the noise
+(standard deviation for Gaussian noise) has a prior that is uniform
+between log(low-width) and log(high-width).  If high-width is omitted,
+it is assumed to be equal to low-width, in which case the width is
+fixed.  If there is no df specification after the width prior, the
+noise is Gaussian.  Otherwise, the noise has a t distribution with the
+prior for the reciprocal of the df parameter being uniform between
+1/high-df and 1/low-df.  If only low-df is specified, with no colon,
+high-df is assumed to be equal to low-df, so df is fixed.  If a colon
+is present but not high-df, high-df is assumed to be infinite (ie,
+1/high-df is zero).
+
+            Copyright (c) 2007 by Radford M. Neal
+</pre>
+</body>
+</html>

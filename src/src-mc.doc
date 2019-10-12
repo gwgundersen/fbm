@@ -1,0 +1,118 @@
+
+
+SRC-MC:  Do Markov chain sampling for source location models.
+
+The src-mc program samples from the posterior distribution determined
+by the specifications from src-spec (see src-spec.doc), det-spec (see
+det-spec.doc), and flow-spec (see flow-spec.doc), and by the
+measurement data (see data-spec.doc).  Sampling is done using a series
+of Markov chain operations specified using mc-spec (see mc-spec.doc).
+
+The Markov chain state consists of the following parts:
+
+    - number of sources
+    - the source locations (x,y,z)
+    - the source intensities, raised to a specified power (see src-spec.doc)
+    - the source start times, if not a steady state model
+    - the source stop times, if they don't continue indefinitely
+    - the parameters of the detector noise model
+    - the parameters of the flow model
+
+Some of these may not really be part of the state, because they are
+fixed at constant values in the prior specifications, though they are
+nevertheless still recorded in the log file for each iteration.  The
+number of sources is represented by a real value, the floor of which
+gives the number of sources (this is because the code for standard
+operations is written for real values only).
+
+All standard Markov chain operations are supported by this module
+except the dynamical operations that require derivatives.  The default
+stepsizes for the various sorts of parameters are as follows:
+
+    N (number of sources)       min (1, (highN-lowN)/4)
+    Q^power (source intensity)  (highQ^power - lowQ^power) / 10
+    T0 (start time of source)   max-start/10 
+    T1 (stop time of source)    max-duration/10 if finite, 
+                                else max-stop/10 if finite, else 0
+    x, y, z (source coords)     (high-low)/10
+    log n (log noise width)     0.1
+    1/d (inverse noise df)      0.1
+    U (wind speed)              (highU-lowU)/10
+
+These stepsizes may be multiplied by a stepsize adjustment factor
+specified by the user, in the usual way (see mc-spec.doc).
+
+The inverse temperature for tempering methods is used to multiply the
+log likelihood.  An inverse temperature of zero therefore gives the
+prior distribution.  Src-mc knows how to sample from the prior
+distribution, so annealed importance sampling can be used.  There is a
+src-mc-test program (see xxx-mc-test.doc) that can be used to test
+correctness of the Markov chain sampling methods.
+
+The following application-specific operations are implemented:
+
+    shuffle-sources
+
+        Randomly permutes the order of sources that are currently being
+        used.  This changes nothing in itself, but alters which source 
+        would be effectively deleted if the number of sources were decreased.  
+        It should improve converence when the number of sources is variable.
+
+    prior-gen-unused
+
+        Randomly sample the parameters of sources not currently used from
+        the prior.  This should improve convergence when the number of 
+        sources is variable.
+
+    shift-intensities [ [-]n ] 
+
+        If there are less than two sources at present, this operation does
+        nothing.  Otherwise, it does the following n times (default once):
+
+        Randomly select two different active sources, and compute the sum
+        of their intensities; then perform a slice sampling update for
+        the proportion of this total intensity allocated to one source 
+        versus the other.  The slice sampling update starts by sampling the
+        interval spanning the extreme proportions of 0 and 1, and shrinks
+        this interval as points are rejected.  If a "-" sign is before n,
+        only the intensities are updated.  Otherwise, the x, y, z coordinates
+        are modified as the intensities are modified, so as to keep the
+        weighted means (weighted by intensity) the same, while the difference
+        in coordinates between the two sources also stays the same.
+
+        After this update, the total intensity remains unchanged, but the 
+        way it is split between the two sources will have changed, and 
+        (if no "-" is specified) the coordinates will have changed to keep
+        the overall effect roughly the same as before (exactly the same if
+        the effect is linear in the coordinat values).
+
+        This operation is useful when the two sources have similar locations 
+        and times, since it may then make a large change in how the total 
+        intensity is split.  Ultimately, this may facilitate a change in the 
+        number of sources, since this happens more easily when the intensity 
+        of one of the sources is small.
+
+The following application-specific ranges of components are
+implemented and may be used with operations such as met-1 and slice-1
+(see mc-spec.doc):
+
+    N   The number of sources only
+    F   The parameters of the flow model
+    D   The parameters of the detector model
+    S   The locations and other parameters of the sources currently existing
+
+Here is a simple set of operations for fitting a model in which the
+number of sources is variable:
+
+    mc-spec log-file met-1 0.2 F met-1 0.2 D met-1 0.2 S \
+                     shuffle prior-gen-unused met-1 1 N
+
+The operations from 'shuffle' on would be omitted if the number of
+sources is fixed.  Similarly, the met-1 commands for the parameters of
+the flow and detector models would be omitted if these models have no
+unknown parameters.
+
+For details regarding program arguments, see the generic documentation
+in xxx-mc.doc.
+
+            Copyright (c) 2007 by Radford M. Neal

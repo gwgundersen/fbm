@@ -55,15 +55,17 @@ fi
 
 # Say what we're about to do.  Disabled at the moment.
 
-# echo JOINT DISTRIBUTION TEST OF CORRECTNESS
-# echo " "
-# echo Simulating $rep chains for $len iterations
-# echo The `data-spec $log | grep "Number of inputs:" | sed "s/.*: *//"` \
-#      "input(s) come from" \
-#      `data-spec $log | grep "Training inputs:" | sed "s/.*: *//"`
-# echo The file to hold the \
-#      `data-spec $log | grep "Number of targets:" | sed "s/.*: *//"` \
-#      "target(s) is" \"$targets\"
+if false; then
+  echo JOINT DISTRIBUTION TEST OF CORRECTNESS
+  echo " "
+  echo Simulating $rep chains for $len iterations
+  echo The `data-spec $log | grep "Number of inputs:" | sed "s/.*: *//"` \
+       "input(s) come from" \
+       `data-spec $log | grep "Training inputs:" | sed "s/.*: *//"`
+  echo The file to hold the \
+       `data-spec $log | grep "Number of targets:" | sed "s/.*: *//"` \
+       "target(s) is" \"$targets\"
+fi
 
 # Generate log files containing samples directly from the prior, and from
 # the prior via a Markov chain simulation of the joint prior/data distribution.
@@ -72,21 +74,21 @@ for i in `seq $rep`; do
 
   # Generate directly from prior.
 
-  cp $log $log:p$i
-  rand-seed $log:p$i $i
-  $module-gen $genop1 $genop2 $log:p$i $len
+  cp $log $log-p$i
+  rand-seed $log-p$i $i
+  $module-gen $genop1 $genop2 $log-p$i $len
 
   # Generate by Markov chain simulation of joint distribution.
 
-  cp $log $log:j$i
-  rand-seed $log:j$i $i
-  $module-gen $genop1 $genop2 $log:j$i 0
-  $module-dgen $log:j$i / $targets
-  mc-spec $log:j$i $@
+  cp $log $log-j$i
+  rand-seed $log-j$i $i
+  $module-gen $genop1 $genop2 $log-j$i 0
+  $module-dgen $log-j$i / $targets
+  mc-spec $log-j$i $@
 
   for j in `seq $len`; do
-    $module-mc $log:j$i $j
-    $module-dgen $log:j$i / $targets
+    $module-mc $log-j$i $j
+    $module-dgen $log-j$i / $targets
   done
   
 done

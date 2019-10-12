@@ -19,7 +19,8 @@ programs:	gp-spec gp-gen gp-display gp-eval gp-plt gp-hist gp-mc \
 		gp-dgen gp-genp 
 
 clean:
-	rm -f *.o gp-spec gp-gen gp-display gp-eval gp-plt gp-hist gp-mc \
+	rm -f *.o *.exe \
+		  gp-spec gp-gen gp-display gp-eval gp-plt gp-hist gp-mc \
 	          gp-pred gp-cov gp-eigen gp-stepsizes gp-grad-test gp-tbl \
 		  gp-dgen gp-genp 
 

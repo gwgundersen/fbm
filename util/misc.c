@@ -316,6 +316,108 @@ error:
 }
 
 
+/* PARSE RANGE OF NON-NEGATIVE INTEGERS.  Parses a string of the following form:
+
+       low[:high]]
+
+   'low' and 'high' must be non-negative integers.  If the colon and 'high' 
+   are omitted, high is set to low.
+
+   The caller provides pointers to places to store 'low' and 'high'.
+
+   If a specification is syntactically incorrect, or if high<low, the
+   value 0 is returned.  The value 1 is returned if everything is OK. */
+
+int parse_non_neg_range
+( char *str,		/* String to parse */
+  int *low,		/* Place to store 'low' */
+  int *high		/* Place to store 'high' */
+)
+{
+  char junk;
+
+  if (strchr(str,':')==0)
+  { 
+    if (sscanf(str,"%d%c",low,&junk)!=1) return 0;
+    if (*low<0) return 0;
+    *high = *low;
+  }
+  else
+  {
+    if (sscanf(str,"%d:%d%c",low,high,&junk)!=2) return 0;
+    if (*low<0 || *high<*low) return 0;
+  }
+  
+  return 1;
+}
+
+
+/* PARSE RANGE OF REALS.  Parses a string of the following form:
+
+       low[:[high][:pow]]
+
+   'low' and 'high' must be real numbers.  If 'high' is omitted but the colon 
+   is present, 'high' is set to infinity.  If just a single number appears, it 
+   is interpreted as the value for both 'low' and 'high'.  The 'pow' part
+   may be present if the 'pow' argument is non-zero.  It may be any real value,
+   and defaults to 1.
+
+   The caller provides pointers to places to store 'low' and 'high', and
+   perhaps 'pow'.
+
+   If a specification is syntactically incorrect, or if high<low, the
+   value 0 is returned.  The value 1 is returned if everything is OK. */
+
+int parse_real_range
+( char *str,		/* String to parse */
+  double *low,		/* Place to store 'low' */
+  double *high,		/* Place to store 'high' */
+  double *pow		/* Place to store 'pow', or zero */
+)
+{
+  char *p, *q;
+  char junk;
+
+  p = strchr(str,':');
+  if (p!=0) 
+  { q = strchr(p+1,':');
+  }
+
+  if (p==0) /* no colons */
+  { 
+    if (sscanf(str,"%lf%c",low,&junk)!=1) return 0;
+    *high = *low;
+    if (pow) *pow = 1;
+  }
+
+  else if (q==0) /* one colon */
+  { if (*(p+1)==0)
+    { if (sscanf(str,"%lf:%c",low,&junk)!=1) return 0;
+      *high = 1.0/0.0;
+    }
+    else
+    { if (sscanf(str,"%lf:%lf%c",low,high,&junk)!=2) return 0;
+      if (*high<*low) return 0;
+    }
+    if (pow) *pow = 1;
+  }
+
+  else /* two colons */
+  { if (pow==0) return 0;
+    if (*(p+1)==':')
+    { if (sscanf(str,"%lf::%lf%c",low,pow,&junk)!=2) return 0;
+      *high = 1.0/0.0;
+    }
+    else
+    { if (sscanf(str,"%lf:%lf:%lf%c",low,high,pow,&junk)!=3) return 0;
+      if (*high<*low) return 0;
+    }
+  }
+  
+  return 1;
+}
+
+
 /* PARSE A LIST OF FLAG ITEMS.  The list has the form:
 
         [:[-]<item>{,<item>}]

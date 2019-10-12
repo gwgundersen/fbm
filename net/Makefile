@@ -19,7 +19,8 @@ programs:	net-spec net-gen net-rej net-eval net-display net-pred net-mc \
 		net-grad-test net-stepsizes net-genp net-approx net-his
 
 clean:
-	rm -f *.o net-spec net-gen net-rej net-eval net-display net-pred net-mc\
+	rm -f *.o *.exe \
+		  net-spec net-gen net-rej net-eval net-display net-pred net-mc\
 	          net-gd net-plt net-tbl net-hist net-dvar \
 	          net-grad-test net-stepsizes net-genp net-approx net-his
 

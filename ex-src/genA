@@ -1,0 +1,14 @@
+
+# Create test data for detectors on gridA.
+
+set -e
+
+src-spec    logg 3 0:100 / 25:1000 -100:100 0
+det-spec    logg 0.01
+flow-spec   logg test 1 0.08 0.0001 0.06 0.00015
+data-spec   logg 3 1 / /dev/null .
+
+src-initial logg / / 8 30 2 0 / 10 120 -21 0 / 12 300 19 0
+rand-seed   logg 1
+
+src-dgen    logg 0 / gridA data-gridA-0.01-1

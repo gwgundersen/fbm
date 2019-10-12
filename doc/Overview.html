@@ -10,11 +10,12 @@ provides a number of general facilities, some of which may be of use
 for other purposes.  The 'mc' module provides support for Markov chain
 Monte Carlo methods, which the 'dist' module allows you to use for a
 distribution specified by a formula.  The modules 'net', 'gp', 'mix',
-and 'dft' are more specialized modules that use the Markov chain
-methods to support Bayesian inference for neural networks, Gaussian
-process models, finite and infinite mixture models, and Dirichlet
-diffision tree models.  This section provides an overview of the
-various components of the software.
+'dft', 'src', and 'mol' are more specialized modules that use the
+Markov chain methods to support Bayesian inference for neural
+networks, Gaussian process models, finite and infinite mixture models,
+Dirichlet diffision tree models, source location models, and to
+support molecular simulation.  This section provides an overview of
+the various components of the software.
 
 
 Program usage.
@@ -157,9 +158,9 @@ standard approaches, however, as described in the examples in other
 sections of this documentation.  You can also read all about the
 various methods in <A HREF="mc-spec.html">mc-spec.doc</A>.  Note, however, that for each model
 there are also sampling methods specific to that model alone, which
-are documented in <A HREF="net-mc.html">net-mc.doc</A>, <A HREF="gp-mc.html">gp-mc.doc</A>, and <A HREF="mix-mc.html">mix-mc.doc</A>.  At present,
-sampling for mixture models is done only by the specific procedures
-described in <A HREF="mix-mc.html">mix-mc.doc</A>.
+are documented in <A HREF="net-mc.html">net-mc.doc</A>, <A HREF="gp-mc.html">gp-mc.doc</A>, <A HREF="mix-mc.html">mix-mc.doc</A>, <A HREF="dft-mc.html">dft-mc.doc</A>,
+<A HREF="src-mc.html">src-mc.doc</A>, and <A HREF="mol-mc.html">mol-mc.doc</A>.  At present, sampling for mixture models
+is done only by the specific procedures described in <A HREF="mix-mc.html">mix-mc.doc</A>.
 
 Tempering methods and Annealed Importance Sampling are currently
 supported for neural network models and Dirichlet diffusion tree
@@ -289,6 +290,16 @@ with 'dft-mc'.  One can then examine the resulting trees with
 'dft-pred'.
 
 
+Source location models.
+
+See <A HREF="src.html">src.doc</A> for more details on this model.
+
+
+Molecular simulation.
+
+See <A HREF="mol.html">mol.doc</A> for more details on this model.
+
+
 Quantities obtainable from log files.
 
 The 'xxx-plt' programs (eg, 'dist-plt', 'net-plt', 'gp-plt',
@@ -317,7 +328,8 @@ of the noise standard deviation (for a regression model) - and for
 mixture models - for example, 'Cn', the total probability for the n
 largest components in the mixture.  For details, see <A HREF="quantities.html">quantities.doc</A>
 along with <A HREF="mc-quantities.html">mc-quantities.doc</A>, <A HREF="dist-quantities.html">dist-quantities.doc</A>, <A HREF="net-quantities.html">net-quantities.doc</A>,
-<A HREF="gp-quantities.html">gp-quantities.doc</A>, <A HREF="mix-quantities.html">mix-quantities.doc</A>, and <A HREF="dft-quantities.html">dft-quantities.doc</A>.
+<A HREF="gp-quantities.html">gp-quantities.doc</A>, <A HREF="mix-quantities.html">mix-quantities.doc</A>, <A HREF="dft-quantities.html">dft-quantities.doc</A>,
+<A HREF="src-quantities.html">src-quantities.doc</A>, and <A HREF="mol-quantities.html">mol-quantities.doc</A>.
 </pre>
 </body>
 </html>

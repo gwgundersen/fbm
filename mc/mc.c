@@ -52,6 +52,8 @@ main
   char **argv
 )
 {
+  extern int approx_order[Max_approx];  /* found in mc-traj.c */
+
   int index, max, modulus;
 
   static mc_ops *ops;
@@ -195,10 +197,10 @@ main
 
   if (it==0) it = &it0;
 
-  if (it->approx_order[0]==0)
+  if (approx_order[0]==0)
   { na = tj->N_approx>0 ? tj->N_approx : -tj->N_approx;
     if (na>Max_approx) na = Max_approx;
-    for (j = 0; j<na; j++) it->approx_order[j] = j+1;
+    for (j = 0; j<na; j++) approx_order[j] = j+1;
   }
 
   sch = logg.data['m'];

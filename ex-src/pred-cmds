@@ -1,0 +1,18 @@
+
+# Make predictions at a grid of test points, using MCMC iterations.  The 
+# grid # for which to make predictions and the log file ranges to use in
+# making the predictions are the arguments.  The output consists of one line 
+# for each grid point, containing the x, y, z coordinates and the predicted 
+# value.  This scheme is appropriate only for static models.
+
+set -e
+
+if [ x$1 = x -o x$2 = x -o x$3 = x ]; then
+  echo "Usage: pred-cmds grid# { log-file range }"
+  exit 1
+fi
+
+grid=$1
+shift
+
+src-pred inb $@ / grid$grid

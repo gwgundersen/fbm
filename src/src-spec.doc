@@ -1,0 +1,63 @@
+
+
+SRC-SPEC:  Specify priors of the number and location of sources.
+
+Src-spec is the first command used when specifying a source location
+model.  It creates a log file with a record specifying priors for the
+number and location of sources.  It can also be used to display the
+specifications in an existing log file.
+
+Usage:
+
+  src-spec log-file 
+    lowN[:highN] lowQ[:highQ[:power]] 
+      [ max-start [ max-stop ] ] [ +max-duration ] 
+        / lowx:highx [ lowy:highy [ lowz:highz ] ]
+
+or:
+
+  src-spec log-file
+
+The first form above creates a log file with the name given as the
+first argument, and writes specifications to it (destroying any
+previous contents of this log file).  The second form displays the
+specifications in the log file named.
+
+The number of sources is specified after the name of the log file.
+This may be a single integer (from 0 up), or it may be a range of
+integers separated by a colon.  If a range is given, the prior is
+currently assumed to be uniform over integers in this range.
+
+The next argument is the range of source intensities, which must be
+non-negative.  If lowQ and highQ are equal (the default if highQ is
+omitted), the source intensities are fixed at this value.  If no
+"power" option is given, the prior for the intensity of a source is
+assumed to be uniform over this range.  If a power (which must be
+positive) is specified, the intensity raised to that power has a
+uniform distribution.  This is equivalent to the density for the 
+intensity, Q, being proportional to Q^{power-1}.
+
+If the flow model is not steady-state, sources are active only between
+some start time and some stop time, both of which are non-negative.
+The optional max-start argument gives the latest time that a source
+may start.  The prior for the start time of a source is assumed to be
+uniform from zero to max-start.  If max-start is omitted, zero is
+assumed (so the start times for all sources are fixed at zero).  The
+max-stop argument gives the maximum time at which a source may stop.
+The max-duration argument (which must start with "+") gives the
+maximum allowed duration for a source (stop time minus start time).
+The prior for the stopping time of a source given its start time is
+uniform from the start time to the maximum allowed by the max-stop and
+max-duration arguments.  If max-stop and max-duration are both
+omitted, sources never stop being active once they start.  For steady
+state models, max-start, max-stop, and max-duration should not be
+specified.
+
+Following a "/" argument, the ranges for the locations of the sources
+are given, as low:high pairs for x, y, and z.  Here, lowx, lowy,
+highx, and highy can be any real numbers.  For the height coordinate
+(z), lowz and highz must be non-negative.  The prior for source
+locations is assumed to be uniform over the specified ranges.  If the
+later ranges are omitted, they are assumed to be 0:0.
+
+            Copyright (c) 2007 by Radford M. Neal

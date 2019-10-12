@@ -26,6 +26,9 @@ void parse_time_range (char *, double *, double *, int *);
 					/* Parse range with times rather than
 					   iteration numbers */
 
+int parse_non_neg_range (char *, int *, int *);
+int parse_real_range (char *, double *, double *, double *);
+
 void parse_flags (char *, char *, int, int);
 int list_flags (char *, int, int, char *);
 int not_omitted (char *, int, int);

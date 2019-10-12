@@ -48,7 +48,9 @@ void mc_metropolis
   mc_value_copy (q_save, ds->q, ds->dim);
 
   for (k = 0; k<ds->dim; k++) 
-  { ds->q[k] += sf * ds->stepsize[k] * rand_gaussian();
+  { if (ds->stepsize[k]!=0)
+    { ds->q[k] += sf * ds->stepsize[k] * rand_gaussian();
+    }
   }
   
   mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
@@ -104,9 +106,11 @@ void mc_rgrid_met
   mc_value_copy (q_save, ds->q, ds->dim);
 
   for (k = 0; k<ds->dim; k++) 
-  { U = rand_uniopen() - 0.5;
-    ss = sf * ds->stepsize[k];
-    ds->q[k] = (2*ss) * (U + floor (0.5 + ds->q[k]/(2*ss) - U));
+  { if (ds->stepsize[k]!=0)
+    { U = rand_uniopen() - 0.5;
+      ss = sf * ds->stepsize[k];
+      ds->q[k] = (2*ss) * (U + floor (0.5 + ds->q[k]/(2*ss) - U));
+    }
   }
   
   mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
@@ -152,22 +156,14 @@ void mc_met_1
   double old_energy, qsave, sf, U, a;
   int k;
 
-  if (firsti==-1) 
-  { firsti = 0;
-    lasti = ds->dim-1;
-  }
-
-  if (lasti>=ds->dim-1) lasti = ds->dim-1;
-  if (firsti>lasti) firsti = lasti;
-
-  if (r_update)
-  { firsti = lasti = firsti + (int)(rand_uniform()*(lasti-firsti+1));
-  }
+  mc_set_range (ds, &firsti, &lasti, r_update);
 
   sf = it->stepsize_factor;
 
   for (k = firsti; k<=lasti; k++)
   {
+    if (ds->stepsize[k]==0) continue;
+
     if (!ds->know_pot)
     { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
       ds->know_pot = 1;
@@ -223,22 +219,14 @@ void mc_rgrid_met_1
   double old_energy, qsave, sf, ss, U, a;
   int k;
 
-  if (firsti==-1) 
-  { firsti = 0;
-    lasti = ds->dim-1;
-  }
-
-  if (lasti>=ds->dim-1) lasti = ds->dim-1;
-  if (firsti>lasti) firsti = lasti;
-
-  if (r_update)
-  { firsti = lasti = firsti + (int)(rand_uniform()*(lasti-firsti+1));
-  }
+  mc_set_range (ds, &firsti, &lasti, r_update);
 
   sf = it->stepsize_factor;
 
   for (k = firsti; k<=lasti; k++)
   {
+    if (ds->stepsize[k]==0) continue;
+
     if (!ds->know_pot)
     { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
       ds->know_pot = 1;
@@ -298,17 +286,7 @@ void mc_gaussian_gibbs
   double mean, tau;
   int k;
 
-  if (firsti==-1) 
-  { firsti = 0;
-    lasti = ds->dim-1;
-  }
-
-  if (lasti>=ds->dim-1) lasti = ds->dim-1;
-  if (firsti>lasti) firsti = lasti;
-
-  if (r_update)
-  { firsti = lasti = firsti + (int)(rand_uniform()*(lasti-firsti+1));
-  }
+  mc_set_range (ds, &firsti, &lasti, r_update);
 
   for (k = firsti; k<=lasti; k++)
   {

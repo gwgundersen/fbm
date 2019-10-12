@@ -145,6 +145,10 @@ static void add_grad2
     {
       for (i = 0; i<nv; i++)
       { tv = v[i];
+        if (tv==0) 
+        { g += nd;
+          continue;
+        }
         j = 0;
         do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
       }
@@ -167,6 +171,10 @@ static void add_grad2
       for (i = 0; i<nv; i++)
       { if ((omit[i]&b)==0)
         { tv = v[i];
+          if (tv==0) 
+          { g += nd;
+            continue;
+          }
           j = 0;
           do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
         }

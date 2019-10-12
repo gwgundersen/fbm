@@ -64,7 +64,12 @@ static double *train_sumsq;	/* Sums of squared training input values */
 static net_values *deriv;	/* Derivatives for training cases */
 static net_params grad;		/* Pointers to gradient for network parameters*/
 
-static double *quadratic_approx;/* Quadratic approximation to log likelihood */
+static double *quadratic_approx;/* Quadratic approximation to log likelihood  */
+
+static int approx_count;	/* Number of entries in approx-file, 0 if none*/
+
+static int *approx_case; 	/* Data on how approximations are to be done  */
+static int *approx_times;	/*   as read from approx_file                 */
 
 
 /* PROCEDURES. */
@@ -120,7 +125,7 @@ void mc_app_initialize
 { 
   net_value *value_block;
   int value_count;
-  int i, j;
+  int i, j, junk;
 
   if (!initialize_done)
   {
@@ -247,6 +252,71 @@ void mc_app_initialize
         }
 
         train_sumsq[0] = N_train * tsq / n;
+      }
+    }
+
+    /* Look for trajectory specification, and if there is one, read the
+       approximation file, in there is one. */
+
+    approx_count = 0;
+
+    if (logg->data['t']!=0)
+    { 
+      mc_traj *trj = logg->data['t'];
+
+      if (trj->approx_file[0]!=0)
+      { 
+        FILE *af;
+
+        /* Open approximation file. */
+
+        af = fopen(trj->approx_file,"r");
+        if (af==NULL)
+        { fprintf(stderr,
+            "Can't open approximation file (%s)\n",trj->approx_file);
+          exit(1);
+        }
+
+        /* Count how many entries it has. */
+
+        approx_count = 0;
+        while (fscanf(af,"%d",&junk)==1)
+        { approx_count += 1;
+        }
+
+        /* Allocate space for data from file and read it. */
+
+        approx_case = calloc (approx_count, sizeof *approx_case);
+        approx_times = calloc (N_train, sizeof *approx_times);
+
+        for (i = 0; i<N_train; i++)
+        { approx_times[i] = 0;
+        }
+
+        rewind(af);
+        for (i = 0; i<approx_count; i++)
+        { if (fscanf(af,"%d",&approx_case[i])!=1
+           || approx_case[i]<1 || approx_case[i]>N_train)
+          { fprintf (stderr, "Bad entry in approximation file (%d:%d)\n",
+                     i, approx_case[i]);
+            exit(1);
+          }
+          approx_times[approx_case[i]-1] += 1;
+        }
+ 
+        /* Close file. */
+
+        fclose(af);
+
+        /* Check that all training cases appear in approx-file at least once. */
+
+        for (i = 0; i<N_train; i++)
+        { if (approx_times[i]==0)
+          { fprintf (stderr,
+              "Training case %d does not appear in approx-file\n", i);
+            exit(1);
+          }
+        }
       }
     }
 
@@ -1007,6 +1077,104 @@ static void gibbs_adjustments
 
 /* EVALUATE POTENTIAL ENERGY AND ITS GRADIENT. */
 
+static void one_case  /* Energy and gradient from one training case */
+( 
+  double *energy,	/* Place to increment energy, null if not required */
+  mc_value *gr,		/* Place to increment gradient, null if not required */
+  int i,		/* Case to look at */
+  double en_weight,	/* Weight for this case for energy */
+  double gr_weight	/* Weight for this case for gradient */
+)
+{
+  double log_prob;
+  int k;
+
+  if (model->type=='V'          /* Handle piecewise-constant hazard    */
+   && surv->hazard_type=='P')   /*   model specially                   */
+  { 
+    double ot, ft, t0, t1;
+    int censored;
+    int w;
+  
+    if (train_targets[i]<0)
+    { censored = 1;
+      ot = -train_targets[i];
+    }
+    else
+    { censored = 0;
+      ot = train_targets[i];
+    }
+  
+    t0 = 0;
+    t1 = surv->time[0];
+    train_values[i].i[0] = surv->log_time ? log(t1) : t1;
+  
+    w = 0;
+  
+    for (;;)
+    {
+      net_func (&train_values[i], 0, arch, flgs, &params);
+      
+      ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+  
+      net_model_prob(&train_values[i], &ft,
+                     &log_prob, gr ? &deriv[i] : 0, arch, model, surv, 
+                     &sigmas, Cheap_energy);
+  
+      if (energy) *energy -= en_weight * log_prob;
+  
+      if (gr)
+      { if (gr_weight!=1)
+        { for (k = 0; k<arch->N_outputs; k++)
+          { deriv[i].o[k] *= gr_weight;
+          }
+        }
+        net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
+                  arch, flgs, &params);
+        net_grad (&grad, &params, &train_values[i], &deriv[i], 
+                  arch, flgs);
+      }
+  
+      if (ot<=t1) break;
+   
+      t0 = t1;
+      w += 1;
+      
+      if (surv->time[w]==0) 
+      { t1 = ot;
+        train_values[i].i[0] = surv->log_time ? log(t0) : t0;
+      }
+      else
+      { t1 = surv->time[w];
+        train_values[i].i[0] = surv->log_time ? (log(t0)+log(t1))/2
+                                              : (t0+t1)/2;
+      }
+    }
+  }
+  
+  else /* Everything except piecewise-constant hazard model */
+  { 
+    net_func (&train_values[i], 0, arch, flgs, &params);
+  
+    net_model_prob(&train_values[i], train_targets+data_spec->N_targets*i,
+                   &log_prob, gr ? &deriv[i] : 0, arch, model, surv,
+                   &sigmas, Cheap_energy);
+    
+    if (energy) *energy -= en_weight * log_prob;
+  
+    if (gr)
+    { if (gr_weight!=1)
+      { for (k = 0; k<arch->N_outputs; k++)
+        { deriv[i].o[k] *= gr_weight;
+        }
+      }
+      net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
+                arch, flgs, &params);
+      net_grad (&grad, &params, &train_values[i], &deriv[i], arch, flgs);
+    }
+  }
+}
+
 void mc_app_energy
 ( mc_dynamic_state *ds,	/* Current dynamical state */
   int N_approx,		/* Number of gradient approximations in use */
@@ -1016,7 +1184,7 @@ void mc_app_energy
 )
 {
   double log_prob, inv_temp;
-  int i, low, high;
+  int i, j, low, high;
 
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
@@ -1051,14 +1219,6 @@ void mc_app_energy
 
   if (inv_temp!=0 && (data_spec!=0 || quadratic_approx))
   {
-    if (N_approx>1 && gr)
-    { for (i = 0; i<ds->dim; i++) gr[i] /= N_approx;
-    }
-
-    if (inv_temp!=1 && gr)
-    { for (i = 0; i<ds->dim; i++) gr[i] /= inv_temp;
-    }
-
     if (quadratic_approx)
     {
       double *b, *V;
@@ -1072,113 +1232,66 @@ void mc_app_energy
       for (i = 0; i<ds->dim; i++)
       { for (j = 0; j<ds->dim; j++)
         { if (energy) 
-          { *energy += (ds->q[i]-b[i]) * (ds->q[j]-b[j]) * *V / 2;
+          { *energy += inv_temp * (ds->q[i]-b[i]) * (ds->q[j]-b[j]) * *V / 2;
           }
           if (gr)
-          { gr[i] += (ds->q[j]-b[j]) * *V / 2;
-            gr[j] += (ds->q[i]-b[i]) * *V / 2;
+          { gr[i] += inv_temp * (ds->q[j]-b[j]) * *V / 2;
+            gr[j] += inv_temp * (ds->q[i]-b[i]) * *V / 2;
           }
           V += 1;
         }
       }
     }
 
-    else /* Not approximated */
+    else /* Not approximated by quadratic */
     {
-      low  = (N_train * (w_approx-1)) / N_approx;
-      high = (N_train * w_approx) / N_approx;
-  
-      for (i = (energy ? 0 : low); i < (energy ? N_train : high); i++)
+      if (N_approx==1 || gr==0)
       {
-        if (model->type=='V'          /* Handle piecewise-constant hazard    */
-         && surv->hazard_type=='P')   /*   model specially                   */
+        for (i = 0; i<N_train; i++)
+        { one_case (energy, gr, i, inv_temp, inv_temp);
+        }
+      }
+      else /* We're using multiple approximations */
+      {
+        if (approx_count) /* There's a file saying how to do approximations */
         { 
-          double ot, ft, t0, t1;
-          int censored;
-          int w;
-  
-          if (inv_temp!=1)
-          { fprintf(stderr,
-              "Can't handle tempering with piecewise-constant hazard models\n");
-            exit(1);
+          low  = (approx_count * (w_approx-1)) / N_approx;
+          high = (approx_count * w_approx) / N_approx;
+
+          for (j = low; j<high; j++)
+          { i = approx_case[j] - 1;
+            one_case (0, gr, i, 1, (double)inv_temp*N_approx/approx_times[i]);
           }
-  
-          if (train_targets[i]<0)
-          { censored = 1;
-            ot = -train_targets[i];
-          }
-          else
-          { censored = 0;
-            ot = train_targets[i];
-          }
-  
-          t0 = 0;
-          t1 = surv->time[0];
-          train_values[i].i[0] = surv->log_time ? log(t1) : t1;
-  
-          w = 0;
-  
-          for (;;)
+
+          if (energy)
           {
-            net_func (&train_values[i], 0, arch, flgs, &params);
-            
-            ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
-  
-            net_model_prob(&train_values[i], &ft,
-                           &log_prob, gr ? &deriv[i] : 0, arch, model, surv, 
-                           &sigmas, Cheap_energy);
-  
-            if (energy) *energy -= inv_temp * log_prob;
-  
-            if (gr && i>=low && i<high)
-            { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
-                        arch, flgs, &params);
-              net_grad (&grad, &params, &train_values[i], &deriv[i], 
-                        arch, flgs);
-            }
-  
-            if (ot<=t1) break;
-   
-            t0 = t1;
-            w += 1;
-            
-            if (surv->time[w]==0) 
-            { t1 = ot;
-              train_values[i].i[0] = surv->log_time ? log(t0) : t0;
-            }
-            else
-            { t1 = surv->time[w];
-              train_values[i].i[0] = surv->log_time ? (log(t0)+log(t1))/2
-                                                    : (t0+t1)/2;
+            for (i = 0; i<N_train; i++)
+            { one_case (energy, 0, i, inv_temp, 1);
             }
           }
         }
-  
-        else /* Everything except piecewise-constant hazard model */
-        { 
-          net_func (&train_values[i], 0, arch, flgs, &params);
-  
-          net_model_prob(&train_values[i], train_targets+data_spec->N_targets*i,
-                         &log_prob, gr ? &deriv[i] : 0, arch, model, surv,
-                         &sigmas, Cheap_energy);
-    
-          if (energy) *energy -= inv_temp * log_prob;
-  
-          if (gr && i>=low && i<high)
-          { net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
-                      arch, flgs, &params);
-            net_grad (&grad, &params, &train_values[i], &deriv[i], arch, flgs);
+        else /* There's no file saying how to do approximations */
+        {
+          low  = (N_train * (w_approx-1)) / N_approx;
+          high = (N_train * w_approx) / N_approx;
+
+          if (energy)    
+          { for (i = 0; i<low; i++)
+            { one_case (energy, 0, i, inv_temp, 1);
+            }
+          }
+
+          for (i = low; i<high; i++)
+          { one_case (energy, gr, i, inv_temp, inv_temp*N_approx);
+          }
+
+          if (energy)    
+          { for (i = high; i<N_train; i++)
+            { one_case (energy, 0, i, inv_temp, 1);
+            }
           }
         }
       }
-    }
-
-    if (N_approx>1 && gr)
-    { for (i = 0; i<ds->dim; i++) gr[i] *= N_approx;
-    }
-
-    if (inv_temp!=1 && gr)
-    { for (i = 0; i<ds->dim; i++) gr[i] *= inv_temp;
     }
   }
 }

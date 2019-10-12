@@ -8,14 +8,20 @@ FACILITIES PROVIDED BY THIS SOFTWARE
 This software is meant to support research and education regarding:
 
    * Flexible Bayesian models for regression and classification 
-     based on neural networks and Gaussian processes, and for
+     based on neural networks and Gaussian processes, for
      probability density estimation using mixtures and Dirichlet
-     diffusion trees.  Neural network training using early stopping 
-     is also supported.
+     diffusion trees, and for inferring the sources of atmospheric
+     contamination.  
 
    * Markov chain Monte Carlo methods, and their applications to
      Bayesian modeling, including implementations of Metropolis,
      hybrid Monte Carlo, slice sampling, and tempering methods.
+
+   * Neural network training using early stopping.  This is mostly
+     for purposes of comparing with Bayesian methods.
+
+   * Molecular simulation using the Lennard-Jones potential.  This
+     is mostly for testing MCMC methods in this context.
 
 These facilities might be useful for actual problems, but you should
 note that many features that might be needed for real problems have
@@ -26,7 +32,8 @@ The complete source code (in C) is provided, allowing researchers to
 modify the program to test new ideas.  It is not necessary to know C
 to use the programs (assuming you manage to install them correctly).
 
-This software is designed for use on a Unix or Linux system, using
+This software is designed for use on a Unix or Linux system, or a 
+MS Windows system with the Cygwin Unix emulation environment, using
 commands issued to the command interpreter (shell).  No particular
 window system or other GUI is required, but a plotting program will be
 very useful.  I use the xgraph plot program, written by David
@@ -141,6 +148,20 @@ trees can be seen both as a way of modeling distributions and as a
 method for hierarchical clustering.
 
 
+Models for inferring sources of atmospheric contamination.
+
+This module implements Bayesian inference using Markov chain Monte
+Carlo for a more specialized set of models than the modules described
+above.  
+
+
+Molecular simulation using the Lennard-Jones potential.
+
+This is a commonly-used model in the chemistry and physics literature,
+which is implemented in this software to allow testing of MCMC methods
+as applied to this application area.
+
+
 Software components.
 
 The software consists of a number of programs and modules.  Each major
@@ -170,6 +191,12 @@ component has its own directory, as follows:
 
     dft     Modules and programs that implement density modeling and
             clustering methods based on Dirichlet diffusion trees.
+
+    src     Modules and programs that implement Bayesian inference
+            for models of the source of atmospheric contaminants.
+
+    mol     Modules and programs that implement molecular simulation
+            using the Lennard-Jones potential.
 
 In addition, the 'bvg' directory contains modules and programs for
 sampling from a bivariate Gaussian distribution, as a simple
@@ -202,8 +229,12 @@ be used, many of which are discussed in the documentation:
     ex-gdes   Examples of neural network learning using gradient 
               descent and early stopping.
 
+    ex-src    Examples of source location models.
+
     ex-ais    Contains command and data files used for the tests in
               my paper on "Annealed importance sampling".
+
+    ex-mol    Examples of molecular simulation.
 
 You should note, however, that these examples do not constitute
 "recipes" that can be used unchanged for new problems.  They are
@@ -223,13 +254,13 @@ a Pentium processor, on a Solaris system running on a SPARC processor,
 and on an SGI machine running IRIX Release 6.5.  It also runs OK on
 Compaq Alpha machines, provided that the -ieee and -std options are
 given to the Compaq C compiler (this may no longer be necessary - I
-haven't checked recently).  As far as I know, the software does not
-depend on any peculiarities of these environments (except perhaps for
-the use of the drand48 pseudo-random number generator, and the lgamma
-function, and the Unix facilities used to start programs to evaluate
-"external" functions in the 'dist' module), but you may nevertheless
-have problems getting it to work in substantially different
-environments, and I can offer little or no assistance in this regard.
+haven't checked recently).  It also works in the Cygwin environment
+under MS Windows.  As far as I know, the software does not depend on
+any peculiarities of these environments (except for the Unix
+facilities used to start programs to evaluate "external" functions in
+the 'dist' module), but you may nevertheless have problems getting it
+to work in substantially different environments, and I can offer
+little or no assistance in this regard.
 
 There is no dependence on any particular graphics package or graphical
 user interface.  The 'xxx-plt' programs are designed to allow their

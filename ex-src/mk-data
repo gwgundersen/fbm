@@ -1,0 +1,13 @@
+
+# Generate data on the grids.  The noise is Gaussian with standard deviation 
+# of 0.1.  In addition, a noise-free version is generated for grid1.
+
+gen-cmds grid1 0 1
+gen-cmds grid1 0.1 1
+gen-cmds grid2 0.1 1
+gen-cmds grid3 0.1 1
+gen-cmds grid4 0.1 1
+
+genss-cmds gridss1 0 1
+genss-cmds gridss1 0.1 1
+genss-cmds gridss2 0.1 1

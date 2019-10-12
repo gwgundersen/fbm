@@ -1,0 +1,37 @@
+<html>
+<body>
+<pre>
+
+
+SRC-INITIAL:  Set initial values for parameters of a source location model.
+
+Set the initial parameters of the source location model.  
+
+The defaults if no initial parameters are set with src-initial or
+randomly generated (see <A HREF="src-gen.html">src-gen.doc</A>) is for the initial intensities,
+start times and stop times (if relevant) for all sources to be zero.
+The source locations are set to the middle of the allowed range.  The
+number of sources, the noise degrees of free, the noise width
+parameter, and the wind speed (for the test flow model) are initially
+set to their minimum values.
+
+Usage:
+
+    src-initial log-file { flow-parameter } / [ noise-width [ noise-df ] ]
+                         { / Q x y z [ start [ stop ] ] }
+
+Appends a record to the log file with index 0 that contains values for
+the flow parameters as given (or defaulting), the noise width and
+noise degrees of freedom as given (or defaulting), and zero or more
+intensities, coordinates, and start and stop times for sources (for
+any remaining sources, these parameters are zero).  The number of
+sources is set to the number for which parameters were specified, or
+to the minimum, if that is larger.
+
+For the test flow model, the sole parameter is the wind speed; it
+defaults to its minimum value.
+
+            Copyright (c) 2007 by Radford M. Neal
+</pre>
+</body>
+</html>

@@ -9,12 +9,12 @@
 
 <h1>Software for Flexible Bayesian Modeling</h1>
 
-Version of 2005-??-??.  Copyright (c) 1995-2005 by Radford M. Neal<P>
+Version of 2007-03-31
+Copyright (c) 1995-2007 by Radford M. Neal<P>
 
-Index to documentation for software that implements flexible Bayesian
-models based on neural networks, Gaussian processes, mixtures, and
-Dirichlet diffusion trees, and that demonstrates various Markov chain
-Monte Carlo methods.
+Index to documentation on software for
+various Markov chain Monte Carlo methods and their use for various
+flexible Bayesian models as well as molecular simulation.
 
 
 <h2>Introduction, overview, and examples:</h2>
@@ -68,6 +68,15 @@ Monte Carlo methods.
     </a>
 <LI><a href="Ex-gdes.html">Examples of learning with gradient descent, early
     stopping & ensembles</a>
+<LI><a href="Ex-src.html">Examples of inference for locations of 
+    sources of atmospheric contaminants</a> 
+    <UL>
+    <LI><a href="Ex-src-g.html">Generating test data for source location 
+                                models</a>
+    <LI><a href="Ex-src-c.html">Inferring parameters for a fixed number of 
+                                sources</a>
+    <LI><a href="Ex-src-v.html">Inference for a varying number of sources</a>
+    </UL>
 <LI><a href="Hints.html">Hints and warnings</a>
 <LI><a href="Guide.html">Guide to further documentation</a>
 <LI><a href="Acknowledgements.html">Acknowledgements</a>
@@ -77,7 +86,7 @@ Monte Carlo methods.
 <h2>Notes on the present release and past releases:</h2>
 
 <UL>
-<LI> <a href="Release.next.html">Release of 2005-??-??</a>
+<LI> <a href="Release.2007-03-31.html">Release of 2007-03-31</a>
 <LI> <a href="Release.2004-11-10.html">Release of 2004-11-10</a>
 <LI> <a href="Release.2003-06-29.html">Release of 2003-06-29</a>
 <LI> <a href="Release.2001-08-31.html">Release of 2001-08-31</a>
@@ -132,13 +141,20 @@ Monte Carlo methods.
    <a href="net-tbl.html">net-tbl</a> 
 
 
-   .... MOL .....  
+   .... SRC ....      .... MOL .....  
 
-   <a href="mol.html">mol</a>              
-   <a href="mol-display.html">mol-display</a>
-   <a href="mol-mc.html">mol-mc</a>
-   <a href="mol-quantities.html">mol-quantities</a>
-   <a href="mol-spec.html">mol-spec</a>
+   <a href="src.html">src</a>                <a href="mol.html">mol</a>
+   <a href="src-dgen.html">src-dgen</a>           <a href="mol-display.html">mol-display</a>
+   <a href="src-display.html">src-display</a>        <a href="mol-mc.html">mol-mc</a>
+   <a href="src-gen.html">src-gen</a>            <a href="mol-quantities.html">mol-quantities</a>
+   <a href="src-initial.html">src-initial</a>        <a href="mol-spec.html">mol-spec</a>
+   <a href="src-intensity.html">src-intensity</a>
+   <a href="src-mc.html">src-mc</a>
+   <a href="src-pred.html">src-pred</a>
+   <a href="src-quantities.html">src-quantities</a>
+   <a href="src-spec.html">src-spec</a>
+   <a href="det-spec.html">det-spec</a>
+   <a href="flow-spec.html">flow-spec</a>
  </pre>
 
 A more detailed index is given below, with the most important
@@ -308,6 +324,25 @@ documentation files marked with an asterisk.<P>
   * <a href="dft-pred.html">dft-pred</a>        Make predictions for test cases using diffusion tree model
 
     <a href="dft-cases.html">dft-cases</a>       Generate cases from a diffusion tree model
+</pre>
+
+<h2>Bayesian inference for locations of sources of atmospheric contamination [src]:</h2>
+<pre>
+  * <a href="src.html">src</a>             Programs for inferring source locations from detector readings
+  * <a href="src-spec.html">src-spec</a>        Specify priors of the number and location of sources
+  * <a href="det-spec.html">det-spec</a>        Specify detector noise model
+  * <a href="flow-spec.html">flow-spec</a>       Specify flow model
+
+  * <a href="src-mc.html">src-mc</a>          Do Markov chain sampling for source location models
+    <a href="src-initial.html">src-initial</a>     Set initial values for parameters of a source location model
+    <a href="src-gen.html">src-gen</a>         Generate randomly from the prior for a source location model
+    <a href="src-dgen.html">src-dgen</a>        Randomly generate detector measurements given source parameters
+
+  * <a href="src-display.html">src-display</a>     Print the parameters of a source location model
+  * <a href="src-quantities.html">src-quantities</a>  Quantities from log files relating to source models
+
+  * <a href="src-pred.html">src-pred</a>        Make predictions for measurements in test cases
+  * <a href="src-intensity.html">src-intensity</a>   Make predictions for source intensity in grid cells.
 </pre>
 
 <h2> Molecular simulation with Lennard-Jones potential [mol]:</h2>

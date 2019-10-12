@@ -21,9 +21,10 @@
 #include "phi.h"
 
 
-#define sqrt2   1.4142135623730950488
-#define pi2     6.2831853071795864770 
-#define sqrt2pi 2.5066282746310005024
+#define sqrt2      1.4142135623730950488
+#define pi2        6.2831853071795864770 
+#define sqrt2pi    2.5066282746310005024
+#define logsqrt2pi 0.91893853320467274177
 
 double erfc (double);
 
@@ -33,6 +34,14 @@ double erfc (double);
 double phi (double x)
 {
   return exp(-x*x/2)/sqrt2pi;
+}
+
+
+/* LOG OF GAUSSIAN DENSITY FUNCTION. */
+
+double log_phi (double x)
+{
+  return -x*x/2 - logsqrt2pi;
 }
 
 

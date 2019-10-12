@@ -18,8 +18,9 @@ programs:	mol-spec mol-mc mol-plt mol-hist mol-grad-test mol-stepsizes \
 		mol-tbl mol-display mol-his mol-mis
 
 clean:
-	rm -f *.o mol-spec mol-mc mol-plt mol-hist mol-grad-test mol-stepsizes \
-	          mol-tbl mol-display mol-his
+	rm -f *.o *.exe \
+		  mol-spec mol-mc mol-plt mol-hist mol-grad-test mol-stepsizes \
+	          mol-tbl mol-display mol-his mol-mis
 
 
 include ../util/util.make

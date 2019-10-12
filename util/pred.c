@@ -68,7 +68,6 @@ data_transformation *tr;
 
 int M_targets;
 
-int N_records_used;
 double *test_targ_pred;
 double *test_targ_med;
 double *test_log_prob;
@@ -312,7 +311,7 @@ main
     exit(1);
   }
 
-  if ((op_m || op_d || op_D || op_q || op_Q) && m->type=='N')
+  if ((op_m || op_d || op_D || op_q || op_Q) && m!=0 && m->type=='N')
   { fprintf(stderr,
 "The m, d, D, q, and Q options are not currently implemented for count models\n"
     );

@@ -1,0 +1,82 @@
+
+
+FLOW-SPEC:  Specify flow model.
+
+The flow-spec program is used to specify the type and parameters of
+the flow model to use, or in some cases the prior for parameters.  It
+can also display the specifications stored in a log file.
+
+Usage:
+
+    flow-spec log-file type { parameter }
+
+or:
+
+    flow-spec log-file
+
+The first form above appends flow specifications to the log file named
+(which must already exist, see src-spec.doc).  The second form
+displays the flow specifications in the log file named.
+
+When specifying the flow model, the second argument gives the type of
+model.  Further arguments may follow, giving parameters of the model.  
+
+Only two test models are current implemented, as described below.
+
+
+Steady-state test flow model.
+
+This analytically-tractable model is meant primarily for testing the
+MCMC algorithms.  It is specified as follows:
+
+    test lowU[:highU] ay by az bz
+
+This model is for a steady-state flow, in which time plays no role.
+It assumes a steady wind of speed U in the direction of the negative x
+axis.  The wind speed has a uniform prior between lowU and highU.  If
+highU is omitted, it is assumed to be equal to lowU, and hence U has a
+fixed value.  The other parameters, ay, by, az, and bz, must be
+positive.
+
+This flow model is determined by the following formulas:
+
+    C^* (xs, ys, zs | xr, yr, zr)  =  0 if xs <= xr, otherwise
+
+       (1/U) * Gaussian(ys-yr,sy(xs-xr))
+             * (Gaussian(zs-zr,sz(xs-xr)) + Gaussian(zs+zr,sz(xs-xr))
+
+where 
+
+    Gaussian(d,s) = (1/sqrt(2*pi)) (1/s) exp(-d^2/(2*s^2))
+
+and
+
+    sy(dx) = ay * dx / sqrt(1+by*dx)
+    sz(dx) = az * dx / sqrt(1+bz*dx)
+
+
+Start-stop test flow model.
+
+This model is a slight variation on the test model above, designed to
+test the software's handling of sources that start at some time, and
+may stop at some later time.  It is specified in the same way, apart
+from the model name:
+
+    test-start-stop lowU[:highU] ay by az bz
+
+This model assumes that there is no spreading in the x direction over
+time, so that the plume from a source will have sharp edges
+corresponding to its start and stop times.  This (unrealistic)
+assumption leads to the following modification of the formula above,
+which implicitly integrates over the duration of the source (from
+start to stop):
+
+    C^* (xs, ys, zs | xr, yr, zr, tr)  =  0,
+
+       if xs <= xr or tr - (xs-xr)/U < start or tr - (xs-xr)/U > stop, 
+       otherwise it equals
+
+       (1/U) * Gaussian(ys-yr,sy(xs-xr))
+             * (Gaussian(zs-zr,sz(xs-xr)) + Gaussian(zs+zr,sz(xs-xr))
+
+            Copyright (c) 2007 by Radford M. Neal

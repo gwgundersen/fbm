@@ -214,6 +214,25 @@ Bayesian inference for Dirichlet diffusion tree models [dft]:
     dft-cases       Generate cases from a diffusion tree model
 
 
+Bayesian inference for locations of sources of atmospheric contamination [src]:
+
+  * src             Programs to infer source locations from detector readings
+  * src-spec        Specify priors of the number and location of sources
+  * det-spec        Specify detector noise model
+  * flow-spec       Specify flow model
+
+  * src-mc          Do Markov chain sampling for source location models
+    src-initial     Set initial values for parameters of a source location model
+    src-gen         Generate randomly from the prior for a source location model
+    src-dgen        Randomly generate measurements given source parameters
+
+  * src-display     Print the parameters of a source location model
+  * src-quantities  Quantities from log files relating to source models
+
+  * src-pred        Make predictions for measurements in test cases
+  * src-intensity   Make predictions for source intensity in grid cells.
+
+
 Molecular simulation with Lennard-Jones potential [mol]:
 
   * mol             Molecular simulation with Lennard-Jones potential

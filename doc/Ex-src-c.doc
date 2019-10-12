@@ -1,0 +1,202 @@
+
+
+INFERRING PARAMETERS FOR A FIXED NUMBER OF SOURCES.
+
+Given measurements of concentrations are various locations, we can try
+to infer the locations and intensities of the sources, as well as any
+other unknown parameters, such as the noise level for the detectors.
+Here, we'll consider such inference when the number of sources is
+fixed to a known value.
+
+
+To begin, we need to specify the structure of the model and the priors
+for the unknown model parameters.  This is done with specification
+commands similar to those described in the example of generation of
+data (Ex-src-g.doc).  However, here we'll assume that the noise level
+for measurements is unknown, with the log of the noise standard
+deviation being uniformly distributed between log(0.01) and log(1).
+Otherwise, the specifications are the same as were used when
+generating the data.  The specification commands needed are as
+follows:
+
+    > src-spec  logc2 3 0:5 / -10:10 -1:1 0:1
+    > det-spec  logc2 0.01:1
+    > flow-spec logc2 test 1 0.08 0.0001 0.06 0.00015
+
+We use a data-spec command that specifies the locations of the
+detectors and their measured concentration values:
+
+    > data-spec logc2 3 1 / grid2 data-grid2-0.1-1
+
+There are 3 inputs (detector location coordinates) and 1 target value
+(detector measurement).  The detector locations are on the grid of 126
+points with coordinates in the file 'grid2', and the measurements at
+these locations are in the data file 'data-grid2-0.1-1', which was
+generated as discussed in Ex-src-g.doc.
+
+
+Next, we specify the Markov chain Monte Carlo operations that will be
+used to sample from the posterior distribution of the unknown values,
+which for this example are the noise standard deviation and the source
+intensities and locations.  A wide variety of general-purpose
+operations are possible, as described in mc-spec.doc (though some
+operations are not allowed at present, because gradient computations
+are not implemented).  Also, some special operations for source
+location models have been implemented, as described in src-mc.doc.
+For this example, simple operations such as single-variable slice
+sampling are sufficient.  We can specify that each iteration does 50
+sets of slice sampling updates as follows:
+
+    > mc-spec logc2 repeat 50 slice-1 1 1 D slice-1 1 1 S end
+
+The "repeat 50 ... end" construct says that the operations in the
+middle are repeated 50 times, with the results storing in the log file
+only after all 50 repetitions.  Not storing every possible state saves
+on disk space.  
+
+The operations repeated here are single-variable slice sampling
+updates of detector parameters (indicated by "D"), which for this
+example is just the noise standard deviation, and single-variable
+slice sampling updates of source parameters (indicated by "S"), which
+here are the intensities and locations of the sources.  The two
+numbers after the "slice-1" specifications are the width of the
+initial interval (here 1) and the maximum width of the slice interval,
+in units of this initial width (here also 1, which means that the
+original interval is not expanded).  The specified interval width is
+multiplied by the default stepsize for each parameter, as described in
+src-mc.doc.
+
+We can also specify an initial state for the Markov chain, otherwise a
+default initial state will be used (see src-initial.doc).  For this
+example, the following command is used to set the initial noise
+standard deviation to its maximum value of 1, letting other values
+default:
+
+    > src-initial logc2 / 1
+
+Using a large noise standard deviation initially may help the Markov
+chain move around at the beginning, when the fit to the data is poor.
+(With the slice-1 operations used here, however, this explicit
+initialization to a large value may be unnecessary.)
+
+
+Finally, we can actual run the Markov chain that samples from the
+posterior distribution.  The following command does 1000 iterations,
+taking about 12 minutes on a 3 GHz Pentium 4:
+
+    > src-mc logc2 1000 &
+
+The "&" runs the command in the background.  
+
+We can monitor the progress of the run by displaying the state for the
+last iteration saved in the log file.  For instance, after a few
+minutes, we might see the following:
+
+    > src-display logc2 
+
+    PARAMETERS OF SOURCE LOCATION MODEL AT ITERATION 341
+      
+    Noise standard deviation: 0.1007
+      
+    Wind speed: 1.0000
+      
+            Q       x       y       z
+      
+      1    1.83    9.02    0.10    0.45
+      2    0.81   -6.33    0.71    0.88
+      3    0.55    4.42   -0.41    0.20
+
+Here, "Q" is the source intensity.  A specific iteration can be
+displayed by specifying the iteration index as an additional argument
+(see src-display.doc for details).
+
+We can also plot traces such as the following:
+
+    > src-plt t n logc2 | plot
+
+This plots the iteration number (t) on the horizontal axis and the
+noise standard deviation (n) on the vertical axis, for all iterations
+stored so far in logc2.  The "plot" program must be able to plot data
+given as lines containing pairs of coordinates.  The "xgraph" program
+is very suitable for this.  It takes about 20 iterations for the noise
+standard deviation to fall to the vicinity of the 0.1, which was the
+value used to generate the data.  We can also monitor the source
+locations with a command such as
+
+    > src-plt t x@ logc2 | plot-points
+
+Here, "x@" represents the x coordinates of all the sources.  The
+"plot-points" program should plot multiple sets of data pairs as
+points.  Again, "xgraph" is suitable, if the "-P" option is used.
+After about 50 iterations, the three sources have x coordinates in the
+vicinity of the correct values of 4.5, -6, and 9.  Other quantities
+that can be plotted are described in src-quantities.doc (see also
+mc-quantities.doc and quantities.doc).
+
+It appears that 1000 iterations are more than enough.  If more
+iterations were needed, more could be done.  For example, the command
+
+    > src-mc logc2 3000 &
+
+would do an additional 2000 iterations (after which the total number
+would be 3000).  Commands such as this can also be used to continue
+runs after a src-mc command was interrupted for some reason.
+
+
+Once the run is complete, we can make predictions for the
+concentration at any set of locations, using the src-pred program (see
+src-pred.doc).  Predictions at all locations in the file 'grid1' can
+be made with the following command:
+
+    > src-pred inb logc2 100: / grid1 >predc2
+
+This command writes the predictions to standard output, which is here
+re-directed to the file 'predc2'.  The characters in the first
+argument, "inb", specify that inputs (i) are included in the output
+(always four inputs, for x, y, z, and t, even if the data file had
+fewer), that the mean (n) of the posterior predictive distribution
+will be written, and that the output will be bare (b), with no
+headers.
+
+These predictions can be compared to the true values using the R
+functions in data-plot.r.  There is a good correspondence, except that
+various spurious values are present at locations with x coordinates
+less than -8.  This happens because there are no measurements at
+locations with x coordinates less than that (ie, downwind), so there
+is no evidence that such sources don't exist.
+
+
+We can also use the results of the MCMC run to find the expected total
+intensity of sources in a set of grid cells.  Here some example output:
+
+    > src-intensity 5 4 / logc2 100: 
+          0.0000      -8.0000      -0.7500
+          0.0000      -8.0000      -0.2500
+          0.0000      -8.0000      +0.2500
+          1.4688      -8.0000      +0.7500
+          0.0000      -4.0000      -0.7500
+          0.0000      -4.0000      -0.2500
+          0.0000      -4.0000      +0.2500
+          0.0788      -4.0000      +0.7500
+          0.0000      +0.0000      -0.7500
+          0.0000      +0.0000      -0.2500
+          0.0000      +0.0000      +0.2500
+          0.0000      +0.0000      +0.7500
+          0.0000      +4.0000      -0.7500
+          0.5002      +4.0000      -0.2500
+          0.0000      +4.0000      +0.2500
+          0.0000      +4.0000      +0.7500
+          0.0000      +8.0000      -0.7500
+          0.0000      +8.0000      -0.2500
+          1.8144      +8.0000      +0.2500
+          0.0000      +8.0000      +0.7500
+    
+The src-intensity command asks for a grid over x and y, with 5 cells
+in the x dimension and 4 in the y dimension.  Iterations from 100
+onwards in log file logc2 are used to estimated the expected total
+intensity in each of these cells.  The output has one line for each of
+the 20 cells, with the first number being the estimated total
+intensity, and the second and third numbers being the x and y
+coordinates of the centre of the cell.  Grids can extend over z also,
+and over t as well for non-steady-state models.  The output can be
+plotted in R using the functions in data-plot.r.

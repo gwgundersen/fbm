@@ -4,15 +4,17 @@
 
            FLEXIBLE BAYESIAN MODELS BASED ON NEURAL NETWORKS, 
 
-       GAUSSIAN PROCESSES, MIXTURES, AND DIRICHLET DIFFUSION TREES
+       GAUSSIAN PROCESSES, MIXTURES, DIRICHLET DIFFUSION TREES, AND
+ 
+                OTHER STATISTICAL AND PHYSICAL MODELS
 
                          and that demonstrates
 
                    MARKOV CHAIN MONTE CARLO METHODS
 
-              Copyright (c) 1995-2004 by Radford M. Neal 
+              Copyright (c) 1995-2007 by Radford M. Neal 
 
-                         Version of 2004-11-10
+                         Version of 2007-03-31
 
 Permission is granted for anyone to copy, use, modify, or distribute
 these programs and accompanying documents for any purpose, provided

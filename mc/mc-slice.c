@@ -56,20 +56,12 @@ void mc_slice_1
   double curr_q, slice_point, low_bnd, high_bnd;
   int k;
 
-  if (firsti==-1) 
-  { firsti = 0;
-    lasti = ds->dim-1;
-  }
-
-  if (lasti>=ds->dim-1) lasti = ds->dim-1;
-  if (firsti>lasti) firsti = lasti;
-
-  if (r_update)
-  { firsti = lasti = firsti + (int)(rand_uniform()*(lasti-firsti+1));
-  }
+  mc_set_range (ds, &firsti, &lasti, r_update);
   
   for (k = firsti; k<=lasti; k++)
   {
+    if (ds->stepsize[k]==0) continue;
+
     it->slice_calls += 1;
 
     if (!ds->know_pot)
@@ -264,22 +256,14 @@ void mc_slice_over
   double sf, curr_q, slice_point, width;
   int k, r;
 
+  mc_set_range (ds, &firsti, &lasti, r_update);
+
   sf = it->stepsize_factor;
-
-  if (firsti==-1) 
-  { firsti = 0;
-    lasti = ds->dim-1;
-  }
-
-  if (lasti>=ds->dim-1) lasti = ds->dim-1;
-  if (firsti>lasti) firsti = lasti;
-
-  if (r_update)
-  { firsti = lasti = firsti + (int)(rand_uniform()*(lasti-firsti+1));
-  }
   
   for (k = firsti; k<=lasti; k++)
   {
+    if (ds->stepsize[k]==0) continue;
+
     it->slice_calls += 1;
 
     if (!ds->know_pot)

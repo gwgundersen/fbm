@@ -6,6 +6,7 @@
 (cd gp;   echo " "; echo "Making programs in gp directory"; echo " "; make)
 (cd mix;  echo " "; echo "Making programs in mix directory"; echo " "; make)
 (cd dft;  echo " "; echo "Making programs in dft directory"; echo " "; make)
+(cd src;  echo " "; echo "Making programs in src directory"; echo " "; make)
 (cd mol;  echo " "; echo "Making programs in mol directory"; echo " "; make)
 
 echo " "; echo "Done making programs in all directories"; echo " "

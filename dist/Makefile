@@ -18,17 +18,18 @@ programs:	dist-spec dist-mc dist-plt dist-tbl dist-hist dist-grad-test \
 		dist-stepsizes dist-initial dist-display dist-est dist-gen \
 		dist-dgen dist-genp dist-his dist-mis
 clean:
-	rm -f *.o dist-spec dist-mc dist-plt dist-tbl dist-hist dist-grad-test \
+	rm -f *.o *.exe \
+		  dist-spec dist-mc dist-plt dist-tbl dist-hist dist-grad-test \
 	          dist-stepsizes dist-initial dist-display dist-est dist-gen \
-		  dist-dgen dist-genp dist-his
+		  dist-dgen dist-genp dist-his dist-mis
 
 
 include ../util/util.make
 include ../mc/mc.make
 
 dist-spec:	dist-spec.o	misc.o log.o formula.o digamma.o rand.o
-		$(CC) dist-spec.o misc.o log.o formula.o digamma.o rand.o \
-		  -lm -o dist-spec
+		$(CC) $(LFLAGS) dist-spec.o misc.o log.o formula.o digamma.o \
+		  rand.o -lm -o dist-spec
 
 dist-spec.o:	dist-spec.c	misc.h log.h mc.h dist.h formula.h
 

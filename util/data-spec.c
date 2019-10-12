@@ -260,6 +260,12 @@ main
          i<ds->N_inputs && *ap!=0 && strcmp(*ap,"/")!=0 && strcmp(*ap,"...")!=0;
          i++)
     { ds->trans[i] = data_trans_parse(*ap++);
+      if (do_not_read_data && 
+            (ds->trans[i].data_shift || ds->trans[i].data_scale))
+      { fprintf(stderr,
+         "Can't use data-derived transformations when data isn't read (-n)\n");
+        exit(1);
+      }
     }
 
     if (*ap!=0 && strcmp(*ap,"...")==0)
@@ -283,6 +289,12 @@ main
         i<ds->N_targets && *ap!=0 && strcmp(*ap,"/")!=0 && strcmp(*ap,"...")!=0;
         i++)
       { ds->trans[ds->N_inputs+i] = data_trans_parse(*ap++);
+        if (do_not_read_data && 
+              (ds->trans[i].data_shift || ds->trans[i].data_scale))
+        { fprintf(stderr,
+          "Can't use data-derived transformations when data isn't read (-n)\n");
+          exit(1);
+        }
         if (ds->int_target && (ds->trans[ds->N_inputs+i].data_shift 
                                 || ds->trans[ds->N_inputs+i].data_scale))
         { fprintf(stderr,

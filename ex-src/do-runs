@@ -1,0 +1,13 @@
+
+# Do MCMC runs for data on grid2, grid3, and grid4, using models with both 
+# fixed (3) and variable numbers of sources.
+
+fitc-cmds 4 3 >outc4
+fitc-cmds 3 3 >outc3
+fitc-cmds 2 3 >outc2
+
+fitv-cmds 4 0:5 0.5 >outv4
+fitv-cmds 3 0:5 0.5 >outv3
+fitv-cmds 2 0:5 0.5 >outv2
+
+fitssc-cmds 2 2 >outssc2

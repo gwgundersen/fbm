@@ -1,0 +1,141 @@
+
+
+INFERENCE FOR A VARYING NUMBER OF SOURCES.
+
+We may wish to infer not only the locations and intensities of
+sources, but also their number.  Inferring the number of sources is
+not a completely well-defined problem.  If sources can have very low
+intensity, there could be many sources that are virtually
+undetectable.  There could also be many sources located where the
+available detectors cannot see their effects.  Nevertheless, as long
+as these issues are kept in mind when interpreting the results,
+inferring the number of sources makes sense in many situations.
+
+
+A model with a an unknown number of sources can be specified by giving
+a range for the number of sources in the src-spec command.  It may
+also be desirable to use a non-uniform prior for source intensities
+when the number of sources is unknown.  Here is an example:
+
+    > src-spec  logv2 0:5 0:5:0.5 / -10:10 -1:1 0:1
+
+This resembles the src-spec command in the previous example
+(Ex-src-c.doc), except that the number of sources is now said to be
+between 0 and 5, and the prior for source intensities is now written
+as "0:5:0.5", which means intensities range from 0 to 5 and the
+intensity raised to the power 0.5 has a uniform distribution (the
+default for this power is 1).  Note that this is equivalent to the
+intensity having a prior probability density proportional to the
+intensity raised to the power -0.5 (and in general, a density
+proportional to the intensity raised to the specified power minus 1).
+Using a prior that favours small intensities may allow sources to be
+added and eliminated more easily, since they are more likely to have
+low intensities, and hence their presence or absence has less effect
+on the fit to the data.  On the other hand, the presence of
+low-intensity sources makes interpretation of the results harder.
+
+We can leave the remaining model specifications, and the data
+specification, as in the previous example (Ex-src-c.doc):
+
+    > det-spec  logv2 0.01:1
+    > flow-spec logv2 test 1 0.08 0.0001 0.06 0.00015
+    > data-spec logv2 3 1 / grid2 data-grid2-0.1-1
+
+
+The specification of the MCMC operations to perform each iteration
+does need to be changed.  First of all, an operation that can change
+the number of active sources is required.  The number of sources that
+are represented in the Markov chain state is fixed at the maximum
+specified with src-spec, but only the first N of these are "active",
+with the remaining sources having no effect on the data distribution.
+(Note that "active" here means "really exists", and is not related to
+the start and stop times for sources in non-steady-state models).  The
+number of active sources, N, is also part of the Markov chain state.
+It is represented as a real number, N0, whose fractional part is
+ignored (ie, N is the floor of N0) - an arrangement motivated by the
+fact that the general MCMC routines work only on real values.
+
+Several ways of changing N0 (and hence N0 would be possible, but a
+Metropolis update seems simplest.  We could add such an update,
+specified by "met-1 1 N", to the operatons used in the previous
+example, using the following specification command:
+
+    > mc-spec logv2 repeat 50 met-1 1 N slice-1 1 1 D slice-1 1 1 S end
+
+However, this would be a very inefficient way to sample from the
+posterior distribution.  The "slice-1 1 1 S" operation updates the
+locations and intensities of active sources only, so these operations
+would leave the parameters of inactive sources, until such time as
+they become active when N increases.  But usually N will be unlikely
+to increase, since the newly active source would not have suitable
+parameters values, and so a proposal to increase N will have a low
+probability of acceptance.  A special "prior-gen-used" operation has
+been implemented that changes the parameters of inactive sources to
+values generated from their prior.  Including this operation in
+mc-spec as follows would improve convergence (note that "\" is used
+here to continue the command on the next line):
+
+    > mc-spec logv2 repeat 50 \
+                      prior-gen-unused met-1 1 N \
+                      slice-1 1 1 D slice-1 1 1 S \
+                    end
+
+Since inactive sources will now have constantly-changing parameters,
+it is more likely that an increase in N will sooner-or-later be
+accepted, since the parameters will sometime happen to be suitable.
+However, there is still a problem with decreasing N, since the N'th
+active source may be essential to fitting the data, even if one of the
+earlier active sources should not really be active.  We can solve this
+problem using a special operation, "shuffle", that rearranges the
+order of the active sources.  With this operation added, the mc-spec
+command becomes:
+
+    > mc-spec logv2 repeat 50 \
+                      shuffle prior-gen-unused met-1 1 N \
+                      slice-1 1 1 D slice-1 1 1 S \
+                    end
+
+If one of the active sources should not be active, "shuffle" will
+sometimes make it the last active source, at which point a proposal to
+decrease N may be accepted.
+
+The above set of operations works reasonably well, but one more
+elaboration may help.  The "shift-intensities" operation chooses two
+active sources at random, and shifts the intensities of these two
+sources while keeping their total intensity constant.  By default, it
+also shifts the coordinates of the sources to keep their
+intensity-weighted average the same. See src-mc.doc for details.  With
+this additional operation (done 5 times), the mc-spec command becomes
+
+    > mc-spec logv2 repeat 50 \
+                      shift-intensities 5 \
+                      shuffle prior-gen-unused met-1 1 N \
+                      slice-1 1 1 D slice-1 1 1 S \
+                    end
+
+
+We can now do an MCMC run with commands such as the following:
+
+    > src-initial logv2 / 1
+    > src-mc logv2 1000 
+
+This takes about 20 minutes on a 3 GHz Pentium 3, and seems to be more
+than enough iterations.
+
+
+We can looking at the posterior distribution of the number of sources
+used with the command:
+
+    > src-hist N -0.5 5.5 6 logv2 100: | plot
+
+The number of sources is always at least three (which we know is the
+correct number from how the data was generated), but is almost as
+likely to be four or five as to be three.  The extra sources that are
+often present usually have low intensity, as can be seen from plots
+such as
+
+    > src-plt t Q1@ logv2 100: | plot-points
+
+The src-pred and src-intensity programs can be used to predict
+concentrations and to see where sources are, as in the example in
+Ex-src-c.doc.  See src-pred.doc and src-intensity.doc for details.

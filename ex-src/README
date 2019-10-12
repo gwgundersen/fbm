@@ -1,0 +1,24 @@
+This directory contains command files and R programs for the examples
+of inference for locations of sources of atmospheric contamination.
+
+The command files provided here are a bit more general than the
+commands in the tutorial examples.  The following general command
+files exist:
+
+   gen-cmds   Generate data, similar to the commands in the example
+   fit-cmds   Fit models to data, similar to the commands in the examples
+   pred-cmds  Make predictions for a grid of locations, as in the examples
+
+These command files take arguments, allowing them to be used more
+generally than just reproducing the examples.  To reproduce all the
+examples (plus some more things), you can run the 'mk-grids',
+'mk-data', 'do-runs', and 'do-pred' command files, in that sequence.
+After this, the 'plt-data.r' and 'plt-pred.r' scripts can be run in R
+to produce plots.
+
+The file 'gridA' has grid points for an example suggest by Eugene Yee.
+The 'genA', 'runcA', and 'runvA' files have commands to generate data
+for that grid, and fit model with fixed and varying numbers of sources.
+
+The scripts in 'genss-cmds' and 'fitssc-cmds' so some simple tests of
+a non-steady-state model in which sources start and stop.  

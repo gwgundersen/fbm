@@ -1,6 +1,6 @@
 /* MC-UTIL.C - Utility procedures for Monte Carlo simulation. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2007 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -22,6 +22,14 @@
 #include "rand.h"
 #include "log.h"
 #include "mc.h"
+
+
+/* POINTER TO APPLICATION'S PROCEDURE FOR SETTING CUSTOM RANGES.  Zero if
+   not supplied by application.  The range is specified by the second 
+   argument, which is -2 or below, for 'A' to 'Z'.  The value returned is
+   zero if the range specification is unknown to the application.  */
+
+int (*mc_app_set_range_ptr) (mc_dynamic_state *, int *, int *);
 
 
 /* SET REQUIRED RECORD SIZES. */
@@ -173,5 +181,46 @@ void mc_value_copy
   while (n>0)
   { *dest++ = *src++;
     n -= 1;
+  }
+}
+
+
+/* SET RANGE OF COMPONENTS FOR UPDATES. */
+
+void mc_set_range
+( mc_dynamic_state *ds,
+  int *first,
+  int *last,
+  int r_update
+)
+{
+  if (*first>=0)
+  { if (*last>ds->dim-1)
+    { fprintf (stderr, "Last (%d) is beyond end (%d) in coordinate range\n",
+               *last, ds->dim-1);
+      exit(1);
+    }
+  }
+  else if (*first==-1)
+  { *first = 0;
+    *last = ds->dim-1;
+  }
+  else 
+  { if (mc_app_set_range_ptr==0 || !(*mc_app_set_range_ptr) (ds, first, last))
+    { fprintf (stderr, "Unknown application-specified coordinate range (%c)\n",
+                       'A' + (-2-*first));
+      exit(1);
+    }
+  }
+
+  if (*first>*last+1)
+  { fprintf (stderr, 
+     "First (%d) greater than last (%d) + 1 in coordinate range\n",
+      *first, *last);
+    exit(1);
+  }
+
+  if (r_update)
+  { *first = *last = *first + (int)(rand_uniform()*(*last-*first+1));
   }
 }

@@ -1,0 +1,35 @@
+<html>
+<body>
+<pre>
+
+
+SRC-DGEN - Randomly generate detector measurements given source parameters.
+
+The src-dgen program randomly samples from the distribution of the
+training measurements given the source parameters (as well as the
+parameters of the detector and flow models, if any).  This may be of
+interest in itself, and can also be used as part of Geweke's procedure
+for testing the correctness of Markov chain sampling methods (see
+<A HREF="xxx-mc-test.html">xxx-mc-test.doc</A>).
+
+Usage:
+
+    src-dgen log-file [ index ] / [ inputs ] targets-file
+
+Parameters are read from the record in the log file with the specified
+index.  Detector measurements are then sampled from their distribution
+as defined by these parameters, for the locations/times of measurement
+as read from the inputs file.  These measurements are written to the
+targets file, whose previous contents are overwritten.  The random
+number seed used is that saved for the index specified.
+
+The default if no inputs are specified is the file of inputs for
+training cases as specified with data-spec.  The default if no index
+is specified is the last index in the log file.  When the last index
+is used by default, the random number state is appended to the file
+after being updated during generation of the measurements.
+
+            Copyright (c) 2007 by Radford M. Neal
+</pre>
+</body>
+</html>

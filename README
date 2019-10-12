@@ -1,14 +1,15 @@
 
-  FLEXIBLE BAYESIAN MODELLING SOFTWARE, VERSION OF 2004-11-10.
+  FLEXIBLE BAYESIAN MODELLING SOFTWARE, VERSION OF 2007-03-31
 
   This directory and its subdirectories contain software for flexible
   Bayesian learning of regression, classification, density, and other
   models, based on multilayer perceptron neural networks, Gaussian 
   processes, finite and countably infinite mixtures, and Dirichlet 
-  diffusion trees.  These models are implemented using Markov chain 
-  Monte Carlo methods.  Software that does Markov chain sampling for 
-  distributions specified by simple formulas for the density or for the 
-  prior and likelihood is also included.
+  diffusion trees, as well as facilities for inferring sources of
+  atmospheric contamination and for molecular simulation.  These are
+  implemented using Markov chain Monte Carlo methods.  Software that 
+  does Markov chain sampling for distributions specified by simple 
+  formulas for the density or for the prior and likelihood is also included.
 
   For more information, see the files in the 'doc' directory.   The
   file 'index.html' in 'doc' has links to all the documentation, which
@@ -19,7 +20,7 @@
   -----------------------------------------------------------------------
 
   The contents of this directory and its sub-directories are 
-  Copyright (c) 1995-2004 by Radford M. Neal
+  Copyright (c) 1995-2007 by Radford M. Neal
   
   Permission is granted for anyone to copy, use, modify, or distribute these
   programs and accompanying documents for any purpose, provided this copyright

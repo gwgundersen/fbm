@@ -13,4 +13,4 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
-double phi(double), Phi(double), Phi_inverse(double);
+double phi(double), log_phi(double), Phi(double), Phi_inverse(double);

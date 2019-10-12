@@ -1,0 +1,3 @@
+cp blog.net bf2clog
+mc-spec bf2clog sample-sigmas heatbath hybrid 800:10 1.0 negate / leapfrog 20
+net-mc bf2clog 400
