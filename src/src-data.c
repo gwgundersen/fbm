@@ -90,9 +90,13 @@ void src_data_read
     exit(1);
   }
 
-  if (data_spec->N_targets!=1)
+  /* Expect 1 or 2 targets - measured mean concentration data and its
+     standard deviation (uncertainty).  Standard deviation defaults to one 
+     if there is only one target. */
+
+  if (data_spec->N_targets!=1 && data_spec->N_targets!=2)
   { fprintf(stderr,
-     "Number of targets in data specification must be 1 for source models\n");
+"Number of targets in data specification must be 1 or 2 for source models\n");
     exit(1);
   }
 
@@ -171,7 +175,7 @@ double *src_data_read_targets
     exit(1);
   }
 
-  tg = chk_alloc (N_cases, sizeof (double));
+  tg = chk_alloc (2*N_cases, sizeof (double));
 
   if (data_spec->trans[data_spec->N_inputs].take_log)
   { fprintf (stderr,
@@ -180,8 +184,14 @@ double *src_data_read_targets
   }
 
   for (i = 0; i<N_cases; i++)
-  { numin_read(ns,tg+i);
-    tg[i] = data_trans (tg[i], data_spec->trans[data_spec->N_inputs]);
+  { numin_read(ns,tg+2*i);
+    for (j=0; j < data_spec->N_targets; j++)
+    {
+      tg[2*i+j] = data_trans (tg[2*i+j], data_spec->trans[data_spec->N_inputs]);
+    }
+    if (data_spec->N_targets==1)
+    { tg[2*i+1] = 1;  /* Default measurement standard deviation is one */
+    }
   }
 
   numin_close(ns);

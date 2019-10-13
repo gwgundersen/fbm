@@ -48,7 +48,7 @@ synonym for "t0" (similarly "i" is a synonym for "i0").
 The notation in the likelihood specification using "~" is actually an
 abbreviation for the following:
 
-    Log(2*Pi)/2 + [t - (u+w0i0+w1i1)]^2 / [2Exp(-v)]
+    Log(2*Pi Exp(-v))/2 + [t - (u+w0i0+w1i1)]^2 / [2Exp(-v)]
 
 which is minus the log of the normal probability density for t with
 the given mean and variance.  In general, the likelihood is specified

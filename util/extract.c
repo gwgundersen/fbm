@@ -13,6 +13,7 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "rand.h"

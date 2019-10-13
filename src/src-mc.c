@@ -212,11 +212,15 @@ int mc_app_sample
       j = rand_int(N-1);
       if (j>=i) j += 1;
 
-      /* Get their intensities, and compute total and proportion of source i. */
+      /* Get their intensities, and compute total and proportion of source i. 
+         Do nothing if the total intensity is zero. */
 
       inti = pow(params->src[i].Q,1/src->powQ);
       intj = pow(params->src[j].Q,1/src->powQ);
       total = inti + intj;
+
+      if (total==0) continue;
+
       propi = inti / total;
 
       /* Find weighted means and differences of coordinates for the sources. */
@@ -349,7 +353,7 @@ void mc_app_energy
     return;
   }
   
-  for (i = 0; i<N; i++)
+  for (i = 0; i<src->highN; i++)
   { upper_time = params->src[i].start + src->max_duration;
     if (upper_time>src->max_stop)
     { upper_time = src->max_stop;
@@ -378,12 +382,17 @@ void mc_app_energy
   /* Evaluate energy contribution from fit of predicted values with actual
      measurements. */
 
+  /* In this version, an uncertainty sigma is provided for each
+     concentration measurement.  If overall scale of uncertainty is
+     unknown, it can be included through noise width.  Otherwise, set
+     noise width = 1 (fixed value), ie, log_width = 0. */
+
   if (tf>0)
   { 
     for (c = 0; c<N_train; c++)
     {
       v = src_total (src, flow, params, train_inputs+4*c);
-      e = v - train_targets[c];
+      e = (v - train_targets[2*c])/train_targets[2*c+1];
       lw = params->log_width;
       idf = params->inv_df;
   

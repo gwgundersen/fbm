@@ -32,7 +32,7 @@ src-data.o:	src-data.c	misc.h numin.h src.h data.h src-data.h
 src-prior.o:	src-prior.c	log.h rand.h src.h
 src-quantities.o: src-quantities.c misc.h log.h quantities.h mc.h src.h \
 				numin.h data.h src-data.h
-src-flow.o:	src-flow.c	log.h src.h
+src-flow.o:	src-flow.c	log.h src.h phi.h
 
 src-spec:	src-spec.o	log.o src-util.o misc.o
 		$(CC) $(LFLAGS) src-spec.o log.o src-util.o misc.o \
@@ -71,7 +71,7 @@ src-dgen:	src-dgen.o	log.o rand.o src-util.o src-data.o src-flow.o \
 		  -lm -o src-dgen
 
 src-dgen.o:	src-dgen.c	misc.h log.h src.h numin.h data.h src-data.h \
-				rand.h
+				rand.h 
 
 src-display:	src-display.o	log.o src-util.o
 		$(CC) $(LFLAGS) src-display.o log.o src-util.o \
@@ -161,7 +161,7 @@ src-pred:	pred.o		src-pred.o src-data.o src-util.o src-flow.o \
 		  -lm -o src-pred
 
 src-pred.o:	src-pred.c	misc.h rand.h log.h mc.h src.h numin.h \
-				data.h src-data.h pred.h
+				data.h src-data.h pred.h phi.h
 
 src-intensity:	src-intensity.o	src-data.o src-util.o src-flow.o \
 				misc.o phi.o log.o rand.o numin.o data-trans.o

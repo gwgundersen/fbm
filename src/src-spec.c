@@ -199,8 +199,9 @@ main
 static void usage(void)
 {
   fprintf(stderr, "Usage: src-spec log-file\n");
-  fprintf(stderr, "         lowN[:highN] lowQ[:highQ[:power]] [ max-start [ max-stop ] ]\n");
-  fprintf(stderr, "           / lowx:highx [ lowy:highy [ lowz:highz ] ]\n");
+  fprintf(stderr, "         lowN[:highN] lowQ[:highQ[:power]]\n");
+  fprintf(stderr,"            [ max-start [ max-stop ] ] [ +max-duration ]\n");
+  fprintf(stderr, "             / lowx:highx [ lowy:highy [ lowz:highz ] ]\n");
   fprintf(stderr,
                   "   or: src-spec log-file (to display stored specifications)\n");
 

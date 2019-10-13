@@ -51,7 +51,7 @@ correctness of the Markov chain sampling methods.
 
 The following application-specific operations are implemented:
 
-    shuffle-sources
+    shuffle
 
         Randomly permutes the order of sources that are currently being
         used.  This changes nothing in itself, but alters which source 
@@ -84,7 +84,7 @@ The following application-specific operations are implemented:
         way it is split between the two sources will have changed, and 
         (if no "-" is specified) the coordinates will have changed to keep
         the overall effect roughly the same as before (exactly the same if
-        the effect is linear in the coordinat values).
+        the effect is linear in the coordinate values).
 
         This operation is useful when the two sources have similar locations 
         and times, since it may then make a large change in how the total 

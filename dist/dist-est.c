@@ -27,7 +27,7 @@
 
 /* VALUES AND IMPORTANCE WEIGHTS AT DATA POINTS. */
 
-#define Max_points 200000		/* Maximum number of points allowed */
+#define Max_points 1000000		/* Maximum number of points allowed */
 
 static int n_points;			/* Number of points used for estimate */
 

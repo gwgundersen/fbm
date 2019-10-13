@@ -34,7 +34,7 @@ void src_prior_generate
 {
   int i;
 
-  if (flow->type=='t')
+  if (strchr("tT",flow->type))
   { params->U = flow->lowU + (flow->highU-flow->lowU) * rand_uniopen();
   }
   else
@@ -65,6 +65,7 @@ void src_prior_one_src
   int i			/* Which source to sample for */
 )
 {
+  double upper_time;
   int j;
 
   if (i>=src->highN) abort();
@@ -76,8 +77,13 @@ void src_prior_one_src
 
   params->src[i].Q = pow(src->lowQ,src->powQ) + rand_uniopen() 
                       * (pow(src->highQ,src->powQ) - pow(src->lowQ,src->powQ));
+
   params->src[i].start = src->max_start * rand_uniopen();
-  params->src[i].stop = src->max_stop>=1e30 ? 1e30 
-      : params->src[i].start 
-           + (src->max_stop-params->src[i].start) * rand_uniopen();
+
+  upper_time = params->src[i].start + src->max_duration;
+  if (upper_time>src->max_stop)
+  { upper_time = src->max_stop;
+  }
+  params->src[i].stop = upper_time>=1e30 ? 1e30 
+    : params->src[i].start + (upper_time-params->src[i].start) * rand_uniopen();
 }

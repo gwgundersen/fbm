@@ -63,8 +63,9 @@ output units specified in the network architecture, or an error will
 result when training is started.
 
 The initial and sampling phases of the simulation can be done using
-the same approach as was used above for the binary data set (but the
-"sample-noise" operation doesn't actually do anything here):
+the same approach as was used above for the binary data set (as noted
+there, the "sample-noise" operation doesn't actually do anything for
+classification models like this):
 
     > net-gen clog.net fix 0.5
     > mc-spec clog.net repeat 10 sample-noise heatbath hybrid 100:10 0.2

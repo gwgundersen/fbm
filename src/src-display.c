@@ -148,7 +148,7 @@ main
         params->src[i].coord[2]);
     }
     else if (src->max_stop==1e30 && src->max_duration==1e30)
-    { printf("%3d %7.2f %7.2f %7.2f %7.2f %7.2f %7.2f\n", i+1,
+    { printf("%3d %7.2f %7.2f %7.2f %7.2f %7.2f\n", i+1,
         pow(params->src[i].Q,1/src->powQ),
         params->src[i].coord[0], 
         params->src[i].coord[1], 

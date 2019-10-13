@@ -309,7 +309,7 @@ main
         ds.temp_state->inv_temp = 0;
         mc_app_energy(&ds,1,1,&E1,0);
 
-        if (E1>level || (H1-H0)>10000 || (H0-H1)>10000)
+        if (E1>level || (H1-H0)>1000 || (H0-H1)>1000)
         { mc_value_copy (ds.q, save_q, ds.dim);
           for (k = 0; k<ds.dim; k++)
           { ds.p[k] = -save_p[k];

@@ -24,7 +24,7 @@
 #include "rand.h"
 
 
-static long int this_nrand48 (unsigned short int [3]);
+static long int my_nrand48 (unsigned short int [3]);
 					/* Local version of nrand48 */
 
 
@@ -171,7 +171,7 @@ int rand_word(void)
 
   if (!initialized) initialize();
 
-  v = this_nrand48(state->state48);
+  v = my_nrand48(state->state48);
 
   for (j = 0; j<N_tables; j++)
   { v ^= rn[j][state->ptr[j]];
@@ -478,7 +478,7 @@ double rand_beta
 #include <limits.h>
 #include <sys/types.h>
 
-struct drand48_data
+struct my_drand48_data
   {
     unsigned short int x[3];	/* Current state.  */
     unsigned short int old_x[3]; /* Old state.  */
@@ -489,34 +489,38 @@ struct drand48_data
 
 /* Global state for non-reentrant functions.  */
 
-struct drand48_data libc_drand48_data;
+struct my_drand48_data my_drand48_state;
 
-static int nrand48_r (unsigned short int xsubi[3],
-                      struct drand48_data *buffer,
+/* Internal function prototypes. */
+
+static int my_nrand48_r (unsigned short int xsubi[3],
+                      struct my_drand48_data *buffer,
                       long int *result);
 
-/* Internal function to compute next state of the generator.  */
+static int my_drand48_iterate (unsigned short int xsubi[3],
+                            struct my_drand48_data *buffer);
 
-static int drand48_iterate (unsigned short int xsubi[3],
-                            struct drand48_data *buffer);
+/* Function used above. */
 
-static long int this_nrand48 (xsubi)
+static long int my_nrand48 (xsubi)
      unsigned short int xsubi[3];
 {
   long int result;
 
-  (void) nrand48_r (xsubi, &libc_drand48_data, &result);
+  (void) my_nrand48_r (xsubi, &my_drand48_state, &result);
 
   return result;
 }
 
-static int nrand48_r (xsubi, buffer, result)
+/* Internal functions. */
+
+static int my_nrand48_r (xsubi, buffer, result)
      unsigned short int xsubi[3];
-     struct drand48_data *buffer;
+     struct my_drand48_data *buffer;
      long int *result;
 {
   /* Compute next state.  */
-  if (drand48_iterate (xsubi, buffer) < 0)
+  if (my_drand48_iterate (xsubi, buffer) < 0)
     return -1;
 
   /* Store the result.  */
@@ -528,10 +532,13 @@ static int nrand48_r (xsubi, buffer, result)
   return 0;
 }
 
-static int drand48_iterate (xsubi, buffer)
+static int my_drand48_iterate (xsubi, buffer)
      unsigned short int xsubi[3];
-     struct drand48_data *buffer;
+     struct my_drand48_data *buffer;
 {
+  typedef unsigned long long int uint64_t;
+  typedef unsigned long int uint32_t;
+
   uint64_t X;
   uint64_t result;
 

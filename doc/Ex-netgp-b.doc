@@ -46,11 +46,12 @@ problem turn out to be adequate for this problem as well:
     > mc-spec blog.net repeat 10 sample-noise heatbath hybrid 100:10 0.2
     > net-mc blog.net 1
 
-(The sample-noise operation above is actually unnecessary, since there
-is no noise for this model.)  For the sampling phase, we could also
-try using commands similar to those presented above, but we might as
-well try something different (the mc-spec command needed here is long,
-so it is continued by putting a "\" at the end of the first line):
+(Note that the sample-noise operation above is actually unnecessary
+here, since there is no noise for classification models.)  For the
+sampling phase, we could also try using commands similar to those
+presented above, but we might as well try something different (the
+mc-spec command needed here is long, so it is continued by putting a
+"\" at the end of the first line):
 
     > mc-spec blog.net repeat 10 sample-sigmas heatbath 0.95 \
                                  hybrid 100:10 0.3 negate

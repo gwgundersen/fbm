@@ -2,8 +2,6 @@
 
 SRC-INTENSITY:  Make predictions for source intensity in grid cells.
 
-NOTE: THIS PROGRAM IS NOT IMPLEMENTED YET.
-
 Src-intensity makes predictions for the total intensity of sources
 within each cell in a grid.
 

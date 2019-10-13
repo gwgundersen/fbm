@@ -4,15 +4,17 @@ SRC:  Programs to infer source locations from detector readings.
 
 The 'src' programs implement sampling from the posterior distributions
 of Bayesian models for the location of the sources of some pollutant
-carried by air.  Source locations are specified by rectangular x, y,
-and z coordinates.  Here, z is height above some reference ground
-level, and is always positive.  Each source has a non-negative
-intensity, Q, during the period it is active (and zero intensity when
-it is not active).  Inference is based on measurements made by
-detectors located at specified x, y, and z coordinates, and (except
-for steady-state models) at specified times.  A flow model relates
-emissions from the source locations to concentrations at the
-detectors.  Another model describes detector noise.
+carried by air.  They were developed in consultation with Eugene Yee.
+
+Source locations are specified by rectangular x, y, and z coordinates.
+Here, z is height above some reference ground level, and is always
+positive.  Each source has a non-negative intensity, Q, during the
+period it is active (and zero intensity when it is not active).
+Inference is based on measurements made by detectors located at
+specified x, y, and z coordinates, and (except for steady-state
+models) at specified times.  A flow model relates emissions from the
+source locations to concentrations at the detectors.  Another model
+describes detector noise.
 
 The number of sources may be variable.  The current number of sources
 is represented by a real value, the floor of which gives the number of
@@ -27,11 +29,13 @@ programs:
     det-spec.doc        Specify the detector noise model
     flow-spec.doc       Specify flow model
 
-    src-display.doc     Display parameters for a given iteration
-    src-pred.doc        Make predictions for test measurements 
     src-initial.doc     Set initial values for parameters
     src-gen.doc         Generate parameters from the prior distribution
     src-dgen.doc        Generate measurements from the data distribution
+
+    src-display.doc     Display parameters for a given iteration
+    src-pred.doc        Make predictions for test measurements 
+    src-intensitiy.doc  Make predictions for source intensity in grid cells
 
 The general-purpose programs in the 'util' and 'mc' modules are also
 used, as well as the specializations of the 'xxx' programs to the
