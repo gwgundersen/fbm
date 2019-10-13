@@ -92,7 +92,8 @@ void mc_available
       }
 
       if (letter=='s')
-      { qd[i].available = low==-1 && mod>=0 && mod<ds.dim ? 1 : -1;
+      { qd[i].available = low==-1 
+                           && (mod==-1 || mod>=0 && mod<ds.dim) ? 1 : -1;
       }
   
       if (letter=='p')
@@ -118,6 +119,11 @@ void mc_evaluate
   
   it = logg->data['i'];
   ds.p = logg->data['p'];
+
+  ds.slevel.value = 0;
+  if (logg->data['l'])
+  { ds.slevel = * (struct slevel *) logg->data['l'];
+  }
 
   ds.know_grad    = 0;
   ds.know_pot     = 0;
@@ -387,9 +393,15 @@ void mc_evaluate
         }
   
         case 's':
-        { mc_app_stepsizes(&ds);
-          *qh->value[i] = ds.stepsize[mod];
-          qh->updated[i] = 1;
+        { if (mod==-1)  /* slevel value */
+          { *qh->value[i] = ds.slevel.random==-1 ? 0 : ds.slevel.value;
+            qh->updated[i] = 1;
+          }
+          else  /* stepsizes */
+          { mc_app_stepsizes(&ds);
+            *qh->value[i] = ds.stepsize[mod];
+            qh->updated[i] = 1;
+          }
           break;
         }
 

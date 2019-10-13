@@ -33,7 +33,7 @@ void mc_metropolis
   int b_accept		/* Use Barker/Boltzmann acceptance probability? */
 )
 {
-  double old_energy, sf, U, a;
+  double old_energy, sf, U, a, a0;
   int k;
 
   if (!ds->know_pot)
@@ -58,9 +58,9 @@ void mc_metropolis
   it->proposals += 1;
   it->delta = ds->pot_energy - old_energy;
 
-  U = rand_uniform(); /* Do every time to keep in sync for coupling purposes */
+  U = mc_slevel(ds);
 
-  a = exp(-it->delta/it->temperature);
+  a = a0 = exp(-it->delta/it->temperature);
   if (b_accept) 
   { a = 1/(1+1/a);
   }
@@ -69,6 +69,7 @@ void mc_metropolis
   { 
     it->move_point = 1;
     ds->know_grad = 0;
+    ds->slevel.value /= a0;
   }
   else
   { 
@@ -118,7 +119,7 @@ void mc_rgrid_met
   it->proposals += 1;
   it->delta = ds->pot_energy - old_energy;
 
-  U = rand_uniform(); /* Do every time to keep in sync for coupling purposes */
+  U = mc_slevel(ds);
 
   a = exp(-it->delta/it->temperature);
   if (b_accept) 
@@ -180,7 +181,7 @@ void mc_met_1
     it->proposals += 1;
     it->delta = ds->pot_energy - old_energy;
   
-    U = rand_uniform(); /* Do every time to keep in sync for coupling purposes*/
+    U = mc_slevel(ds);
 
     a = exp(-it->delta/it->temperature);
     if (b_accept) 
@@ -245,7 +246,7 @@ void mc_rgrid_met_1
     it->proposals += 1;
     it->delta = ds->pot_energy - old_energy;
   
-    U = rand_uniform(); /* Do every time to keep in sync for coupling purposes*/
+    U = mc_slevel(ds);
 
     a = exp(-it->delta/it->temperature);
     if (b_accept) 

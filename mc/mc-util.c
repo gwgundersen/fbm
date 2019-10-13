@@ -137,6 +137,30 @@ int mc_temp_index
 }
 
 
+/* FIND [0,1] VARIABLE FOR ACCEPT/REJECT OR SLICE LEVEL.  Updates or 
+   records in slevel as required. */
+
+double mc_slevel
+( mc_dynamic_state *ds		/* Dynamical state structure */
+)
+{ double a;
+  if (ds->slevel.random==-1 || ds->slevel.random==2)
+  { a = rand_uniform();
+  }
+  else
+  { a = ds->slevel.value;
+    if (ds->slevel.random!=0)
+    { a = a + ds->slevel.random * (2*rand_uniform()-1);
+    }
+    a = a + ds->slevel.move;
+    while (a > 1) a -= 2;
+    while (a < -1) a += 2;
+  }
+  ds->slevel.value = a;
+  return a>=0 ? a : -a;
+}
+
+
 /* FIND DIFFERENCE IN ENERGY FOR TEMPERING CHANGE.  Computes the difference
    in energy resulting from a change in the tempering index by one step
    up or down. */

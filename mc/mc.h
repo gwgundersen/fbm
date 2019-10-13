@@ -49,6 +49,9 @@ typedef struct
     float stepsize_adjust;/* Adjustment factor for stepsizes */
     float stepsize_alpha; /* Gamma param for stepsize dist, zero is infinity */
 
+#   define op_slevel_move stepsize_adjust   /* overlap slevel (type == 'v')  */
+#   define op_slevel_random stepsize_alpha  /*   arguments with above fields */
+
     int window; 	  /* Window size for hybrid Monte Carlo updates */
     int jump;	  	  /* Steps in each jump for hybrid Monte Carlo */
 
@@ -239,6 +242,12 @@ typedef struct
   mc_value *p;		/* Momentum variables */
   mc_value *aux;	/* Auxiliary variables */
 
+  struct slevel         /* Value for slevel, and how it is updated */
+  { mc_value value;       /* Value in [-1,+1], with abs used as [0,1] value */
+    mc_value move;        /* Amount to move value by, in [-1,+1] */
+    mc_value random;      /* Randomization amount, -1 if no slevel record, */
+  } slevel;               /*   2 if slevel record for default behaviour */
+
   mc_temp_state *temp_state; /* State for simulated tempering */
   int temp_index;	/* Index of inverse temperature in schedule */
 #if 0
@@ -328,3 +337,5 @@ void mc_slice_outside (mc_dynamic_state *, mc_iter *, int, int,
 void mc_value_copy (mc_value *, mc_value *, int);
 
 void mc_set_range (mc_dynamic_state *, int *, int *, int);
+
+double mc_slevel (mc_dynamic_state *);

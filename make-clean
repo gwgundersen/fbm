@@ -1,3 +1,4 @@
+
 (cd util; echo " "; echo "Cleaning util directory"; echo " "; make clean)
 (cd mc;   echo " "; echo "Cleaning mc directory"; echo " "; make clean)
 (cd dist; echo " "; echo "Cleaning dist directory"; echo " "; make clean)
@@ -8,5 +9,7 @@
 (cd dft;  echo " "; echo "Cleaning dft directory"; echo " "; make clean)
 (cd src;  echo " "; echo "Cleaning src directory"; echo " "; make clean)
 (cd mol;  echo " "; echo "Cleaning mol directory"; echo " "; make clean)
+
+rm -r -f nohup.out
 
 echo " "; echo "Done cleaning all directories"; echo " "

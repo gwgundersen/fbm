@@ -31,7 +31,7 @@ enum { PLT, TBL, HIST } program_type;
 
 /* MAIN PROGRAM. */
 
-main
+int main
 ( int argc,
   char **argv
 )

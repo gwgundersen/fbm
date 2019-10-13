@@ -28,7 +28,7 @@ static void usage(void);
 
 /* MAIN PROGRAM. */
 
-main
+int main
 ( int argc,
   char **argv
 )
@@ -83,7 +83,7 @@ main
     if (logf_out.header.type=='i')
     { if (logf_out.header.size!=sizeof(mc_iter))
       { fprintf(stderr,"MC iteration record is the wrong size! (%d %d)\n",
-          logf_in.header.size, sizeof(mc_iter));
+          logf_in.header.size, (int)sizeof(mc_iter));
         exit(1);
       }
       it = (mc_iter *) data;

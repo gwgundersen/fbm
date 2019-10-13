@@ -341,7 +341,7 @@ void mc_app_initialize
        != (1+ds->dim+ds->dim*ds->dim) * sizeof *quadratic_approx)
   { fprintf(stderr,"Approximation record is the wrong size (%d!=%d)\n",
        logg->actual_size['Q'], 
-       (1+ds->dim+ds->dim*ds->dim) * sizeof *quadratic_approx);
+       (1+ds->dim+ds->dim*ds->dim) * (int)sizeof *quadratic_approx);
     exit(1);
   }
 

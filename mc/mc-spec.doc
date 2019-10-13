@@ -97,6 +97,25 @@ General operations:
         be done repeatedly.  In particular, if factor is less than one, 
         the stepsizes will be successively smaller for each repetition.
 
+    slevel [ move [ random ] ] 
+
+        Sets the manner in which the [0,1] value used for a Metropolis
+        accept/reject decision or for the setting the slice level is
+        obtained.  With no arguments, the value is found by generating
+        a [0,1] value uniformly at random, ignoring the previous
+        value.  If move is specified, the value is obtained from the
+        previous value by adding move, and also adding a uniform
+        random value in (-random,+random) if random is specified, and
+        then reflecting off the boundaries at 0 and 1 (implemented by
+        letting the value be in [-1,+1] and using its absolute value).
+        The value is also updated appropriately when a move is accepted,
+        to achieve reversibility.
+
+        The default is to generate a [0,1] value randomly, ignoring
+        the previous value.  Also, if no slevel operation is done, the
+        value will not be recorded in the log file, and hence will not
+        be available as the "s" quantity.
+
     (any operation not otherwise defined here) [ number [ number ] ]
 
         Invoke the application-specific update procedure, passing the
@@ -466,4 +485,4 @@ their description of opt2 in table 2. b1=1-b2 should be 1-1/sqrt(2).)
 The list of operations is stored in a record of type 'o'; the
 trajectory specification in a record of type 't'.
 
-            Copyright (c) 1995-2007 by Radford M. Neal
+            Copyright (c) 1995-2019 by Radford M. Neal

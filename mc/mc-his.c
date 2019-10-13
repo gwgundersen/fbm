@@ -41,7 +41,7 @@ static void usage(void);
 
 /* MAIN PROGRAM. */
 
-main
+int main
 ( int argc,
   char **argv
 )
@@ -204,6 +204,11 @@ main
   }
   else
   { ds.p = chk_alloc (ds.dim, sizeof (mc_value));
+  }
+
+  ds.slevel.value = 0;
+  if (logg.data['l'])
+  { ds.slevel = * (struct slevel *) logg.data['l'];
   }
 
   /* Initialize for simulating dynamics. */

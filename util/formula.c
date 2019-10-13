@@ -21,6 +21,7 @@
 #include "formula.h"
 #include "extfunc.h"
 #include "rand.h"
+#include "unistd.h"
 
 extern double lgamma(double), digamma(double);
 

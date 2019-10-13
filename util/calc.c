@@ -25,7 +25,7 @@ static void usage(void)
   exit(1);
 }
 
-main
+int main
 ( int argc,
   char **argv
 )

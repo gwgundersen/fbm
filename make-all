@@ -1,3 +1,4 @@
+
 (cd util; echo " "; echo "Making programs in util directory"; echo " "; make)
 (cd mc;   echo " "; echo "Making programs in mc directory"; echo " "; make)
 (cd dist; echo " "; echo "Making programs in dist directory"; echo " "; make)

@@ -47,10 +47,15 @@ application being used.
     pn  Component n of momentum
     sn  Stepsize selected by application for component n
 
-None of these quantities can be used with a range; 'q', 'p', and 's'
-must have a modifier; 'D' and 'Q' may have a modifier; 'E' may only
-have a modifier of '0' or '1'; 'K' may only have a modifier of '0';
-the others may not have a modifier.
+    s   Value used for the most recent accept/reject decision or setting
+        of the slice level.  Only available if an slevel operation was 
+        done at some time; if not, has value zero.
+
+None of these quantities can be used with a range; 'q' and 'p' must
+have a modifier; the meaning of 's' with no modifier is different; 
+'D' and 'Q' may have a modifier; 'E' may only have a modifier of '0' 
+or '1'; 'K' may only have a modifier of '0'; the others may not have 
+a modifier.
 
 The 'Q' quantity is the importance weight, which will always be one
 except during annealed importance sampling.  Note that these weights
@@ -71,4 +76,4 @@ is accepted, and is otherwise based on just the first half.
 
 Momenta of zero are assumed if none exist.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2019 by Radford M. Neal

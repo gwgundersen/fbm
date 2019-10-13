@@ -30,7 +30,7 @@ static void usage(void);
 
 /* MAIN PROGRAM. */
 
-main
+int main
 ( int argc,
   char **argv
 )
@@ -98,7 +98,7 @@ main
     }
   }
 
-  if (fscanf(af,"%lf",junk)!=EOF)
+  if (fscanf(af,"%lf",&junk)!=EOF)
   { fprintf(stderr,"Excess data in approximation file\n");
     exit(1);
   }

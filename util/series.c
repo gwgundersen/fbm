@@ -35,7 +35,7 @@ static int ml;				/* Maximum lag with any data */
 static void usage(void);
 
 
-main
+int main
 ( int argc,
   char **argv
 )

@@ -30,7 +30,7 @@ static void usage (void), print_formula (char *);
 
 /* MAIN PROGRAM. */
 
-main
+int main
 ( int argc,
   char **argv
 ) 

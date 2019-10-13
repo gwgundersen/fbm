@@ -1,6 +1,6 @@
 /* MC.C - Skeleton of program to run Markov chain Monte Carlo simulation. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2019 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -47,7 +47,7 @@ static void usage(void);
 
 /* MAIN PROGRAM. */
 
-main
+int main
 ( int argc,
   char **argv
 )
@@ -69,6 +69,8 @@ main
   quantities_described qd;
 
   double temperature, decay;
+
+  struct slevel *slevel;
 
   log_file logf, clogf;
   log_gobbled logg, clogg;
@@ -222,6 +224,26 @@ main
   { ds.temp_index = mc_temp_index (sch, ds.temp_state->inv_temp);
   }
 
+  slevel = logg.data['l'];
+  if (slevel==0)
+  { ds.slevel.value = 0.5;
+    ds.slevel.move = 0;
+    ds.slevel.random = -1;
+  }
+  else
+  { if (logg.actual_size['l'] != sizeof (ds.slevel))
+    { fprintf(stderr,"Log file's slevel record has wrong size (in mc.c)\n");
+      exit(1);
+    }
+    ds.slevel = *slevel;
+    if (ds.slevel.value < -1 || ds.slevel.value > 1
+     || ds.slevel.move < -1 || ds.slevel.move > 1
+     || ds.slevel.random < 0 || ds.slevel.random > 1 && ds.slevel.random != 2)
+    { fprintf(stderr,"Log file's slevel record invalid (in mc.c)\n");
+      exit(1);
+    }
+  }
+
 #if 0
 
   ds.therm_state = logg.data['h'];
@@ -306,7 +328,8 @@ main
         log_append_compare = &clogg;
       }
 
-      /* Write data.  Will be compared to data in coupled file, if any. */
+      /* Write data other than slevel.  Will be compared to data in coupled
+         file, if any. */
 
       mc_app_save(&ds,&logf,index);
 
@@ -337,11 +360,20 @@ main
       log_file_append (&logf, rand_get_state());
 
       /* See if there's a match to data in coupling file, before writing
-         the iteration stats.  Then disable comparison. */
+         slevel and the iteration stats.  Then disable comparison. */
 
       coalesced = log_append_compare!=0;
 
       log_append_compare = 0;
+
+      /* Write slevel stuff, if being recorded. */
+
+      if (ds.slevel.random != -1)
+      { logf.header.type = 'l';
+        logf.header.index = index;
+        logf.header.size = sizeof (ds.slevel);
+        log_file_append (&logf, &ds.slevel);
+      }
 
       /* Write iteration stats, and re-initialize them. */
 

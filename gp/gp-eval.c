@@ -41,7 +41,7 @@ static void usage(void);
 
 /* MAIN PROGRAM. */
 
-main
+int main
 ( int argc,
   char **argv
 )
@@ -222,7 +222,7 @@ main
   data_spec = logg.data['D']==0 ? &ds0 : logg.data['D'];
 
   if (logg.data['D']==0)
-  { N_train==0;
+  { N_train = 0;
     data_spec->N_inputs = gp->N_inputs;
     data_spec->N_targets = gp->N_outputs;
     if (m!=0 && m->type=='B') 

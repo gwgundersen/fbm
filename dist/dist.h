@@ -64,3 +64,5 @@ double dist_total_likelihood (dist_spec *, double, double *),
 void dist_sample_prior (dist_spec *, double *);
 
 void dist_print_vars (void);
+
+void dist_const_eval (dist_spec *);

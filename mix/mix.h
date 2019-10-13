@@ -74,7 +74,7 @@ typedef struct
 /* Macro for calculating size of above record given actual number of targets. */
 
 #define mix_hypers_size(n) \
-  ( sizeof(mix_hypers) - (Max_targets-(n)) * 3 * sizeof(double) )
+  ( (int)sizeof(mix_hypers) - (Max_targets-(n)) * 3 * (int)sizeof(double) )
 
 
 /* PROCEDURES. */

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-main()
+int main()
 {
   double t, x, mt, mx;
 

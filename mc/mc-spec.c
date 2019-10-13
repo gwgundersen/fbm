@@ -29,7 +29,7 @@ static void display_specs (log_gobbled *);
 
 /* MAIN PROGRAM. */
 
-main
+int main
 ( int argc,
   char **argv
 )
@@ -554,7 +554,7 @@ main
 
       ap += 1;
 
-      if ((ops->op[o].stepsize_adjust = atof(*ap)) <= 0) usage();
+      if (*ap==0 || (ops->op[o].stepsize_adjust = atof(*ap)) <= 0) usage();
       ap += 1;
 
       ops->op[o].firsti = -1;
@@ -573,6 +573,28 @@ main
       { ops->op[o].firsti = -(**ap-'A'+2);
         ops->op[o].lasti = 0;
         ap += 1;
+      }
+    }
+
+    else if (strcmp(*ap,"slevel")==0)
+    {
+      ops->op[o].type = 'v';
+      ops->op[o].op_slevel_move = 0;
+      ops->op[o].op_slevel_random = 2;
+
+      ap += 1;
+      if (*ap && strchr("0123456789.-",**ap))
+      { ops->op[o].op_slevel_move = atof(*ap);
+        if (ops->op[o].op_slevel_move < -1
+         || ops->op[o].op_slevel_move > 1) usage();
+        ap += 1;
+        ops->op[o].op_slevel_random = 0;
+        if (*ap && strchr("0123456789.",**ap))
+        { ops->op[o].op_slevel_random = atof(*ap);
+          if (ops->op[o].op_slevel_random < 0
+           || ops->op[o].op_slevel_random > 1) usage();
+           ap += 1;
+        }
       }
     }
 
@@ -602,7 +624,7 @@ main
       ap += 1;
     }
 
-    else if (strcmp(*ap,"AIS")==0)
+    else if (strcmp(*ap,"AIS")==0 || strcmp(*ap,"ais")==0)
     { ops->op[o].type = 'a';
       ap += 1;
     }
@@ -1210,6 +1232,18 @@ static void display_specs
           }
           else if (ops->op[o].firsti<=-2)
           { printf(" %c",'A'+(-2-ops->op[o].firsti));
+          }
+          printf("\n");
+          break;
+        }
+
+        case 'v':
+        { printf(" slevel");
+          if (ops->op[o].op_slevel_random!=2)
+          { printf(" %f",ops->op[o].op_slevel_move);
+            if (ops->op[o].op_slevel_random!=0)
+            { printf(" %f",ops->op[o].op_slevel_random);
+            }
           }
           printf("\n");
           break;

@@ -384,6 +384,12 @@ static void do_group
         break;
       }
 
+      case 'v':
+      { ds->slevel.move = ops->op[i].op_slevel_move;
+        ds->slevel.random = ops->op[i].op_slevel_random;
+        break;
+      }
+
       case 'B':
       { double d;
         d = it->decay>=0 ? it->decay : ops->op[i].heatbath_decay;

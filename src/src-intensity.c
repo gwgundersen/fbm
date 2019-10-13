@@ -1,4 +1,4 @@
-/* SRC-INTENSITY.C - Make predictions for source intensity in grid cells.
+/* SRC-INTENSITY.C - Make predictions for source intensity in grid cells. */
 
 /* Copyright (c) 2007 by Radford M. Neal 
  *
@@ -35,7 +35,7 @@ static void usage(void);
 
 /* MAIN PROGRAM. */
 
-main
+int main
 ( int argc,
   char **argv
 )

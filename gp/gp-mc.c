@@ -226,7 +226,7 @@ void mc_app_initialize
       if (logg->actual_size['F']!=gp->N_outputs*N_train*sizeof(double))
       { fprintf (stderr,
           "Bad size for latent values record (is %d, should be %d)\n",
-          logg->actual_size['F'], gp->N_outputs*N_train*sizeof(double));
+          logg->actual_size['F'], gp->N_outputs*N_train * (int)sizeof(double));
         exit(1);
       }
 
@@ -243,7 +243,7 @@ void mc_app_initialize
       if (logg->actual_size['N']!=gp->N_outputs*N_train*sizeof(double))
       { fprintf (stderr,
           "Bad size for noise variances record (is %d, should be %d)\n",
-          logg->actual_size['N'], gp->N_outputs*N_train*sizeof(double));
+          logg->actual_size['N'], gp->N_outputs*N_train * (int)sizeof(double));
         exit(1);
       }
 

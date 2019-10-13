@@ -30,7 +30,7 @@
 #define Flag_spread 4		/* Flag saying relevance should be spread out */
 #define Flag_drop 8		/* Flags indicating term not used for outputs */
 #define Flag_mulprod 16		/* Flags indicating covariance should be 
-				/*  multiplied by products of listed inputs */
+				   multiplied by products of listed inputs */
 
 typedef struct
 {
