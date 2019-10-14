@@ -51,7 +51,7 @@ void mc_hybrid
   int have_acc, acc_point;
 
   int n, k, dir, jmps;
-  double H, U;
+  double a, H, U;
 
   if (steps%jump!=0) abort();
 
@@ -224,9 +224,10 @@ void mc_hybrid
   it->proposals += 1;
   it->delta = acc_free_energy - rej_free_energy;
 
-  U = rand_uniform(); /* Do every time to keep in sync for coupling purposes */
+  U = mc_slevel(ds);
+  a = exp(-it->delta/it->temperature);
 
-  if (it->delta<=0 || U<exp(-it->delta/it->temperature))
+  if (U<a)
   { 
     it->move_point = jump * (acc_point - it->window_offset);
 
@@ -243,6 +244,8 @@ void mc_hybrid
     for (k = 0; k<ds->dim; k++)
     { ds->p[k] = -ds->p[k];
     }
+
+    ds->slevel.value /= a;
   }
   else
   { 
