@@ -52,11 +52,16 @@ each of which corresponds to a specification documented with mc-spec:
     P  permuted-dynamic       R  repeat
     H  hybrid                 E  end
     T  tempered-hybrid        p  plot
+    @  spiral                 ^  double-spiral
 
     S  slice-1                t  temp-trans
     O  slice-over             a  ais
     i  slice-inside
     o  slice-outside
+
+    x  multiply-stepsizes     l  slevel
+    *  multiply-momentum      =  set-momentum
+    :  set-value
 
 The sequence of operations to use is specified by the user, and is
 stored in the log file as a record of type 'o'.  Some of the
@@ -68,9 +73,10 @@ such record stored in the log file is used.
 
 Records of type 'i' containing information on an iteration are
 periodically written to the log file, along with the current state.
-The momentum part of the state is written as a record of type 'p'.
-The position and auxiliary parts of the state are written as defined
-by the application.
+The momentum part of the state is written as a record of type 'p'.  If
+an slevel operation is done, the level and update method is recorded
+in a record of type 'l'.  The position and auxiliary parts of the
+state are written as defined by the application.
 
 The state of the random number generator after each iteration is
 stored in records of type 'r', the first of which may be written at

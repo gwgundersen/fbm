@@ -51,8 +51,9 @@ application being used.
     sn  Stepsize selected by application for component n
 
     s   Value used for the most recent accept/reject decision or setting
-        of the slice level.  Only available if an slevel operation was 
-        done at some time; if not, has value zero.
+        of the slice level (in [-1,+1], with absolute value used).  Only
+        available if an slevel operation was done at some time; if not, 
+        has value zero.
 
 None of these quantities can be used with a range; 'q' and 'p' must
 have a modifier; the meaning of 's' with no modifier is different; 

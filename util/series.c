@@ -22,7 +22,7 @@
 
 
 #define Max_realizations   200
-#define Max_length       50000
+#define Max_length      500000
 
 static double *data[Max_realizations];	/* Data for each realization */
 static int length[Max_realizations];	/* Length of each realization */
