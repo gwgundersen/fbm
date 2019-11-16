@@ -1,0 +1,50 @@
+<html>
+<body>
+<pre>
+
+
+NOTES ON THE VERSION OF 2019-??-??
+
+
+Changes in this version:
+
+1) A new 'slevel' MCMC operation has been added, which allows the
+   uniform [0,1] value used for accept/reject decisions to be retained
+   in the state, and updated by a method that leaves its distribution
+   invariant, rather than always being sampled independently of
+   previous values.
+
+
+Bug fixes.
+
+1) There are a few minor documentation fixes. 
+
+
+Known bugs and other deficiencies.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The latent value update operations for Gaussian processes may recompute 
+   the inverse covariance matrix even when an up-to-date version was 
+   computed for the previous Monte Carlo operation.
+
+4) Covariance matrices are stored in full, even though they are symmetric,
+   which sometimes costs a factor of two in memory usage.
+
+5) Giving net-pred several log files that have different network architectures
+   doesn't work, but an error message is not always produced (the results may
+   just be nonsense).
+
+6) Some Markov chain updates for Dirichlet diffusion tree models in which 
+   there is no data model (ie, no noise) are not implemented when some of 
+   the data is missing.  An error message is produced in such cases.
+</pre>
+</body>
+</html>

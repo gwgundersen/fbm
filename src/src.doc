@@ -35,7 +35,7 @@ programs:
 
     src-display.doc     Display parameters for a given iteration
     src-pred.doc        Make predictions for test measurements 
-    src-intensitiy.doc  Make predictions for source intensity in grid cells
+    src-intensity.doc   Make predictions for source intensity in grid cells
 
 The general-purpose programs in the 'util' and 'mc' modules are also
 used, as well as the specializations of the 'xxx' programs to the

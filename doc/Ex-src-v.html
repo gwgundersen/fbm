@@ -58,7 +58,7 @@ It is represented as a real number, N0, whose fractional part is
 ignored (ie, N is the floor of N0) - an arrangement motivated by the
 fact that the general MCMC routines work only on real values.
 
-Several ways of changing N0 (and hence N0 would be possible, but a
+Several ways of changing N0 (and hence N) would be possible, but a
 Metropolis update seems simplest.  We could add such an update,
 specified by "met-1 1 N", to the operatons used in the previous
 example, using the following specification command:
@@ -68,13 +68,13 @@ example, using the following specification command:
 However, this would be a very inefficient way to sample from the
 posterior distribution.  The "slice-1 1 1 S" operation updates the
 locations and intensities of active sources only, so these operations
-would leave the parameters of inactive sources, until such time as
-they become active when N increases.  But usually N will be unlikely
-to increase, since the newly active source would not have suitable
-parameters values, and so a proposal to increase N will have a low
-probability of acceptance.  A special "prior-gen-used" operation has
-been implemented that changes the parameters of inactive sources to
-values generated from their prior.  Including this operation in
+would leave the parameters of inactive sources fixed, until such time
+as they become active when N increases.  But usually N will be
+unlikely to increase, since the newly active source would not have
+suitable parameters values, and so a proposal to increase N will have
+a low probability of acceptance.  A special "prior-gen-used" operation
+has been implemented that changes the parameters of inactive sources
+to values generated from their prior.  Including this operation in
 mc-spec as follows would improve convergence (note that "\" is used
 here to continue the command on the next line):
 

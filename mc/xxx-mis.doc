@@ -37,13 +37,13 @@ simulated by simply running the program again.
 
 The importance sampling distribution is an equal mixture of the
 distributions defined by first sampling the ordinary state variables
-from the infinite-temperature distribution and the special "termostat"
-variable from the exponential distribution with mean equal to the
-specified temperature (shown above in terms of its inverse, inv-temp),
-and then applying between min-steps and max-steps iterations of a
-semi-deterministic Metropolis dynamics, in conjunction with decay for
-the thermostat variable.  The inverse temperature may be specified
-directly, or as "/T", where T is the temperature.
+from the infinite-temperature distribution and the special
+"thermostat" variable from the exponential distribution with mean
+equal to the specified temperature (shown above in terms of its
+inverse, inv-temp), and then applying between min-steps and max-steps
+iterations of a semi-deterministic Metropolis dynamics, in conjunction
+with decay for the thermostat variable.  The inverse temperature may
+be specified directly, or as "/T", where T is the temperature.
 
 Conceptually, each of the runs simulated by xxx-mis gives rise to
 (max-steps - min-steps + 1) states from this importance sampling
@@ -109,7 +109,7 @@ the canonical distribution at this temperature is almost the same as
 the prior (or almost uniform).  The range min-steps to max-steps
 should be chosen so that the system cools to approximately a
 temperature of one somewhere within this range of steps.  The
-stepsizes need small enough that reasonable acceptance rates are
+stepsizes need to be small enough that reasonable acceptance rates are
 obtained, but not too small.  (The ideal size may vary with
 temperature, which is why several stepsizes are allowed, so that at
 least one will be appropriate at any time.)  Finally, the decay needs
