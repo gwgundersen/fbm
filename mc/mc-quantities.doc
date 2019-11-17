@@ -53,10 +53,10 @@ application being used.
         has value zero.
 
 None of these quantities can be used with a range; 'q' and 'p' must
-have a modifier; the meaning of 's' with no modifier is different; 
-'D' and 'Q' may have a modifier; 'E' may only have a modifier of '0' 
-or '1'; 'K' may only have a modifier of '0'; the others may not have 
-a modifier.
+have a modifier; 'D' and 'Q' may have a modifier; 'E' may only have a
+modifier of '0' or '1'; 'K' may only have a modifier of '0'; the
+meaning of 's' is different with and without a modifier; the others
+may not have a modifier.
 
 The 'Q' quantity is the importance weight, which will always be one
 except during annealed importance sampling.  Note that these weights

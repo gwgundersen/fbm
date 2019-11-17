@@ -42,3 +42,7 @@ Known bugs and other deficiencies.
 6) Some Markov chain updates for Dirichlet diffusion tree models in which 
    there is no data model (ie, no noise) are not implemented when some of 
    the data is missing.  An error message is produced in such cases.
+
+7) The times given in the documentation for the examples are for a
+   very old computer.  Typical current (2019) desktop computers will
+   be at least 20 times faster.
