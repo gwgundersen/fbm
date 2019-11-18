@@ -225,9 +225,9 @@ typedef struct
 } mc_iter;
 
 
-/* DYNAMICAL VARIABLES.  This structure contains pointers to the position
-   and momentum components of the state, as well to the stepsizes to use
-   for each component and saved values of the potential and kinetic energy 
+/* DYNAMICAL VARIABLES.  This structure contains pointers to the position,
+   momentum, and slevel components of the state, as well to the stepsizes to 
+   use for each component, and saved values of the potential and kinetic energy 
    (useful to avoid unnecessary recomputation).  The inverse temperature
    used in simulated tempering is also stored here. */
 

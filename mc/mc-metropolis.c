@@ -24,6 +24,47 @@
 #include "mc.h"
 
 
+/* MAKE METROPOLIS ACCEPT/REJECT DECISION.  Uses and updates fields in
+   it and ds, with ds->pot_energy being the energy of the proposed
+   state.  Returns 1 for accept, 0 for reject.  Does not restore old
+   state on reject (caller must). */
+
+static int accept
+( mc_dynamic_state *ds,	/* State to update */
+  mc_iter *it,		/* Description of this iteration */
+  int b_accept,		/* Use Barker/Boltzmann acceptance probability? */
+  double old_energy	/* Energy before change of ds to proposed state */
+)
+{
+  double a, a0, U;
+
+  it->proposals += 1;
+  it->delta = ds->pot_energy - old_energy;
+
+  U = mc_slevel(ds);
+
+  a = a0 = exp(-it->delta/it->temperature);
+  if (b_accept) 
+  { a = 1/(1+1/a);
+  }
+
+  if (U<a)
+  { 
+    it->move_point = 1;
+    ds->know_grad = 0;
+    ds->slevel.value /= a0;
+    return 1;
+  }
+  else
+  { 
+    it->rejects += 1;
+    it->move_point = 0;
+    ds->pot_energy = old_energy;
+    return 0;
+  }
+}
+
+
 /* PERFORM METROPOLIS UPDATE ON ALL COMPONENTS AT ONCE. */
 
 void mc_metropolis
@@ -33,7 +74,7 @@ void mc_metropolis
   int b_accept		/* Use Barker/Boltzmann acceptance probability? */
 )
 {
-  double old_energy, sf, U, a, a0;
+  double old_energy, sf;
   int k;
 
   if (!ds->know_pot)
@@ -55,30 +96,8 @@ void mc_metropolis
   
   mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
 
-  it->proposals += 1;
-  it->delta = ds->pot_energy - old_energy;
-
-  U = mc_slevel(ds);
-
-  a = a0 = exp(-it->delta/it->temperature);
-  if (b_accept) 
-  { a = 1/(1+1/a);
-  }
-
-  if (U<a)
-  { 
-    it->move_point = 1;
-    ds->know_grad = 0;
-    ds->slevel.value /= a0;
-  }
-  else
-  { 
-    it->rejects += 1;
-    it->move_point = 0;
-
-    ds->pot_energy = old_energy;
-
-    mc_value_copy (ds->q, q_save, ds->dim);
+  if (!accept (ds, it, b_accept, old_energy))
+  { mc_value_copy (ds->q, q_save, ds->dim);
   }
 }
 
@@ -92,7 +111,7 @@ void mc_rgrid_met
   int b_accept		/* Use Barker/Boltzmann acceptance probability? */
 )
 {
-  double old_energy, sf, U, a, ss;
+  double old_energy, sf, ss, U;
   int k;
 
   if (!ds->know_pot)
@@ -116,29 +135,8 @@ void mc_rgrid_met
   
   mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
 
-  it->proposals += 1;
-  it->delta = ds->pot_energy - old_energy;
-
-  U = mc_slevel(ds);
-
-  a = exp(-it->delta/it->temperature);
-  if (b_accept) 
-  { a = 1/(1+1/a);
-  }
-
-  if (U<a)
-  { 
-    it->move_point = 1;
-    ds->know_grad = 0;
-  }
-  else
-  { 
-    it->rejects += 1;
-    it->move_point = 0;
-
-    ds->pot_energy = old_energy;
-
-    mc_value_copy (ds->q, q_save, ds->dim);
+  if (!accept (ds, it, b_accept, old_energy))
+  { mc_value_copy (ds->q, q_save, ds->dim);
   }
 }
 
@@ -154,7 +152,7 @@ void mc_met_1
   int r_update		/* Update just one component at random? */
 )
 {
-  double old_energy, qsave, sf, U, a;
+  double old_energy, qsave, sf;
   int k;
 
   mc_set_range (ds, &firsti, &lasti, r_update);
@@ -178,29 +176,8 @@ void mc_met_1
     
     mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
   
-    it->proposals += 1;
-    it->delta = ds->pot_energy - old_energy;
-  
-    U = mc_slevel(ds);
-
-    a = exp(-it->delta/it->temperature);
-    if (b_accept) 
-    { a = 1/(1+1/a);
-    }
-
-    if (U<a)
-    { 
-      it->move_point = 1;
-      ds->know_grad = 0;
-    }
-    else
-    { 
-      it->rejects += 1;
-      it->move_point = 0;
-  
-      ds->pot_energy = old_energy;
-  
-      ds->q[k] = qsave;
+    if (!accept (ds, it, b_accept, old_energy))
+    { ds->q[k] = qsave;
     }
   }
 }
@@ -217,7 +194,7 @@ void mc_rgrid_met_1
   int r_update		/* Update just one component at random? */
 )
 {
-  double old_energy, qsave, sf, ss, U, a;
+  double old_energy, qsave, sf, ss, U;
   int k;
 
   mc_set_range (ds, &firsti, &lasti, r_update);
@@ -242,30 +219,9 @@ void mc_rgrid_met_1
     ds->q[k] = (2*ss) * (U + floor (0.5 + ds->q[k]/(2*ss) - U));
     
     mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
-  
-    it->proposals += 1;
-    it->delta = ds->pot_energy - old_energy;
-  
-    U = mc_slevel(ds);
 
-    a = exp(-it->delta/it->temperature);
-    if (b_accept) 
-    { a = 1/(1+1/a);
-    }
-
-    if (U<a)
-    { 
-      it->move_point = 1;
-      ds->know_grad = 0;
-    }
-    else
-    { 
-      it->rejects += 1;
-      it->move_point = 0;
-  
-      ds->pot_energy = old_energy;
-  
-      ds->q[k] = qsave;
+    if (!accept (ds, it, b_accept, old_energy))
+    { ds->q[k] = qsave;
     }
   }
 }
