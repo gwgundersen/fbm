@@ -107,9 +107,10 @@ General operations:
         previous value by adding move, and also adding a uniform
         random value in (-random,+random) if random is specified, and
         then reflecting off the boundaries at 0 and 1 (implemented by
-        letting the value be in [-1,+1] and using its absolute value).
-        The value is also updated appropriately when a move is accepted,
-        to achieve reversibility.
+        confining the value to [-1,+1] by wrapping circularly, and
+        using its absolute value as the [0,1] value).  The value is
+        also updated appropriately when a move is accepted, to achieve
+        reversibility.
 
         The default is to generate a [0,1] value randomly, ignoring
         the previous value.  Also, if no slevel operation is done, the
@@ -262,8 +263,8 @@ Dynamical operations:
 
     double-spiral temper-factor steps [ stepsize-adjust[:stepsize-alpha] ] 
 
-        Like spiral, but with a reversal of direction at a randomly 
-        chosen point, producing a double spiral.
+        Like spiral, but with a reversal of multiply vs. divide at a
+        randomly chosen point, producing a double spiral.
 
 Slicing operations:
 

@@ -1,6 +1,6 @@
 /* MC-HYBRID.C - Procedure for performing Hybrid Monte Carlo updates. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2019 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -24,7 +24,7 @@
 #include "mc.h"
   
 
-/* PERFORM HYBRID MONTE CARLO OPERATION. */
+/* PERFORM HYBRID MONTE CARLO OPERATION - FIRST FORM (MAYBE HAS WINDOWS). */
 
 void mc_hybrid
 ( mc_dynamic_state *ds,	/* State to update */
@@ -179,9 +179,10 @@ void mc_hybrid
   
     if (window!=jmps+1 && n<window)
     { 
-      rej_free_energy = !have_rej ? H : - addlogs (-rej_free_energy, -H);
+      rej_free_energy = !have_rej ? H/it->temperature : 
+                          - addlogs (-rej_free_energy, -H/it->temperature);
 
-      if (!have_rej || rand_uniform() < exp(rej_free_energy-H))
+      if (!have_rej || rand_uniform() < exp(rej_free_energy-H/it->temperature))
       { 
         mc_value_copy (q_rsv, ds->q, ds->dim);
         mc_value_copy (p_rsv, ds->p, ds->dim);
@@ -198,9 +199,10 @@ void mc_hybrid
 
     if (n>jmps-window)
     {
-      acc_free_energy = !have_acc ? H : - addlogs (-acc_free_energy, -H);
+      acc_free_energy = !have_acc ? H/it->temperature : 
+                          - addlogs (-acc_free_energy, -H/it->temperature);
 
-      if (!have_acc || rand_uniform() < exp(acc_free_energy-H))
+      if (!have_acc || rand_uniform() < exp(acc_free_energy-H/it->temperature))
       { 
         if (n!=jmps)
         { mc_value_copy (q_asv, ds->q, ds->dim);
@@ -222,7 +224,7 @@ void mc_hybrid
   if (!have_acc || !have_rej) abort();
 
   it->proposals += 1;
-  it->delta = acc_free_energy - rej_free_energy;
+  it->delta = (acc_free_energy - rej_free_energy) * it->temperature;
 
   U = mc_slevel(ds);
   a = exp(-it->delta/it->temperature);
@@ -264,7 +266,7 @@ void mc_hybrid
 }
   
 
-/* PERFORM HYBRID MONTE CARLO OPERATION - SECOND FORM. */
+/* PERFORM HYBRID MONTE CARLO OPERATION - SECOND FORM (ACCEPTS BY THRESHOLD). */
 
 void mc_hybrid2
 ( mc_dynamic_state *ds,	/* State to update */
@@ -278,7 +280,7 @@ void mc_hybrid2
 )
 {
   double old_pot_energy, old_kinetic_energy;
-  double threshold, H;
+  double threshold, H, U;
   int n, in, k;
 
   if (steps%jump!=0 || in_steps%jump!=0) abort();
@@ -297,10 +299,13 @@ void mc_hybrid2
   mc_value_copy (q_save, ds->q, ds->dim);
   mc_value_copy (p_save, ds->p, ds->dim);
 
+  U = mc_slevel(ds);
+  if (U < 1e-30) U = 1e-30;  /* avoid log(0), just in case... */
+
   old_pot_energy = ds->pot_energy;
   old_kinetic_energy = ds->kinetic_energy;
 
-  threshold = ds->pot_energy + ds->kinetic_energy + rand_exp();
+  threshold = old_pot_energy + old_kinetic_energy + it->temperature*log(U);
 
   mc_traj_init(tj,it);
   mc_traj_permute();
@@ -330,6 +335,7 @@ void mc_hybrid2
   }
 
   it->proposals += 1;
+  it->delta = H - old_pot_energy - old_kinetic_energy;
 
   if (H<=threshold)
   { 
@@ -338,6 +344,8 @@ void mc_hybrid2
     for (k = 0; k<ds->dim; k++)
     { ds->p[k] = -ds->p[k];
     }
+
+    ds->slevel.value /= exp(-it->delta/it->temperature);
   }
   else
   { 
