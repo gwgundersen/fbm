@@ -25,7 +25,7 @@
 
 /* FIND LENGTH OF SOURCE PARAMETERS RECORD. */
 
-src_params_length
+int src_params_length
 ( int highN		/* Maximum number of sources */
 )
 { src_params *junk_params;
