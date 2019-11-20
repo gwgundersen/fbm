@@ -305,7 +305,7 @@ void mc_hybrid2
   old_pot_energy = ds->pot_energy;
   old_kinetic_energy = ds->kinetic_energy;
 
-  threshold = old_pot_energy + old_kinetic_energy + it->temperature*log(U);
+  threshold = old_pot_energy + old_kinetic_energy - it->temperature*log(U);
 
   mc_traj_init(tj,it);
   mc_traj_permute();
