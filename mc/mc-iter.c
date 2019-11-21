@@ -522,6 +522,31 @@ static void do_group
         break;
       }
 
+      case '~':  /* set-temp */
+      {
+        int ix = ops->op[i].op_set_temp;
+
+        mc_temp_present(ds,sch);
+
+        if (ds->temp_index<0 || ds->temp_index>Max_temps
+         || ds->temp_state->temp_dir!=-1 && ds->temp_state->temp_dir!=+1)
+        { abort();
+        }
+
+        if (ds->temp_index==ix)
+        { break;
+        }
+
+        ds->temp_index = ix<0 || ix>Max_temps ? 0 : ix;
+        ds->temp_state->inv_temp = sch->sched[ds->temp_index].inv_temp;
+        ds->temp_state->temp_dir = 1;
+
+        mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
+        ds->know_grad = 0;
+        
+        break;
+      }
+
       case 't':
       { mc_tempered_transition (ds, it, i+1, endp[i]-1, reverse, 
           logg, qd, N_quantities);

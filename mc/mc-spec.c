@@ -612,6 +612,14 @@ int main
       ap += 1;
     }
 
+    else if (strcmp(*ap,"set-temp")==0)
+    { ops->op[o].type = '~';
+      ap += 1;
+
+      if (!*ap || !strchr("0123456789",**ap)) usage();
+      ops->op[o].op_set_temp = atoi(*ap++);
+    }
+
     else if (strcmp(*ap,"rand-dir")==0)
     { 
       ops->op[o].type = 'b';
@@ -1194,6 +1202,11 @@ static void display_specs
 
         case 's':
         { printf(" sim-temp\n");
+          break;
+        }
+
+        case '~':
+        { printf(" set-temp %d\n",ops->op[o].op_set_temp);
           break;
         }
 

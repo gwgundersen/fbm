@@ -11,6 +11,9 @@ Changes in this version:
    invariant, rather than always being sampled independently of
    previous values.
 
+2) A new 'set-temp' MCMC operation has been added, meant for testing
+   and other fiddling around.
+
 
 Bug fixes.
 

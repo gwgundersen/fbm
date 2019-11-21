@@ -75,6 +75,9 @@ typedef struct
     int in_steps;	  /* Maximum number of inside steps in trajectory,
 			     zero if this feature is not being used */
 
+#   define op_set_temp in_steps  /* Index in schedule of temperature to set
+                                    overlaps above field when type == '~' */
+
     char b_accept;	  /* 0 for Metropolis acceptance function, 1 for 
                              Barker/Boltzmann acceptance*/
 
@@ -167,11 +170,11 @@ typedef struct
 typedef struct
 {
   float inv_temp;	/* Current inverse temperature, must correspond to an 
-			     entry in the tempering schedule, except that it's
-                             set to zero at the start of an ais run.  Also,
-                             gets set to -1 for Hamiltonian importance sampling
-                             to indicate that only the likelihood (not prior)
-                             is being looked at. */
+			   entry in the tempering schedule, except that it's
+                           set to zero at the start of an ais run.  Also,
+                           gets set to -1 for Hamiltonian importance sampling
+                           to indicate that only the likelihood (not prior)
+                           is being looked at. */
 
   int temp_dir;		/* Direction in which to change inverse temperature   */
 

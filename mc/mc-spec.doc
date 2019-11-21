@@ -402,6 +402,13 @@ Test operations:
     invariant, and hence should not be used as part of any final sampling 
     scheme.
 
+    set-temp index
+
+        Sets the temperature for simulated tempering to the given
+        index from the tempering schedule (see mc-temp-sched.doc),
+        with 0 being the highest temperature.  The direction for
+        temperature change is also set to +1 (to lower temperatures).
+
     multiply-momentum factor
 
         All momentum variables are multiplied by the given factor.
