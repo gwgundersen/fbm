@@ -14,10 +14,23 @@ Changes in this version:
    invariant, rather than always being sampled independently of
    previous values.
 
+2) A new 'set-temp' MCMC operation has been added, meant for testing
+   and other fiddling around.
+
 
 Bug fixes.
 
-1) There are a few minor documentation fixes. 
+1) The first (windowed) form of the hybrid operation now accounts for
+   the current temperature (as specified with xxx-mc, not the
+   simulated tempering temperature) when selecting a state from the
+   accept or reject window.
+
+2) The second (theshold) form of the hybrid operation now records the
+   energy difference for an accepted state (and for the final state if
+   none accepted), and also pays attention to the current temperature
+   (as specified with xxx-mc) when setting the threshold for acceptance.
+
+3) There are a few minor documentation fixes. 
 
 
 Known bugs and other deficiencies.
