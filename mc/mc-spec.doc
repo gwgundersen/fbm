@@ -259,7 +259,9 @@ Dynamical operations:
         alternate with multiplication/division of the momentum by the
         specified tempering factor.  The specified number of steps are
         randomly divided into steps "before" and "after" the current
-        state.
+        state.  A state is the selected from all that are generated
+        according to their probabilities adjusted for expansion or 
+        contraction by multiply/divide.
 
     double-spiral temper-factor steps [ stepsize-adjust[:stepsize-alpha] ] 
 
