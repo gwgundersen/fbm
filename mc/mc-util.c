@@ -161,6 +161,18 @@ double mc_slevel
 }
 
 
+/* FIND SLICE LEVEL INCREMENT. */
+
+double mc_slice_inc
+( mc_dynamic_state *ds		/* Dynamical state structure */
+)
+{
+  double s = mc_slevel(ds);
+  if (s < 1e-30) s = 1e-30;
+  return -log(s);
+}
+
+
 /* FIND DIFFERENCE IN ENERGY FOR TEMPERING CHANGE.  Computes the difference
    in energy resulting from a change in the tempering index by one step
    up or down. */

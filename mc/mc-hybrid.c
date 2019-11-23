@@ -280,7 +280,7 @@ void mc_hybrid2
 )
 {
   double old_pot_energy, old_kinetic_energy;
-  double threshold, H, U;
+  double threshold, H;
   int n, in, k;
 
   if (steps%jump!=0 || in_steps%jump!=0) abort();
@@ -299,13 +299,11 @@ void mc_hybrid2
   mc_value_copy (q_save, ds->q, ds->dim);
   mc_value_copy (p_save, ds->p, ds->dim);
 
-  U = mc_slevel(ds);
-  if (U < 1e-30) U = 1e-30;  /* avoid log(0), just in case... */
-
   old_pot_energy = ds->pot_energy;
   old_kinetic_energy = ds->kinetic_energy;
 
-  threshold = old_pot_energy + old_kinetic_energy - it->temperature*log(U);
+  threshold = old_pot_energy + old_kinetic_energy 
+               + it->temperature * mc_slice_inc(ds);
 
   mc_traj_init(tj,it);
   mc_traj_permute();

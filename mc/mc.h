@@ -342,3 +342,4 @@ void mc_value_copy (mc_value *, mc_value *, int);
 void mc_set_range (mc_dynamic_state *, int *, int *, int);
 
 double mc_slevel (mc_dynamic_state *);
+double mc_slice_inc (mc_dynamic_state *);
