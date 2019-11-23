@@ -69,7 +69,7 @@ void mc_slice_1
       it->slice_evals += 1;
     }
 
-    slice_point = ds->pot_energy + rand_exp();
+    slice_point = ds->pot_energy + it->temperature * mc_slice_inc(ds);
     curr_q = ds->q[k];
 
     if (max_steps>=0)
@@ -109,7 +109,7 @@ void mc_slice
     it->slice_evals += 1;
   }
 
-  slice_point = ds->pot_energy + rand_exp();
+  slice_point = ds->pot_energy + it->temperature * mc_slice_inc(ds);
   init_energy = ds->pot_energy;
 
   mc_value_copy (save, ds->q, ds->dim);
@@ -194,7 +194,7 @@ void mc_slice_gaussian
     it->slice_evals += 1;
   }
 
-  slice_point = ds->pot_energy + rand_exp();  
+  slice_point = ds->pot_energy + it->temperature * mc_slice_inc(ds);
   init_energy = ds->pot_energy;
 
   mc_value_copy (save, ds->q, ds->dim);
@@ -271,7 +271,7 @@ void mc_slice_over
       it->slice_evals += 1;
     }
 
-    slice_point = ds->pot_energy + rand_exp();
+    slice_point = ds->pot_energy + it->temperature * mc_slice_inc(ds);
     curr_q = ds->q[k];
 
     if (max_steps>=0)
@@ -615,7 +615,7 @@ void mc_slice_inside
     ds->know_grad = 1;
   }
 
-  slice_point = ds->pot_energy + rand_exp();
+  slice_point = ds->pot_energy + it->temperature * mc_slice_inc(ds);
 
   rejects = 0;
   
@@ -712,7 +712,7 @@ void mc_slice_outside
   mc_value_copy (p_save, ds->grad, ds->dim);
   old_pot = ds->pot_energy;
 
-  slice_point = ds->pot_energy + rand_exp();
+  slice_point = ds->pot_energy + it->temperature * mc_slice_inc(ds);
 
   /*fprintf(stderr,"E: %f %f",ds->pot_energy,slice_point);*/
   /*printf("\n%f %f\n",ds->q[0],ds->q[1]);*/

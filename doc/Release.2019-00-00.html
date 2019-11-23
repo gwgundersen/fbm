@@ -9,10 +9,10 @@ NOTES ON THE VERSION OF 2019-??-??
 Changes in this version:
 
 1) A new 'slevel' MCMC operation has been added, which allows the
-   uniform [0,1] value used for accept/reject decisions to be retained
-   in the state, and updated by a method that leaves its distribution
-   invariant, rather than always being sampled independently of
-   previous values.
+   uniform [0,1] value used for accept/reject decisions and setting of
+   slice levels to be retained in the state, and updated by a method
+   that leaves its distribution invariant, rather than always being
+   sampled independently of previous values.
 
 2) A new 'set-temp' MCMC operation has been added, meant for testing
    and other fiddling around.
@@ -21,14 +21,17 @@ Changes in this version:
 Bug fixes.
 
 1) The first (windowed) form of the hybrid operation now accounts for
-   the current temperature (as specified with xxx-mc, not the
-   simulated tempering temperature) when selecting a state from the
-   accept or reject window.
+   the temperature as specified with xxx-mc (not the simulated
+   tempering temperature) when selecting a state from the accept or
+   reject window.
 
 2) The second (theshold) form of the hybrid operation now records the
    energy difference for an accepted state (and for the final state if
-   none accepted), and also pays attention to the current temperature
-   (as specified with xxx-mc) when setting the threshold for acceptance.
+   none accepted), and also pays attention to the temperature as
+   specified with xxx-mc when setting the threshold for acceptance.
+
+3) Slice sampling operations now account for the temperature as set in
+   the xxx-mc command.
 
 3) There are a few minor documentation fixes. 
 
