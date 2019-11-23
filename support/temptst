@@ -30,7 +30,7 @@ bvg-tbl q1 log 11: | series mvs
 echo " "
 
 bvg-spec log 2.5 3.5 0
-mc-spec log heatbath hybrid 100 2:10
+mc-spec log repeat 10 slice-inside 10 2
 mc-spec log
 bvg-mc log 10010
 bvg-tbl r log 11: | series m
@@ -40,7 +40,17 @@ bvg-tbl q1 log 11: | series mvs
 echo " "
 
 bvg-spec log 2.5 3.5 0
-mc-spec log heatbath hybrid 100:10 2:10
+mc-spec log repeat 10 heatbath hybrid 10 2:10
+mc-spec log
+bvg-mc log 10010
+bvg-tbl r log 11: | series m
+bvg-tbl q0 log 11: | series mvs
+bvg-tbl q1 log 11: | series mvs
+
+echo " "
+
+bvg-spec log 2.5 3.5 0
+mc-spec log repeat 10 heatbath hybrid 10:10 2:10
 mc-spec log
 bvg-mc log 10010
 bvg-tbl r log 11: | series m
@@ -91,7 +101,7 @@ bvg-tbl q1 log 11: | series mvs
 echo " "
 
 bvg-spec log 2.5 3.5 0
-mc-spec log heatbath hybrid 100 2:10
+mc-spec log repeat 10 slice-inside 10 2
 mc-spec log
 bvg-mc log 10010 / 0 4
 bvg-tbl r log 11: | series m
@@ -101,7 +111,17 @@ bvg-tbl q1 log 11: | series mvs
 echo " "
 
 bvg-spec log 2.5 3.5 0
-mc-spec log heatbath hybrid 100:10 2:10
+mc-spec log repeat 10 heatbath hybrid 10 2:10
+mc-spec log
+bvg-mc log 10010 / 0 4
+bvg-tbl r log 11: | series m
+bvg-tbl q0 log 11: | series mvs
+bvg-tbl q1 log 11: | series mvs
+
+echo " "
+
+bvg-spec log 2.5 3.5 0
+mc-spec log repeat 10 heatbath hybrid 10:10 2:10
 mc-spec log
 bvg-mc log 10010 / 0 4
 bvg-tbl r log 11: | series m
