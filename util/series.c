@@ -210,19 +210,19 @@ int main
   /* Calculate autocovariances. */
 
   ml = -1;
-  
-  for (r = 0; r<nr; r++)
-  {
-    for (t = 0; t<length[r]; t++)
-    { for (l = 0; t+l<length[r]; l++)
-      { if (max_lag>=0 && l>max_lag) break;
-        if (l>ml)
-        { cvs[l] = 0;
-          cvn[l] = 0;
-          ml = l;
+
+  if (max_lag>=0 || op_a || op_c)
+  { for (r = 0; r<nr; r++)
+    { for (t = 0; t<length[r]; t++)
+      { for (l = 0; (max_lag<0 || l<=max_lag) && t+l<length[r]; l++)
+        { if (l>ml)
+          { cvs[l] = 0;
+            cvn[l] = 0;
+            ml = l;
+          }
+          cvs[l] += (data[r][t] - mean) * (data[r][t+l] - mean);
+          cvn[l] += 1;
         }
-        cvs[l] += (data[r][t] - mean) * (data[r][t+l] - mean);
-        cvn[l] += 1;
       }
     }
   }
