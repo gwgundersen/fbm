@@ -1,6 +1,6 @@
 /* FORMULA.C - Parse and evaluate a mathematical formula. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2019 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -76,7 +76,8 @@ static double expr (double [26][11]),
 
 static double gaussian  (int, double, double [26][11]),
               expgamma2 (int, double, double [26][11]),
-              expgamma  (int, double, double [26][11]);
+              expgamma  (int, double, double [26][11]),
+              bernoulli (int, double, double [26][11]);
 
 static void error(void);
 static double ext_func(int,double);
@@ -337,7 +338,7 @@ static double prefactor
 ( double gr[26][11]
 )
 { 
-  double v;
+  double v = 0;
   int k;
 
   switch (*nch)
@@ -390,7 +391,22 @@ static double prefactor
       break;
     }
 
-    case 'B': goto unknown_function;
+    case 'B':
+    {
+      if (nch[0]=='B' && nch[1]=='e' && nch[2]=='r' && nch[3]=='n' 
+                      && nch[4]=='o' && nch[5]=='u' && nch[6]=='l' 
+                      && nch[7]=='l' && nch[8]=='i' && !LOWER(nch[9]))
+      { nch += 8;
+        next();
+        v = bernoulli(0,v,gr);
+      }
+
+      else
+      { goto unknown_function;
+      }
+
+      break;
+    }
 
     case 'C':
     {
@@ -771,7 +787,15 @@ static double prefactor
 
       next();
 
-      if (nch[0]=='N' && nch[1]=='o' && nch[2]=='r' && nch[3]=='m'
+      if (nch[0]=='B' && nch[1]=='e' && nch[2]=='r' && nch[3]=='n' 
+                      && nch[4]=='o' && nch[5]=='u' && nch[6]=='l' 
+                      && nch[7]=='l' && nch[8]=='i' && !LOWER(nch[9]))
+      { nch += 8;
+        next();
+        v = bernoulli(1,v,gr);
+      }
+
+      else if (nch[0]=='N' && nch[1]=='o' && nch[2]=='r' && nch[3]=='m'
                       && nch[4]=='a' && nch[5]=='l' && !LOWER(nch[6]))
       { nch += 5;
         next();
@@ -946,6 +970,46 @@ static double number
    value of the log density (if eval is set), and set the gradient (if
    gradvars is set).  The function and the tilde syntax are both supported,
    with the value of the variable being passed in for tilde syntax. */
+
+static double bernoulli
+( int tilde,		/* Does this call use the tilde syntax? */
+  double v,		/* Set to value if tilde syntax used */
+  double gr[26][11]	/* Gradient, set for first arg if tilde syntax used */
+)
+{ 
+  double gr2[26][11];
+  double v2;
+  char close;
+  int k;
+
+  if (*nch=='(') close = ')';
+  else if (*nch=='[') close = ']';
+  else if (*nch=='{') close = '}';
+  else error();
+
+  next();
+
+  if (!tilde)
+  { v = expr(gr);
+    if (*nch!=',') error();
+    next();
+  }
+
+  v2 = expr(gr2);
+  if (*nch!=close) error();
+  next();
+
+  if (gradvars)
+  { for (k = 0; k<n_gv; k++)
+    { gr [c_gv[k]] [i_gv[k]] = v ? - gr2 [c_gv[k]] [i_gv[k]] / v2
+                                 : gr2 [c_gv[k]] [i_gv[k]] / (1-v2);
+    }
+  }
+
+  if (eval) v = - log (v ? v2 : 1-v2);
+
+  return v;
+}
 
 static double gaussian
 ( int tilde,		/* Does this call use the tilde syntax? */
@@ -1180,8 +1244,31 @@ void formula_sample
       goto var_error;
     }
 
-    if (nch[0]=='N' && nch[1]=='o' && nch[2]=='r' && nch[3]=='m'
-                    && nch[4]=='a' && nch[5]=='l' && !LOWER(nch[6])
+
+    else if (nch[0]=='B' && nch[1]=='e' && nch[2]=='r' && nch[3]=='n' 
+                         && nch[4]=='o' && nch[5]=='u' && nch[6]=='l' 
+                         && nch[7]=='l' && nch[8]=='i' && !LOWER(nch[9]))
+    { nch += 8;
+      next();
+
+      if (!strchr("([{",*nch)) abort();
+      next();
+
+      v2 = expr(0);
+      if (!strchr(")]}",*nch)) abort();
+      next();
+
+      if (v2<0 || v2>1)
+      { fprintf(stderr,
+          "Probability for Bernoulli distribution is not in [0,1]\n");
+        exit(1);
+      }
+
+      formula_var[c][i] = rand_uniform() < v2;
+    }
+
+    else if (nch[0]=='N' && nch[1]=='o' && nch[2]=='r' && nch[3]=='m'
+                         && nch[4]=='a' && nch[5]=='l' && !LOWER(nch[6])
      || nch[0]=='G' && nch[1]=='a' && nch[2]=='u' && nch[3]=='s'
                     && nch[4]=='s' && nch[5]=='i' && nch[6]=='a'
                     && nch[7]=='n' && !LOWER(nch[8]))

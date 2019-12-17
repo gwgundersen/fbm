@@ -67,7 +67,7 @@ without overflow occurring.
 The following functions return minus the log of the probability
 density for a quantity with respect to some distribution:
 
-  Normal  Gaussian  ExpGamma  ExpGamma2
+  Normal  Gaussian  ExpGamma  ExpGamma2  Bernoulli
 
 The Normal (equivalently, Gaussian) function computes minus the log of
 the probability density for the normal distribution with the given
@@ -89,6 +89,9 @@ This is closer to the way priors are specified for neural network and
 other models.  For example, the log of a hyperparameter whose prior is
 specified by "5:3" has the ExpGamma2(3,1/5^2) distribution.
 
+Bernoulli(x,p) returns -Log(p) if x is non-zero, and -Log(1-p) if x is
+zero.
+
 If the first parameter of one of these density functions is a
 variable, it can be written as follows instead:
 
@@ -96,6 +99,7 @@ variable, it can be written as follows instead:
   x ~ Gaussian(m,v)   is equivalent to   Gaussian(x,m,v)
   x ~ ExpGamma(s,b)   is equivalent to   ExpGamma(x,s,b)
   x ~ ExpGamma2(a,m)  is equivalent to   ExpGamma2(x,a,m)
+  x ~ Bernoulli(p)    is equivalent to   Bernoulli(x,p)
 
 Use of this form can allow random number generation by some programs.
 
