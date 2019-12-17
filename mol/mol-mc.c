@@ -229,7 +229,7 @@ int mc_app_sample
     int i, j, k;
 
     if (ms->len_pres>0)
-    { fprintf(stderr,"The met-vol operation applies only to NPT ensembles\n");
+    { fprintf(stderr,"The met-len operation applies only to NPT ensembles\n");
       exit(1);
     }
 

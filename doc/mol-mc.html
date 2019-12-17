@@ -42,7 +42,8 @@ The following applications-specific sampling procedures are implemented:
     met-len [ stepsize ]
 
         Does a Metropolis update for the length of a dimension (actually,
-        for the log of this length).
+        for the log of this length).  Only allowed when the NPT ensemble
+        is being used.
 
 The inverse temperature used in tempering methods is interpreted in
 the standard way, as a power to raise the (unnormalized) probability
@@ -64,7 +65,7 @@ molecules are initialized randomly, from the uniform distribution.
 Momenta (if needed) are initialized from their canonical distribution
 at (actual, not reduced) temperature one.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2019 by Radford M. Neal
 </pre>
 </body>
 </html>
