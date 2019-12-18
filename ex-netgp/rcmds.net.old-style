@@ -12,3 +12,5 @@ net-mc rlog.net 1
 
 mc-spec rlog.net sample-sigmas heatbath hybrid 1000:10 0.4
 net-mc rlog.net 400
+
+net-pred na rlog.net 101: 
