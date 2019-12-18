@@ -313,6 +313,7 @@ void mc_rgrid_met        (mc_dynamic_state *, mc_iter *, mc_value *, int);
 void mc_met_1            (mc_dynamic_state *, mc_iter *, int, int, int, int);
 void mc_rgrid_met_1      (mc_dynamic_state *, mc_iter *, int, int, int, int);
 void mc_gaussian_gibbs   (mc_dynamic_state *, mc_iter *, int, int, int);
+void mc_binary_gibbs     (mc_dynamic_state *, mc_iter *, int, int, int);
 
 void mc_hybrid (mc_dynamic_state *, mc_iter *, int, int, 
   mc_traj *, int, int, int, double,

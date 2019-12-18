@@ -270,3 +270,38 @@ void mc_gaussian_gibbs
   ds->know_pot = 0;
   ds->know_grad = 0;
 }
+
+
+/* PERFORM BINARY GIBBS SAMPLING UPDATES.  The components updated are ASSUMED,
+   without checking, to have conditional distributions over the values 0 and 1,
+   found by evaluating the energy at 0 and 1. */
+
+void mc_binary_gibbs
+( mc_dynamic_state *ds,	/* State to update */
+  mc_iter *it,		/* Description of this iteration */
+  int firsti,		/* Index of first component to update (-1 for all) */
+  int lasti,		/* Index of last component to update */
+  int r_update		/* Update just one component at random? */
+)
+{
+  double E0, E1, p1;
+  int k;
+
+  mc_set_range (ds, &firsti, &lasti, r_update);
+
+  for (k = firsti; k<=lasti; k++)
+  {
+    ds->q[k] = 0;
+    mc_app_energy (ds, 1, 1, &E0, 0);
+
+    ds->q[k] = 1;
+    mc_app_energy (ds, 1, 1, &E1, 0);
+
+    p1 = 1 / (1 + exp(E0-E1));
+
+    ds->q[k] = rand_uniform() < p1;
+  }
+
+  ds->know_pot = 0;
+  ds->know_grad = 0;
+}

@@ -442,6 +442,12 @@ static void do_group
         break;
       }
 
+      case '1':
+      { mc_binary_gibbs(ds,it,ops->op[i].firsti,ops->op[i].lasti,
+                        ops->op[i].r_update);
+        break;
+      }
+
       case 'D':
       { mc_traj_init(tj,it,0,ds->dim-1);
         mc_trajectory(ds,ops->op[i].steps,0);

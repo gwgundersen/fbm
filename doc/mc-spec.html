@@ -170,6 +170,14 @@ probability is R/(1+R), whereas the Metropolis form is min(1,R).
         components are all updated in order; with the -r option, just one 
         randomly-chosen component is updated.
 
+    binary-gibbs [ -r ] [ first[:last] ] ]
+
+        Do Gibbs sampling updates for the range of coordinates given
+        (default all), or do a Gibbs sampling update for one of these 
+        coordinates chosen at random, if -r is specified.  The Gibbs sampling 
+        is done by ASSUMING that the range of the conditional distribution 
+        is the values 0 and 1.
+
     gaussian-gibbs [ -r ] [ first[:last] ] ]
 
         Do Gibbs sampling updates for the range of coordinates given

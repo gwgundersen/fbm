@@ -14,10 +14,13 @@ Changes in this version:
 2) A new "Bernoulli" built-in distribution has been added for
    formulas, which may be generated from in dist-gen, etc.
 
-3) The "hybrid" and "tempered-hybrid" operatons now accept a first:last
+3) A new "binary-gibbs" Markov chain operation has been added, which
+   does Gibbs sampling for 0/1 variables.
+
+4) The "hybrid" and "tempered-hybrid" operatons now accept a first:last
    option, which restricts the range of coordinates updated.
 
-4) A new 'set-temp' MCMC operation has been added, meant for testing
+5) A new 'set-temp' MCMC operation has been added, meant for testing
    and other fiddling around.
 
 
