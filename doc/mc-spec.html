@@ -222,11 +222,13 @@ Dynamical operations:
         Like 'dynamic', but the order of approximations is randomly
         permuted.
 
-    hybrid steps[:window[:jump]] [ stepsize-adjust[:stepsize-alpha] ] 
+    hybrid steps[:window[:jump]] 
+           [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ] 
    
         OR
 
-    hybrid max-steps/max-ok[:jump] [ stepsize-adjust[:stepsize-alpha] ] 
+    hybrid max-steps/max-ok[:jump] 
+           [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ] 
 
         Use the results of following a dynamical trajectory as a 
         candidate state for a Metropolis update.  There are two forms,
@@ -248,13 +250,17 @@ Dynamical operations:
         is guaranteed.  The default if neither 'max-ok' nor 'window' is 
         specified is standard hybrid Monte Carlo (ie, a window of one).
 
-    tempered-hybrid temper-factor steps[:window[:jump]] 
-                  [ stepsize-adjust[:stepsize-alpha] ] 
+        The first:last option restricts the update to only the specified
+        range of coordinates (numbered from 0), same as if the others
+        had a stepsize of zero.
 
-        Like hybrid, but the trajectory is "tempered" by multiplying
-        the momenta by temper-factor in the first half of the portion
-        of the trajectory outside any windows, and by 1/temper-factor
-        in the second half.
+    tempered-hybrid temper-factor steps[:window[:jump]] 
+                    [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ] 
+
+        Like hybrid (first form), but the trajectory is "tempered" by
+        multiplying the momenta by temper-factor in the first half of
+        the portion of the trajectory outside any windows, and by
+        1/temper-factor in the second half.
 
     spiral temper-factor steps [ stepsize-adjust[:stepsize-alpha] ] 
 

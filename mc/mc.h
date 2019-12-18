@@ -1,6 +1,6 @@
 /* MC.H - Interface to Markov chain Monte Carlo module. */
 
-/* Copyright (c) 1995-2007 by Radford M. Neal 
+/* Copyright (c) 1995-2019 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -292,7 +292,7 @@ extern int (*mc_app_set_range_ptr) (mc_dynamic_state *, int *, int *);
 void mc_iter_init  (mc_dynamic_state *, mc_ops *, mc_traj *, mc_temp_sched *);
 void mc_iteration  (mc_dynamic_state *, mc_iter *, log_gobbled *, void *, int);
 
-void mc_traj_init    (mc_traj *, mc_iter *);
+void mc_traj_init    (mc_traj *, mc_iter *, int, int);
 void mc_traj_permute (void);
 void mc_trajectory   (mc_dynamic_state *, int, int);
 void mc_therm_trajectory (mc_dynamic_state *, int, int);
@@ -314,10 +314,12 @@ void mc_met_1            (mc_dynamic_state *, mc_iter *, int, int, int, int);
 void mc_rgrid_met_1      (mc_dynamic_state *, mc_iter *, int, int, int, int);
 void mc_gaussian_gibbs   (mc_dynamic_state *, mc_iter *, int, int, int);
 
-void mc_hybrid (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int, double,
+void mc_hybrid (mc_dynamic_state *, mc_iter *, int, int, 
+  mc_traj *, int, int, int, double,
   int, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *, mc_value *);
 
-void mc_hybrid2 (mc_dynamic_state *, mc_iter *, mc_traj *, int, int, int,
+void mc_hybrid2 (mc_dynamic_state *, mc_iter *, int, int, 
+                 mc_traj *, int, int, int,
                  mc_value *, mc_value *);
 
 void mc_spiral (mc_dynamic_state *, mc_iter *, mc_traj *, int, double, int,

@@ -1,6 +1,6 @@
 /* MC-SPEC.C - Specify parameters of Markov chain Monte Carlo simulation. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2019 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -516,7 +516,23 @@ int main
         ap += 1;
       }
 
-      if (ops->op[o].type=='T' || ops->op[o].type=='@' || ops->op[o].type=='^')
+      if (*ap && strchr("0123456789",**ap))
+      { ops->op[o].firsti = atoi(*ap);
+        ops->op[o].lasti = ops->op[o].firsti;
+        if (strchr(*ap,':')!=0)
+        { if ((ops->op[o].lasti = atoi(strchr(*ap,':')+1)) < ops->op[o].firsti)
+          { usage();
+          }
+        }
+        ap += 1;
+      }
+      else if (*ap && **ap>='A' && **ap<='Z' && *(*ap+1)==0)
+      { ops->op[o].firsti = -(**ap-'A'+2);
+        ops->op[o].lasti = 0;
+        ap += 1;
+      }
+
+      if (ops->op[o].type!='H')
       { if (ops->op[o].in_steps!=0)
         { fprintf(stderr,
  "The max-steps/max-ok form is allowed only for plain hybrid Monte Carlo\n");
@@ -525,7 +541,12 @@ int main
       }      
 
       if (ops->op[o].type=='@' || ops->op[o].type=='^')
-      { if (ops->op[o].jump!=1)
+      { if (ops->op[o].firsti!=-1)
+        { fprintf(stderr,
+         "The first:last option is not allowed for spiral and double-spiral\n");
+          exit(1);
+        }
+        if (ops->op[o].jump!=1)
         { fprintf(stderr,
            "Jump must be one for spiral and double-spiral operations\n");
           exit(1);
@@ -1023,7 +1044,7 @@ static void display_specs
           else if (ops->op[o].stepsize_adjust!=1 || ops->op[o].firsti!=-1)
           { printf(" %.4f",ops->op[o].stepsize_adjust);
           }
-          if (ops->op[o].firsti>0)
+          if (ops->op[o].firsti>=0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);
@@ -1041,7 +1062,7 @@ static void display_specs
           if (ops->op[o].r_update)
           { printf(" -r");
           }
-          if (ops->op[o].firsti>0)
+          if (ops->op[o].firsti>=0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);
@@ -1093,8 +1114,17 @@ static void display_specs
           { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
                                 ops->op[o].stepsize_alpha);
           }
-          else if (ops->op[o].stepsize_adjust!=1)
+          else if (ops->op[o].stepsize_adjust!=1 || ops->op[o].firsti!=-1)
           { printf(" %.4f",ops->op[o].stepsize_adjust);
+          }
+          if (ops->op[o].firsti>=0)
+          { printf(" %d",ops->op[o].firsti);
+            if (ops->op[o].lasti!=ops->op[o].firsti)
+            { printf(":%d",ops->op[o].lasti);
+            }
+          }
+          else if (ops->op[o].firsti<=-2)
+          { printf(" %c",'A'+(-2-ops->op[o].firsti));
           }
           printf("\n");
           break;
@@ -1125,7 +1155,7 @@ static void display_specs
           if (ops->op[o].steps!=0 || ops->op[o].firsti!=-1)
           { printf(" %d",ops->op[o].steps);
           }
-          if (ops->op[o].firsti>0)
+          if (ops->op[o].firsti>=0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);
@@ -1168,7 +1198,7 @@ static void display_specs
           if (ops->op[o].steps!=0 || ops->op[o].firsti!=-1)
           { printf(" %d",ops->op[o].steps);
           }
-          if (ops->op[o].firsti>0)
+          if (ops->op[o].firsti>=0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);
@@ -1240,7 +1270,7 @@ static void display_specs
 
         case 'x':
         { printf(" multiply-stepsizes %f",ops->op[o].stepsize_adjust);
-          if (ops->op[o].firsti>0)
+          if (ops->op[o].firsti>=0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);
@@ -1290,7 +1320,7 @@ static void display_specs
 
         case ':':
         { printf (" set-value %.4f", (double)ops->op[o].heatbath_decay);
-          if (ops->op[o].firsti>0)
+          if (ops->op[o].firsti>=0)
           { printf(" %d",ops->op[o].firsti);
             if (ops->op[o].lasti!=ops->op[o].firsti)
             { printf(":%d",ops->op[o].lasti);

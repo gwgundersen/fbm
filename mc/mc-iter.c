@@ -1,6 +1,6 @@
 /* MC-ITER.C - Procedures for performing Markov chain Monte Carlo iterations. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2019 by Radford M. Neal
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -443,20 +443,20 @@ static void do_group
       }
 
       case 'D':
-      { mc_traj_init(tj,it);
+      { mc_traj_init(tj,it,0,ds->dim-1);
         mc_trajectory(ds,ops->op[i].steps,0);
         break;
       }
 #if 0
       case 'h':
       { mc_therm_present(ds);
-        mc_traj_init(tj,it);
+        mc_traj_init(tj,it,0,ds->dim-1);
         mc_therm_trajectory(ds,ops->op[i].steps,0);
         break;
       }
 #endif
       case 'P':
-      { mc_traj_init(tj,it);
+      { mc_traj_init(tj,it,0,ds->dim-1);
         mc_traj_permute();
         mc_trajectory(ds,ops->op[i].steps,0);
         break;
@@ -464,13 +464,15 @@ static void do_group
 
       case 'H': case 'T':
       { if (ops->op[i].in_steps==0)
-        { mc_hybrid (ds, it, tj, ops->op[i].steps, ops->op[i].window, 
-                  ops->op[i].jump, type=='H' ? 0.0 : ops->op[i].temper_factor, 
-                  N_quantities, q_save, p_save, q_asv, p_asv, q_rsv, p_rsv);
+        { mc_hybrid(ds, it, ops->op[i].firsti, ops->op[i].lasti,
+                    tj, ops->op[i].steps, ops->op[i].window, 
+                    ops->op[i].jump, type=='H' ? 0.0 : ops->op[i].temper_factor,
+                    N_quantities, q_save, p_save, q_asv, p_asv, q_rsv, p_rsv);
         }
         else
-        { mc_hybrid2 (ds, it, tj, ops->op[i].steps, ops->op[i].in_steps,
-                ops->op[i].jump, q_save, p_save);
+        { mc_hybrid2 (ds, it, ops->op[i].firsti, ops->op[i].lasti,
+                      tj, ops->op[i].steps, ops->op[i].in_steps,
+                      ops->op[i].jump, q_save, p_save);
         }
         break;
       }

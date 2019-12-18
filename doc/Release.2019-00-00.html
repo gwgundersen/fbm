@@ -17,7 +17,10 @@ Changes in this version:
 2) A new "Bernoulli" built-in distribution has been added for
    formulas, which may be generated from in dist-gen, etc.
 
-3) A new 'set-temp' MCMC operation has been added, meant for testing
+3) The "hybrid" and "tempered-hybrid" operatons now accept a first:last
+   option, which restricts the range of coordinates updated.
+
+4) A new 'set-temp' MCMC operation has been added, meant for testing
    and other fiddling around.
 
 
@@ -36,8 +39,9 @@ Bug fixes.
 3) Slice sampling operations now account for the temperature as set in
    the xxx-mc command.
 
-4) The rgrid-met-1 operation specificagon now correctly parses the
-   first:last option.
+4) The rgrid-met-1 operation specification now correctly parses the
+   first:last option.  Operations with a first:last option now
+   correctly display when first is zero.
 
 5) There are a few minor documentation fixes. 
 

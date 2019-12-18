@@ -1,6 +1,6 @@
 /* MC-HIS.C - Skeleton of program for Hamiltonian importance sampling. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2019 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -231,7 +231,7 @@ int main
     it->stepsize_factor = -stepsize;
   }
 
-  mc_traj_init(tj,it);
+  mc_traj_init(tj,it,0,ds.dim-1);
 
   ds.temp_state = &temp_state;
 

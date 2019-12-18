@@ -29,6 +29,8 @@
 void mc_hybrid
 ( mc_dynamic_state *ds,	/* State to update */
   mc_iter *it,		/* Description of this iteration */
+  int firsti,		/* Index of first component to update (-1 for all) */
+  int lasti,		/* Index of last component to update */
   mc_traj *tj,		/* Trajectory specification */
   int steps,		/* Total number of steps to do */
   int window,		/* Window size to use */
@@ -54,6 +56,8 @@ void mc_hybrid
   double a, H, U;
 
   if (steps%jump!=0) abort();
+
+  mc_set_range (ds, &firsti, &lasti, 0);
 
   jmps = steps/jump;
 
@@ -82,7 +86,7 @@ void mc_hybrid
 
   /* Set up for travelling about trajectory. */
 
-  mc_traj_init(tj,it);
+  mc_traj_init(tj,it,firsti,lasti);
   mc_traj_permute();
 
   have_rej = have_acc = 0;
@@ -271,6 +275,8 @@ void mc_hybrid
 void mc_hybrid2
 ( mc_dynamic_state *ds,	/* State to update */
   mc_iter *it,		/* Description of this iteration */
+  int firsti,		/* Index of first component to update (-1 for all) */
+  int lasti,		/* Index of last component to update */
   mc_traj *tj,		/* Trajectory specification */
   int steps,		/* Maximum number of steps to do */
   int in_steps,		/* Maximum number of acceptable steps to do */
@@ -284,6 +290,8 @@ void mc_hybrid2
   int n, in, k;
 
   if (steps%jump!=0 || in_steps%jump!=0) abort();
+
+  mc_set_range (ds, &firsti, &lasti, 0);
 
   if (!ds->know_pot)
   { mc_app_energy (ds, 1, 1, &ds->pot_energy, ds->grad);
@@ -305,7 +313,7 @@ void mc_hybrid2
   threshold = old_pot_energy + old_kinetic_energy 
                + it->temperature * mc_slice_inc(ds);
 
-  mc_traj_init(tj,it);
+  mc_traj_init(tj,it,firsti,lasti);
   mc_traj_permute();
 
   n = 0;
@@ -425,7 +433,7 @@ void mc_spiral
 
   /* Set up for travelling about trajectory. */
 
-  mc_traj_init(tj,it);
+  mc_traj_init(tj,it,0,ds->dim-1);
   mc_traj_permute();
 
   n = offset;
