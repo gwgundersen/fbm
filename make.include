@@ -2,7 +2,7 @@
 #
 # You may wish to modify this file to fit your local installation.
 
-CC = gcc               # C compiler to use
+CC = gcc-9             # C compiler to use
 CFLAGS = -O3 -g \
   -Wno-logical-op-parentheses \
   -Wno-absolute-value  # Options compiling .c files to .o files

@@ -348,7 +348,8 @@ int main
         ap += 1;
       }
 
-      if (ops->op[o].type!='m' && *ap && strchr("-0123456789",**ap))
+      if ((ops->op[o].type=='S' || ops->op[o].type=='O')
+           && *ap && strchr("-0123456789",**ap))
       { ops->op[o].steps = atoi(*ap);
         ap += 1;
       }
@@ -470,6 +471,8 @@ int main
       ops->op[o].in_steps = 0;
       ops->op[o].window = 1;
       ops->op[o].jump = 1;
+      ops->op[o].r_update = 0;
+      ops->op[o].firsti = -1;
 
       ap += 1;
 
