@@ -1058,7 +1058,7 @@ static void display_specs
         }
 
         case 'U': case '1':
-        { printf(ops->op[o].type=='U' ? "gaussian-gibbs" : "binary-gibbs");
+        { printf(ops->op[o].type=='U' ? " gaussian-gibbs" : " binary-gibbs");
           if (ops->op[o].r_update)
           { printf(" -r");
           }
