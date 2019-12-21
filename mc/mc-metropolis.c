@@ -297,7 +297,7 @@ void mc_binary_gibbs
     ds->q[k] = 1;
     mc_app_energy (ds, 1, 1, &E1, 0);
 
-    p1 = 1 / (1 + exp(E0-E1));
+    p1 = 1 / (1 + exp(E1-E0));
 
     ds->q[k] = rand_uniform() < p1;
   }
