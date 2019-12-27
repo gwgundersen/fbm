@@ -20,7 +20,7 @@ separated by blank lines.
 
 The options control what statistics are printed, as follows:
 
-   m   Mean, with standard error
+   m   Sample mean, with standard error
    s   Standard deviation
    v   Variance 
 
@@ -49,7 +49,8 @@ minus one.
 If a presumed mean is specified, it is used rather than the estimated
 mean when calculating the autocorrelations, and the displayed
 variance, and the variance used to normalize the autocorrelations.
-The 'm' option makes no sense if a presumed mean is specified.
+The sample mean can still be display with the 'm' option, but it is
+not used for other calculations.
 
 The autocovariance estimate at lag k is calculated from a series of
 length n using a divisor of n-k, not n (as is sometimes done).  The

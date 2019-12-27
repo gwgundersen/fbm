@@ -43,7 +43,7 @@ int main
   int op_m, op_s, op_v, op_a, op_c, op_b, op_e;
   char *options;
   int max_lag, have_presumed_mean;
-  double presumed_mean;
+  double presumed_mean, sample_mean;
 
   double mean, submean[Max_realizations], subvar[Max_realizations];
   int same_lengths;
@@ -84,11 +84,6 @@ int main
   if (argc>3)
   { have_presumed_mean = 1;
     presumed_mean = atof(argv[3]);
-  }
-
-  if (op_m && have_presumed_mean)
-  { fprintf(stderr,"Option m makes no sense with a presumed mean\n");
-    exit(1);
   }
 
   if ((op_m || op_v || op_s) && op_b)
@@ -190,7 +185,8 @@ int main
     if (r>0 && length[r-1]!=length[r]) same_lengths = 0;
   }
 
-  mean = have_presumed_mean ? presumed_mean : s/n;
+  sample_mean = s/n;
+  mean = have_presumed_mean ? presumed_mean : sample_mean;
 
   /* Calculate variance. */
 
@@ -249,7 +245,7 @@ int main
   {
     printf("\n");
 
-    printf("Mean: %.6f  ",mean);
+    printf("Sample mean: %.6f  ", sample_mean);
 
     /* Print standard error estimated from multiple realizations. */
 
