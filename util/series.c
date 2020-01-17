@@ -1,6 +1,6 @@
 /* SERIES.C - Program to analyse stationary time series data. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2020 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -21,8 +21,8 @@
 #include "misc.h"
 
 
-#define Max_realizations   200
-#define Max_length      500000
+#define Max_realizations   1000
+#define Max_length      2000000
 
 static double *data[Max_realizations];	/* Data for each realization */
 static int length[Max_realizations];	/* Length of each realization */
