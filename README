@@ -1,5 +1,5 @@
 
-  FLEXIBLE BAYESIAN MODELLING SOFTWARE, VERSION OF 2007-03-31
+  FLEXIBLE BAYESIAN MODELLING SOFTWARE, VERSION OF 2020-??-??
 
   This directory and its subdirectories contain software for flexible
   Bayesian learning of regression, classification, density, and other
@@ -20,7 +20,7 @@
   -----------------------------------------------------------------------
 
   The contents of this directory and its sub-directories are 
-  Copyright (c) 1995-2007 by Radford M. Neal
+  Copyright (c) 1995-2020 by Radford M. Neal
   
   Permission is granted for anyone to copy, use, modify, or distribute these
   programs and accompanying documents for any purpose, provided this copyright

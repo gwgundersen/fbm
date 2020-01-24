@@ -1,9 +1,6 @@
-<html>
-<body>
-<pre>
 
 
-NOTES ON THE VERSION OF 2019-??-??
+NOTES ON THE VERSION OF 2020-??-??
 
 
 Changes in this version:
@@ -76,8 +73,5 @@ Known bugs and other deficiencies.
    the data is missing.  An error message is produced in such cases.
 
 7) The times given in the documentation for the examples are for a
-   very old computer.  Typical current (2019) desktop computers will
+   very old computer.  Typical current (2020) desktop computers will
    be at least 20 times faster.
-</pre>
-</body>
-</html>
