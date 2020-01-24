@@ -15,7 +15,6 @@ echo " "; echo gcmds2.slc1; time -p gcmds2.slc1 5
 
 echo " "; echo gcmds.slc;   time -p gcmds.slc 5
 echo " "; echo gcmds.slcg;  time -p gcmds.slcg 5
-echo " "; echo gcmds.slcG;  time -p gcmds.slcG 5
 
 echo " "; echo gcmds.sgau;  time -p gcmds.sgau 5
 

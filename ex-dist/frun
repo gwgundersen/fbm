@@ -6,5 +6,4 @@ echo " "; echo fcmds.met1;  time fcmds.met1 1
 echo " "; echo fcmds.metv;  time fcmds.metv 1
 echo " "; echo fcmds.slc1;  time fcmds.slc1 1
 echo " "; echo fcmds.slc;   time fcmds.slc 1
-echo " "; echo fcmds.slcG;  time fcmds.slcG 1
 echo " "; echo fcmds.slcg;  time fcmds.slcg 1
