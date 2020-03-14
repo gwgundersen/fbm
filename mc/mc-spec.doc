@@ -42,17 +42,22 @@ described below:
 
     [ stepsize-adjust[:stepsize-alpha] ]
 
-        Specifies a stepsize to use, or a distribution of stepsizes
-        to randomly select from.  A minus sign before a stepsize-adjust 
-        value results in the adjustment being applied to uniform 
-        stepsizes of one; otherwise, the adjustment is applied to the 
-        application-specific stepsizes (which may be non-uniform).  A 
-        minus sign in front of stepsize alpha means that instead of the 
-        usual Gamma distribution for stepsizes, a distribution over 'alpha' 
-        orders of magnitude, uniform in the log domain, centred at the 
-	value found using stepsize-adjust, is used.  The default is
-        stepsize-adjust of 1 and stepsize-alpha of infinity (so that the
-        stepsize is a constant).
+        Specifies a stepsize to use, or a distribution of stepsizes to
+        randomly select from.  A minus sign before a stepsize-adjust
+        value results in the adjustment being applied to uniform
+        stepsizes of one; otherwise, the adjustment is applied to the
+        application-specific stepsizes (which may be non-uniform).  
+        A minus sign in front of stepsize-alpha means that instead of
+        the usual Gamma-based distribution for stepsizes, a distribution
+        over 'alpha' orders of magnitude, uniform in the log domain,
+        centred at the value found using stepsize-adjust, is used.
+
+        The Gamma-based stepsize distribution uses a Gamma distribution
+        with shape alpha/2 and scale 1/(alpha/2), with stepsize-adjust
+        being divided by the square root of this Gamma random value.
+
+        The default is stepsize-adjust of 1 and stepsize-alpha of
+        infinity (so that the stepsize is a constant).
 
     [ first[:last] ] ]
 
