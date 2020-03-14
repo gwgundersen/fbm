@@ -1,9 +1,0 @@
-Number of training cases: 17
-n-traj=100 min-steps=0 max-steps=99 modulus=1 pre_save=0
-stepsize=0.030 steps=1 inv-temp=0.010 decay=0.950 mix=0.000
-Number of training cases: 17
-n-traj=100 min-steps=0 max-steps=99 modulus=1 pre_save=0
-stepsize=0.050 steps=1 inv-temp=0.005 decay=0.950 mix=0.000
-Number of training cases: 17
-n-traj=500 min-steps=0 max-steps=99 modulus=1 pre_save=0
-stepsize=0.050 steps=1 inv-temp=0.005 decay=0.950 mix=0.000
