@@ -166,9 +166,9 @@ void net_available
 
     if (letter && qd[v].available==0 && (strchr("iItT",letter)==0 || mod!=-1))
     {
-      if (strchr("ixoygtzlbav",letter)!=0 && !have_train_data
-       || strchr("IXOYGTZLBAV",letter)!=0 && !have_test_data
-       || strchr("ZBA",letter)!=0       && !have_test_targets)
+      if (strchr("ixoygtzlcbav",letter)!=0 && !have_train_data
+       || strchr("IXOYGTZLCBAV",letter)!=0 && !have_test_data
+       || strchr("ZBA",letter)!=0          && !have_test_targets)
       { qd[v].available = -1;
         continue;
       }

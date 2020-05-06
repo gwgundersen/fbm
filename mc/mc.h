@@ -205,7 +205,11 @@ typedef struct
   float temperature;	/* Temperature used during this iteration */
   float decay;		/* Heatbath decay used during this iteration */
 
-  char reserved[100];	/* Reserved for future use */
+  char reserved[96];	/* Reserved for future use */
+
+  int consecutive_accepts; /* Length of run of acceptances at end of iteration;
+                              negated for immediately following rejection; zero
+                              for rejections that follow rejections */
 
   float stepsize_factor;/* Factor last used to adjust stepsizes */
 

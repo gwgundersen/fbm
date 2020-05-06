@@ -31,9 +31,15 @@ application being used.
 
     d   Heatbath decay factor used in this iteration
     f   Stepsize factor used in this iteration
-    r   Rejection rate for this iteration
     e   Average number of evaluations per slice sampling update this iteration
     k   Cumulative cpu usage in minutes.
+
+    r   Rejection rate for this iteration
+    C0  Number of consecutive acceptances of metropolis/hybrid updates, 
+        zero if last update rejected
+    C1  Number of consecutive acceptances previous to this rejection, zero 
+        if last update was not rejected
+    C2  As for C1, but squared
 
     m   Point last moved to relative to starting point
     m0  Point moved to relative to lowest point for spiral and double-spiral

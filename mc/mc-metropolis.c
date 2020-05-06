@@ -51,6 +51,12 @@ static int accept
   if (U<a)
   { 
     it->move_point = 1;
+    if (it->consecutive_accepts<=0)
+    { it->consecutive_accepts = 1;
+    }
+    else
+    { it->consecutive_accepts += 1;
+    }
     ds->know_grad = 0;
     ds->slevel.value /= a0;
     return 1;
@@ -58,6 +64,12 @@ static int accept
   else
   { 
     it->rejects += 1;
+    if (it->consecutive_accepts<=0)
+    { it->consecutive_accepts = 0;
+    }
+    else
+    { it->consecutive_accepts = -it->consecutive_accepts;
+    }
     it->move_point = 0;
     ds->pot_energy = old_energy;
     return 0;

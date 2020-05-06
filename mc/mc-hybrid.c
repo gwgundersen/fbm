@@ -236,6 +236,12 @@ void mc_hybrid
   if (U<a)
   { 
     it->move_point = jump * (acc_point - it->window_offset);
+    if (it->consecutive_accepts<=0)
+    { it->consecutive_accepts = 1;
+    }
+    else
+    { it->consecutive_accepts += 1;
+    }
 
     if (acc_point!=jmps)
     { mc_value_copy (ds->q, q_asv, ds->dim);
@@ -256,6 +262,12 @@ void mc_hybrid
   else
   { 
     it->rejects += 1;
+    if (it->consecutive_accepts<=0)
+    { it->consecutive_accepts = 0;
+    }
+    else
+    { it->consecutive_accepts = -it->consecutive_accepts;
+    }
     it->move_point = jump * (rej_point - it->window_offset);
 
     mc_value_copy (ds->q, q_rsv, ds->dim);
@@ -346,6 +358,12 @@ void mc_hybrid2
   if (H<=threshold)
   { 
     it->move_point = n;
+    if (it->consecutive_accepts<=0)
+    { it->consecutive_accepts = 1;
+    }
+    else
+    { it->consecutive_accepts += 1;
+    }
 
     for (k = 0; k<ds->dim; k++)
     { ds->p[k] = -ds->p[k];
@@ -356,6 +374,12 @@ void mc_hybrid2
   else
   { 
     it->rejects += 1;
+    if (it->consecutive_accepts<=0)
+    { it->consecutive_accepts = 0;
+    }
+    else
+    { it->consecutive_accepts = -it->consecutive_accepts;
+    }
     it->move_point = 0;
 
     mc_value_copy (ds->q, q_save, ds->dim);
