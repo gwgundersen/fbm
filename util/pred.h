@@ -25,7 +25,7 @@ extern char *pred_app_name;	/* Name of application (eg, "net" or "gp") */
                                    not be too small, or quantiles won't work
 				   with few iterations. */
 
-#define Max_median_points 200	/* Max iterations allowed finding median/quant*/
+#define Max_median_points 1000	/* Max iterations allowed finding median/quant*/
 
 
 /* SHARED VARIABLES DESCRIBING DATA.  Set by application in pred_app_init. */
