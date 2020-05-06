@@ -164,7 +164,8 @@ void net_available
     letter = qd[v].letter;
     mod = qd[v].modifier;
 
-    if (letter && qd[v].available==0 && (strchr("iItT",letter)==0 || mod!=-1))
+    if (letter && qd[v].available==0 && (strchr("iItT",letter)==0 || mod!=-1)
+               && !((letter=='c' || letter=='C') && mod!=-1))
     {
       if (strchr("ixoygtzlcbav",letter)!=0 && !have_train_data
        || strchr("IXOYGTZLCBAV",letter)!=0 && !have_test_data
@@ -342,7 +343,8 @@ void net_evaluate
     high = qd[v].high;
     mod  = qd[v].modifier;
 
-    if (letter && !qh->updated[v] && (strchr("iItT",letter)==0 || mod!=-1))
+    if (letter && !qh->updated[v] && (strchr("iItT",letter)==0 || mod!=-1)
+                                  && !((letter=='c' || letter=='C') && mod!=-1))
     {
       if (letter>='a' && letter<='z')
       { cases = train_values;
