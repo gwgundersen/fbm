@@ -39,7 +39,7 @@ application being used.
         zero if last update rejected
     C1  Number of consecutive acceptances previous to this rejection, zero 
         if last update was not rejected
-    Cn  (for n>1) The value of f(C1/n), where f(c) = c*(1-exp(-0.6*c-c^2)).
+    Cn  (for n>1) The value of n^2*f(C1/n), where f(c) = c*(1-exp(-0.6*c-c^2)).
         This provides an approximation to the value of the sequence of
         acceptances if movement is mostly systematic up to about n steps,
         and a random walk at larger scales.

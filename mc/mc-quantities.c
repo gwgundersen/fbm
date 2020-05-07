@@ -387,7 +387,7 @@ void mc_evaluate
           { c = it->consecutive_accepts < 0 ? -it->consecutive_accepts : 0;
             if (mod>1) 
             { c /= mod;
-              c = c * (1 - exp(-0.6*c-c*c));
+              c = (mod*mod) * c * (1 - exp(-0.6*c-c*c));
             }
           }
           *qh->value[i] = c;
