@@ -42,7 +42,10 @@ application being used.
         zero if last update rejected
     C1  Number of consecutive acceptances previous to this rejection, zero 
         if last update was not rejected
-    C2  As for C1, but squared
+    Cn  (for n&gt;1) The value of f(C1/n), where f(c) = c*(1-exp(-0.6*c-c^2)).
+        This provides an approximation to the value of the sequence of
+        acceptances if movement is mostly systematic up to about n steps,
+        and a random walk at larger scales.
 
     m   Point last moved to relative to starting point
     m0  Point moved to relative to lowest point for spiral and double-spiral

@@ -84,7 +84,7 @@ void mc_available
       }
 
       if (letter=='C')
-      { qd[i].available = low==-1 && (mod==0 || mod==1 || mod==2) ? 1 : -1;
+      { qd[i].available = low==-1 && mod>=0 ? 1 : -1;
       }
 
       if (letter=='F')
@@ -378,16 +378,19 @@ void mc_evaluate
         }
   
         case 'C':
-        { if (it==0 || logg->index['i']!=logg->last_index) break;
+        { double c;
+          if (it==0 || logg->index['i']!=logg->last_index) break;
           if (mod==0)
-          { *qh->value[i] = it->consecutive_accepts > 0 ?
-                              it->consecutive_accepts : 0;
+          { c = it->consecutive_accepts > 0 ? it->consecutive_accepts : 0;
           }
           else
-          { *qh->value[i] = it->consecutive_accepts < 0 ?
-                              -it->consecutive_accepts : 0;
-            if (mod==2) *qh->value[i] *= *qh->value[i];
+          { c = it->consecutive_accepts < 0 ? -it->consecutive_accepts : 0;
+            if (mod>1) 
+            { c /= mod;
+              c = c * (1 - exp(-0.6*c-c*c));
+            }
           }
+          *qh->value[i] = c;
           qh->updated[i] = 1;
           break;
         }
