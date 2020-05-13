@@ -86,8 +86,12 @@ General operations:
     plot
 
         Prints the current values of those quantities specified in the
-        "xxx-mc" command on standard output, preceded by an index that
-        is reset to zero every iteration.
+        "xxx-mc" command (default none) on standard output, on a
+        single line. If there is only one quantity, it is preceded by
+        an index that is reset to zero every iteration. A blank line
+        precedes the output for each iteration (which results in
+        output suitable for the xgraph plot program), unless no
+        quantities are specified.
 
     multiply-stepsizes factor [ first[:last] ] ]
 

@@ -2,13 +2,17 @@
 
 NOTES ON THE VERSION OF 0000-00-00
 
-Changes in this version:
+Changes in this version.
 
 1) New C0, C1, and Cn for n>1 quantities are now defined, to help assess
    how well metropolis and hybrid updates are exploring the distribution.
 
-1) The maximum number of iterations that can be used when making predictions
+2) The maximum number of iterations that can be used when making predictions
    with the median has been increased from 200 to 1000.
+
+Bug fixes.
+
+1) Documentation for the 'plot' mc operation has been corrected.
 
 Known bugs and other deficiencies.
 
